@@ -23,13 +23,6 @@ import { OptionSelector } from '@/components/common/OptionSelector';
 import { isSupabaseConfigured } from '@/services/supabase';
 import { exportAndShareFile } from '@/services/fileExporter';
 
-const CURRENCIES = [
-  { value: '€', label: '€', sublabel: 'EUR' },
-  { value: '$', label: '$', sublabel: 'USD' },
-  { value: '£', label: '£', sublabel: 'GBP' },
-  { value: 'CHF', label: 'CHF', sublabel: 'CHF' },
-];
-
 export default function SettingsScreen() {
   const { theme, colorSchemePreference, setColorSchemePreference, spacing, radius, typography } =
     useTheme();
@@ -179,14 +172,40 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        {/* Currency Selector */}
-        <OptionSelector
-          label={t.settings.currencyLabel}
-          sublabel={t.settings.currencySubtitle}
-          options={CURRENCIES}
-          selectedValue={family.currency}
-          onSelect={(symbol) => updateFamilySettings({ currency: symbol })}
-        />
+        {/* Fixed EUR Currency Info */}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            backgroundColor: theme.colors.surfaceSubtle,
+            padding: spacing.md,
+            borderRadius: radius.md,
+            marginTop: spacing.sm,
+          }}
+        >
+          <View style={{ flex: 1, marginRight: spacing.sm }}>
+            <Text
+              style={{
+                color: theme.colors.textPrimary,
+                fontSize: typography.fontSizes.sm,
+                fontWeight: typography.fontWeights.semibold,
+              }}
+            >
+              {t.settings.currencyLabel}
+            </Text>
+            <Text
+              style={{
+                color: theme.colors.textMuted,
+                fontSize: typography.fontSizes.xs,
+                marginTop: 2,
+              }}
+            >
+              {t.settings.currencySubtitle}
+            </Text>
+          </View>
+          <Badge label="EUR (€)" color={theme.colors.brand} size="md" variant="solid" />
+        </View>
       </Card>
 
       {/* 2. Appearance & Language Card */}

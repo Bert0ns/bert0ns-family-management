@@ -1,4 +1,4 @@
-import { Family, FamilyMember, Category, Expense } from '@/types';
+import { Family, FamilyMember, Category, Expense, RawExpenseReport } from '@/types';
 
 export const INITIAL_FAMILY: Family = {
   id: 'fam_1',
@@ -328,7 +328,7 @@ export const INITIAL_EXPENSES: Expense[] = [
   },
 ];
 
-export const SAMPLE_IMPORT_REPORT = {
+export const SAMPLE_IMPORT_REPORT: RawExpenseReport = {
   report_title: "Elena's September Expense Report",
   statement_period: {
     start_date: '2026-09-01',

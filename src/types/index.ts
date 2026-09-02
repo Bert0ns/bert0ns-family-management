@@ -1,11 +1,12 @@
 import { z } from 'zod';
 
 export type UserRole = 'ADMIN' | 'MEMBER' | 'VIEWER';
+export type SupportedCurrency = '€' | 'EUR';
 
 export interface Family {
   id: string;
   name: string;
-  currency: string;
+  currency: '€';
   created_at: string;
 }
 
@@ -90,7 +91,11 @@ export const ExpenseReportImportSchema = z.object({
       end_date: z.string().optional(),
     })
     .optional(),
-  currency: z.string().default('EUR'),
+  currency: z
+    .enum(['EUR', '€'], {
+      message: 'Only EUR (€) currency is supported',
+    })
+    .default('EUR'),
   uploaded_by: z.string().optional(),
   expenses: z.array(ExpenseItemSchema).min(1, 'At least one expense is required in the report'),
 });

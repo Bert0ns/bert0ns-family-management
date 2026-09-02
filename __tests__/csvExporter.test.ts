@@ -60,7 +60,7 @@ describe('CsvExporter (Unit Tests & Edge Cases)', () => {
   });
 
   it('falls back to "Uncategorized", "Family", and "Standard" when IDs or methods are missing', () => {
-    const csv = exporter.generateCsv([mockExpenses[1]], mockCategories, mockMembers, '$');
+    const csv = exporter.generateCsv([mockExpenses[1]], mockCategories, mockMembers, '€');
     expect(csv).toContain('"Uncategorized"');
     expect(csv).toContain('"Family"');
     expect(csv).toContain('"Standard"');
@@ -69,11 +69,11 @@ describe('CsvExporter (Unit Tests & Edge Cases)', () => {
   });
 
   it('handles empty expense list returning only header row', () => {
-    const csv = exporter.generateCsv([], mockCategories, mockMembers, 'CHF');
+    const csv = exporter.generateCsv([], mockCategories, mockMembers, '€');
     const lines = csv.split('\n');
     expect(lines).toHaveLength(1);
     expect(lines[0]).toBe(
-      'Transaction ID,Date,Merchant,Amount (CHF),Category,Paid By,Payment Method,Is Recurring,Notes',
+      'Transaction ID,Date,Merchant,Amount (€),Category,Paid By,Payment Method,Is Recurring,Notes',
     );
   });
 

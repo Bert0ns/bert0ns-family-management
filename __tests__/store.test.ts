@@ -136,13 +136,13 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     expect(importedUnknown?.category_id).toBe('cat_other');
   });
 
-  it('updates family settings (name and currency)', () => {
+  it('updates family settings (name only, currency remains EUR)', () => {
     const state = useAppStore.getState();
-    state.updateFamilySettings({ name: 'The Rossi Family', currency: '$' });
+    state.updateFamilySettings({ name: 'The Rossi Family' });
 
     const updatedState = useAppStore.getState();
     expect(updatedState.family.name).toBe('The Rossi Family');
-    expect(updatedState.family.currency).toBe('$');
+    expect(updatedState.family.currency).toBe('€');
   });
 
   it('clears all expenses and batches when clearAllExpenses is called', () => {

@@ -102,7 +102,7 @@ describe('ReportValidator (Zod Schema Validation Tests & Edge Cases)', () => {
         start_date: '2026-08-01',
         end_date: '2026-08-31',
       },
-      currency: 'USD',
+      currency: 'EUR',
       uploaded_by: 'Berto',
       expenses: [
         {
@@ -128,5 +128,16 @@ describe('ReportValidator (Zod Schema Validation Tests & Edge Cases)', () => {
     expect(result.data?.expenses[0].split?.members).toEqual(['Berto', 'Elena']);
     expect(result.data?.statement_period?.start_date).toBe('2026-08-01');
     expect(result.data?.uploaded_by).toBe('Berto');
+  });
+
+  it('rejects reports with non-EUR currency', () => {
+    const nonEurReport = {
+      ...SAMPLE_IMPORT_REPORT,
+      currency: 'USD',
+    };
+
+    const result = validator.validate(nonEurReport);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Only EUR (€) currency is supported');
   });
 });

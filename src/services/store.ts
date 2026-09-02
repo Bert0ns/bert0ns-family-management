@@ -42,7 +42,7 @@ interface AppState {
   clearAllExpenses: () => void;
 
   // Family & Member Actions
-  updateFamilySettings: (updates: { name?: string; currency?: string }) => void;
+  updateFamilySettings: (updates: { name?: string }) => void;
   addMember: (member: Omit<FamilyMember, 'id' | 'family_id'>) => FamilyMember;
   updateMember: (id: string, updates: Partial<FamilyMember>) => void;
   deleteMember: (id: string) => void;
@@ -86,7 +86,8 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           family: {
             ...state.family,
-            ...updates,
+            name: updates.name ?? state.family.name,
+            currency: '€',
           },
         }));
       },

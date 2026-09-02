@@ -106,9 +106,9 @@ export const it: TranslationSchema = {
   settings: {
     title: 'Impostazioni & Preferenze',
     householdProfile: 'Profilo Nucleo Familiare',
-    familyNameLabel: 'Nome dello Spazio Famiglia',
-    currencyLabel: 'Valuta Predefinita',
-    currencySubtitle: 'Scegli la valuta attiva visualizzata per registri e statistiche.',
+    familyNameLabel: 'Nome Gruppo Familiare',
+    currencyLabel: 'Valuta',
+    currencySubtitle: 'Valuta supportata (solo EUR €).',
     appearanceLanguage: 'Aspetto & Lingua',
     themeLabel: 'Tema Colori',
     themeLight: 'Chiaro',
