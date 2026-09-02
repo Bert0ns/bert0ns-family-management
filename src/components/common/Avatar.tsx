@@ -1,14 +1,23 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, ViewStyle, TextStyle } from 'react-native';
+import { View, Text, Image, ViewStyle, TextStyle } from 'react-native';
 import { useTheme } from '@/theme';
+
+type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
 
 interface AvatarProps {
   name: string;
   avatarUrl?: string;
   colorCode?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: AvatarSize;
   showBorder?: boolean;
 }
+
+const SIZE_CONFIG: Record<AvatarSize, { dim: number; fontSizeKey: 'xs' | 'sm' | 'lg' | 'xxl' }> = {
+  sm: { dim: 28, fontSizeKey: 'xs' },
+  md: { dim: 36, fontSizeKey: 'sm' },
+  lg: { dim: 48, fontSizeKey: 'lg' },
+  xl: { dim: 64, fontSizeKey: 'xxl' },
+};
 
 export const Avatar: React.FC<AvatarProps> = ({
   name,
@@ -18,36 +27,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   showBorder = false,
 }) => {
   const { theme, radius, typography } = useTheme();
+  const config = SIZE_CONFIG[size] || SIZE_CONFIG.md;
 
-  const getDimensions = () => {
-    switch (size) {
-      case 'sm':
-        return 28;
-      case 'lg':
-        return 48;
-      case 'xl':
-        return 64;
-      case 'md':
-      default:
-        return 36;
-    }
-  };
-
-  const getFontSize = () => {
-    switch (size) {
-      case 'sm':
-        return typography.fontSizes.xs;
-      case 'lg':
-        return typography.fontSizes.lg;
-      case 'xl':
-        return typography.fontSizes.xxl;
-      case 'md':
-      default:
-        return typography.fontSizes.sm;
-    }
-  };
-
-  const dim = getDimensions();
   const initials = name
     .split(' ')
     .map((part) => part[0])
@@ -55,13 +36,11 @@ export const Avatar: React.FC<AvatarProps> = ({
     .toUpperCase()
     .substring(0, 2);
 
-  const bgColor = colorCode || theme.colors.brand;
-
   const containerStyle: ViewStyle = {
-    width: dim,
-    height: dim,
+    width: config.dim,
+    height: config.dim,
     borderRadius: radius.full,
-    backgroundColor: bgColor,
+    backgroundColor: colorCode || theme.colors.brand,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: showBorder ? 2 : 0,
@@ -71,21 +50,21 @@ export const Avatar: React.FC<AvatarProps> = ({
 
   const textStyle: TextStyle = {
     color: '#FFFFFF',
-    fontSize: getFontSize(),
+    fontSize: typography.fontSizes[config.fontSizeKey],
     fontWeight: typography.fontWeights.bold,
   };
 
-  if (avatarUrl) {
-    return (
-      <View style={containerStyle}>
-        <Image source={{ uri: avatarUrl }} style={{ width: dim, height: dim }} resizeMode="cover" />
-      </View>
-    );
-  }
-
   return (
     <View style={containerStyle}>
-      <Text style={textStyle}>{initials}</Text>
+      {avatarUrl ? (
+        <Image
+          source={{ uri: avatarUrl }}
+          style={{ width: config.dim, height: config.dim }}
+          resizeMode="cover"
+        />
+      ) : (
+        <Text style={textStyle}>{initials}</Text>
+      )}
     </View>
   );
 };

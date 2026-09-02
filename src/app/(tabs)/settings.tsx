@@ -1,21 +1,9 @@
 import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Platform,
-  StyleSheet,
-} from 'react-native';
-import {
-  Settings as SettingsIcon,
-  Globe,
   Sun,
-  Moon,
   RotateCcw,
   ShieldCheck,
-  Coins,
   Download,
   Trash2,
   Lock,
@@ -31,13 +19,14 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { Input } from '@/components/common/Input';
+import { OptionSelector } from '@/components/common/OptionSelector';
 import { isSupabaseConfigured } from '@/services/supabase';
 
 const CURRENCIES = [
-  { symbol: '€', code: 'EUR', label: 'Euro (€)' },
-  { symbol: '$', code: 'USD', label: 'US Dollar ($)' },
-  { symbol: '£', code: 'GBP', label: 'British Pound (£)' },
-  { symbol: 'CHF', code: 'CHF', label: 'Swiss Franc (CHF)' },
+  { value: '€', label: '€', sublabel: 'EUR' },
+  { value: '$', label: '$', sublabel: 'USD' },
+  { value: '£', label: '£', sublabel: 'GBP' },
+  { value: 'CHF', label: 'CHF', sublabel: 'CHF' },
 ];
 
 export default function SettingsScreen() {
@@ -67,10 +56,6 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleCurrencySelect = (currSymbol: string) => {
-    updateFamilySettings({ currency: currSymbol });
-  };
-
   const handleExportFullArchive = () => {
     const archivePayload = {
       app: "Bert0n's Family Expense Manager",
@@ -98,12 +83,9 @@ export default function SettingsScreen() {
   };
 
   const handleClearLedger = () => {
+    const message = `${t.settings.clearLedgerConfirmTitle}\n${t.settings.clearLedgerConfirmMessage}`;
     if (Platform.OS === 'web') {
-      if (
-        window.confirm(
-          `${t.settings.clearLedgerConfirmTitle}\n${t.settings.clearLedgerConfirmMessage}`,
-        )
-      ) {
+      if (window.confirm(message)) {
         clearAllExpenses();
       }
     } else {
@@ -113,6 +95,17 @@ export default function SettingsScreen() {
       ]);
     }
   };
+
+  const themeOptions = [
+    { value: 'light' as const, label: t.settings.themeLight },
+    { value: 'dark' as const, label: t.settings.themeDark },
+    { value: 'system' as const, label: t.settings.themeSystem },
+  ];
+
+  const languageOptions = [
+    { value: 'en' as SupportedLocale, label: t.settings.english },
+    { value: 'it' as SupportedLocale, label: t.settings.italian },
+  ];
 
   return (
     <ScrollView
@@ -197,67 +190,13 @@ export default function SettingsScreen() {
         </View>
 
         {/* Currency Selector */}
-        <View>
-          <Text
-            style={{
-              color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              marginBottom: 4,
-            }}
-          >
-            {t.settings.currencyLabel}
-          </Text>
-          <Text
-            style={{
-              color: theme.colors.textMuted,
-              fontSize: typography.fontSizes.xs,
-              marginBottom: spacing.sm,
-            }}
-          >
-            {t.settings.currencySubtitle}
-          </Text>
-          <View style={{ flexDirection: 'row', gap: spacing.xs }}>
-            {CURRENCIES.map((curr) => {
-              const isSelected = family.currency === curr.symbol;
-              return (
-                <TouchableOpacity
-                  key={curr.code}
-                  activeOpacity={0.7}
-                  onPress={() => handleCurrencySelect(curr.symbol)}
-                  style={{
-                    flex: 1,
-                    paddingVertical: spacing.sm,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: radius.md,
-                    backgroundColor: isSelected ? theme.colors.brand : theme.colors.surfaceSubtle,
-                    borderWidth: 1,
-                    borderColor: isSelected ? theme.colors.brand : theme.colors.border,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: isSelected ? '#FFFFFF' : theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.md,
-                      fontWeight: typography.fontWeights.bold,
-                    }}
-                  >
-                    {curr.symbol}
-                  </Text>
-                  <Text
-                    style={{
-                      color: isSelected ? 'rgba(255,255,255,0.8)' : theme.colors.textMuted,
-                      fontSize: 10,
-                      marginTop: 2,
-                    }}
-                  >
-                    {curr.code}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+        <OptionSelector
+          label={t.settings.currencyLabel}
+          sublabel={t.settings.currencySubtitle}
+          options={CURRENCIES}
+          selectedValue={family.currency}
+          onSelect={(symbol) => updateFamilySettings({ currency: symbol })}
+        />
       </Card>
 
       {/* 2. Appearance & Language Card */}
@@ -283,104 +222,21 @@ export default function SettingsScreen() {
         </View>
 
         {/* Theme Selector */}
-        <View style={{ marginBottom: spacing.md }}>
-          <Text
-            style={{
-              color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              marginBottom: spacing.xs,
-            }}
-          >
-            {t.settings.themeLabel}
-          </Text>
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            {(['light', 'dark', 'system'] as const).map((pref) => {
-              const isSelected = colorSchemePreference === pref;
-              const label =
-                pref === 'light'
-                  ? t.settings.themeLight
-                  : pref === 'dark'
-                    ? t.settings.themeDark
-                    : t.settings.themeSystem;
-
-              return (
-                <TouchableOpacity
-                  key={pref}
-                  activeOpacity={0.7}
-                  onPress={() => setColorSchemePreference(pref)}
-                  style={{
-                    flex: 1,
-                    paddingVertical: spacing.sm,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: radius.md,
-                    backgroundColor: isSelected ? theme.colors.brand : theme.colors.surfaceSubtle,
-                    borderWidth: 1,
-                    borderColor: isSelected ? theme.colors.brand : theme.colors.border,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: isSelected ? '#FFFFFF' : theme.colors.textSecondary,
-                      fontSize: typography.fontSizes.sm,
-                      fontWeight: typography.fontWeights.semibold,
-                    }}
-                  >
-                    {label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+        <OptionSelector
+          label={t.settings.themeLabel}
+          options={themeOptions}
+          selectedValue={colorSchemePreference}
+          onSelect={setColorSchemePreference}
+          style={{ marginBottom: spacing.md }}
+        />
 
         {/* Language Selector */}
-        <View>
-          <Text
-            style={{
-              color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              marginBottom: spacing.xs,
-            }}
-          >
-            {t.settings.languageLabel}
-          </Text>
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            {(['en', 'it'] as const).map((loc) => {
-              const isSelected = locale === loc;
-              const label = loc === 'en' ? t.settings.english : t.settings.italian;
-              return (
-                <TouchableOpacity
-                  key={loc}
-                  activeOpacity={0.7}
-                  onPress={() => setLocale(loc)}
-                  style={{
-                    flex: 1,
-                    paddingVertical: spacing.sm,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: radius.md,
-                    backgroundColor: isSelected ? theme.colors.brand : theme.colors.surfaceSubtle,
-                    borderWidth: 1,
-                    borderColor: isSelected ? theme.colors.brand : theme.colors.border,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: isSelected ? '#FFFFFF' : theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.sm,
-                      fontWeight: isSelected
-                        ? typography.fontWeights.bold
-                        : typography.fontWeights.medium,
-                    }}
-                  >
-                    {label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+        <OptionSelector
+          label={t.settings.languageLabel}
+          options={languageOptions}
+          selectedValue={locale}
+          onSelect={setLocale}
+        />
       </Card>
 
       {/* 3. Backend & Cloud Sync Status */}

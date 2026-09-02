@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { X, Tag, Check } from 'lucide-react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Tag, Check } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { Input } from '@/components/common/Input';
-import { Button } from '@/components/common/Button';
 import { IconHelper } from '@/components/common/IconHelper';
+import { FormModal } from '@/components/common/FormModal';
 
 interface AddCategoryModalProps {
   visible: boolean;
@@ -41,6 +42,7 @@ const AVAILABLE_COLORS = [
 
 export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ visible, onClose, onSave }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
 
   const [name, setName] = useState('');
   const [selectedIcon, setSelectedIcon] = useState(AVAILABLE_ICONS[0]);
@@ -49,7 +51,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ visible, onC
 
   const handleSave = () => {
     if (!name.trim()) {
-      setError('Category name is required');
+      setError(t.family.categoryNamePlaceholder);
       return;
     }
     setError(null);
@@ -63,158 +65,106 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ visible, onC
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          justifyContent: 'flex-end',
+    <FormModal
+      visible={visible}
+      title={t.family.addCategoryTitle}
+      icon={<Tag size={20} color={theme.colors.brand} />}
+      onClose={onClose}
+      onSubmit={handleSave}
+      submitTitle={t.common.save}
+      cancelTitle={t.common.cancel}
+    >
+      {/* Name input */}
+      <Input
+        label={t.family.categoryNameLabel}
+        placeholder={t.family.categoryNamePlaceholder}
+        value={name}
+        onChangeText={(text) => {
+          setName(text);
+          if (error) setError(null);
         }}
-      >
-        <View
+        error={error || undefined}
+      />
+
+      {/* Icon Selector */}
+      <View style={{ marginBottom: spacing.md }}>
+        <Text
           style={{
-            backgroundColor: theme.colors.surface,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            padding: spacing.xl,
-            maxHeight: '90%',
+            color: theme.colors.textSecondary,
+            fontSize: typography.fontSizes.sm,
+            fontWeight: typography.fontWeights.medium,
+            marginBottom: spacing.xs,
           }}
         >
-          {/* Header */}
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: spacing.lg,
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-              <Tag size={20} color={theme.colors.brand} />
-              <Text
+          {t.family.selectIcon}
+        </Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+          {AVAILABLE_ICONS.map((ic) => {
+            const isSelected = selectedIcon === ic;
+            return (
+              <TouchableOpacity
+                key={ic}
+                onPress={() => setSelectedIcon(ic)}
                 style={{
-                  color: theme.colors.textPrimary,
-                  fontSize: typography.fontSizes.xl,
-                  fontWeight: typography.fontWeights.bold,
+                  width: 44,
+                  height: 44,
+                  borderRadius: radius.md,
+                  backgroundColor: isSelected
+                    ? theme.colors.brandLight
+                    : theme.colors.surfaceSubtle,
+                  borderWidth: 1.5,
+                  borderColor: isSelected ? theme.colors.brand : theme.colors.border,
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                Create Custom Category
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              onPress={onClose}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <X size={24} color={theme.colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Name input */}
-          <Input
-            label="Category Name"
-            placeholder="e.g. Pets, Subscriptions, Vacation"
-            value={name}
-            onChangeText={(t) => {
-              setName(t);
-              if (error) setError(null);
-            }}
-            error={error || undefined}
-          />
-
-          {/* Icon Selector */}
-          <View style={{ marginBottom: spacing.md }}>
-            <Text
-              style={{
-                color: theme.colors.textSecondary,
-                fontSize: typography.fontSizes.sm,
-                fontWeight: typography.fontWeights.medium,
-                marginBottom: spacing.xs,
-              }}
-            >
-              Select Icon
-            </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-              {AVAILABLE_ICONS.map((ic) => {
-                const isSelected = selectedIcon === ic;
-                return (
-                  <TouchableOpacity
-                    key={ic}
-                    onPress={() => setSelectedIcon(ic)}
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: radius.md,
-                      backgroundColor: isSelected
-                        ? theme.colors.brandLight
-                        : theme.colors.surfaceSubtle,
-                      borderWidth: 1.5,
-                      borderColor: isSelected ? theme.colors.brand : theme.colors.border,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <IconHelper
-                      name={ic}
-                      size={20}
-                      color={isSelected ? theme.colors.brand : theme.colors.textPrimary}
-                    />
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Color Selector */}
-          <View style={{ marginBottom: spacing.xl }}>
-            <Text
-              style={{
-                color: theme.colors.textSecondary,
-                fontSize: typography.fontSizes.sm,
-                fontWeight: typography.fontWeights.medium,
-                marginBottom: spacing.xs,
-              }}
-            >
-              Select Color
-            </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-              {AVAILABLE_COLORS.map((col) => {
-                const isSelected = selectedColor === col;
-                return (
-                  <TouchableOpacity
-                    key={col}
-                    onPress={() => setSelectedColor(col)}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: radius.full,
-                      backgroundColor: col,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderWidth: isSelected ? 3 : 0,
-                      borderColor: theme.colors.surface,
-                    }}
-                  >
-                    {isSelected && <Check size={18} color="#FFFFFF" />}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Actions */}
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            <Button title="Cancel" variant="outline" onPress={onClose} style={{ flex: 1 }} />
-            <Button
-              title="Create Category"
-              variant="primary"
-              icon={<Check size={18} color="#FFFFFF" />}
-              onPress={handleSave}
-              style={{ flex: 1 }}
-            />
-          </View>
+                <IconHelper
+                  name={ic}
+                  size={20}
+                  color={isSelected ? theme.colors.brand : theme.colors.textPrimary}
+                />
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
-    </Modal>
+
+      {/* Color Selector */}
+      <View style={{ marginBottom: spacing.sm }}>
+        <Text
+          style={{
+            color: theme.colors.textSecondary,
+            fontSize: typography.fontSizes.sm,
+            fontWeight: typography.fontWeights.medium,
+            marginBottom: spacing.xs,
+          }}
+        >
+          {t.family.selectColor}
+        </Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+          {AVAILABLE_COLORS.map((col) => {
+            const isSelected = selectedColor === col;
+            return (
+              <TouchableOpacity
+                key={col}
+                onPress={() => setSelectedColor(col)}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: radius.full,
+                  backgroundColor: col,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: isSelected ? 3 : 0,
+                  borderColor: theme.colors.surface,
+                }}
+              >
+                {isSelected && <Check size={18} color="#FFFFFF" />}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+    </FormModal>
   );
 };

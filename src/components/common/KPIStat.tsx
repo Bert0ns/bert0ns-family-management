@@ -1,14 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { View, Text, ViewStyle } from 'react-native';
 import { useTheme } from '@/theme';
 import { Card } from './Card';
+
+type KPIVariant = 'default' | 'success' | 'warning' | 'danger' | 'brand';
 
 interface KPIStatProps {
   title: string;
   value: string;
   subtitle?: string;
   icon?: React.ReactNode;
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'brand';
+  variant?: KPIVariant;
   progress?: number; // 0 - 100
   style?: ViewStyle;
 }
@@ -24,37 +26,15 @@ export const KPIStat: React.FC<KPIStatProps> = ({
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
 
-  const getAccentColor = () => {
-    switch (variant) {
-      case 'success':
-        return theme.colors.success;
-      case 'warning':
-        return theme.colors.warning;
-      case 'danger':
-        return theme.colors.danger;
-      case 'brand':
-        return theme.colors.brand;
-      default:
-        return theme.colors.textPrimary;
-    }
+  const variantColors: Record<KPIVariant, { accent: string; bg: string }> = {
+    success: { accent: theme.colors.success, bg: theme.colors.successBg },
+    warning: { accent: theme.colors.warning, bg: theme.colors.warningBg },
+    danger: { accent: theme.colors.danger, bg: theme.colors.dangerBg },
+    brand: { accent: theme.colors.brand, bg: theme.colors.brandLight },
+    default: { accent: theme.colors.textPrimary, bg: theme.colors.surfaceSubtle },
   };
 
-  const getBgColor = () => {
-    switch (variant) {
-      case 'success':
-        return theme.colors.successBg;
-      case 'warning':
-        return theme.colors.warningBg;
-      case 'danger':
-        return theme.colors.dangerBg;
-      case 'brand':
-        return theme.colors.brandLight;
-      default:
-        return theme.colors.surfaceSubtle;
-    }
-  };
-
-  const accent = getAccentColor();
+  const { accent, bg } = variantColors[variant] || variantColors.default;
 
   return (
     <Card style={[{ flex: 1, minWidth: 150 }, style]} padding="md">
@@ -75,7 +55,7 @@ export const KPIStat: React.FC<KPIStatProps> = ({
             style={{
               padding: spacing.xs,
               borderRadius: radius.md,
-              backgroundColor: getBgColor(),
+              backgroundColor: bg,
             }}
           >
             {icon}

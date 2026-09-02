@@ -15,99 +15,65 @@ import {
   FileText,
   Users,
   Settings,
-  Plus,
-  ArrowUpRight,
-  ArrowDownLeft,
   Calendar,
   Search,
   Filter,
-  Trash2,
-  Edit3,
-  CheckCircle2,
-  AlertTriangle,
   Upload,
   Download,
-  Share2,
-  PieChart,
-  Layers,
-  ChevronRight,
-  ChevronDown,
-  X,
   CreditCard,
   Building,
   Plane,
-  Sparkles,
+  PieChart,
   LucideProps,
+  LucideIcon,
 } from 'lucide-react-native';
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  shoppingcart: ShoppingCart,
+  groceries: ShoppingCart,
+  utensils: Utensils,
+  dining: Utensils,
+  restaurant: Utensils,
+  zap: Zap,
+  utilities: Zap,
+  bills: Zap,
+  car: Car,
+  transport: Car,
+  transportation: Car,
+  home: Home,
+  housing: Home,
+  rent: Home,
+  heartpulse: HeartPulse,
+  health: HeartPulse,
+  pharmacy: HeartPulse,
+  film: Film,
+  entertainment: Film,
+  shoppingbag: ShoppingBag,
+  shopping: ShoppingBag,
+  graduationcap: GraduationCap,
+  education: GraduationCap,
+  dollarsign: DollarSign,
+  trendingup: TrendingUp,
+  filetext: FileText,
+  users: Users,
+  settings: Settings,
+  calendar: Calendar,
+  search: Search,
+  filter: Filter,
+  upload: Upload,
+  download: Download,
+  creditcard: CreditCard,
+  building: Building,
+  plane: Plane,
+  piechart: PieChart,
+  tag: Tag,
+};
 
 interface IconHelperProps extends LucideProps {
   name: string;
 }
 
 export const IconHelper: React.FC<IconHelperProps> = ({ name, ...props }) => {
-  switch (name?.toLowerCase()) {
-    case 'shoppingcart':
-    case 'groceries':
-      return <ShoppingCart {...props} />;
-    case 'utensils':
-    case 'dining':
-    case 'restaurant':
-      return <Utensils {...props} />;
-    case 'zap':
-    case 'utilities':
-    case 'bills':
-      return <Zap {...props} />;
-    case 'car':
-    case 'transport':
-    case 'transportation':
-      return <Car {...props} />;
-    case 'home':
-    case 'housing':
-    case 'rent':
-      return <Home {...props} />;
-    case 'heartpulse':
-    case 'health':
-    case 'pharmacy':
-      return <HeartPulse {...props} />;
-    case 'film':
-    case 'entertainment':
-      return <Film {...props} />;
-    case 'shoppingbag':
-    case 'shopping':
-      return <ShoppingBag {...props} />;
-    case 'graduationcap':
-    case 'education':
-      return <GraduationCap {...props} />;
-    case 'dollarsign':
-      return <DollarSign {...props} />;
-    case 'trendingup':
-      return <TrendingUp {...props} />;
-    case 'filetext':
-      return <FileText {...props} />;
-    case 'users':
-      return <Users {...props} />;
-    case 'settings':
-      return <Settings {...props} />;
-    case 'calendar':
-      return <Calendar {...props} />;
-    case 'search':
-      return <Search {...props} />;
-    case 'filter':
-      return <Filter {...props} />;
-    case 'upload':
-      return <Upload {...props} />;
-    case 'download':
-      return <Download {...props} />;
-    case 'creditcard':
-      return <CreditCard {...props} />;
-    case 'building':
-      return <Building {...props} />;
-    case 'plane':
-      return <Plane {...props} />;
-    case 'piechart':
-      return <PieChart {...props} />;
-    case 'tag':
-    default:
-      return <Tag {...props} />;
-  }
+  const IconComponent = (name && ICON_MAP[name.toLowerCase()]) || Tag;
+  return <IconComponent {...props} />;
 };

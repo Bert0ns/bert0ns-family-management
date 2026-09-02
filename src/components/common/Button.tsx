@@ -2,7 +2,6 @@ import React from 'react';
 import {
   TouchableOpacity,
   Text,
-  StyleSheet,
   ActivityIndicator,
   ViewStyle,
   TextStyle,
@@ -12,11 +11,14 @@ import {
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/theme';
 
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
+type ButtonSize = 'sm' | 'md' | 'lg';
+
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   icon?: React.ReactNode;
   loading?: boolean;
   disabled?: boolean;
@@ -44,86 +46,63 @@ export const Button: React.FC<ButtonProps> = ({
     if (Platform.OS !== 'web') {
       try {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      } catch (e) {}
+      } catch {}
     }
     onPress();
   };
 
-  const getButtonBg = () => {
-    if (disabled) return theme.colors.surfaceSubtle;
-    switch (variant) {
-      case 'primary':
-        return theme.colors.brand;
-      case 'secondary':
-        return theme.colors.brandLight;
-      case 'danger':
-        return theme.colors.danger;
-      case 'outline':
-      case 'ghost':
-        return 'transparent';
-      default:
-        return theme.colors.brand;
-    }
+  const bgMap: Record<ButtonVariant, string> = {
+    primary: theme.colors.brand,
+    secondary: theme.colors.brandLight,
+    danger: theme.colors.danger,
+    outline: 'transparent',
+    ghost: 'transparent',
   };
 
-  const getTextColor = () => {
-    if (disabled) return theme.colors.textMuted;
-    switch (variant) {
-      case 'primary':
-      case 'danger':
-        return '#FFFFFF';
-      case 'secondary':
-        return theme.colors.brand;
-      case 'outline':
-        return theme.colors.textPrimary;
-      case 'ghost':
-        return theme.colors.textSecondary;
-      default:
-        return '#FFFFFF';
-    }
+  const textColorMap: Record<ButtonVariant, string> = {
+    primary: '#FFFFFF',
+    secondary: theme.colors.brand,
+    danger: '#FFFFFF',
+    outline: theme.colors.textPrimary,
+    ghost: theme.colors.textSecondary,
   };
 
-  const getPadding = () => {
-    switch (size) {
-      case 'sm':
-        return { paddingVertical: spacing.xs, paddingHorizontal: spacing.md };
-      case 'lg':
-        return { paddingVertical: spacing.md, paddingHorizontal: spacing.xl };
-      case 'md':
-      default:
-        return { paddingVertical: spacing.sm + 2, paddingHorizontal: spacing.lg };
-    }
+  const sizePaddingMap: Record<ButtonSize, { paddingVertical: number; paddingHorizontal: number }> =
+    {
+      sm: { paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
+      md: { paddingVertical: spacing.sm + 2, paddingHorizontal: spacing.lg },
+      lg: { paddingVertical: spacing.md, paddingHorizontal: spacing.xl },
+    };
+
+  const sizeFontMap: Record<ButtonSize, number> = {
+    sm: typography.fontSizes.sm,
+    md: typography.fontSizes.md,
+    lg: typography.fontSizes.lg,
   };
 
-  const getFontSize = () => {
-    switch (size) {
-      case 'sm':
-        return typography.fontSizes.sm;
-      case 'lg':
-        return typography.fontSizes.lg;
-      case 'md':
-      default:
-        return typography.fontSizes.md;
-    }
-  };
+  const bgColor = disabled ? theme.colors.surfaceSubtle : bgMap[variant] || theme.colors.brand;
+  const textColor = disabled ? theme.colors.textMuted : textColorMap[variant] || '#FFFFFF';
+  const padding = sizePaddingMap[size] || sizePaddingMap.md;
+
+  const isOutline = variant === 'outline';
 
   const buttonStyle: ViewStyle = {
-    backgroundColor: getButtonBg(),
+    backgroundColor: bgColor,
     borderRadius: radius.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    ...getPadding(),
-    borderWidth: variant === 'outline' ? 1 : 0,
-    borderColor: variant === 'outline' ? theme.colors.border : 'transparent',
+    ...padding,
+    borderWidth: isOutline ? 1 : 0,
+    borderColor: isOutline ? theme.colors.border : 'transparent',
     alignSelf: fullWidth ? 'stretch' : 'auto',
     opacity: disabled ? 0.6 : 1,
     gap: spacing.sm,
   };
 
   const labelStyle: TextStyle = {
-    color: getTextColor(),
-    fontSize: getFontSize(),
+    color: textColor,
+    fontSize: sizeFontMap[size] || typography.fontSizes.md,
     fontWeight: typography.fontWeights.semibold,
   };
 
@@ -135,7 +114,7 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={disabled || loading}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={getTextColor()} />
+        <ActivityIndicator size="small" color={textColor} />
       ) : (
         <>
           {icon}
