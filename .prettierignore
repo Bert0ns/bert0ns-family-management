@@ -1,0 +1,7 @@
+node_modules
+dist
+.expo
+pnpm-lock.yaml
+assets
+dist/
+EOF
