@@ -170,4 +170,35 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     expect(updatedState.filters.searchQuery).toBe('');
     expect(updatedState.filters.selectedMemberId).toBeUndefined();
   });
+
+  it('retains and calculates split details when importing a report with splits', () => {
+    const state = useAppStore.getState();
+    const result = state.importExpenseReport(SAMPLE_IMPORT_REPORT, 'sample.json');
+    expect(result.importedCount).toBe(SAMPLE_IMPORT_REPORT.expenses.length);
+
+    const updatedState = useAppStore.getState();
+    const pizzaExpense = updatedState.expenses.find((e) => e.merchant_name === 'Pizzeria Da Mario');
+    expect(pizzaExpense).toBeDefined();
+    expect(pizzaExpense?.splits).toBeDefined();
+    expect(pizzaExpense?.splits).toHaveLength(2);
+    // 64.0 split equally between Berto and Elena is 32.0 each
+    expect(pizzaExpense?.splits?.[0].share_amount).toBe(32);
+    expect(pizzaExpense?.splits?.[1].share_amount).toBe(32);
+  });
+
+  it('deletes members and categories correctly', () => {
+    const state = useAppStore.getState();
+    const initialMemberCount = state.members.length;
+    const initialCategoryCount = state.categories.length;
+
+    state.deleteMember('mem_4');
+    let updated = useAppStore.getState();
+    expect(updated.members).toHaveLength(initialMemberCount - 1);
+    expect(updated.members.find((m) => m.id === 'mem_4')).toBeUndefined();
+
+    state.deleteCategory('cat_other');
+    updated = useAppStore.getState();
+    expect(updated.categories).toHaveLength(initialCategoryCount - 1);
+    expect(updated.categories.find((c) => c.id === 'cat_other')).toBeUndefined();
+  });
 });

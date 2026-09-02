@@ -40,6 +40,7 @@ export interface IAnalyticsCalculator {
     categories: Category[],
     members: FamilyMember[],
     period: string,
+    referenceDate?: Date,
   ): MonthlyKPIMetrics;
 
   calculateCategoryBreakdown(expenses: Expense[], categories: Category[]): CategorySummary[];

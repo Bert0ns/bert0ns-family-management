@@ -21,6 +21,7 @@ import { Badge } from '@/components/common/Badge';
 import { Input } from '@/components/common/Input';
 import { OptionSelector } from '@/components/common/OptionSelector';
 import { isSupabaseConfigured } from '@/services/supabase';
+import { exportAndShareFile } from '@/services/fileExporter';
 
 const CURRENCIES = [
   { value: '€', label: '€', sublabel: 'EUR' },
@@ -55,7 +56,7 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleExportFullArchive = () => {
+  const handleExportFullArchive = async () => {
     const archivePayload = {
       app: "Bert0n's Family Expense Manager",
       version: '1.0.0',
@@ -67,17 +68,8 @@ export default function SettingsScreen() {
     };
 
     const jsonString = JSON.stringify(archivePayload, null, 2);
-
-    if (Platform.OS === 'web') {
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `family-management-archive-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-    } else {
-      Alert.alert(t.settings.exportArchiveButton, 'Complete JSON archive exported.');
-    }
+    const fileName = `family-management-archive-${new Date().toISOString().split('T')[0]}.json`;
+    await exportAndShareFile(jsonString, fileName, 'application/json');
   };
 
   const handleClearLedger = () => {
@@ -278,7 +270,7 @@ export default function SettingsScreen() {
                 fontWeight: typography.fontWeights.semibold,
               }}
             >
-              {isSupabaseConfigured() ? t.settings.cloudStatusSynced : t.settings.cloudStatusLocal}
+              {t.settings.cloudStatusLocal}
             </Text>
             <Text
               style={{
@@ -291,18 +283,13 @@ export default function SettingsScreen() {
             </Text>
           </View>
 
-          <Badge
-            label={isSupabaseConfigured() ? 'Cloud Active' : 'Offline'}
-            color={isSupabaseConfigured() ? theme.colors.success : theme.colors.info}
-            size="sm"
-            variant="solid"
-          />
+          <Badge label="Local-First" color={theme.colors.success} size="sm" variant="solid" />
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.xs }}>
           <Lock size={12} color={theme.colors.textMuted} />
           <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
-            {t.settings.rlsProtectionNotice}
+            {t.settings.privacyGuaranteeTitle}: 100% On-Device Persistence
           </Text>
         </View>
       </Card>

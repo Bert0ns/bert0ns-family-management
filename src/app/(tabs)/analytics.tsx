@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
@@ -7,7 +7,6 @@ import {
   calculateCategoryBreakdown,
   calculateMemberContributions,
   calculateSpendingVelocity,
-  calculateMonthlyMetrics,
 } from '@/services/analytics';
 import { Card } from '@/components/common/Card';
 import { PeriodSelector } from '@/components/common/PeriodSelector';
@@ -27,23 +26,37 @@ export default function AnalyticsScreen() {
     'categories',
   );
 
-  const periodExpenses = expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod));
+  const periodExpenses = useMemo(
+    () => expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod)),
+    [expenses, selectedPeriod],
+  );
 
-  const metrics = calculateMonthlyMetrics(expenses, categories, members, selectedPeriod);
+  const categoryBreakdown = useMemo(
+    () => calculateCategoryBreakdown(periodExpenses, categories),
+    [periodExpenses, categories],
+  );
 
-  const categoryBreakdown = calculateCategoryBreakdown(periodExpenses, categories);
-  const memberContributions = calculateMemberContributions(periodExpenses, members);
-  const velocityData = calculateSpendingVelocity(expenses, selectedPeriod);
+  const memberContributions = useMemo(
+    () => calculateMemberContributions(periodExpenses, members),
+    [periodExpenses, members],
+  );
+
+  const velocityData = useMemo(
+    () => calculateSpendingVelocity(expenses, selectedPeriod),
+    [expenses, selectedPeriod],
+  );
 
   // Top Merchants summary
-  const merchantMap = new Map<string, number>();
-  periodExpenses.forEach((e) => {
-    merchantMap.set(e.merchant_name, (merchantMap.get(e.merchant_name) || 0) + e.amount);
-  });
-  const topMerchants = Array.from(merchantMap.entries())
-    .map(([name, total]) => ({ name, total }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 5);
+  const topMerchants = useMemo(() => {
+    const merchantMap = new Map<string, number>();
+    periodExpenses.forEach((e) => {
+      merchantMap.set(e.merchant_name, (merchantMap.get(e.merchant_name) || 0) + e.amount);
+    });
+    return Array.from(merchantMap.entries())
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+  }, [periodExpenses]);
 
   return (
     <ScrollView

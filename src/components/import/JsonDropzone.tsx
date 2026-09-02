@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { Upload, FileJson, AlertCircle, CheckCircle2 } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { RawExpenseReport } from '@/types';
 import { reportValidator } from '@/services/validator';
-import { Button } from '@/components/common/Button';
 
 interface JsonDropzoneProps {
   onFileParsed: (report: RawExpenseReport, fileName: string) => void;
@@ -13,6 +21,7 @@ interface JsonDropzoneProps {
 
 export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -74,6 +83,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed }) => {
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={handlePickDocument}
+        disabled={loading}
         style={{
           borderWidth: 2,
           borderColor: errorMessage ? theme.colors.danger : theme.colors.brand,
@@ -108,7 +118,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed }) => {
             textAlign: 'center',
           }}
         >
-          Upload JSON Expense Report
+          {t.import.dropzoneTitle}
         </Text>
 
         <Text
@@ -120,17 +130,38 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed }) => {
             maxWidth: 320,
           }}
         >
-          Select or drop a valid structured .json statement to immediately extract and index
-          expenses.
+          {t.import.dropzoneSubtitle}
         </Text>
 
-        <View style={{ marginTop: spacing.lg }}>
-          <Button
-            title="Browse Files"
-            icon={<FileJson size={18} color="#FFFFFF" />}
-            onPress={handlePickDocument}
-            loading={loading}
-          />
+        <View
+          pointerEvents="none"
+          style={{
+            marginTop: spacing.lg,
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: theme.colors.brand,
+            paddingVertical: spacing.sm,
+            paddingHorizontal: spacing.lg,
+            borderRadius: radius.md,
+            gap: spacing.xs,
+          }}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <>
+              <FileJson size={18} color="#FFFFFF" />
+              <Text
+                style={{
+                  color: '#FFFFFF',
+                  fontWeight: typography.fontWeights.semibold,
+                  fontSize: typography.fontSizes.sm,
+                }}
+              >
+                {t.import.selectJsonFile}
+              </Text>
+            </>
+          )}
         </View>
       </TouchableOpacity>
 

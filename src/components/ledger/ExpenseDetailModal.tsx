@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
-import { X, Trash2, Calendar, CreditCard, User, Tag, FileText, Split } from 'lucide-react-native';
+import { View, Text, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import { X, Trash2, Calendar, CreditCard, User, Tag, Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
+import { useAppStore } from '@/services/store';
 import { Expense, Category, FamilyMember } from '@/types';
 import { Avatar } from '@/components/common/Avatar';
 import { IconHelper } from '@/components/common/IconHelper';
@@ -30,13 +32,21 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
   onDelete,
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const { t, locale } = useI18n();
+  const { categories, members } = useAppStore();
 
   if (!expense) return null;
 
-  const catColor = category?.color || theme.colors.brand;
-  const catIcon = category?.icon || 'Tag';
-  const catName = category?.name || 'Uncategorized';
-  const memberName = member?.display_name || 'Family';
+  const resolvedCategory = category || categories.find((c) => c.id === expense.category_id);
+  const resolvedMember = member || members.find((m) => m.id === expense.paid_by_member_id);
+  const resolvedAllMembers = allMembers.length > 0 ? allMembers : members;
+
+  const catColor = resolvedCategory?.color || theme.colors.brand;
+  const catIcon = resolvedCategory?.icon || 'Tag';
+  const catName = resolvedCategory?.name || 'Uncategorized';
+  const memberName = resolvedMember?.display_name || 'Family';
+
+  const dateLocale = locale === 'it' ? 'it-IT' : 'en-US';
 
   const handleDelete = () => {
     onDelete(expense.id);
@@ -77,7 +87,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                 fontWeight: typography.fontWeights.bold,
               }}
             >
-              Expense Details
+              {t.expenseDetail.title}
             </Text>
             <TouchableOpacity
               onPress={onClose}
@@ -151,7 +161,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   <Text
                     style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.sm }}
                   >
-                    Category
+                    {t.expenseDetail.category}
                   </Text>
                 </View>
                 <Badge label={catName} color={catColor} size="md" />
@@ -170,14 +180,14 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   <Text
                     style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.sm }}
                   >
-                    Paid by
+                    {t.expenseDetail.paidBy}
                   </Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                   <Avatar
                     name={memberName}
-                    avatarUrl={member?.avatar_url}
-                    colorCode={member?.color_code}
+                    avatarUrl={resolvedMember?.avatar_url}
+                    colorCode={resolvedMember?.color_code}
                     size="sm"
                   />
                   <Text
@@ -204,7 +214,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   <Text
                     style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.sm }}
                   >
-                    Date
+                    {t.expenseDetail.date}
                   </Text>
                 </View>
                 <Text
@@ -213,7 +223,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                     fontWeight: typography.fontWeights.semibold,
                   }}
                 >
-                  {new Date(expense.transaction_date).toLocaleDateString(undefined, {
+                  {new Date(expense.transaction_date).toLocaleDateString(dateLocale, {
                     weekday: 'short',
                     year: 'numeric',
                     month: 'short',
@@ -235,7 +245,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   <Text
                     style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.sm }}
                   >
-                    Payment Method
+                    {t.expenseDetail.paymentMethod}
                   </Text>
                 </View>
                 <Text
@@ -273,12 +283,13 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                         fontWeight: typography.fontWeights.bold,
                       }}
                     >
-                      Split Breakdown ({expense.splits.length} Members)
+                      {t.expenseDetail.splitBreakdown} ({expense.splits.length}{' '}
+                      {t.dashboard.familyMembers})
                     </Text>
                   </View>
                   <View style={{ gap: spacing.xs }}>
                     {expense.splits.map((s) => {
-                      const splitMember = allMembers.find((m) => m.id === s.member_id);
+                      const splitMember = resolvedAllMembers.find((m) => m.id === s.member_id);
                       return (
                         <View
                           key={s.member_id}
@@ -323,7 +334,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                       marginBottom: 4,
                     }}
                   >
-                    Notes
+                    {t.expenseDetail.notes}
                   </Text>
                   <View
                     style={{
@@ -345,13 +356,18 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
             {/* Actions */}
             <View style={{ flexDirection: 'row', gap: spacing.md }}>
               <Button
-                title="Delete"
+                title={t.common.delete}
                 variant="danger"
                 icon={<Trash2 size={18} color="#FFFFFF" />}
                 onPress={handleDelete}
                 style={{ flex: 1 }}
               />
-              <Button title="Close" variant="outline" onPress={onClose} style={{ flex: 1 }} />
+              <Button
+                title={t.common.close}
+                variant="outline"
+                onPress={onClose}
+                style={{ flex: 1 }}
+              />
             </View>
           </ScrollView>
         </View>

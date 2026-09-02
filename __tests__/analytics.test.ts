@@ -74,8 +74,14 @@ describe('AnalyticsCalculator (Unit Tests & Edge Cases)', () => {
   const calculator = new AnalyticsCalculator();
 
   describe('Monthly KPI Metrics', () => {
-    it('calculates accurate total spend and burn rate', () => {
-      const metrics = calculateMonthlyMetrics(mockExpenses, mockCategories, mockMembers, '2026-08');
+    it('calculates accurate total spend and burn rate during active month', () => {
+      const metrics = calculateMonthlyMetrics(
+        mockExpenses,
+        mockCategories,
+        mockMembers,
+        '2026-08',
+        new Date('2026-08-15T12:00:00Z'),
+      );
 
       expect(metrics.totalSpend).toBe(300.0);
       expect(metrics.transactionCount).toBe(3);
@@ -83,6 +89,19 @@ describe('AnalyticsCalculator (Unit Tests & Edge Cases)', () => {
       expect(metrics.projectedMonthEnd).toBeCloseTo((300 / 15) * 31, 1);
       expect(metrics.topCategory?.category.name).toBe('Groceries');
       expect(metrics.topSpender?.member.display_name).toBe('Berto');
+    });
+
+    it('does not extrapolate past completed months', () => {
+      const metrics = calculateMonthlyMetrics(
+        mockExpenses,
+        mockCategories,
+        mockMembers,
+        '2026-07',
+        new Date('2026-08-15T12:00:00Z'),
+      );
+
+      expect(metrics.totalSpend).toBe(0);
+      expect(metrics.projectedMonthEnd).toBe(0);
     });
 
     it('handles empty month with 0 expenses gracefully', () => {

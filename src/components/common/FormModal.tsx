@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, ViewStyle } from 'react-native';
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { X, Check } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { Button } from './Button';
@@ -29,7 +37,8 @@ export const FormModal: React.FC<FormModalProps> = ({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{
           flex: 1,
           backgroundColor: 'rgba(0,0,0,0.5)',
@@ -76,7 +85,13 @@ export const FormModal: React.FC<FormModalProps> = ({
           </View>
 
           {/* Form Content */}
-          {children}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: spacing.sm }}
+          >
+            {children}
+          </ScrollView>
 
           {/* Footer Actions */}
           <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg }}>
@@ -90,7 +105,7 @@ export const FormModal: React.FC<FormModalProps> = ({
             />
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

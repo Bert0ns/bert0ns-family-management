@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Code, Check, Sparkles } from 'lucide-react-native';
+import React from 'react';
+import { View, Text } from 'react-native';
+import { Code, Sparkles } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { SAMPLE_IMPORT_REPORT } from '@/data/mockData';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -12,7 +13,7 @@ interface SchemaViewerProps {
 
 export const SchemaViewer: React.FC<SchemaViewerProps> = ({ onLoadSample }) => {
   const { theme, spacing, radius, typography } = useTheme();
-  const [copied, setCopied] = useState(false);
+  const { t } = useI18n();
 
   const sampleJsonString = JSON.stringify(SAMPLE_IMPORT_REPORT, null, 2);
 
@@ -35,12 +36,12 @@ export const SchemaViewer: React.FC<SchemaViewerProps> = ({ onLoadSample }) => {
               fontWeight: typography.fontWeights.bold,
             }}
           >
-            Expected JSON Format
+            {t.import.schemaTitle}
           </Text>
         </View>
 
         <Button
-          title="Try Sample File"
+          title={t.import.loadSample}
           variant="secondary"
           size="sm"
           icon={<Sparkles size={14} color={theme.colors.brand} />}
@@ -55,7 +56,7 @@ export const SchemaViewer: React.FC<SchemaViewerProps> = ({ onLoadSample }) => {
           marginBottom: spacing.sm,
         }}
       >
-        Your files should contain an array of expenses with date, merchant, amount, and category.
+        {t.import.schemaSubtitle}
       </Text>
 
       <View

@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { DailySpendPoint } from '@/services/analytics';
 import { Card } from '@/components/common/Card';
 
@@ -16,8 +17,9 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   currency = '€',
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
 
-  const maxDaily = Math.max(...data.map((d) => d.dailyAmount), 10);
+  const maxDaily = data.reduce((max, d) => Math.max(max, d.dailyAmount), 10);
 
   const getHeatColor = (amount: number) => {
     if (amount === 0) return theme.colors.surfaceSubtle;
@@ -37,6 +39,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   const daysInMonth = new Date(year, month, 0).getDate();
 
   const dayHeaders = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const colWidth = `${100 / 7}%` as const;
 
   return (
     <Card padding="md">
@@ -48,34 +51,32 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           marginBottom: spacing.md,
         }}
       >
-        Daily Spending Heatmap
+        {t.analytics.heatmapTitle}
       </Text>
 
       {/* Weekday headers */}
-      <View
-        style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.xs }}
-      >
+      <View style={{ flexDirection: 'row', marginBottom: spacing.xs }}>
         {dayHeaders.map((dh, i) => (
-          <Text
-            key={i}
-            style={{
-              width: 32,
-              textAlign: 'center',
-              color: theme.colors.textMuted,
-              fontSize: typography.fontSizes.xs,
-              fontWeight: typography.fontWeights.semibold,
-            }}
-          >
-            {dh}
-          </Text>
+          <View key={i} style={{ width: colWidth, alignItems: 'center' }}>
+            <Text
+              style={{
+                textAlign: 'center',
+                color: theme.colors.textMuted,
+                fontSize: typography.fontSizes.xs,
+                fontWeight: typography.fontWeights.semibold,
+              }}
+            >
+              {dh}
+            </Text>
+          </View>
         ))}
       </View>
 
       {/* Calendar Grid */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
         {/* Empty placeholder cells for start offset */}
         {Array.from({ length: adjustedFirstDay }).map((_, i) => (
-          <View key={`empty-${i}`} style={{ width: 32, height: 32 }} />
+          <View key={`empty-${i}`} style={{ width: colWidth, height: 34, padding: 2 }} />
         ))}
 
         {/* Day cells */}
@@ -90,23 +91,30 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
             <View
               key={`day-${dayNum}`}
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: radius.xs,
-                backgroundColor: cellBg,
-                alignItems: 'center',
-                justifyContent: 'center',
+                width: colWidth,
+                height: 34,
+                padding: 2,
               }}
             >
-              <Text
+              <View
                 style={{
-                  fontSize: 10,
-                  fontWeight: typography.fontWeights.semibold,
-                  color: isHigh ? '#FFFFFF' : theme.colors.textPrimary,
+                  flex: 1,
+                  borderRadius: radius.xs,
+                  backgroundColor: cellBg,
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                {dayNum}
-              </Text>
+                <Text
+                  style={{
+                    fontSize: 10,
+                    fontWeight: typography.fontWeights.semibold,
+                    color: isHigh ? '#FFFFFF' : theme.colors.textPrimary,
+                  }}
+                >
+                  {dayNum}
+                </Text>
+              </View>
             </View>
           );
         })}
@@ -122,7 +130,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           gap: spacing.xs,
         }}
       >
-        <Text style={{ color: theme.colors.textMuted, fontSize: 10 }}>Less</Text>
+        <Text style={{ color: theme.colors.textMuted, fontSize: 10 }}>{t.analytics.less}</Text>
         <View
           style={{
             width: 12,
@@ -158,7 +166,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
         <View
           style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: theme.colors.brand }}
         />
-        <Text style={{ color: theme.colors.textMuted, fontSize: 10 }}>More</Text>
+        <Text style={{ color: theme.colors.textMuted, fontSize: 10 }}>{t.analytics.more}</Text>
       </View>
     </Card>
   );

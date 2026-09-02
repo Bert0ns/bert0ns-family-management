@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { DollarSign, Building, Tag, User, Calendar, FileText, Check } from 'lucide-react-native';
+import { Building, Calendar, FileText, Check } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -11,6 +11,14 @@ import { Avatar } from '@/components/common/Avatar';
 import { IconHelper } from '@/components/common/IconHelper';
 import { SplitCalculator } from '@/components/ledger/SplitCalculator';
 import { ExpenseSplit } from '@/types';
+
+const getTodayLocalIso = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export default function AddExpenseScreen() {
   const router = useRouter();
@@ -22,21 +30,26 @@ export default function AddExpenseScreen() {
   const [merchant, setMerchant] = useState('');
   const [categoryId, setCategoryId] = useState(categories[0]?.id || '');
   const [paidByMemberId, setPaidByMemberId] = useState(currentMemberId || members[0]?.id || '');
-  const [transactionDate, setTransactionDate] = useState(new Date().toISOString().split('T')[0]);
+  const [transactionDate, setTransactionDate] = useState(getTodayLocalIso());
   const [notes, setNotes] = useState('');
   const [splits, setSplits] = useState<ExpenseSplit[] | undefined>(undefined);
-  const [errors, setErrors] = useState<{ amount?: string; merchant?: string }>({});
+  const [errors, setErrors] = useState<{ amount?: string; merchant?: string; date?: string }>({});
 
   const numericAmount = parseFloat(amount.replace(',', '.')) || 0;
 
   const handleSave = () => {
-    const errs: { amount?: string; merchant?: string } = {};
+    const errs: { amount?: string; merchant?: string; date?: string } = {};
 
     if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
       errs.amount = t.addExpense.errorAmount;
     }
     if (!merchant.trim()) {
       errs.merchant = t.addExpense.errorMerchant;
+    }
+
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+    if (!datePattern.test(transactionDate.trim())) {
+      errs.date = 'Invalid date format (YYYY-MM-DD required)';
     }
 
     if (Object.keys(errs).length > 0) {
@@ -47,7 +60,7 @@ export default function AddExpenseScreen() {
     addExpense({
       paid_by_member_id: paidByMemberId,
       category_id: categoryId,
-      transaction_date: transactionDate,
+      transaction_date: transactionDate.trim(),
       merchant_name: merchant.trim(),
       amount: numericAmount,
       notes: notes.trim() || undefined,
@@ -108,7 +121,11 @@ export default function AddExpenseScreen() {
         label={t.addExpense.dateLabel}
         placeholder="YYYY-MM-DD"
         value={transactionDate}
-        onChangeText={setTransactionDate}
+        onChangeText={(dVal) => {
+          setTransactionDate(dVal);
+          if (errors.date) setErrors({ ...errors, date: undefined });
+        }}
+        error={errors.date}
         leftIcon={<Calendar size={18} color={theme.colors.textMuted} />}
       />
 

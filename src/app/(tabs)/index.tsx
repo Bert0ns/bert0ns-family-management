@@ -37,26 +37,42 @@ export default function DashboardScreen() {
     expenses,
     selectedPeriod,
     setSelectedPeriod,
+    setFilters,
     deleteExpense,
   } = useAppStore();
 
-  const metrics = calculateMonthlyMetrics(expenses, categories, members, selectedPeriod);
-
-  const categoryBreakdown = calculateCategoryBreakdown(
-    expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod)),
-    categories,
+  const periodExpenses = React.useMemo(
+    () => expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod)),
+    [expenses, selectedPeriod],
   );
 
-  const memberContributions = calculateMemberContributions(
-    expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod)),
-    members,
+  const metrics = React.useMemo(
+    () => calculateMonthlyMetrics(expenses, categories, members, selectedPeriod),
+    [expenses, categories, members, selectedPeriod],
   );
 
-  const velocityData = calculateSpendingVelocity(expenses, selectedPeriod);
+  const categoryBreakdown = React.useMemo(
+    () => calculateCategoryBreakdown(periodExpenses, categories),
+    [periodExpenses, categories],
+  );
 
-  const recentExpenses = expenses
-    .filter((e) => e.transaction_date.startsWith(selectedPeriod))
-    .slice(0, 5);
+  const memberContributions = React.useMemo(
+    () => calculateMemberContributions(periodExpenses, members),
+    [periodExpenses, members],
+  );
+
+  const velocityData = React.useMemo(
+    () => calculateSpendingVelocity(expenses, selectedPeriod),
+    [expenses, selectedPeriod],
+  );
+
+  const recentExpenses = React.useMemo(() => {
+    return [...periodExpenses]
+      .sort(
+        (a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime(),
+      )
+      .slice(0, 5);
+  }, [periodExpenses]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -263,7 +279,10 @@ export default function DashboardScreen() {
         <CategoryPieChart
           data={categoryBreakdown}
           currency={family.currency}
-          onSelectCategory={(catId) => router.push(`/(tabs)/ledger`)}
+          onSelectCategory={(catId) => {
+            setFilters({ selectedCategoryId: catId });
+            router.push('/(tabs)/ledger');
+          }}
         />
       </View>
 
@@ -331,6 +350,9 @@ export default function DashboardScreen() {
       {/* Expense Detail Modal */}
       <ExpenseDetailModal
         expense={selectedExpense}
+        category={categories.find((c) => c.id === selectedExpense?.category_id)}
+        member={members.find((m) => m.id === selectedExpense?.paid_by_member_id)}
+        allMembers={members}
         visible={!!selectedExpense}
         onClose={() => setSelectedExpense(null)}
         onDelete={(id) => {

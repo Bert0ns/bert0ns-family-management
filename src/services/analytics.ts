@@ -18,6 +18,7 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
     categories: Category[],
     members: FamilyMember[],
     period: string,
+    referenceDate: Date = new Date(),
   ): MonthlyKPIMetrics {
     const periodExpenses = expenses.filter((e) => e.transaction_date.startsWith(period));
     const totalSpend = periodExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -27,12 +28,30 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
     const month = parseInt(monthStr, 10);
     const totalDaysInMonth = new Date(year, month, 0).getDate();
 
-    const expenseDays = periodExpenses.map((e) => parseInt(e.transaction_date.split('-')[2], 10));
-    const maxExpenseDay = expenseDays.length > 0 ? Math.max(...expenseDays) : 1;
-    const daysElapsed = Math.min(Math.max(maxExpenseDay, 1), totalDaysInMonth);
+    const refYear = referenceDate.getFullYear();
+    const refMonth = referenceDate.getMonth() + 1;
+    const isCurrentPeriod = year === refYear && month === refMonth;
+    const isPastPeriod = year < refYear || (year === refYear && month < refMonth);
+
+    let daysElapsed: number;
+    let projectedMonthEnd: number;
+
+    if (isPastPeriod) {
+      // Completed month - no projection, use actual total spend
+      daysElapsed = totalDaysInMonth;
+      projectedMonthEnd = totalSpend;
+    } else if (isCurrentPeriod) {
+      // Current active month - use actual calendar day of month
+      daysElapsed = Math.min(Math.max(referenceDate.getDate(), 1), totalDaysInMonth);
+      const dailyAverageBurn = daysElapsed > 0 ? totalSpend / daysElapsed : 0;
+      projectedMonthEnd = dailyAverageBurn * totalDaysInMonth;
+    } else {
+      // Future month
+      daysElapsed = 1;
+      projectedMonthEnd = totalSpend;
+    }
 
     const dailyAverageBurn = daysElapsed > 0 ? totalSpend / daysElapsed : 0;
-    const projectedMonthEnd = dailyAverageBurn * totalDaysInMonth;
 
     const catSummaries = this.calculateCategoryBreakdown(periodExpenses, categories);
     const memSummaries = this.calculateMemberContributions(periodExpenses, members);
@@ -151,7 +170,9 @@ export const calculateMonthlyMetrics = (
   categories: Category[],
   members: FamilyMember[],
   period: string,
-) => analyticsCalculator.calculateMonthlyMetrics(expenses, categories, members, period);
+  referenceDate?: Date,
+) =>
+  analyticsCalculator.calculateMonthlyMetrics(expenses, categories, members, period, referenceDate);
 
 export const calculateCategoryBreakdown = (expenses: Expense[], categories: Category[]) =>
   analyticsCalculator.calculateCategoryBreakdown(expenses, categories);

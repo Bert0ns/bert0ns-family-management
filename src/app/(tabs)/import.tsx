@@ -21,6 +21,7 @@ import { Badge } from '@/components/common/Badge';
 import { RawExpenseReport } from '@/types';
 import { SAMPLE_IMPORT_REPORT } from '@/data/mockData';
 import { csvExporter } from '@/services/csvExporter';
+import { exportAndShareFile } from '@/services/fileExporter';
 
 export default function ImportScreen() {
   const { theme, spacing, radius, typography } = useTheme();
@@ -45,17 +46,21 @@ export default function ImportScreen() {
     setSuccessNotice(
       `${t.import.successNotice} (${result.importedCount} ${t.common.items} • ${family.currency}${result.totalAmount.toFixed(2)})`,
     );
+  };
 
-    setTimeout(() => {
+  React.useEffect(() => {
+    if (!successNotice) return;
+    const timer = setTimeout(() => {
       setSuccessNotice(null);
     }, 5000);
-  };
+    return () => clearTimeout(timer);
+  }, [successNotice]);
 
   const handleLoadSample = () => {
     handleFileParsed(SAMPLE_IMPORT_REPORT, 'sample-family-expense-report.json');
   };
 
-  const handleExportJson = () => {
+  const handleExportJson = async () => {
     const exportData = {
       family: family.name,
       currency: family.currency,
@@ -64,23 +69,14 @@ export default function ImportScreen() {
     };
 
     const jsonString = JSON.stringify(exportData, null, 2);
-
-    if (Platform.OS === 'web') {
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `family-expenses-${family.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-    } else {
-      Alert.alert('Export Ready', `Exported ${expenses.length} transactions as JSON.`);
-    }
+    const fileName = `family-expenses-${family.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
+    await exportAndShareFile(jsonString, fileName, 'application/json');
   };
 
-  const handleExportCsv = () => {
+  const handleExportCsv = async () => {
     const csvContent = csvExporter.generateCsv(expenses, categories, members, family.currency);
     const fileName = `family-expenses-${family.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.csv`;
-    csvExporter.downloadCsv(csvContent, fileName);
+    await exportAndShareFile(csvContent, fileName, 'text/csv');
   };
 
   return (
