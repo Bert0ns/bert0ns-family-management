@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   LightTheme,
   DarkTheme,
@@ -11,7 +12,7 @@ import {
   MemberColors,
 } from './tokens';
 
-type ColorSchemePreference = 'light' | 'dark' | 'system';
+export type ColorSchemePreference = 'light' | 'dark' | 'system';
 
 interface ThemeContextType {
   theme: Theme;
@@ -24,6 +25,8 @@ interface ThemeContextType {
   palette: typeof Palette;
   memberColors: typeof MemberColors;
 }
+
+const STORAGE_KEY = '@bert0ns_family_app_theme';
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: LightTheme,
@@ -39,8 +42,21 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
-  const [colorSchemePreference, setColorSchemePreference] =
+  const [colorSchemePreference, setColorSchemePreferenceState] =
     useState<ColorSchemePreference>('system');
+
+  useEffect(() => {
+    AsyncStorage.getItem(STORAGE_KEY).then((saved) => {
+      if (saved === 'light' || saved === 'dark' || saved === 'system') {
+        setColorSchemePreferenceState(saved);
+      }
+    });
+  }, []);
+
+  const setColorSchemePreference = (pref: ColorSchemePreference) => {
+    setColorSchemePreferenceState(pref);
+    AsyncStorage.setItem(STORAGE_KEY, pref).catch(() => {});
+  };
 
   const activeScheme =
     colorSchemePreference === 'system' ? systemColorScheme || 'light' : colorSchemePreference;

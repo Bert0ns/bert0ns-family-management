@@ -3,6 +3,7 @@ import { View, Text, ScrollView, FlatList, TouchableOpacity, StyleSheet } from '
 import { useRouter } from 'expo-router';
 import { Search, Filter, Plus, X, ArrowDownUp } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import { ExpenseItem } from '@/components/ledger/ExpenseItem';
 import { ExpenseDetailModal } from '@/components/ledger/ExpenseDetailModal';
@@ -15,6 +16,7 @@ import { Expense } from '@/types';
 export default function LedgerScreen() {
   const router = useRouter();
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
   const {
     family,
     members,
@@ -89,14 +91,14 @@ export default function LedgerScreen() {
   const getSortLabel = () => {
     switch (filters.sortBy) {
       case 'date_asc':
-        return 'Date: Oldest';
+        return t.ledger.sortDateOldest;
       case 'amount_desc':
-        return 'Amount: Highest';
+        return t.ledger.sortAmountHighest;
       case 'amount_asc':
-        return 'Amount: Lowest';
+        return t.ledger.sortAmountLowest;
       case 'date_desc':
       default:
-        return 'Date: Newest';
+        return t.ledger.sortDateNewest;
     }
   };
 
@@ -113,7 +115,7 @@ export default function LedgerScreen() {
         }}
       >
         <Input
-          placeholder="Search merchants, notes..."
+          placeholder={t.ledger.searchPlaceholder}
           value={filters.searchQuery}
           onChangeText={(text) => setFilters({ searchQuery: text })}
           leftIcon={<Search size={18} color={theme.colors.textMuted} />}
@@ -151,7 +153,7 @@ export default function LedgerScreen() {
                 fontWeight: typography.fontWeights.semibold,
               }}
             >
-              All Members
+              {t.ledger.allMembers}
             </Text>
           </TouchableOpacity>
 
@@ -206,7 +208,7 @@ export default function LedgerScreen() {
                 fontWeight: typography.fontWeights.semibold,
               }}
             >
-              All Categories
+              {t.ledger.allCategories}
             </Text>
           </TouchableOpacity>
 
@@ -271,7 +273,7 @@ export default function LedgerScreen() {
             fontWeight: typography.fontWeights.bold,
           }}
         >
-          {filteredExpenses.length} Txs • {family.currency}
+          {filteredExpenses.length} {t.ledger.transactionsCount} • {family.currency}
           {totalFilteredAmount.toFixed(2)}
         </Text>
       </View>
@@ -306,10 +308,10 @@ export default function LedgerScreen() {
                 fontWeight: typography.fontWeights.medium,
               }}
             >
-              No expenses match your filters
+              {t.ledger.noExpensesMatch}
             </Text>
             <Button
-              title="Reset Filters"
+              title={t.ledger.resetFilters}
               variant="outline"
               size="sm"
               onPress={resetFilters}

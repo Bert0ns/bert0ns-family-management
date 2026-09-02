@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import {
   calculateCategoryBreakdown,
@@ -18,6 +19,7 @@ import { IconHelper } from '@/components/common/IconHelper';
 
 export default function AnalyticsScreen() {
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
   const { family, members, categories, budgets, expenses, selectedPeriod, setSelectedPeriod } =
     useAppStore();
 
@@ -68,12 +70,12 @@ export default function AnalyticsScreen() {
           const isActive = activeTab === tab;
           const label =
             tab === 'categories'
-              ? 'Categories'
+              ? t.analytics.categoriesTab
               : tab === 'members'
-                ? 'Members'
+                ? t.analytics.membersTab
                 : tab === 'trends'
-                  ? 'Trends'
-                  : 'Heatmap';
+                  ? t.analytics.trendsTab
+                  : t.analytics.heatmapTab;
 
           return (
             <TouchableOpacity
@@ -124,7 +126,7 @@ export default function AnalyticsScreen() {
                 marginBottom: spacing.md,
               }}
             >
-              Top Merchants ({selectedPeriod})
+              {t.analytics.topMerchants} ({selectedPeriod})
             </Text>
 
             {topMerchants.length === 0 ? (
@@ -136,7 +138,7 @@ export default function AnalyticsScreen() {
                   paddingVertical: spacing.md,
                 }}
               >
-                No merchant data available for this month
+                {t.analytics.noMerchantData}
               </Text>
             ) : (
               <View style={{ gap: spacing.sm }}>

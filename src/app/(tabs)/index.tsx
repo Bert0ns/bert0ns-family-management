@@ -12,6 +12,7 @@ import {
   ShieldAlert,
 } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import {
   calculateMonthlyMetrics,
@@ -34,6 +35,7 @@ import { Expense } from '@/types';
 export default function DashboardScreen() {
   const router = useRouter();
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
@@ -95,7 +97,7 @@ export default function DashboardScreen() {
               fontWeight: typography.fontWeights.medium,
             }}
           >
-            Household Overview
+            {t.dashboard.householdOverview}
           </Text>
           <Text
             style={{
@@ -110,14 +112,14 @@ export default function DashboardScreen() {
 
         <View style={{ flexDirection: 'row', gap: spacing.xs }}>
           <Button
-            title="Import"
+            title={t.common.import}
             variant="secondary"
             size="sm"
             icon={<Upload size={14} color={theme.colors.brand} />}
             onPress={() => router.push('/(tabs)/import')}
           />
           <Button
-            title="Add"
+            title={t.common.add}
             variant="primary"
             size="sm"
             icon={<Plus size={14} color="#FFFFFF" />}
@@ -155,7 +157,7 @@ export default function DashboardScreen() {
                 fontWeight: typography.fontWeights.semibold,
               }}
             >
-              Total Family Spending
+              {t.dashboard.totalSpending}
             </Text>
             <Text
               style={{
@@ -173,8 +175,8 @@ export default function DashboardScreen() {
           <Badge
             label={
               metrics.isOverBudget
-                ? 'Over Budget'
-                : `${metrics.budgetProgressPercent.toFixed(0)}% of Budget`
+                ? t.dashboard.overBudget
+                : `${metrics.budgetProgressPercent.toFixed(0)}${t.dashboard.percentOfBudget}`
             }
             color={metrics.isOverBudget ? theme.colors.danger : theme.colors.success}
             variant="solid"
@@ -211,7 +213,7 @@ export default function DashboardScreen() {
           }}
         >
           <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}>
-            Monthly Limit: {family.currency}
+            {t.dashboard.monthlyLimit}: {family.currency}
             {metrics.totalBudget.toFixed(0)}
           </Text>
           <Text
@@ -222,8 +224,8 @@ export default function DashboardScreen() {
             }}
           >
             {metrics.isOverBudget
-              ? `+${family.currency}${Math.abs(metrics.remainingBudget).toFixed(2)} over`
-              : `${family.currency}${metrics.remainingBudget.toFixed(2)} remaining`}
+              ? `+${family.currency}${Math.abs(metrics.remainingBudget).toFixed(2)} ${t.dashboard.over}`
+              : `${family.currency}${metrics.remainingBudget.toFixed(2)} ${t.dashboard.remaining}`}
           </Text>
         </View>
       </Card>
@@ -231,17 +233,19 @@ export default function DashboardScreen() {
       {/* KPI Grid */}
       <View style={{ flexDirection: 'row', gap: spacing.md, marginBottom: spacing.lg }}>
         <KPIStat
-          title="Daily Average"
+          title={t.dashboard.dailyAverage}
           value={`${family.currency}${metrics.dailyAverageBurn.toFixed(0)}`}
-          subtitle="Burn rate per day"
+          subtitle={t.dashboard.burnRatePerDay}
           icon={<Flame size={18} color={theme.colors.warning} />}
           variant="warning"
         />
         <KPIStat
-          title="Month Forecast"
+          title={t.dashboard.monthForecast}
           value={`${family.currency}${metrics.projectedMonthEnd.toFixed(0)}`}
           subtitle={
-            metrics.projectedMonthEnd > metrics.totalBudget ? 'Exceeds budget target' : 'On track'
+            metrics.projectedMonthEnd > metrics.totalBudget
+              ? t.dashboard.exceedsBudget
+              : t.dashboard.onTrack
           }
           icon={<TrendingUp size={18} color={theme.colors.info} />}
           variant={metrics.projectedMonthEnd > metrics.totalBudget ? 'danger' : 'success'}
@@ -258,7 +262,7 @@ export default function DashboardScreen() {
             marginBottom: spacing.sm,
           }}
         >
-          Family Members
+          {t.dashboard.familyMembers}
         </Text>
 
         <ScrollView
@@ -305,7 +309,7 @@ export default function DashboardScreen() {
                 {mc.total.toFixed(0)}
               </Text>
               <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
-                {mc.percentage.toFixed(0)}% • {mc.transactionCount} txs
+                {mc.percentage.toFixed(0)}% • {mc.transactionCount} {t.dashboard.txs}
               </Text>
             </Card>
           ))}
@@ -347,7 +351,7 @@ export default function DashboardScreen() {
               fontWeight: typography.fontWeights.bold,
             }}
           >
-            Recent Expenses
+            {t.dashboard.recentExpenses}
           </Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/ledger')}>
             <Text
@@ -357,7 +361,7 @@ export default function DashboardScreen() {
                 fontWeight: typography.fontWeights.semibold,
               }}
             >
-              View All ({expenses.length})
+              {t.dashboard.viewAll} ({expenses.length})
             </Text>
           </TouchableOpacity>
         </View>
@@ -365,7 +369,7 @@ export default function DashboardScreen() {
         {recentExpenses.length === 0 ? (
           <Card padding="md" style={{ alignItems: 'center' }}>
             <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.sm }}>
-              No expenses recorded for this month
+              {t.dashboard.noExpensesMonth}
             </Text>
           </Card>
         ) : (

@@ -10,6 +10,7 @@ import {
   FileJson,
 } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import { JsonDropzone } from '@/components/import/JsonDropzone';
 import { ImportPreviewModal } from '@/components/import/ImportPreviewModal';
@@ -23,6 +24,7 @@ import { csvExporter } from '@/services/csvExporter';
 
 export default function ImportScreen() {
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
   const { family, members, categories, expenses, importBatches, importExpenseReport } =
     useAppStore();
 
@@ -41,7 +43,7 @@ export default function ImportScreen() {
     const result = importExpenseReport(stagedReport, stagedFileName);
     setStagedReport(null);
     setSuccessNotice(
-      `Successfully imported ${result.importedCount} transactions (${family.currency}${result.totalAmount.toFixed(2)}) into the ledger!`,
+      `${t.import.successNotice} (${result.importedCount} ${t.common.items} • ${family.currency}${result.totalAmount.toFixed(2)})`,
     );
 
     setTimeout(() => {
@@ -134,7 +136,7 @@ export default function ImportScreen() {
             marginBottom: 2,
           }}
         >
-          Export Family Ledger
+          {t.import.exportLedger}
         </Text>
         <Text
           style={{
@@ -143,13 +145,12 @@ export default function ImportScreen() {
             marginBottom: spacing.md,
           }}
         >
-          Download complete household ledger ({expenses.length} records) for backup or spreadsheet
-          analysis.
+          {t.import.exportLedgerSub} ({expenses.length} {t.common.items})
         </Text>
 
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <Button
-            title="Export CSV"
+            title={t.import.exportCsv}
             variant="outline"
             size="sm"
             icon={<FileSpreadsheet size={14} color={theme.colors.textPrimary} />}
@@ -157,7 +158,7 @@ export default function ImportScreen() {
             style={{ flex: 1 }}
           />
           <Button
-            title="Export JSON"
+            title={t.import.exportJson}
             variant="outline"
             size="sm"
             icon={<FileJson size={14} color={theme.colors.textPrimary} />}
@@ -186,7 +187,7 @@ export default function ImportScreen() {
                 fontWeight: typography.fontWeights.bold,
               }}
             >
-              Import History
+              {t.import.importHistory}
             </Text>
           </View>
 
@@ -215,7 +216,7 @@ export default function ImportScreen() {
                     style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}
                   >
                     {new Date(batch.created_at).toLocaleDateString()} • {batch.total_records}{' '}
-                    records
+                    {t.common.items}
                   </Text>
                 </View>
                 <Badge

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'rea
 import { useRouter } from 'expo-router';
 import { DollarSign, Building, Tag, User, Calendar, FileText, Check } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
@@ -14,6 +15,7 @@ import { ExpenseSplit } from '@/types';
 export default function AddExpenseScreen() {
   const router = useRouter();
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
   const { family, members, categories, addExpense, currentMemberId } = useAppStore();
 
   const [amount, setAmount] = useState('');
@@ -31,10 +33,10 @@ export default function AddExpenseScreen() {
     const errs: { amount?: string; merchant?: string } = {};
 
     if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
-      errs.amount = 'Please enter a valid amount greater than 0';
+      errs.amount = t.addExpense.errorAmount;
     }
     if (!merchant.trim()) {
-      errs.merchant = 'Merchant name is required';
+      errs.merchant = t.addExpense.errorMerchant;
     }
 
     if (Object.keys(errs).length > 0) {
@@ -66,11 +68,11 @@ export default function AddExpenseScreen() {
     >
       {/* Amount Input */}
       <Input
-        label="Expense Amount"
+        label={t.addExpense.amountLabel}
         placeholder="0.00"
         value={amount}
-        onChangeText={(t) => {
-          setAmount(t);
+        onChangeText={(tVal) => {
+          setAmount(tVal);
           if (errors.amount) setErrors({ ...errors, amount: undefined });
         }}
         keyboardType="decimal-pad"
@@ -90,11 +92,11 @@ export default function AddExpenseScreen() {
 
       {/* Merchant Name */}
       <Input
-        label="Merchant or Description"
-        placeholder="e.g. Supermarket, Gas Station, Coffee"
+        label={t.addExpense.merchantLabel}
+        placeholder={t.addExpense.merchantPlaceholder}
         value={merchant}
-        onChangeText={(t) => {
-          setMerchant(t);
+        onChangeText={(tVal) => {
+          setMerchant(tVal);
           if (errors.merchant) setErrors({ ...errors, merchant: undefined });
         }}
         error={errors.merchant}
@@ -103,7 +105,7 @@ export default function AddExpenseScreen() {
 
       {/* Date */}
       <Input
-        label="Date (YYYY-MM-DD)"
+        label={t.addExpense.dateLabel}
         placeholder="YYYY-MM-DD"
         value={transactionDate}
         onChangeText={setTransactionDate}
@@ -120,7 +122,7 @@ export default function AddExpenseScreen() {
             marginBottom: spacing.xs,
           }}
         >
-          Paid By
+          {t.addExpense.paidByLabel}
         </Text>
         <ScrollView
           horizontal
@@ -179,7 +181,7 @@ export default function AddExpenseScreen() {
             marginBottom: spacing.xs,
           }}
         >
-          Category
+          {t.addExpense.categoryLabel}
         </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
           {categories.map((c) => {
@@ -230,8 +232,8 @@ export default function AddExpenseScreen() {
 
       {/* Notes */}
       <Input
-        label="Notes (Optional)"
-        placeholder="Add any extra details or split notes..."
+        label={t.addExpense.notesLabel}
+        placeholder={t.addExpense.notesPlaceholder}
         value={notes}
         onChangeText={setNotes}
         leftIcon={<FileText size={18} color={theme.colors.textMuted} />}
@@ -240,7 +242,7 @@ export default function AddExpenseScreen() {
       {/* Save Button */}
       <View style={{ marginTop: spacing.md }}>
         <Button
-          title="Save Expense"
+          title={t.addExpense.saveExpense}
           variant="primary"
           size="lg"
           icon={<Check size={20} color="#FFFFFF" />}

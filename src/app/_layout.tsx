@@ -3,9 +3,11 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '@/theme';
+import { I18nProvider, useI18n } from '@/i18n';
 
 function RootLayoutNav() {
   const { theme, isDark } = useTheme();
+  const { t } = useI18n();
 
   return (
     <>
@@ -27,7 +29,7 @@ function RootLayoutNav() {
           name="expense/add"
           options={{
             presentation: 'modal',
-            title: 'Add Expense',
+            title: t.addExpense.title,
             headerShown: true,
           }}
         />
@@ -39,9 +41,11 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <RootLayoutNav />
-      </ThemeProvider>
+      <I18nProvider>
+        <ThemeProvider>
+          <RootLayoutNav />
+        </ThemeProvider>
+      </I18nProvider>
     </SafeAreaProvider>
   );
 }

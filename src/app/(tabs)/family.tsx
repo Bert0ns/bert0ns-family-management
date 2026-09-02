@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { Users, Target, Sun, Moon, RotateCcw, Plus, Tag, UserPlus } from 'lucide-react-native';
+import {
+  Users,
+  Target,
+  Sun,
+  Moon,
+  RotateCcw,
+  Plus,
+  Tag,
+  UserPlus,
+  Globe,
+} from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n, SupportedLocale } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import { MemberCard } from '@/components/family/MemberCard';
 import { BudgetEnvelopeCard } from '@/components/family/BudgetEnvelopeCard';
@@ -16,6 +27,8 @@ import { Category, Budget } from '@/types';
 export default function FamilyScreen() {
   const { theme, colorSchemePreference, setColorSchemePreference, spacing, radius, typography } =
     useTheme();
+
+  const { t, locale, setLocale } = useI18n();
 
   const {
     family,
@@ -75,11 +88,129 @@ export default function FamilyScreen() {
                 marginTop: 2,
               }}
             >
-              Active Currency: {family.currency} (EUR) • {members.length} Members
+              {family.currency} • {members.length} {t.family.membersCount}
             </Text>
           </View>
 
-          <Badge label="Active Workspace" color={theme.colors.brand} variant="solid" size="sm" />
+          <Badge
+            label={t.family.activeWorkspace}
+            color={theme.colors.brand}
+            variant="solid"
+            size="sm"
+          />
+        </View>
+      </Card>
+
+      {/* Language / Lingua Selection */}
+      <Card padding="md" style={{ marginBottom: spacing.lg }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.xs,
+            marginBottom: spacing.sm,
+          }}
+        >
+          <Globe size={18} color={theme.colors.brand} />
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              fontSize: typography.fontSizes.md,
+              fontWeight: typography.fontWeights.bold,
+            }}
+          >
+            {t.family.languageSelection}
+          </Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          {(['en', 'it'] as const).map((loc) => {
+            const isSelected = locale === loc;
+            const label = loc === 'en' ? t.family.english : t.family.italian;
+            return (
+              <TouchableOpacity
+                key={loc}
+                activeOpacity={0.7}
+                onPress={() => setLocale(loc)}
+                style={{
+                  flex: 1,
+                  paddingVertical: spacing.sm,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: radius.md,
+                  backgroundColor: isSelected ? theme.colors.brand : theme.colors.surfaceSubtle,
+                  borderWidth: 1,
+                  borderColor: isSelected ? theme.colors.brand : theme.colors.border,
+                }}
+              >
+                <Text
+                  style={{
+                    color: isSelected ? '#FFFFFF' : theme.colors.textPrimary,
+                    fontSize: typography.fontSizes.sm,
+                    fontWeight: isSelected
+                      ? typography.fontWeights.bold
+                      : typography.fontWeights.medium,
+                  }}
+                >
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </Card>
+
+      {/* Appearance & Theme */}
+      <Card padding="md" style={{ marginBottom: spacing.lg }}>
+        <Text
+          style={{
+            color: theme.colors.textPrimary,
+            fontSize: typography.fontSizes.md,
+            fontWeight: typography.fontWeights.bold,
+            marginBottom: spacing.md,
+          }}
+        >
+          {t.family.appearanceTheme}
+        </Text>
+
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          {(['light', 'dark', 'system'] as const).map((pref) => {
+            const isSelected = colorSchemePreference === pref;
+            const label =
+              pref === 'light'
+                ? t.family.themeLight
+                : pref === 'dark'
+                  ? t.family.themeDark
+                  : t.family.themeSystem;
+
+            return (
+              <TouchableOpacity
+                key={pref}
+                activeOpacity={0.7}
+                onPress={() => setColorSchemePreference(pref)}
+                style={{
+                  flex: 1,
+                  paddingVertical: spacing.sm,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: radius.md,
+                  backgroundColor: isSelected ? theme.colors.brand : theme.colors.surfaceSubtle,
+                  borderWidth: 1,
+                  borderColor: isSelected ? theme.colors.brand : theme.colors.border,
+                }}
+              >
+                <Text
+                  style={{
+                    color: isSelected ? '#FFFFFF' : theme.colors.textSecondary,
+                    fontSize: typography.fontSizes.sm,
+                    fontWeight: typography.fontWeights.semibold,
+                  }}
+                >
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </Card>
 
@@ -102,12 +233,12 @@ export default function FamilyScreen() {
                 fontWeight: typography.fontWeights.bold,
               }}
             >
-              Family Members ({members.length})
+              {t.family.membersTitle} ({members.length})
             </Text>
           </View>
 
           <Button
-            title="Add Member"
+            title={t.family.addMember}
             variant="secondary"
             size="sm"
             icon={<UserPlus size={14} color={theme.colors.brand} />}
@@ -151,12 +282,12 @@ export default function FamilyScreen() {
                 fontWeight: typography.fontWeights.bold,
               }}
             >
-              Category Budgets ({selectedPeriod})
+              {t.family.budgetEnvelopes} ({selectedPeriod})
             </Text>
           </View>
 
           <Button
-            title="Add Category"
+            title={t.family.addCategory}
             variant="secondary"
             size="sm"
             icon={<Plus size={14} color={theme.colors.brand} />}
@@ -171,7 +302,7 @@ export default function FamilyScreen() {
             marginBottom: spacing.xs,
           }}
         >
-          Tap any category card below to edit its monthly spending envelope limit:
+          {t.family.tapToEditLimit}
         </Text>
 
         {categories.map((category) => {
@@ -198,51 +329,6 @@ export default function FamilyScreen() {
         })}
       </View>
 
-      {/* App Preferences & Settings */}
-      <Card padding="md" style={{ marginBottom: spacing.lg }}>
-        <Text
-          style={{
-            color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.md,
-            fontWeight: typography.fontWeights.bold,
-            marginBottom: spacing.md,
-          }}
-        >
-          Appearance & Theme
-        </Text>
-
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-          {(['light', 'dark', 'system'] as const).map((pref) => {
-            const isSelected = colorSchemePreference === pref;
-            return (
-              <TouchableOpacity
-                key={pref}
-                onPress={() => setColorSchemePreference(pref)}
-                style={{
-                  flex: 1,
-                  paddingVertical: spacing.sm,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: radius.md,
-                  backgroundColor: isSelected ? theme.colors.brand : theme.colors.surfaceSubtle,
-                }}
-              >
-                <Text
-                  style={{
-                    color: isSelected ? '#FFFFFF' : theme.colors.textSecondary,
-                    fontSize: typography.fontSizes.sm,
-                    fontWeight: typography.fontWeights.semibold,
-                    textTransform: 'capitalize',
-                  }}
-                >
-                  {pref}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </Card>
-
       {/* Reset State Button */}
       <Card padding="md" style={{ alignItems: 'center' }}>
         <Text
@@ -253,10 +339,10 @@ export default function FamilyScreen() {
             marginBottom: spacing.sm,
           }}
         >
-          Want to restore the standard mock family transactions & categories?
+          {t.family.resetTitle}
         </Text>
         <Button
-          title="Reset to Sample Data"
+          title={t.family.resetButton}
           variant="outline"
           size="sm"
           icon={<RotateCcw size={14} color={theme.colors.textSecondary} />}
