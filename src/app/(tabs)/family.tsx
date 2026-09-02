@@ -1,32 +1,43 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { Users, Target, Sun, Moon, RotateCcw, Plus, Shield } from 'lucide-react-native';
+import { Users, Target, Sun, Moon, RotateCcw, Plus, Tag, UserPlus } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useAppStore } from '@/services/store';
 import { MemberCard } from '@/components/family/MemberCard';
 import { BudgetEnvelopeCard } from '@/components/family/BudgetEnvelopeCard';
+import { EditBudgetModal } from '@/components/family/EditBudgetModal';
+import { AddMemberModal } from '@/components/family/AddMemberModal';
+import { AddCategoryModal } from '@/components/family/AddCategoryModal';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
+import { Category, Budget } from '@/types';
 
 export default function FamilyScreen() {
-  const {
-    theme,
-    isDark,
-    colorSchemePreference,
-    setColorSchemePreference,
-    spacing,
-    radius,
-    typography,
-  } = useTheme();
+  const { theme, colorSchemePreference, setColorSchemePreference, spacing, radius, typography } =
+    useTheme();
 
-  const { family, members, categories, budgets, expenses, selectedPeriod, resetToSampleData } =
-    useAppStore();
+  const {
+    family,
+    members,
+    categories,
+    budgets,
+    expenses,
+    selectedPeriod,
+    updateBudget,
+    addMember,
+    addCategory,
+    resetToSampleData,
+  } = useAppStore();
+
+  const [selectedCategoryForBudget, setSelectedCategoryForBudget] = useState<Category | null>(null);
+  const [isAddMemberVisible, setIsAddMemberVisible] = useState(false);
+  const [isAddCategoryVisible, setIsAddCategoryVisible] = useState(false);
 
   const periodExpenses = expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod));
 
-  const handleResetData = () => {
-    resetToSampleData();
+  const handleSaveBudget = (categoryId: string, newLimit: number) => {
+    updateBudget(categoryId, newLimit);
   };
 
   return (
@@ -94,6 +105,14 @@ export default function FamilyScreen() {
               Family Members ({members.length})
             </Text>
           </View>
+
+          <Button
+            title="Add Member"
+            variant="secondary"
+            size="sm"
+            icon={<UserPlus size={14} color={theme.colors.brand} />}
+            onPress={() => setIsAddMemberVisible(true)}
+          />
         </View>
 
         {members.map((member) => {
@@ -135,7 +154,25 @@ export default function FamilyScreen() {
               Category Budgets ({selectedPeriod})
             </Text>
           </View>
+
+          <Button
+            title="Add Category"
+            variant="secondary"
+            size="sm"
+            icon={<Plus size={14} color={theme.colors.brand} />}
+            onPress={() => setIsAddCategoryVisible(true)}
+          />
         </View>
+
+        <Text
+          style={{
+            color: theme.colors.textMuted,
+            fontSize: typography.fontSizes.xs,
+            marginBottom: spacing.xs,
+          }}
+        >
+          Tap any category card below to edit its monthly spending envelope limit:
+        </Text>
 
         {categories.map((category) => {
           const catTxs = periodExpenses.filter((e) => e.category_id === category.id);
@@ -145,13 +182,18 @@ export default function FamilyScreen() {
           );
 
           return (
-            <BudgetEnvelopeCard
+            <TouchableOpacity
               key={category.id}
-              category={category}
-              budget={budget}
-              actualSpend={actualSpend}
-              currency={family.currency}
-            />
+              activeOpacity={0.75}
+              onPress={() => setSelectedCategoryForBudget(category)}
+            >
+              <BudgetEnvelopeCard
+                category={category}
+                budget={budget}
+                actualSpend={actualSpend}
+                currency={family.currency}
+              />
+            </TouchableOpacity>
           );
         })}
       </View>
@@ -218,9 +260,35 @@ export default function FamilyScreen() {
           variant="outline"
           size="sm"
           icon={<RotateCcw size={14} color={theme.colors.textSecondary} />}
-          onPress={handleResetData}
+          onPress={resetToSampleData}
         />
       </Card>
+
+      {/* Edit Budget Modal */}
+      <EditBudgetModal
+        visible={!!selectedCategoryForBudget}
+        category={selectedCategoryForBudget}
+        currentBudget={budgets.find(
+          (b) => b.category_id === selectedCategoryForBudget?.id && b.period === selectedPeriod,
+        )}
+        currency={family.currency}
+        onClose={() => setSelectedCategoryForBudget(null)}
+        onSave={handleSaveBudget}
+      />
+
+      {/* Add Member Modal */}
+      <AddMemberModal
+        visible={isAddMemberVisible}
+        onClose={() => setIsAddMemberVisible(false)}
+        onSave={addMember}
+      />
+
+      {/* Add Category Modal */}
+      <AddCategoryModal
+        visible={isAddCategoryVisible}
+        onClose={() => setIsAddCategoryVisible(false)}
+        onSave={addCategory}
+      />
     </ScrollView>
   );
 }

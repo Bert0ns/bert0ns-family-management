@@ -9,6 +9,7 @@ import {
   calculateMonthlyMetrics,
 } from '@/services/analytics';
 import { Card } from '@/components/common/Card';
+import { PeriodSelector } from '@/components/common/PeriodSelector';
 import { CategoryPieChart } from '@/components/charts/CategoryPieChart';
 import { MemberBarChart } from '@/components/charts/MemberBarChart';
 import { SpendingVelocityChart } from '@/components/charts/SpendingVelocityChart';
@@ -17,7 +18,8 @@ import { IconHelper } from '@/components/common/IconHelper';
 
 export default function AnalyticsScreen() {
   const { theme, spacing, radius, typography } = useTheme();
-  const { family, members, categories, budgets, expenses, selectedPeriod } = useAppStore();
+  const { family, members, categories, budgets, expenses, selectedPeriod, setSelectedPeriod } =
+    useAppStore();
 
   const [activeTab, setActiveTab] = useState<'categories' | 'members' | 'trends' | 'heatmap'>(
     'categories',
@@ -47,6 +49,11 @@ export default function AnalyticsScreen() {
       contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.huge }}
       showsVerticalScrollIndicator={false}
     >
+      {/* Interactive Month Stepper */}
+      <View style={{ marginBottom: spacing.md }}>
+        <PeriodSelector selectedPeriod={selectedPeriod} onPeriodChange={setSelectedPeriod} />
+      </View>
+
       {/* Top Segmented Controls */}
       <View
         style={{
@@ -117,53 +124,66 @@ export default function AnalyticsScreen() {
                 marginBottom: spacing.md,
               }}
             >
-              Top Merchants
+              Top Merchants ({selectedPeriod})
             </Text>
 
-            <View style={{ gap: spacing.sm }}>
-              {topMerchants.map((m, idx) => (
-                <View
-                  key={m.name}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingVertical: spacing.xs,
-                  }}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                    <Text
-                      style={{
-                        color: theme.colors.textMuted,
-                        fontSize: typography.fontSizes.xs,
-                        width: 16,
-                      }}
-                    >
-                      #{idx + 1}
-                    </Text>
+            {topMerchants.length === 0 ? (
+              <Text
+                style={{
+                  color: theme.colors.textMuted,
+                  fontSize: typography.fontSizes.sm,
+                  textAlign: 'center',
+                  paddingVertical: spacing.md,
+                }}
+              >
+                No merchant data available for this month
+              </Text>
+            ) : (
+              <View style={{ gap: spacing.sm }}>
+                {topMerchants.map((m, idx) => (
+                  <View
+                    key={m.name}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      paddingVertical: spacing.xs,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                      <Text
+                        style={{
+                          color: theme.colors.textMuted,
+                          fontSize: typography.fontSizes.xs,
+                          width: 16,
+                        }}
+                      >
+                        #{idx + 1}
+                      </Text>
+                      <Text
+                        style={{
+                          color: theme.colors.textPrimary,
+                          fontSize: typography.fontSizes.sm,
+                          fontWeight: typography.fontWeights.semibold,
+                        }}
+                      >
+                        {m.name}
+                      </Text>
+                    </View>
                     <Text
                       style={{
                         color: theme.colors.textPrimary,
                         fontSize: typography.fontSizes.sm,
-                        fontWeight: typography.fontWeights.semibold,
+                        fontWeight: typography.fontWeights.bold,
                       }}
                     >
-                      {m.name}
+                      {family.currency}
+                      {m.total.toFixed(2)}
                     </Text>
                   </View>
-                  <Text
-                    style={{
-                      color: theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.sm,
-                      fontWeight: typography.fontWeights.bold,
-                    }}
-                  >
-                    {family.currency}
-                    {m.total.toFixed(2)}
-                  </Text>
-                </View>
-              ))}
-            </View>
+                ))}
+              </View>
+            )}
           </Card>
         </View>
       )}

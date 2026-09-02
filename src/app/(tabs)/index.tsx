@@ -24,6 +24,7 @@ import { Button } from '@/components/common/Button';
 import { KPIStat } from '@/components/common/KPIStat';
 import { Avatar } from '@/components/common/Avatar';
 import { Badge } from '@/components/common/Badge';
+import { PeriodSelector } from '@/components/common/PeriodSelector';
 import { ExpenseItem } from '@/components/ledger/ExpenseItem';
 import { ExpenseDetailModal } from '@/components/ledger/ExpenseDetailModal';
 import { CategoryPieChart } from '@/components/charts/CategoryPieChart';
@@ -70,11 +71,6 @@ export default function DashboardScreen() {
     setTimeout(() => setRefreshing(false), 500);
   };
 
-  const periodLabel = new Date(`${selectedPeriod}-01`).toLocaleDateString(undefined, {
-    month: 'long',
-    year: 'numeric',
-  });
-
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
@@ -82,33 +78,33 @@ export default function DashboardScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       showsVerticalScrollIndicator={false}
     >
-      {/* Top Header Card */}
+      {/* Top Header Card with Quick Actions */}
       <View
         style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: spacing.lg,
+          marginBottom: spacing.md,
         }}
       >
         <View>
           <Text
             style={{
               color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.sm,
+              fontSize: typography.fontSizes.xs,
               fontWeight: typography.fontWeights.medium,
             }}
           >
-            {family.name}
+            Household Overview
           </Text>
           <Text
             style={{
               color: theme.colors.textPrimary,
-              fontSize: typography.fontSizes.xxl,
+              fontSize: typography.fontSizes.xl,
               fontWeight: typography.fontWeights.bold,
             }}
           >
-            {periodLabel}
+            {family.name}
           </Text>
         </View>
 
@@ -128,6 +124,11 @@ export default function DashboardScreen() {
             onPress={() => router.push('/expense/add')}
           />
         </View>
+      </View>
+
+      {/* Interactive Month Stepper */}
+      <View style={{ marginBottom: spacing.md }}>
+        <PeriodSelector selectedPeriod={selectedPeriod} onPeriodChange={setSelectedPeriod} />
       </View>
 
       {/* Main Budget Progress Card */}
@@ -361,20 +362,28 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
 
-        {recentExpenses.map((expense) => {
-          const cat = categories.find((c) => c.id === expense.category_id);
-          const mem = members.find((m) => m.id === expense.paid_by_member_id);
-          return (
-            <ExpenseItem
-              key={expense.id}
-              expense={expense}
-              category={cat}
-              member={mem}
-              currency={family.currency}
-              onPress={() => setSelectedExpense(expense)}
-            />
-          );
-        })}
+        {recentExpenses.length === 0 ? (
+          <Card padding="md" style={{ alignItems: 'center' }}>
+            <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.sm }}>
+              No expenses recorded for this month
+            </Text>
+          </Card>
+        ) : (
+          recentExpenses.map((expense) => {
+            const cat = categories.find((c) => c.id === expense.category_id);
+            const mem = members.find((m) => m.id === expense.paid_by_member_id);
+            return (
+              <ExpenseItem
+                key={expense.id}
+                expense={expense}
+                category={cat}
+                member={mem}
+                currency={family.currency}
+                onPress={() => setSelectedExpense(expense)}
+              />
+            );
+          })
+        )}
       </View>
 
       {/* Expense Detail Modal */}
@@ -383,6 +392,7 @@ export default function DashboardScreen() {
         expense={selectedExpense}
         category={categories.find((c) => c.id === selectedExpense?.category_id)}
         member={members.find((m) => m.id === selectedExpense?.paid_by_member_id)}
+        allMembers={members}
         currency={family.currency}
         onClose={() => setSelectedExpense(null)}
         onDelete={deleteExpense}

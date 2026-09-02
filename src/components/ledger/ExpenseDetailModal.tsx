@@ -1,15 +1,6 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
-import {
-  X,
-  Trash2,
-  Calendar,
-  CreditCard,
-  User,
-  Tag,
-  FileText,
-  CheckCircle,
-} from 'lucide-react-native';
+import { X, Trash2, Calendar, CreditCard, User, Tag, FileText, Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { Expense, Category, FamilyMember } from '@/types';
 import { Avatar } from '@/components/common/Avatar';
@@ -22,6 +13,7 @@ interface ExpenseDetailModalProps {
   expense: Expense | null;
   category?: Category;
   member?: FamilyMember;
+  allMembers?: FamilyMember[];
   currency?: string;
   onClose: () => void;
   onDelete: (id: string) => void;
@@ -32,6 +24,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
   expense,
   category,
   member,
+  allMembers = [],
   currency = '€',
   onClose,
   onDelete,
@@ -254,6 +247,71 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   {expense.payment_method || 'Standard'}
                 </Text>
               </View>
+
+              {/* Split Breakdown (if shared) */}
+              {expense.splits && expense.splits.length > 0 && (
+                <View
+                  style={{
+                    backgroundColor: theme.colors.surfaceSubtle,
+                    padding: spacing.md,
+                    borderRadius: radius.md,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: spacing.xs,
+                      marginBottom: spacing.xs,
+                    }}
+                  >
+                    <Split size={16} color={theme.colors.brand} />
+                    <Text
+                      style={{
+                        color: theme.colors.textPrimary,
+                        fontSize: typography.fontSizes.sm,
+                        fontWeight: typography.fontWeights.bold,
+                      }}
+                    >
+                      Split Breakdown ({expense.splits.length} Members)
+                    </Text>
+                  </View>
+                  <View style={{ gap: spacing.xs }}>
+                    {expense.splits.map((s) => {
+                      const splitMember = allMembers.find((m) => m.id === s.member_id);
+                      return (
+                        <View
+                          key={s.member_id}
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: theme.colors.textSecondary,
+                              fontSize: typography.fontSizes.xs,
+                            }}
+                          >
+                            {splitMember?.display_name || 'Member'}
+                          </Text>
+                          <Text
+                            style={{
+                              color: theme.colors.textPrimary,
+                              fontSize: typography.fontSizes.xs,
+                              fontWeight: typography.fontWeights.semibold,
+                            }}
+                          >
+                            {currency}
+                            {s.share_amount.toFixed(2)}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
 
               {/* Notes */}
               {expense.notes && (

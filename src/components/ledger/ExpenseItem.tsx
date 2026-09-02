@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { Expense, Category, FamilyMember } from '@/types';
 import { Avatar } from '@/components/common/Avatar';
@@ -32,6 +33,8 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
     month: 'short',
     day: 'numeric',
   });
+
+  const isSplit = expense.splits && expense.splits.length > 0;
 
   return (
     <TouchableOpacity
@@ -66,16 +69,27 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
 
       {/* Details */}
       <View style={{ flex: 1, marginRight: spacing.sm }}>
-        <Text
-          style={{
-            color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.md,
-            fontWeight: typography.fontWeights.semibold,
-          }}
-          numberOfLines={1}
-        >
-          {expense.merchant_name}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              fontSize: typography.fontSizes.md,
+              fontWeight: typography.fontWeights.semibold,
+              flex: 1,
+            }}
+            numberOfLines={1}
+          >
+            {expense.merchant_name}
+          </Text>
+          {isSplit && (
+            <Badge
+              label="Split"
+              color={theme.colors.brand}
+              size="sm"
+              icon={<Split size={10} color={theme.colors.brand} />}
+            />
+          )}
+        </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: 4 }}>
           <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
@@ -98,7 +112,7 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
         </View>
       </View>
 
-      {/* Amount & Badges */}
+      {/* Amount & Category Badge */}
       <View style={{ alignItems: 'flex-end', gap: 4 }}>
         <Text
           style={{

@@ -1,15 +1,17 @@
 import React from 'react';
 import { View, Text, Modal, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { X, CheckCircle2, AlertTriangle, FileJson } from 'lucide-react-native';
+import { X, CheckCircle2, AlertTriangle, FileJson, AlertCircle } from 'lucide-react-native';
 import { useTheme } from '@/theme';
-import { RawExpenseReport } from '@/types';
+import { RawExpenseReport, Expense } from '@/types';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
+import { duplicateDetector } from '@/services/duplicateDetector';
 
 interface ImportPreviewModalProps {
   visible: boolean;
   report: RawExpenseReport | null;
   fileName: string;
+  existingExpenses: Expense[];
   onClose: () => void;
   onConfirm: () => void;
 }
@@ -18,6 +20,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
   visible,
   report,
   fileName,
+  existingExpenses,
   onClose,
   onConfirm,
 }) => {
@@ -27,6 +30,18 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 
   const totalAmount = report.expenses.reduce((sum, e) => sum + e.amount, 0);
   const currency = report.currency || '€';
+
+  // Check for duplicates
+  const checkedExpenses = report.expenses.map((exp) => {
+    const dupResult = duplicateDetector.checkDuplicate(exp, existingExpenses);
+    return {
+      ...exp,
+      isDuplicate: dupResult.isDuplicate,
+      matchReason: dupResult.matchReason,
+    };
+  });
+
+  const duplicateCount = checkedExpenses.filter((e) => e.isDuplicate).length;
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -83,6 +98,34 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
             </TouchableOpacity>
           </View>
 
+          {/* Duplicate warning alert if any duplicates found */}
+          {duplicateCount > 0 && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: theme.colors.warningBg,
+                padding: spacing.sm,
+                borderRadius: radius.md,
+                marginBottom: spacing.md,
+                gap: spacing.xs,
+              }}
+            >
+              <AlertTriangle size={16} color={theme.colors.warning} />
+              <Text
+                style={{
+                  color: theme.colors.warning,
+                  fontSize: typography.fontSizes.xs,
+                  fontWeight: typography.fontWeights.semibold,
+                  flex: 1,
+                }}
+              >
+                {duplicateCount} potential duplicate{duplicateCount > 1 ? 's' : ''} detected. They
+                will still be imported if confirmed.
+              </Text>
+            </View>
+          )}
+
           {/* KPI Summary Strip */}
           <View
             style={{
@@ -131,10 +174,10 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 
           {/* Transactions Staging List */}
           <ScrollView
-            style={{ maxHeight: 300, marginBottom: spacing.lg }}
+            style={{ maxHeight: 280, marginBottom: spacing.lg }}
             showsVerticalScrollIndicator={false}
           >
-            {report.expenses.map((exp, idx) => (
+            {checkedExpenses.map((exp, idx) => (
               <View
                 key={idx}
                 style={{
@@ -147,18 +190,32 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                 }}
               >
                 <View style={{ flex: 1, marginRight: spacing.sm }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                    <Text
+                      style={{
+                        color: theme.colors.textPrimary,
+                        fontSize: typography.fontSizes.sm,
+                        fontWeight: typography.fontWeights.semibold,
+                      }}
+                      numberOfLines={1}
+                    >
+                      {exp.merchant}
+                    </Text>
+                    {exp.isDuplicate && (
+                      <Badge
+                        label="Duplicate"
+                        color={theme.colors.warning}
+                        size="sm"
+                        variant="solid"
+                      />
+                    )}
+                  </View>
                   <Text
                     style={{
-                      color: theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.sm,
-                      fontWeight: typography.fontWeights.semibold,
+                      color: theme.colors.textMuted,
+                      fontSize: typography.fontSizes.xs,
+                      marginTop: 2,
                     }}
-                    numberOfLines={1}
-                  >
-                    {exp.merchant}
-                  </Text>
-                  <Text
-                    style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}
                   >
                     {exp.date} • {exp.category}
                   </Text>

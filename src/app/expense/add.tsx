@@ -8,6 +8,8 @@ import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Avatar } from '@/components/common/Avatar';
 import { IconHelper } from '@/components/common/IconHelper';
+import { SplitCalculator } from '@/components/ledger/SplitCalculator';
+import { ExpenseSplit } from '@/types';
 
 export default function AddExpenseScreen() {
   const router = useRouter();
@@ -20,13 +22,15 @@ export default function AddExpenseScreen() {
   const [paidByMemberId, setPaidByMemberId] = useState(currentMemberId || members[0]?.id || '');
   const [transactionDate, setTransactionDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
+  const [splits, setSplits] = useState<ExpenseSplit[] | undefined>(undefined);
   const [errors, setErrors] = useState<{ amount?: string; merchant?: string }>({});
+
+  const numericAmount = parseFloat(amount.replace(',', '.')) || 0;
 
   const handleSave = () => {
     const errs: { amount?: string; merchant?: string } = {};
-    const parsedAmount = parseFloat(amount.replace(',', '.'));
 
-    if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+    if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
       errs.amount = 'Please enter a valid amount greater than 0';
     }
     if (!merchant.trim()) {
@@ -43,11 +47,12 @@ export default function AddExpenseScreen() {
       category_id: categoryId,
       transaction_date: transactionDate,
       merchant_name: merchant.trim(),
-      amount: parsedAmount,
+      amount: numericAmount,
       notes: notes.trim() || undefined,
       payment_method: 'Manual Entry',
       is_recurring: false,
       is_verified: true,
+      splits: splits,
     });
 
     router.back();
@@ -213,6 +218,15 @@ export default function AddExpenseScreen() {
           })}
         </View>
       </View>
+
+      {/* Split Expense Calculator */}
+      <SplitCalculator
+        totalAmount={numericAmount}
+        members={members}
+        currency={family.currency}
+        initialSplits={splits}
+        onSplitsChange={setSplits}
+      />
 
       {/* Notes */}
       <Input

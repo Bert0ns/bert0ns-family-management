@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Search, Filter, Plus, X } from 'lucide-react-native';
+import { Search, Filter, Plus, X, ArrowDownUp } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useAppStore } from '@/services/store';
 import { ExpenseItem } from '@/components/ledger/ExpenseItem';
@@ -29,7 +29,7 @@ export default function LedgerScreen() {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
   // Apply filters
-  const filteredExpenses = expenses.filter((exp) => {
+  let filteredExpenses = expenses.filter((exp) => {
     // Search query filter
     if (filters.searchQuery) {
       const q = filters.searchQuery.toLowerCase();
@@ -51,7 +51,54 @@ export default function LedgerScreen() {
     return true;
   });
 
+  // Apply Sorting
+  filteredExpenses = [...filteredExpenses].sort((a, b) => {
+    switch (filters.sortBy) {
+      case 'date_asc':
+        return new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime();
+      case 'amount_desc':
+        return b.amount - a.amount;
+      case 'amount_asc':
+        return a.amount - b.amount;
+      case 'date_desc':
+      default:
+        return new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime();
+    }
+  });
+
   const totalFilteredAmount = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+  const toggleSort = () => {
+    switch (filters.sortBy) {
+      case 'date_desc':
+        setFilters({ sortBy: 'date_asc' });
+        break;
+      case 'date_asc':
+        setFilters({ sortBy: 'amount_desc' });
+        break;
+      case 'amount_desc':
+        setFilters({ sortBy: 'amount_asc' });
+        break;
+      case 'amount_asc':
+      default:
+        setFilters({ sortBy: 'date_desc' });
+        break;
+    }
+  };
+
+  const getSortLabel = () => {
+    switch (filters.sortBy) {
+      case 'date_asc':
+        return 'Date: Oldest';
+      case 'amount_desc':
+        return 'Amount: Highest';
+      case 'amount_asc':
+        return 'Amount: Lowest';
+      case 'date_desc':
+      default:
+        return 'Date: Newest';
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -191,7 +238,7 @@ export default function LedgerScreen() {
         </ScrollView>
       </View>
 
-      {/* Summary Count Bar */}
+      {/* Summary Count & Sort Bar */}
       <View
         style={{
           flexDirection: 'row',
@@ -201,9 +248,22 @@ export default function LedgerScreen() {
           paddingVertical: spacing.sm,
         }}
       >
-        <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
-          Showing {filteredExpenses.length} transactions
-        </Text>
+        <TouchableOpacity
+          onPress={toggleSort}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+        >
+          <ArrowDownUp size={14} color={theme.colors.brand} />
+          <Text
+            style={{
+              color: theme.colors.brand,
+              fontSize: typography.fontSizes.xs,
+              fontWeight: typography.fontWeights.semibold,
+            }}
+          >
+            {getSortLabel()}
+          </Text>
+        </TouchableOpacity>
+
         <Text
           style={{
             color: theme.colors.textPrimary,
@@ -211,7 +271,7 @@ export default function LedgerScreen() {
             fontWeight: typography.fontWeights.bold,
           }}
         >
-          Total: {family.currency}
+          {filteredExpenses.length} Txs • {family.currency}
           {totalFilteredAmount.toFixed(2)}
         </Text>
       </View>
@@ -265,6 +325,7 @@ export default function LedgerScreen() {
         expense={selectedExpense}
         category={categories.find((c) => c.id === selectedExpense?.category_id)}
         member={members.find((m) => m.id === selectedExpense?.paid_by_member_id)}
+        allMembers={members}
         currency={family.currency}
         onClose={() => setSelectedExpense(null)}
         onDelete={deleteExpense}

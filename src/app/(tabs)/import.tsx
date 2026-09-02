@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
-import { Download, UploadCloud, CheckCircle2, History, Share2 } from 'lucide-react-native';
+import {
+  Download,
+  UploadCloud,
+  CheckCircle2,
+  History,
+  Share2,
+  FileSpreadsheet,
+  FileJson,
+} from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useAppStore } from '@/services/store';
 import { JsonDropzone } from '@/components/import/JsonDropzone';
@@ -11,10 +19,12 @@ import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { RawExpenseReport } from '@/types';
 import { SAMPLE_IMPORT_REPORT } from '@/data/mockData';
+import { csvExporter } from '@/services/csvExporter';
 
 export default function ImportScreen() {
   const { theme, spacing, radius, typography } = useTheme();
-  const { family, expenses, importBatches, importExpenseReport } = useAppStore();
+  const { family, members, categories, expenses, importBatches, importExpenseReport } =
+    useAppStore();
 
   const [stagedReport, setStagedReport] = useState<RawExpenseReport | null>(null);
   const [stagedFileName, setStagedFileName] = useState<string>('');
@@ -65,6 +75,12 @@ export default function ImportScreen() {
     }
   };
 
+  const handleExportCsv = () => {
+    const csvContent = csvExporter.generateCsv(expenses, categories, members, family.currency);
+    const fileName = `family-expenses-${family.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.csv`;
+    csvExporter.downloadCsv(csvContent, fileName);
+  };
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
@@ -110,36 +126,43 @@ export default function ImportScreen() {
 
       {/* Export Section */}
       <Card padding="md" style={{ marginBottom: spacing.lg }}>
-        <View
-          style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+        <Text
+          style={{
+            color: theme.colors.textPrimary,
+            fontSize: typography.fontSizes.md,
+            fontWeight: typography.fontWeights.bold,
+            marginBottom: 2,
+          }}
         >
-          <View style={{ flex: 1, marginRight: spacing.md }}>
-            <Text
-              style={{
-                color: theme.colors.textPrimary,
-                fontSize: typography.fontSizes.md,
-                fontWeight: typography.fontWeights.bold,
-              }}
-            >
-              Export Family Ledger
-            </Text>
-            <Text
-              style={{
-                color: theme.colors.textSecondary,
-                fontSize: typography.fontSizes.xs,
-                marginTop: 2,
-              }}
-            >
-              Download complete ledger ({expenses.length} records) in clean JSON format for backup.
-            </Text>
-          </View>
+          Export Family Ledger
+        </Text>
+        <Text
+          style={{
+            color: theme.colors.textSecondary,
+            fontSize: typography.fontSizes.xs,
+            marginBottom: spacing.md,
+          }}
+        >
+          Download complete household ledger ({expenses.length} records) for backup or spreadsheet
+          analysis.
+        </Text>
 
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <Button
+            title="Export CSV"
+            variant="outline"
+            size="sm"
+            icon={<FileSpreadsheet size={14} color={theme.colors.textPrimary} />}
+            onPress={handleExportCsv}
+            style={{ flex: 1 }}
+          />
           <Button
             title="Export JSON"
             variant="outline"
             size="sm"
-            icon={<Download size={14} color={theme.colors.textPrimary} />}
+            icon={<FileJson size={14} color={theme.colors.textPrimary} />}
             onPress={handleExportJson}
+            style={{ flex: 1 }}
           />
         </View>
       </Card>
@@ -206,11 +229,12 @@ export default function ImportScreen() {
         </View>
       )}
 
-      {/* Staging Preview Modal */}
+      {/* Staging Preview Modal with Duplicate Detection */}
       <ImportPreviewModal
         visible={!!stagedReport}
         report={stagedReport}
         fileName={stagedFileName}
+        existingExpenses={expenses}
         onClose={() => setStagedReport(null)}
         onConfirm={handleConfirmImport}
       />
