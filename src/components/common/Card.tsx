@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ViewStyle, StyleProp } from 'react-native';
+import { View, ViewStyle, StyleProp, Platform } from 'react-native';
 import { useTheme } from '@/theme';
 
 type CardVariant = 'elevated' | 'outlined' | 'subtle';
@@ -28,6 +28,19 @@ export const Card: React.FC<CardProps> = ({
   };
 
   const isElevated = variant === 'elevated';
+  const isWeb = Platform.OS === 'web';
+
+  const shadowStyles = isWeb
+    ? isElevated
+      ? ({ boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.06)' } as any)
+      : {}
+    : {
+        shadowColor: theme.colors.shadow,
+        shadowOffset: { width: 0, height: isElevated ? 4 : 0 },
+        shadowOpacity: isElevated ? 0.08 : 0,
+        shadowRadius: isElevated ? 12 : 0,
+        elevation: isElevated ? 3 : 0,
+      };
 
   const cardStyle: ViewStyle = {
     backgroundColor: variant === 'subtle' ? theme.colors.surfaceSubtle : theme.colors.card,
@@ -35,11 +48,7 @@ export const Card: React.FC<CardProps> = ({
     padding: paddingValues[padding] ?? spacing.md,
     borderWidth: 1,
     borderColor: variant === 'outlined' ? theme.colors.border : theme.colors.cardBorder,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: isElevated ? 4 : 0 },
-    shadowOpacity: isElevated ? 0.08 : 0,
-    shadowRadius: isElevated ? 12 : 0,
-    elevation: isElevated ? 3 : 0,
+    ...shadowStyles,
   };
 
   return <View style={[cardStyle, style]}>{children}</View>;
