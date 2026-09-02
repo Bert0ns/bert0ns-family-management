@@ -1,4 +1,4 @@
-import { Expense, Category, FamilyMember, Budget } from '@/types';
+import { Expense, Category, FamilyMember } from '@/types';
 import {
   IAnalyticsCalculator,
   CategorySummary,
@@ -15,23 +15,12 @@ export { CategorySummary, MemberSummary, DailySpendPoint, MonthlyKPIMetrics };
 export class AnalyticsCalculator implements IAnalyticsCalculator {
   calculateMonthlyMetrics(
     expenses: Expense[],
-    budgets: Budget[],
     categories: Category[],
     members: FamilyMember[],
     period: string,
   ): MonthlyKPIMetrics {
     const periodExpenses = expenses.filter((e) => e.transaction_date.startsWith(period));
     const totalSpend = periodExpenses.reduce((sum, e) => sum + e.amount, 0);
-
-    const totalBudgetObj = budgets.find((b) => !b.category_id && b.period === period);
-    const totalBudget = totalBudgetObj
-      ? totalBudgetObj.monthly_limit
-      : budgets.filter((b) => b.period === period).reduce((sum, b) => sum + b.monthly_limit, 0) ||
-        4000;
-
-    const remainingBudget = totalBudget - totalSpend;
-    const budgetProgressPercent = totalBudget > 0 ? (totalSpend / totalBudget) * 100 : 0;
-    const isOverBudget = totalSpend > totalBudget;
 
     const [yearStr, monthStr] = period.split('-');
     const year = parseInt(yearStr, 10);
@@ -50,10 +39,6 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
 
     return {
       totalSpend,
-      totalBudget,
-      remainingBudget,
-      budgetProgressPercent,
-      isOverBudget,
       dailyAverageBurn,
       projectedMonthEnd,
       transactionCount: periodExpenses.length,
@@ -125,11 +110,7 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
     return summaries.sort((a, b) => b.total - a.total);
   }
 
-  calculateSpendingVelocity(
-    expenses: Expense[],
-    totalBudget: number,
-    period: string,
-  ): DailySpendPoint[] {
+  calculateSpendingVelocity(expenses: Expense[], period: string): DailySpendPoint[] {
     const [yearStr, monthStr] = period.split('-');
     const year = parseInt(yearStr, 10);
     const month = parseInt(monthStr, 10);
@@ -155,7 +136,6 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
         dateStr,
         dailyAmount: amount,
         cumulativeAmount: runningTotal,
-        budgetLine: totalBudget,
       });
     }
 
@@ -168,11 +148,10 @@ export const analyticsCalculator = new AnalyticsCalculator();
 // Function exports for convenience
 export const calculateMonthlyMetrics = (
   expenses: Expense[],
-  budgets: Budget[],
   categories: Category[],
   members: FamilyMember[],
   period: string,
-) => analyticsCalculator.calculateMonthlyMetrics(expenses, budgets, categories, members, period);
+) => analyticsCalculator.calculateMonthlyMetrics(expenses, categories, members, period);
 
 export const calculateCategoryBreakdown = (expenses: Expense[], categories: Category[]) =>
   analyticsCalculator.calculateCategoryBreakdown(expenses, categories);
@@ -180,8 +159,5 @@ export const calculateCategoryBreakdown = (expenses: Expense[], categories: Cate
 export const calculateMemberContributions = (expenses: Expense[], members: FamilyMember[]) =>
   analyticsCalculator.calculateMemberContributions(expenses, members);
 
-export const calculateSpendingVelocity = (
-  expenses: Expense[],
-  totalBudget: number,
-  period: string,
-) => analyticsCalculator.calculateSpendingVelocity(expenses, totalBudget, period);
+export const calculateSpendingVelocity = (expenses: Expense[], period: string) =>
+  analyticsCalculator.calculateSpendingVelocity(expenses, period);

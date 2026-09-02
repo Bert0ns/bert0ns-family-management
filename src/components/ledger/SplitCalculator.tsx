@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import { Users, Check, Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { FamilyMember, ExpenseSplit } from '@/types';
+import { calculateEqualSplits } from '@/services/splitCalculator';
 import { Avatar } from '@/components/common/Avatar';
 import { Badge } from '@/components/common/Badge';
 
@@ -39,17 +40,8 @@ export const SplitCalculator: React.FC<SplitCalculatorProps> = ({
       return;
     }
 
-    const count = selectedMemberIds.length;
-    const equalShare = totalAmount / count;
-    const percentage = 100 / count;
-
-    const splits: ExpenseSplit[] = selectedMemberIds.map((mId) => ({
-      member_id: mId,
-      share_amount: equalShare,
-      percentage,
-    }));
-
-    onSplitsChange(splits);
+    const splits = calculateEqualSplits(totalAmount, selectedMemberIds);
+    onSplitsChange(splits.length > 0 ? splits : undefined);
   }, [isSplitEnabled, selectedMemberIds, totalAmount]);
 
   const toggleMember = (memberId: string) => {

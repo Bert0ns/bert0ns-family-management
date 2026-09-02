@@ -3,7 +3,6 @@ import {
   Family,
   FamilyMember,
   Category,
-  Budget,
   Expense,
   ImportBatch,
   FilterOptions,
@@ -13,7 +12,6 @@ import {
   INITIAL_FAMILY,
   INITIAL_MEMBERS,
   INITIAL_CATEGORIES,
-  INITIAL_BUDGETS,
   INITIAL_EXPENSES,
 } from '@/data/mockData';
 
@@ -21,7 +19,6 @@ interface AppState {
   family: Family;
   members: FamilyMember[];
   categories: Category[];
-  budgets: Budget[];
   expenses: Expense[];
   importBatches: ImportBatch[];
   currentMemberId: string;
@@ -45,9 +42,8 @@ interface AppState {
   addMember: (member: Omit<FamilyMember, 'id' | 'family_id'>) => FamilyMember;
   updateMember: (id: string, updates: Partial<FamilyMember>) => void;
 
-  // Category & Budget Actions
+  // Category Actions
   addCategory: (category: Omit<Category, 'id' | 'family_id'>) => Category;
-  updateBudget: (categoryId: string | undefined, limit: number) => void;
 
   // Import JSON Actions
   importExpenseReport: (
@@ -67,7 +63,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   family: INITIAL_FAMILY,
   members: INITIAL_MEMBERS,
   categories: INITIAL_CATEGORIES,
-  budgets: INITIAL_BUDGETS,
   expenses: INITIAL_EXPENSES,
   importBatches: [],
   currentMemberId: 'mem_1',
@@ -144,32 +139,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     return newCategory;
   },
 
-  updateBudget: (categoryId, limit) => {
-    const state = get();
-    const period = state.selectedPeriod;
-    const existingIndex = state.budgets.findIndex(
-      (b) => b.category_id === categoryId && b.period === period,
-    );
-
-    if (existingIndex >= 0) {
-      const updatedBudgets = [...state.budgets];
-      updatedBudgets[existingIndex] = {
-        ...updatedBudgets[existingIndex],
-        monthly_limit: limit,
-      };
-      set({ budgets: updatedBudgets });
-    } else {
-      const newBudget: Budget = {
-        id: `bud_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-        family_id: state.family.id,
-        category_id: categoryId,
-        monthly_limit: limit,
-        period,
-      };
-      set({ budgets: [...state.budgets, newBudget] });
-    }
-  },
-
   importExpenseReport: (report, fileName) => {
     const state = get();
     const batchId = `batch_${Date.now()}`;
@@ -234,9 +203,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       family: INITIAL_FAMILY,
       members: INITIAL_MEMBERS,
       categories: INITIAL_CATEGORIES,
-      budgets: INITIAL_BUDGETS,
       expenses: INITIAL_EXPENSES,
       importBatches: [],
+      currentMemberId: 'mem_1',
+      selectedPeriod: '2026-08',
       filters: DEFAULT_FILTERS,
     });
   },

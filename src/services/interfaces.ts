@@ -1,4 +1,4 @@
-import { Expense, Category, FamilyMember, Budget, RawExpenseReport, Family } from '@/types';
+import { Expense, Category, FamilyMember, RawExpenseReport, Family } from '@/types';
 
 export interface CategorySummary {
   category: Category;
@@ -19,15 +19,10 @@ export interface DailySpendPoint {
   dateStr: string;
   dailyAmount: number;
   cumulativeAmount: number;
-  budgetLine: number;
 }
 
 export interface MonthlyKPIMetrics {
   totalSpend: number;
-  totalBudget: number;
-  remainingBudget: number;
-  budgetProgressPercent: number;
-  isOverBudget: boolean;
   dailyAverageBurn: number;
   projectedMonthEnd: number;
   transactionCount: number;
@@ -42,7 +37,6 @@ export interface MonthlyKPIMetrics {
 export interface IAnalyticsCalculator {
   calculateMonthlyMetrics(
     expenses: Expense[],
-    budgets: Budget[],
     categories: Category[],
     members: FamilyMember[],
     period: string,
@@ -52,11 +46,7 @@ export interface IAnalyticsCalculator {
 
   calculateMemberContributions(expenses: Expense[], members: FamilyMember[]): MemberSummary[];
 
-  calculateSpendingVelocity(
-    expenses: Expense[],
-    totalBudget: number,
-    period: string,
-  ): DailySpendPoint[];
+  calculateSpendingVelocity(expenses: Expense[], period: string): DailySpendPoint[];
 }
 
 export interface IReportValidator {
@@ -71,7 +61,6 @@ export interface IExpenseRepository {
   getExpenses(): Expense[];
   getMembers(): FamilyMember[];
   getCategories(): Category[];
-  getBudgets(): Budget[];
   getFamily(): Family;
   addExpense(expense: Omit<Expense, 'id' | 'created_at' | 'family_id'>): Expense;
   updateExpense(id: string, updates: Partial<Expense>): void;

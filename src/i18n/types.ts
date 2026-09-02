@@ -28,21 +28,16 @@ export interface TranslationSchema {
   dashboard: {
     householdOverview: string;
     totalSpending: string;
-    overBudget: string;
-    percentOfBudget: string;
-    monthlyLimit: string;
-    remaining: string;
-    over: string;
     dailyAverage: string;
     burnRatePerDay: string;
     monthForecast: string;
-    onTrack: string;
-    exceedsBudget: string;
+    projectedSpend: string;
     familyMembers: string;
     recentExpenses: string;
     viewAll: string;
     noExpensesMonth: string;
     txs: string;
+    totalTransactions: string;
   };
   analytics: {
     categoriesTab: string;
@@ -54,7 +49,6 @@ export interface TranslationSchema {
     spendingVelocity: string;
     dailySpend: string;
     cumulativeSpend: string;
-    budgetLimitLine: string;
     heatmapTitle: string;
     less: string;
     more: string;
@@ -92,12 +86,8 @@ export interface TranslationSchema {
     membersCount: string;
     membersTitle: string;
     addMember: string;
-    budgetEnvelopes: string;
+    categoriesTitle: string;
     addCategory: string;
-    tapToEditLimit: string;
-    editBudgetTitle: string;
-    editBudgetSubtitle: string;
-    monthlyBudgetLimit: string;
     addMemberTitle: string;
     memberNameLabel: string;
     memberNamePlaceholder: string;

@@ -1,19 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
 import { useTheme } from '@/theme';
-import { DailySpendPoint } from '@/services/analytics';
+import { DailySpendPoint } from '@/services/interfaces';
 import { Card } from '@/components/common/Card';
 
 interface SpendingVelocityChartProps {
   data: DailySpendPoint[];
-  totalBudget: number;
   currency?: string;
 }
 
 export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
   data,
-  totalBudget,
   currency = '€',
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
@@ -30,7 +28,7 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
     dataPointText: '',
   }));
 
-  const maxCumulative = Math.max(...data.map((d) => d.cumulativeAmount), totalBudget);
+  const maxCumulative = Math.max(...data.map((d) => d.cumulativeAmount), 100);
 
   return (
     <Card padding="md">
@@ -56,13 +54,7 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
             style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: theme.colors.brand }}
           />
           <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}>
-            Actual
-          </Text>
-          <View
-            style={{ width: 10, height: 2, backgroundColor: theme.colors.danger, marginLeft: 4 }}
-          />
-          <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}>
-            Budget
+            Cumulative Spend
           </Text>
         </View>
       </View>
@@ -72,11 +64,8 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
           data={lineData}
           color={theme.colors.brand}
           thickness={3}
-          startFillColor={`${theme.colors.brand}40`}
-          endFillColor={`${theme.colors.brand}05`}
-          startOpacity={0.9}
-          endOpacity={0.2}
-          areaChart
+          startFillColor={theme.colors.brandLight}
+          startOpacity={0.4}
           yAxisColor={theme.colors.border}
           xAxisColor={theme.colors.border}
           yAxisTextStyle={{ color: theme.colors.textMuted, fontSize: 10 }}
@@ -87,14 +76,6 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
           curved
           showVerticalLines={false}
           rulesColor={theme.colors.surfaceSubtle}
-          showReferenceLine1
-          referenceLine1Position={totalBudget}
-          referenceLine1Config={{
-            color: theme.colors.danger,
-            dashWidth: 4,
-            dashGap: 4,
-            thickness: 1.5,
-          }}
         />
       </View>
 

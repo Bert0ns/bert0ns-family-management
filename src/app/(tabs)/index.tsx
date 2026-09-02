@@ -1,16 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  TrendingUp,
-  Plus,
-  Upload,
-  Calendar,
-  Wallet,
-  Flame,
-  ArrowUpRight,
-  ShieldAlert,
-} from 'lucide-react-native';
+import { TrendingUp, Plus, Upload, Flame, ArrowUpRight, Receipt, Users } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -43,14 +34,13 @@ export default function DashboardScreen() {
     family,
     members,
     categories,
-    budgets,
     expenses,
     selectedPeriod,
     setSelectedPeriod,
     deleteExpense,
   } = useAppStore();
 
-  const metrics = calculateMonthlyMetrics(expenses, budgets, categories, members, selectedPeriod);
+  const metrics = calculateMonthlyMetrics(expenses, categories, members, selectedPeriod);
 
   const categoryBreakdown = calculateCategoryBreakdown(
     expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod)),
@@ -62,7 +52,7 @@ export default function DashboardScreen() {
     members,
   );
 
-  const velocityData = calculateSpendingVelocity(expenses, metrics.totalBudget, selectedPeriod);
+  const velocityData = calculateSpendingVelocity(expenses, selectedPeriod);
 
   const recentExpenses = expenses
     .filter((e) => e.transaction_date.startsWith(selectedPeriod))
@@ -133,7 +123,7 @@ export default function DashboardScreen() {
         <PeriodSelector selectedPeriod={selectedPeriod} onPeriodChange={setSelectedPeriod} />
       </View>
 
-      {/* Main Budget Progress Card */}
+      {/* Main Total Spending Card */}
       <Card
         padding="lg"
         style={{
@@ -173,60 +163,11 @@ export default function DashboardScreen() {
           </View>
 
           <Badge
-            label={
-              metrics.isOverBudget
-                ? t.dashboard.overBudget
-                : `${metrics.budgetProgressPercent.toFixed(0)}${t.dashboard.percentOfBudget}`
-            }
-            color={metrics.isOverBudget ? theme.colors.danger : theme.colors.success}
+            label={`${metrics.transactionCount} ${t.dashboard.txs}`}
+            color={theme.colors.brand}
             variant="solid"
             size="md"
           />
-        </View>
-
-        {/* Progress Bar */}
-        <View
-          style={{
-            height: 10,
-            backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-            borderRadius: radius.full,
-            marginTop: spacing.md,
-            overflow: 'hidden',
-          }}
-        >
-          <View
-            style={{
-              height: '100%',
-              width: `${Math.min(metrics.budgetProgressPercent, 100)}%`,
-              backgroundColor: metrics.isOverBudget ? theme.colors.danger : theme.colors.brand,
-              borderRadius: radius.full,
-            }}
-          />
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginTop: spacing.sm,
-          }}
-        >
-          <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}>
-            {t.dashboard.monthlyLimit}: {family.currency}
-            {metrics.totalBudget.toFixed(0)}
-          </Text>
-          <Text
-            style={{
-              color: metrics.isOverBudget ? theme.colors.danger : theme.colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              fontWeight: typography.fontWeights.semibold,
-            }}
-          >
-            {metrics.isOverBudget
-              ? `+${family.currency}${Math.abs(metrics.remainingBudget).toFixed(2)} ${t.dashboard.over}`
-              : `${family.currency}${metrics.remainingBudget.toFixed(2)} ${t.dashboard.remaining}`}
-          </Text>
         </View>
       </Card>
 
@@ -242,13 +183,9 @@ export default function DashboardScreen() {
         <KPIStat
           title={t.dashboard.monthForecast}
           value={`${family.currency}${metrics.projectedMonthEnd.toFixed(0)}`}
-          subtitle={
-            metrics.projectedMonthEnd > metrics.totalBudget
-              ? t.dashboard.exceedsBudget
-              : t.dashboard.onTrack
-          }
+          subtitle={t.dashboard.projectedSpend}
           icon={<TrendingUp size={18} color={theme.colors.info} />}
-          variant={metrics.projectedMonthEnd > metrics.totalBudget ? 'danger' : 'success'}
+          variant="brand"
         />
       </View>
 
@@ -301,41 +238,37 @@ export default function DashboardScreen() {
                 style={{
                   color: theme.colors.brand,
                   fontSize: typography.fontSizes.md,
-                  fontWeight: typography.fontWeights.bold,
+                  fontWeight: typography.fontWeights.heavy,
                   marginTop: 2,
                 }}
               >
                 {family.currency}
                 {mc.total.toFixed(0)}
               </Text>
-              <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
-                {mc.percentage.toFixed(0)}% • {mc.transactionCount} {t.dashboard.txs}
+              <Text style={{ color: theme.colors.textMuted, fontSize: 10 }}>
+                {mc.percentage.toFixed(0)}%
               </Text>
             </Card>
           ))}
         </ScrollView>
       </View>
 
-      {/* Visual Velocity Trend */}
+      {/* Spending Velocity Chart */}
       <View style={{ marginBottom: spacing.lg }}>
-        <SpendingVelocityChart
-          data={velocityData}
-          totalBudget={metrics.totalBudget}
-          currency={family.currency}
-        />
+        <SpendingVelocityChart data={velocityData} currency={family.currency} />
       </View>
 
-      {/* Category Donut Summary */}
+      {/* Category Breakdown Pie Chart */}
       <View style={{ marginBottom: spacing.lg }}>
         <CategoryPieChart
           data={categoryBreakdown}
           currency={family.currency}
-          onSelectCategory={() => router.push('/(tabs)/analytics')}
+          onSelectCategory={(catId) => router.push(`/(tabs)/ledger`)}
         />
       </View>
 
-      {/* Recent Transactions List */}
-      <View style={{ marginBottom: spacing.lg }}>
+      {/* Recent Expenses List */}
+      <View>
         <View
           style={{
             flexDirection: 'row',
@@ -353,7 +286,11 @@ export default function DashboardScreen() {
           >
             {t.dashboard.recentExpenses}
           </Text>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/ledger')}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push('/(tabs)/ledger')}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
+          >
             <Text
               style={{
                 color: theme.colors.brand,
@@ -361,27 +298,28 @@ export default function DashboardScreen() {
                 fontWeight: typography.fontWeights.semibold,
               }}
             >
-              {t.dashboard.viewAll} ({expenses.length})
+              {t.dashboard.viewAll}
             </Text>
+            <ArrowUpRight size={14} color={theme.colors.brand} />
           </TouchableOpacity>
         </View>
 
         {recentExpenses.length === 0 ? (
-          <Card padding="md" style={{ alignItems: 'center' }}>
+          <Card padding="lg" style={{ alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.sm }}>
               {t.dashboard.noExpensesMonth}
             </Text>
           </Card>
         ) : (
           recentExpenses.map((expense) => {
-            const cat = categories.find((c) => c.id === expense.category_id);
-            const mem = members.find((m) => m.id === expense.paid_by_member_id);
+            const member = members.find((m) => m.id === expense.paid_by_member_id);
+            const category = categories.find((c) => c.id === expense.category_id);
             return (
               <ExpenseItem
                 key={expense.id}
                 expense={expense}
-                category={cat}
-                member={mem}
+                member={member}
+                category={category}
                 currency={family.currency}
                 onPress={() => setSelectedExpense(expense)}
               />
@@ -392,14 +330,14 @@ export default function DashboardScreen() {
 
       {/* Expense Detail Modal */}
       <ExpenseDetailModal
-        visible={!!selectedExpense}
         expense={selectedExpense}
-        category={categories.find((c) => c.id === selectedExpense?.category_id)}
-        member={members.find((m) => m.id === selectedExpense?.paid_by_member_id)}
-        allMembers={members}
-        currency={family.currency}
+        visible={!!selectedExpense}
         onClose={() => setSelectedExpense(null)}
-        onDelete={deleteExpense}
+        onDelete={(id) => {
+          deleteExpense(id);
+          setSelectedExpense(null);
+        }}
+        currency={family.currency}
       />
     </ScrollView>
   );

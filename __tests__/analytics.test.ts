@@ -5,9 +5,9 @@ import {
   calculateMemberContributions,
   calculateSpendingVelocity,
 } from '@/services/analytics';
-import { Expense, Category, FamilyMember, Budget } from '@/types';
+import { Expense, Category, FamilyMember } from '@/types';
 
-describe('AnalyticsCalculator (SOLID Unit Tests)', () => {
+describe('AnalyticsCalculator (Unit Tests & Edge Cases)', () => {
   const mockCategories: Category[] = [
     { id: 'cat_1', family_id: 'fam_1', name: 'Groceries', icon: 'ShoppingCart', color: '#10B981' },
     { id: 'cat_2', family_id: 'fam_1', name: 'Utilities', icon: 'Zap', color: '#6366F1' },
@@ -29,16 +29,12 @@ describe('AnalyticsCalculator (SOLID Unit Tests)', () => {
       role: 'ADMIN',
       color_code: '#10B981',
     },
-  ];
-
-  const mockBudgets: Budget[] = [
-    { id: 'b_total', family_id: 'fam_1', monthly_limit: 1000, period: '2026-08' },
     {
-      id: 'b_groceries',
+      id: 'mem_3',
       family_id: 'fam_1',
-      category_id: 'cat_1',
-      monthly_limit: 500,
-      period: '2026-08',
+      display_name: 'Kid Tommy',
+      role: 'MEMBER',
+      color_code: '#F59E0B',
     },
   ];
 
@@ -78,45 +74,30 @@ describe('AnalyticsCalculator (SOLID Unit Tests)', () => {
   const calculator = new AnalyticsCalculator();
 
   describe('Monthly KPI Metrics', () => {
-    it('calculates accurate total spend and remaining budget', () => {
-      const metrics = calculator.calculateMonthlyMetrics(
-        mockExpenses,
-        mockBudgets,
-        mockCategories,
-        mockMembers,
-        '2026-08',
-      );
+    it('calculates accurate total spend and burn rate', () => {
+      const metrics = calculateMonthlyMetrics(mockExpenses, mockCategories, mockMembers, '2026-08');
 
       expect(metrics.totalSpend).toBe(300.0);
-      expect(metrics.totalBudget).toBe(1000.0);
-      expect(metrics.remainingBudget).toBe(700.0);
-      expect(metrics.budgetProgressPercent).toBe(30.0);
-      expect(metrics.isOverBudget).toBe(false);
       expect(metrics.transactionCount).toBe(3);
+      expect(metrics.dailyAverageBurn).toBeCloseTo(300 / 15, 1);
+      expect(metrics.projectedMonthEnd).toBeCloseTo((300 / 15) * 31, 1);
+      expect(metrics.topCategory?.category.name).toBe('Groceries');
+      expect(metrics.topSpender?.member.display_name).toBe('Berto');
     });
 
-    it('flags budget overrun when expenses exceed budget limit', () => {
-      const lowBudgets: Budget[] = [
-        { id: 'b_low', family_id: 'fam_1', monthly_limit: 200, period: '2026-08' },
-      ];
+    it('handles empty month with 0 expenses gracefully', () => {
+      const metrics = calculateMonthlyMetrics([], mockCategories, mockMembers, '2026-08');
 
-      const metrics = calculator.calculateMonthlyMetrics(
-        mockExpenses,
-        lowBudgets,
-        mockCategories,
-        mockMembers,
-        '2026-08',
-      );
-
-      expect(metrics.isOverBudget).toBe(true);
-      expect(metrics.remainingBudget).toBe(-100.0);
-      expect(metrics.budgetProgressPercent).toBe(150.0);
+      expect(metrics.totalSpend).toBe(0);
+      expect(metrics.dailyAverageBurn).toBe(0);
+      expect(metrics.projectedMonthEnd).toBe(0);
+      expect(metrics.transactionCount).toBe(0);
     });
   });
 
   describe('Category Breakdown', () => {
     it('computes correct category percentages and totals sorted descending', () => {
-      const breakdown = calculator.calculateCategoryBreakdown(mockExpenses, mockCategories);
+      const breakdown = calculateCategoryBreakdown(mockExpenses, mockCategories);
 
       expect(breakdown).toHaveLength(2); // Groceries and Utilities
       expect(breakdown[0].category.name).toBe('Groceries');
@@ -129,13 +110,18 @@ describe('AnalyticsCalculator (SOLID Unit Tests)', () => {
       expect(breakdown[1].percentage).toBeCloseTo(33.33, 1);
       expect(breakdown[1].transactionCount).toBe(1);
     });
+
+    it('handles empty expense array with 0 categories returned', () => {
+      const breakdown = calculateCategoryBreakdown([], mockCategories);
+      expect(breakdown).toEqual([]);
+    });
   });
 
   describe('Member Contributions', () => {
-    it('computes member spend share and rankings', () => {
-      const contributions = calculator.calculateMemberContributions(mockExpenses, mockMembers);
+    it('computes member spend share and includes inactive members with 0 spend', () => {
+      const contributions = calculateMemberContributions(mockExpenses, mockMembers);
 
-      expect(contributions).toHaveLength(2);
+      expect(contributions).toHaveLength(3);
       expect(contributions[0].member.display_name).toBe('Berto');
       expect(contributions[0].total).toBe(250.0);
       expect(contributions[0].percentage).toBeCloseTo(83.33, 1);
@@ -143,12 +129,16 @@ describe('AnalyticsCalculator (SOLID Unit Tests)', () => {
       expect(contributions[1].member.display_name).toBe('Elena');
       expect(contributions[1].total).toBe(50.0);
       expect(contributions[1].percentage).toBeCloseTo(16.67, 1);
+
+      expect(contributions[2].member.display_name).toBe('Kid Tommy');
+      expect(contributions[2].total).toBe(0);
+      expect(contributions[2].percentage).toBe(0);
     });
   });
 
   describe('Spending Velocity', () => {
     it('generates continuous cumulative spend data points across all days in the month', () => {
-      const velocity = calculator.calculateSpendingVelocity(mockExpenses, 1000, '2026-08');
+      const velocity = calculateSpendingVelocity(mockExpenses, '2026-08');
 
       expect(velocity).toHaveLength(31); // 31 days in August
       expect(velocity[0].cumulativeAmount).toBe(0); // Day 1
@@ -156,6 +146,26 @@ describe('AnalyticsCalculator (SOLID Unit Tests)', () => {
       expect(velocity[9].cumulativeAmount).toBe(200.0); // Day 10
       expect(velocity[14].cumulativeAmount).toBe(300.0); // Day 15
       expect(velocity[30].cumulativeAmount).toBe(300.0); // Day 31
+    });
+
+    it('accurately handles leap year February (29 days)', () => {
+      const leapYearExpense: Expense[] = [
+        {
+          id: 'leap_1',
+          family_id: 'fam_1',
+          paid_by_member_id: 'mem_1',
+          category_id: 'cat_1',
+          transaction_date: '2024-02-29',
+          merchant_name: 'Leap Day Dinner',
+          amount: 80.0,
+          created_at: '2024-02-29T00:00:00Z',
+        },
+      ];
+
+      const velocity = calculateSpendingVelocity(leapYearExpense, '2024-02');
+      expect(velocity).toHaveLength(29);
+      expect(velocity[28].dateStr).toBe('2024-02-29');
+      expect(velocity[28].cumulativeAmount).toBe(80.0);
     });
   });
 });

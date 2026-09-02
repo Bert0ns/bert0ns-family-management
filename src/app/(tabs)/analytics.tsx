@@ -20,7 +20,7 @@ import { IconHelper } from '@/components/common/IconHelper';
 export default function AnalyticsScreen() {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
-  const { family, members, categories, budgets, expenses, selectedPeriod, setSelectedPeriod } =
+  const { family, members, categories, expenses, selectedPeriod, setSelectedPeriod } =
     useAppStore();
 
   const [activeTab, setActiveTab] = useState<'categories' | 'members' | 'trends' | 'heatmap'>(
@@ -29,11 +29,11 @@ export default function AnalyticsScreen() {
 
   const periodExpenses = expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod));
 
-  const metrics = calculateMonthlyMetrics(expenses, budgets, categories, members, selectedPeriod);
+  const metrics = calculateMonthlyMetrics(expenses, categories, members, selectedPeriod);
 
   const categoryBreakdown = calculateCategoryBreakdown(periodExpenses, categories);
   const memberContributions = calculateMemberContributions(periodExpenses, members);
-  const velocityData = calculateSpendingVelocity(expenses, metrics.totalBudget, selectedPeriod);
+  const velocityData = calculateSpendingVelocity(expenses, selectedPeriod);
 
   // Top Merchants summary
   const merchantMap = new Map<string, number>();
@@ -80,7 +80,7 @@ export default function AnalyticsScreen() {
           return (
             <TouchableOpacity
               key={tab}
-              activeOpacity={0.8}
+              activeOpacity={0.7}
               onPress={() => setActiveTab(tab)}
               style={{
                 flex: 1,
@@ -90,18 +90,19 @@ export default function AnalyticsScreen() {
                 borderRadius: radius.sm,
                 backgroundColor: isActive ? theme.colors.surface : 'transparent',
                 shadowColor: isActive ? theme.colors.shadow : 'transparent',
+                shadowOffset: { width: 0, height: 1 },
                 shadowOpacity: isActive ? 0.1 : 0,
-                shadowRadius: 4,
-                elevation: isActive ? 2 : 0,
+                shadowRadius: 2,
+                elevation: isActive ? 1 : 0,
               }}
             >
               <Text
                 style={{
+                  color: isActive ? theme.colors.brand : theme.colors.textSecondary,
                   fontSize: typography.fontSizes.sm,
                   fontWeight: isActive
                     ? typography.fontWeights.bold
                     : typography.fontWeights.medium,
-                  color: isActive ? theme.colors.brand : theme.colors.textSecondary,
                 }}
               >
                 {label}
@@ -111,12 +112,12 @@ export default function AnalyticsScreen() {
         })}
       </View>
 
-      {/* Main Chart View based on Tab */}
+      {/* Tab Panels */}
       {activeTab === 'categories' && (
         <View style={{ gap: spacing.lg }}>
           <CategoryPieChart data={categoryBreakdown} currency={family.currency} />
 
-          {/* Top Merchants Leaderboard */}
+          {/* Top Merchants Card */}
           <Card padding="md">
             <Text
               style={{
@@ -126,7 +127,7 @@ export default function AnalyticsScreen() {
                 marginBottom: spacing.md,
               }}
             >
-              {t.analytics.topMerchants} ({selectedPeriod})
+              {t.analytics.topMerchants}
             </Text>
 
             {topMerchants.length === 0 ? (
@@ -198,11 +199,7 @@ export default function AnalyticsScreen() {
 
       {activeTab === 'trends' && (
         <View style={{ gap: spacing.lg }}>
-          <SpendingVelocityChart
-            data={velocityData}
-            totalBudget={metrics.totalBudget}
-            currency={family.currency}
-          />
+          <SpendingVelocityChart data={velocityData} currency={family.currency} />
         </View>
       )}
 

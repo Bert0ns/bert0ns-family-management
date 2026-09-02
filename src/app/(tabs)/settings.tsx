@@ -39,7 +39,6 @@ export default function SettingsScreen() {
     family,
     members,
     categories,
-    budgets,
     expenses,
     updateFamilySettings,
     resetToSampleData,
@@ -64,7 +63,6 @@ export default function SettingsScreen() {
       family,
       members,
       categories,
-      budgets,
       expenses,
     };
 

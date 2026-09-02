@@ -29,14 +29,6 @@ export interface Category {
   is_default?: boolean;
 }
 
-export interface Budget {
-  id: string;
-  family_id: string;
-  category_id?: string; // null for total family monthly budget
-  monthly_limit: number;
-  period: string; // YYYY-MM
-}
-
 export interface ExpenseSplit {
   member_id: string;
   share_amount: number;

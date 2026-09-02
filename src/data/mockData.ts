@@ -1,4 +1,4 @@
-import { Family, FamilyMember, Category, Budget, Expense } from '@/types';
+import { Family, FamilyMember, Category, Expense } from '@/types';
 
 export const INITIAL_FAMILY: Family = {
   id: 'fam_1',
@@ -126,59 +126,6 @@ export const INITIAL_CATEGORIES: Category[] = [
     icon: 'Tag',
     color: '#64748B',
     is_default: true,
-  },
-];
-
-export const INITIAL_BUDGETS: Budget[] = [
-  { id: 'b_total', family_id: 'fam_1', monthly_limit: 4500, period: '2026-08' },
-  {
-    id: 'b_groceries',
-    family_id: 'fam_1',
-    category_id: 'cat_groceries',
-    monthly_limit: 1200,
-    period: '2026-08',
-  },
-  {
-    id: 'b_dining',
-    family_id: 'fam_1',
-    category_id: 'cat_dining',
-    monthly_limit: 450,
-    period: '2026-08',
-  },
-  {
-    id: 'b_utilities',
-    family_id: 'fam_1',
-    category_id: 'cat_utilities',
-    monthly_limit: 400,
-    period: '2026-08',
-  },
-  {
-    id: 'b_transport',
-    family_id: 'fam_1',
-    category_id: 'cat_transport',
-    monthly_limit: 350,
-    period: '2026-08',
-  },
-  {
-    id: 'b_housing',
-    family_id: 'fam_1',
-    category_id: 'cat_housing',
-    monthly_limit: 1500,
-    period: '2026-08',
-  },
-  {
-    id: 'b_entertainment',
-    family_id: 'fam_1',
-    category_id: 'cat_entertainment',
-    monthly_limit: 300,
-    period: '2026-08',
-  },
-  {
-    id: 'b_shopping',
-    family_id: 'fam_1',
-    category_id: 'cat_shopping',
-    monthly_limit: 300,
-    period: '2026-08',
   },
 ];
 

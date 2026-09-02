@@ -3,5 +3,5 @@ dist
 .expo
 pnpm-lock.yaml
 assets
-dist/
-EOF
+coverage
+.fallow
