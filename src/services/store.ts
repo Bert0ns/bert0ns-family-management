@@ -38,8 +38,10 @@ interface AppState {
   addExpense: (expense: Omit<Expense, 'id' | 'created_at' | 'family_id'>) => Expense;
   updateExpense: (id: string, updates: Partial<Expense>) => void;
   deleteExpense: (id: string) => void;
+  clearAllExpenses: () => void;
 
   // Family & Member Actions
+  updateFamilySettings: (updates: { name?: string; currency?: string }) => void;
   addMember: (member: Omit<FamilyMember, 'id' | 'family_id'>) => FamilyMember;
   updateMember: (id: string, updates: Partial<FamilyMember>) => void;
 
@@ -59,13 +61,6 @@ interface AppState {
 
 const DEFAULT_FILTERS: FilterOptions = {
   searchQuery: '',
-  selectedMemberId: undefined,
-  selectedCategoryId: undefined,
-  startDate: undefined,
-  endDate: undefined,
-  minAmount: undefined,
-  maxAmount: undefined,
-  sortBy: 'date_desc',
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -75,54 +70,60 @@ export const useAppStore = create<AppState>((set, get) => ({
   budgets: INITIAL_BUDGETS,
   expenses: INITIAL_EXPENSES,
   importBatches: [],
-  currentMemberId: INITIAL_MEMBERS[0].id,
+  currentMemberId: 'mem_1',
   selectedPeriod: '2026-08',
   filters: DEFAULT_FILTERS,
 
   setCurrentMemberId: (id) => set({ currentMemberId: id }),
   setSelectedPeriod: (period) => set({ selectedPeriod: period }),
-  setFilters: (newFilters) =>
-    set((state) => ({
-      filters: { ...state.filters, ...newFilters },
-    })),
+  setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
   resetFilters: () => set({ filters: DEFAULT_FILTERS }),
+
+  updateFamilySettings: (updates) => {
+    set((state) => ({
+      family: {
+        ...state.family,
+        ...updates,
+      },
+    }));
+  },
 
   addExpense: (expenseData) => {
     const state = get();
     const newExpense: Expense = {
       ...expenseData,
-      id: `exp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      id: `exp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       family_id: state.family.id,
       created_at: new Date().toISOString(),
     };
-    set((state) => ({
-      expenses: [newExpense, ...state.expenses],
-    }));
+    set((state) => ({ expenses: [newExpense, ...state.expenses] }));
     return newExpense;
   },
 
   updateExpense: (id, updates) => {
     set((state) => ({
-      expenses: state.expenses.map((exp) => (exp.id === id ? { ...exp, ...updates } : exp)),
+      expenses: state.expenses.map((e) => (e.id === id ? { ...e, ...updates } : e)),
     }));
   },
 
   deleteExpense: (id) => {
     set((state) => ({
-      expenses: state.expenses.filter((exp) => exp.id !== id),
+      expenses: state.expenses.filter((e) => e.id !== id),
     }));
+  },
+
+  clearAllExpenses: () => {
+    set({ expenses: [], importBatches: [] });
   },
 
   addMember: (memberData) => {
     const state = get();
     const newMember: FamilyMember = {
       ...memberData,
-      id: `mem_${Date.now()}`,
+      id: `mem_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       family_id: state.family.id,
     };
-    set((state) => ({
-      members: [...state.members, newMember],
-    }));
+    set((state) => ({ members: [...state.members, newMember] }));
     return newMember;
   },
 
@@ -136,56 +137,55 @@ export const useAppStore = create<AppState>((set, get) => ({
     const state = get();
     const newCategory: Category = {
       ...categoryData,
-      id: `cat_${Date.now()}`,
+      id: `cat_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       family_id: state.family.id,
     };
-    set((state) => ({
-      categories: [...state.categories, newCategory],
-    }));
+    set((state) => ({ categories: [...state.categories, newCategory] }));
     return newCategory;
   },
 
   updateBudget: (categoryId, limit) => {
-    set((state) => {
-      const existing = state.budgets.find(
-        (b) => b.category_id === categoryId && b.period === state.selectedPeriod,
-      );
-      if (existing) {
-        return {
-          budgets: state.budgets.map((b) =>
-            b.id === existing.id ? { ...b, monthly_limit: limit } : b,
-          ),
-        };
-      } else {
-        const newBudget: Budget = {
-          id: `b_${Date.now()}`,
-          family_id: state.family.id,
-          category_id: categoryId,
-          monthly_limit: limit,
-          period: state.selectedPeriod,
-        };
-        return {
-          budgets: [...state.budgets, newBudget],
-        };
-      }
-    });
+    const state = get();
+    const period = state.selectedPeriod;
+    const existingIndex = state.budgets.findIndex(
+      (b) => b.category_id === categoryId && b.period === period,
+    );
+
+    if (existingIndex >= 0) {
+      const updatedBudgets = [...state.budgets];
+      updatedBudgets[existingIndex] = {
+        ...updatedBudgets[existingIndex],
+        monthly_limit: limit,
+      };
+      set({ budgets: updatedBudgets });
+    } else {
+      const newBudget: Budget = {
+        id: `bud_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        family_id: state.family.id,
+        category_id: categoryId,
+        monthly_limit: limit,
+        period,
+      };
+      set({ budgets: [...state.budgets, newBudget] });
+    }
   },
 
   importExpenseReport: (report, fileName) => {
     const state = get();
     const batchId = `batch_${Date.now()}`;
+    const totalAmount = report.expenses.reduce((sum, e) => sum + e.amount, 0);
 
-    // Find or fallback to member
     const uploaderMember =
-      state.members.find(
-        (m) => m.display_name.toLowerCase() === (report.uploaded_by || '').toLowerCase(),
-      ) ||
-      state.members.find((m) => m.id === state.currentMemberId) ||
-      state.members[0];
+      state.members.find((m) => m.id === state.currentMemberId) || state.members[0];
 
-    let totalAmount = 0;
     const newExpenses: Expense[] = report.expenses.map((rawExp, index) => {
-      totalAmount += rawExp.amount;
+      let paidMember = uploaderMember;
+      if (rawExp.paid_by) {
+        const found = state.members.find(
+          (m) => m.display_name.toLowerCase() === rawExp.paid_by?.toLowerCase(),
+        );
+        if (found) paidMember = found;
+      }
 
       // Match category name or fallback to "General & Other"
       const matchedCat =
@@ -196,7 +196,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       return {
         id: `exp_imp_${Date.now()}_${index}`,
         family_id: state.family.id,
-        paid_by_member_id: uploaderMember.id,
+        paid_by_member_id: paidMember.id,
         category_id: matchedCat.id,
         import_batch_id: batchId,
         transaction_date: rawExp.date,

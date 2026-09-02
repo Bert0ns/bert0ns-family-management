@@ -78,6 +78,7 @@ export const ExpenseItemSchema = z.object({
   amount: z.number().positive('Amount must be greater than 0'),
   category: z.string().default('Uncategorized'),
   notes: z.string().optional(),
+  paid_by: z.string().optional(),
   payment_method: z.string().optional(),
   is_recurring: z.boolean().default(false),
   split: z
@@ -113,5 +114,5 @@ export interface FilterOptions {
   endDate?: string;
   minAmount?: number;
   maxAmount?: number;
-  sortBy: 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';
+  sortBy?: 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';
 }

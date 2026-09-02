@@ -23,6 +23,7 @@ export interface TranslationSchema {
     ledger: string;
     import: string;
     family: string;
+    settings: string;
   };
   dashboard: {
     householdOverview: string;
@@ -94,15 +95,6 @@ export interface TranslationSchema {
     budgetEnvelopes: string;
     addCategory: string;
     tapToEditLimit: string;
-    appearanceTheme: string;
-    themeLight: string;
-    themeDark: string;
-    themeSystem: string;
-    languageSelection: string;
-    english: string;
-    italian: string;
-    resetTitle: string;
-    resetButton: string;
     editBudgetTitle: string;
     editBudgetSubtitle: string;
     monthlyBudgetLimit: string;
@@ -118,6 +110,40 @@ export interface TranslationSchema {
     categoryNamePlaceholder: string;
     selectIcon: string;
     selectColor: string;
+  };
+  settings: {
+    title: string;
+    householdProfile: string;
+    familyNameLabel: string;
+    currencyLabel: string;
+    currencySubtitle: string;
+    appearanceLanguage: string;
+    themeLabel: string;
+    themeLight: string;
+    themeDark: string;
+    themeSystem: string;
+    languageLabel: string;
+    english: string;
+    italian: string;
+    cloudSyncTitle: string;
+    cloudSyncSubtitle: string;
+    cloudStatusLocal: string;
+    cloudStatusSynced: string;
+    rlsProtectionNotice: string;
+    dataManagementTitle: string;
+    exportArchiveButton: string;
+    exportArchiveSubtitle: string;
+    resetDemoDataButton: string;
+    resetDemoSubtitle: string;
+    clearLedgerButton: string;
+    clearLedgerSubtitle: string;
+    clearLedgerConfirmTitle: string;
+    clearLedgerConfirmMessage: string;
+    aboutTitle: string;
+    appVersion: string;
+    privacyGuaranteeTitle: string;
+    privacyGuaranteeBadge: string;
+    privacyGuaranteeDescription: string;
   };
   addExpense: {
     title: string;

@@ -36,6 +36,18 @@
     "ts-jest": "^29.2.5",
     "typescript": "~6.0.3"
   },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "react-native-worklets",
+        "@react-native/metro-config",
+        "@types/react"
+      ]
+    },
+    "onlyBuiltDependencies": [
+      "@parcel/watcher"
+    ]
+  },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",

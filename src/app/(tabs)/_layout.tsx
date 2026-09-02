@@ -1,6 +1,13 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { LayoutDashboard, PieChart, ReceiptText, UploadCloud, Users } from 'lucide-react-native';
+import {
+  LayoutDashboard,
+  PieChart,
+  ReceiptText,
+  UploadCloud,
+  Users,
+  Settings,
+} from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 
@@ -65,6 +72,14 @@ export default function TabsLayout() {
           title: t.tabs.family,
           headerTitle: t.tabs.family,
           tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: t.tabs.settings,
+          headerTitle: t.tabs.settings,
+          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
         }}
       />
     </Tabs>

@@ -1,18 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import {
-  Users,
-  Target,
-  Sun,
-  Moon,
-  RotateCcw,
-  Plus,
-  Tag,
-  UserPlus,
-  Globe,
-} from 'lucide-react-native';
+import { Users, Target, Plus, Tag, UserPlus } from 'lucide-react-native';
 import { useTheme } from '@/theme';
-import { useI18n, SupportedLocale } from '@/i18n';
+import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import { MemberCard } from '@/components/family/MemberCard';
 import { BudgetEnvelopeCard } from '@/components/family/BudgetEnvelopeCard';
@@ -25,10 +15,8 @@ import { Badge } from '@/components/common/Badge';
 import { Category, Budget } from '@/types';
 
 export default function FamilyScreen() {
-  const { theme, colorSchemePreference, setColorSchemePreference, spacing, radius, typography } =
-    useTheme();
-
-  const { t, locale, setLocale } = useI18n();
+  const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
 
   const {
     family,
@@ -40,7 +28,6 @@ export default function FamilyScreen() {
     updateBudget,
     addMember,
     addCategory,
-    resetToSampleData,
   } = useAppStore();
 
   const [selectedCategoryForBudget, setSelectedCategoryForBudget] = useState<Category | null>(null);
@@ -98,119 +85,6 @@ export default function FamilyScreen() {
             variant="solid"
             size="sm"
           />
-        </View>
-      </Card>
-
-      {/* Language / Lingua Selection */}
-      <Card padding="md" style={{ marginBottom: spacing.lg }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.xs,
-            marginBottom: spacing.sm,
-          }}
-        >
-          <Globe size={18} color={theme.colors.brand} />
-          <Text
-            style={{
-              color: theme.colors.textPrimary,
-              fontSize: typography.fontSizes.md,
-              fontWeight: typography.fontWeights.bold,
-            }}
-          >
-            {t.family.languageSelection}
-          </Text>
-        </View>
-
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-          {(['en', 'it'] as const).map((loc) => {
-            const isSelected = locale === loc;
-            const label = loc === 'en' ? t.family.english : t.family.italian;
-            return (
-              <TouchableOpacity
-                key={loc}
-                activeOpacity={0.7}
-                onPress={() => setLocale(loc)}
-                style={{
-                  flex: 1,
-                  paddingVertical: spacing.sm,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: radius.md,
-                  backgroundColor: isSelected ? theme.colors.brand : theme.colors.surfaceSubtle,
-                  borderWidth: 1,
-                  borderColor: isSelected ? theme.colors.brand : theme.colors.border,
-                }}
-              >
-                <Text
-                  style={{
-                    color: isSelected ? '#FFFFFF' : theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.sm,
-                    fontWeight: isSelected
-                      ? typography.fontWeights.bold
-                      : typography.fontWeights.medium,
-                  }}
-                >
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </Card>
-
-      {/* Appearance & Theme */}
-      <Card padding="md" style={{ marginBottom: spacing.lg }}>
-        <Text
-          style={{
-            color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.md,
-            fontWeight: typography.fontWeights.bold,
-            marginBottom: spacing.md,
-          }}
-        >
-          {t.family.appearanceTheme}
-        </Text>
-
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-          {(['light', 'dark', 'system'] as const).map((pref) => {
-            const isSelected = colorSchemePreference === pref;
-            const label =
-              pref === 'light'
-                ? t.family.themeLight
-                : pref === 'dark'
-                  ? t.family.themeDark
-                  : t.family.themeSystem;
-
-            return (
-              <TouchableOpacity
-                key={pref}
-                activeOpacity={0.7}
-                onPress={() => setColorSchemePreference(pref)}
-                style={{
-                  flex: 1,
-                  paddingVertical: spacing.sm,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: radius.md,
-                  backgroundColor: isSelected ? theme.colors.brand : theme.colors.surfaceSubtle,
-                  borderWidth: 1,
-                  borderColor: isSelected ? theme.colors.brand : theme.colors.border,
-                }}
-              >
-                <Text
-                  style={{
-                    color: isSelected ? '#FFFFFF' : theme.colors.textSecondary,
-                    fontSize: typography.fontSizes.sm,
-                    fontWeight: typography.fontWeights.semibold,
-                  }}
-                >
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
         </View>
       </Card>
 
@@ -328,27 +202,6 @@ export default function FamilyScreen() {
           );
         })}
       </View>
-
-      {/* Reset State Button */}
-      <Card padding="md" style={{ alignItems: 'center' }}>
-        <Text
-          style={{
-            color: theme.colors.textSecondary,
-            fontSize: typography.fontSizes.xs,
-            textAlign: 'center',
-            marginBottom: spacing.sm,
-          }}
-        >
-          {t.family.resetTitle}
-        </Text>
-        <Button
-          title={t.family.resetButton}
-          variant="outline"
-          size="sm"
-          icon={<RotateCcw size={14} color={theme.colors.textSecondary} />}
-          onPress={resetToSampleData}
-        />
-      </Card>
 
       {/* Edit Budget Modal */}
       <EditBudgetModal

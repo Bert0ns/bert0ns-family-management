@@ -63,6 +63,26 @@ describe('useAppStore (State Management Unit Tests)', () => {
     expect(updatedState.importBatches[0].file_name).toBe('september-expenses.json');
   });
 
+  it('updates family settings (name and currency)', () => {
+    const state = useAppStore.getState();
+    state.updateFamilySettings({ name: 'The Rossi Family', currency: '$' });
+
+    const updatedState = useAppStore.getState();
+    expect(updatedState.family.name).toBe('The Rossi Family');
+    expect(updatedState.family.currency).toBe('$');
+  });
+
+  it('clears all expenses when clearAllExpenses is called', () => {
+    const state = useAppStore.getState();
+    expect(state.expenses.length).toBeGreaterThan(0);
+
+    state.clearAllExpenses();
+
+    const updatedState = useAppStore.getState();
+    expect(updatedState.expenses).toHaveLength(0);
+    expect(updatedState.importBatches).toHaveLength(0);
+  });
+
   it('updates filters and resets filters correctly', () => {
     const state = useAppStore.getState();
     state.setFilters({ searchQuery: 'Netflix', selectedMemberId: 'mem_1' });

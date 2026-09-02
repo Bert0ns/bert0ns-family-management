@@ -3,7 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from 'react
 import * as DocumentPicker from 'expo-document-picker';
 import { Upload, FileJson, AlertCircle, CheckCircle2 } from 'lucide-react-native';
 import { useTheme } from '@/theme';
-import { ExpenseReportImportSchema, RawExpenseReport } from '@/types';
+import { RawExpenseReport } from '@/types';
+import { reportValidator } from '@/services/validator';
 import { Button } from '@/components/common/Button';
 
 interface JsonDropzoneProps {
@@ -19,11 +20,10 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed }) => {
     try {
       setErrorMessage(null);
       const rawData = JSON.parse(jsonString);
-      const validationResult = ExpenseReportImportSchema.safeParse(rawData);
+      const validationResult = reportValidator.validate(rawData);
 
-      if (!validationResult.success) {
-        const firstError = validationResult.error.issues[0]?.message || 'Invalid JSON format';
-        setErrorMessage(`Validation error: ${firstError}`);
+      if (!validationResult.success || !validationResult.data) {
+        setErrorMessage(`Validation error: ${validationResult.error || 'Invalid JSON format'}`);
         return;
       }
 

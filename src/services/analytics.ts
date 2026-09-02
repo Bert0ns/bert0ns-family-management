@@ -1,40 +1,13 @@
 import { Expense, Category, FamilyMember, Budget } from '@/types';
-import { IAnalyticsCalculator } from './interfaces';
+import {
+  IAnalyticsCalculator,
+  CategorySummary,
+  MemberSummary,
+  DailySpendPoint,
+  MonthlyKPIMetrics,
+} from './interfaces';
 
-export interface CategorySummary {
-  category: Category;
-  total: number;
-  percentage: number;
-  transactionCount: number;
-}
-
-export interface MemberSummary {
-  member: FamilyMember;
-  total: number;
-  percentage: number;
-  transactionCount: number;
-}
-
-export interface DailySpendPoint {
-  day: number;
-  dateStr: string;
-  dailyAmount: number;
-  cumulativeAmount: number;
-  budgetLine: number;
-}
-
-export interface MonthlyKPIMetrics {
-  totalSpend: number;
-  totalBudget: number;
-  remainingBudget: number;
-  budgetProgressPercent: number;
-  isOverBudget: boolean;
-  dailyAverageBurn: number;
-  projectedMonthEnd: number;
-  transactionCount: number;
-  topCategory?: CategorySummary;
-  topSpender?: MemberSummary;
-}
+export { CategorySummary, MemberSummary, DailySpendPoint, MonthlyKPIMetrics };
 
 /**
  * AnalyticsCalculator implements IAnalyticsCalculator following the Single Responsibility Principle.
