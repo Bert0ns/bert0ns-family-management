@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
-import { TrendingUp, Plus, Upload, Flame, ArrowUpRight, Receipt, Users } from 'lucide-react-native';
+import { Plus, Upload, Flame, ArrowUpRight, Receipt, Users } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -187,21 +187,14 @@ export default function DashboardScreen() {
         </View>
       </Card>
 
-      {/* KPI Grid */}
-      <View style={{ flexDirection: 'row', gap: spacing.md, marginBottom: spacing.lg }}>
+      {/* Daily Average Burn KPI */}
+      <View style={{ marginBottom: spacing.lg }}>
         <KPIStat
           title={t.dashboard.dailyAverage}
           value={`${family.currency}${metrics.dailyAverageBurn.toFixed(0)}`}
           subtitle={t.dashboard.burnRatePerDay}
           icon={<Flame size={18} color={theme.colors.warning} />}
           variant="warning"
-        />
-        <KPIStat
-          title={t.dashboard.monthForecast}
-          value={`${family.currency}${metrics.projectedMonthEnd.toFixed(0)}`}
-          subtitle={t.dashboard.projectedSpend}
-          icon={<TrendingUp size={18} color={theme.colors.info} />}
-          variant="brand"
         />
       </View>
 
