@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { UserPlus, Check, Shield, User } from 'lucide-react-native';
+import { UserPlus, Check, Shield, User, Eye } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { UserRole } from '@/types';
@@ -71,44 +71,48 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ visible, onClose
         >
           {t.family.memberRoleLabel}
         </Text>
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-          {(['MEMBER', 'ADMIN'] as const).map((r) => {
+        <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+          {(['MEMBER', 'ADMIN', 'VIEWER'] as const).map((r) => {
             const isSelected = role === r;
-            const label = r === 'ADMIN' ? t.family.roleAdmin : t.family.roleMember;
+            let label = t.family.roleMember;
+            let IconComponent = User;
+            if (r === 'ADMIN') {
+              label = t.family.roleAdmin;
+              IconComponent = Shield;
+            } else if (r === 'VIEWER') {
+              label = t.family.roleViewer;
+              IconComponent = Eye;
+            }
+
             return (
               <TouchableOpacity
                 key={r}
                 onPress={() => setRole(r)}
                 style={{
                   flex: 1,
-                  flexDirection: 'row',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   paddingVertical: spacing.sm,
+                  paddingHorizontal: spacing.xs,
                   borderRadius: radius.md,
                   backgroundColor: isSelected
                     ? theme.colors.brandLight
                     : theme.colors.surfaceSubtle,
                   borderWidth: 1.5,
                   borderColor: isSelected ? theme.colors.brand : theme.colors.border,
-                  gap: spacing.xs,
+                  gap: 4,
                 }}
               >
-                {r === 'ADMIN' ? (
-                  <Shield
-                    size={16}
-                    color={isSelected ? theme.colors.brand : theme.colors.textSecondary}
-                  />
-                ) : (
-                  <User
-                    size={16}
-                    color={isSelected ? theme.colors.brand : theme.colors.textSecondary}
-                  />
-                )}
+                <IconComponent
+                  size={16}
+                  color={isSelected ? theme.colors.brand : theme.colors.textSecondary}
+                />
                 <Text
+                  numberOfLines={1}
                   style={{
                     color: isSelected ? theme.colors.brand : theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.sm,
+                    fontSize: typography.fontSizes.xs,
                     fontWeight: isSelected
                       ? typography.fontWeights.bold
                       : typography.fontWeights.medium,

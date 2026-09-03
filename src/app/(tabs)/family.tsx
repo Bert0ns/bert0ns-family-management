@@ -6,21 +6,33 @@ import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import { MemberCard } from '@/components/family/MemberCard';
 import { AddMemberModal } from '@/components/family/AddMemberModal';
+import { EditMemberModal } from '@/components/family/EditMemberModal';
 import { AddCategoryModal } from '@/components/family/AddCategoryModal';
 import { IconHelper } from '@/components/common/IconHelper';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
+import { FamilyMember } from '@/types';
 
 export default function FamilyScreen() {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
 
-  const { family, members, categories, expenses, selectedPeriod, addMember, addCategory } =
-    useAppStore();
+  const {
+    family,
+    members,
+    categories,
+    expenses,
+    selectedPeriod,
+    addMember,
+    updateMember,
+    deleteMember,
+    addCategory,
+  } = useAppStore();
 
   const [isAddMemberVisible, setIsAddMemberVisible] = useState(false);
   const [isAddCategoryVisible, setIsAddCategoryVisible] = useState(false);
+  const [selectedMemberForEdit, setSelectedMemberForEdit] = useState<FamilyMember | null>(null);
 
   const periodExpenses = expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod));
 
@@ -116,6 +128,7 @@ export default function FamilyScreen() {
               transactionCount={memberTxs.length}
               currency={family.currency}
               isCurrentUser={member.is_current_user}
+              onSelect={() => setSelectedMemberForEdit(member)}
             />
           );
         })}
@@ -226,6 +239,24 @@ export default function FamilyScreen() {
         visible={isAddMemberVisible}
         onClose={() => setIsAddMemberVisible(false)}
         onSave={addMember}
+      />
+
+      {/* Edit Member Modal */}
+      <EditMemberModal
+        visible={!!selectedMemberForEdit}
+        member={selectedMemberForEdit}
+        expenses={expenses}
+        isOnlyMember={members.length <= 1}
+        currency={family.currency}
+        onClose={() => setSelectedMemberForEdit(null)}
+        onSave={(updates) => {
+          if (selectedMemberForEdit) {
+            updateMember(selectedMemberForEdit.id, updates);
+          }
+        }}
+        onDelete={(memberId) => {
+          deleteMember(memberId);
+        }}
       />
 
       {/* Add Category Modal */}

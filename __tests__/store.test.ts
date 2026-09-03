@@ -186,18 +186,105 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     expect(pizzaExpense?.splits?.[1].share_amount).toBe(32);
   });
 
-  it('deletes members and categories correctly', () => {
+  it('updates member permissions, roles, and profile', () => {
     const state = useAppStore.getState();
-    const initialMemberCount = state.members.length;
+    const targetMember = state.members[1]; // mem_2 Elena
+
+    state.updateMember(targetMember.id, {
+      role: 'VIEWER',
+      display_name: 'Elena (Viewer)',
+      color_code: '#10B981',
+    });
+
+    const updated = useAppStore.getState();
+    const modifiedMember = updated.members.find((m) => m.id === targetMember.id);
+    expect(modifiedMember?.role).toBe('VIEWER');
+    expect(modifiedMember?.display_name).toBe('Elena (Viewer)');
+    expect(modifiedMember?.color_code).toBe('#10B981');
+  });
+
+  it('deletes member and all related data (cascade delete of expenses and split cleanup)', () => {
+    const state = useAppStore.getState();
+
+    // Add an expense paid by mem_2
+    const exp1 = state.addExpense({
+      merchant_name: "Elena's Special Purchase",
+      amount: 50.0,
+      category_id: 'cat_groceries',
+      paid_by_member_id: 'mem_2',
+      transaction_date: '2026-08-15',
+      is_recurring: false,
+    });
+
+    // Add an expense paid by mem_1 that has a split with mem_2
+    const exp2 = state.addExpense({
+      merchant_name: 'Joint Dinner',
+      amount: 100.0,
+      category_id: 'cat_groceries',
+      paid_by_member_id: 'mem_1',
+      transaction_date: '2026-08-16',
+      is_recurring: false,
+      splits: [
+        { member_id: 'mem_1', share_amount: 50.0, percentage: 50 },
+        { member_id: 'mem_2', share_amount: 50.0, percentage: 50 },
+      ],
+    });
+
+    // Verify initial presence
+    expect(useAppStore.getState().expenses.some((e) => e.id === exp1.id)).toBe(true);
+
+    // Set active member to mem_2
+    state.setCurrentMemberId('mem_2');
+    expect(useAppStore.getState().currentMemberId).toBe('mem_2');
+
+    // Delete mem_2
+    state.deleteMember('mem_2');
+
+    const updated = useAppStore.getState();
+
+    // 1. Member is removed
+    expect(updated.members.find((m) => m.id === 'mem_2')).toBeUndefined();
+
+    // 2. Expenses paid by mem_2 are cascade deleted
+    expect(updated.expenses.find((e) => e.id === exp1.id)).toBeUndefined();
+
+    // 3. Splits involving mem_2 are cleaned up (only 1 member remaining -> splits cleared)
+    const updatedJointExp = updated.expenses.find((e) => e.id === exp2.id);
+    expect(updatedJointExp).toBeDefined();
+    expect(updatedJointExp?.splits).toBeUndefined();
+
+    // 4. Current member ID safely fell back to remaining member
+    expect(updated.currentMemberId).not.toBe('mem_2');
+    expect(updated.members.some((m) => m.id === updated.currentMemberId)).toBe(true);
+  });
+
+  it('prevents deletion of the last remaining member', () => {
+    const state = useAppStore.getState();
+    const remainingIds = state.members.map((m) => m.id);
+
+    // Delete down to 1 member
+    for (let i = 0; i < remainingIds.length - 1; i++) {
+      state.deleteMember(remainingIds[i]);
+    }
+
+    const stateWithOne = useAppStore.getState();
+    expect(stateWithOne.members).toHaveLength(1);
+    const lastMemberId = stateWithOne.members[0].id;
+
+    // Attempt deleting the only remaining member
+    stateWithOne.deleteMember(lastMemberId);
+
+    const finalState = useAppStore.getState();
+    expect(finalState.members).toHaveLength(1);
+    expect(finalState.members[0].id).toBe(lastMemberId);
+  });
+
+  it('deletes categories correctly', () => {
+    const state = useAppStore.getState();
     const initialCategoryCount = state.categories.length;
 
-    state.deleteMember('mem_4');
-    let updated = useAppStore.getState();
-    expect(updated.members).toHaveLength(initialMemberCount - 1);
-    expect(updated.members.find((m) => m.id === 'mem_4')).toBeUndefined();
-
     state.deleteCategory('cat_other');
-    updated = useAppStore.getState();
+    const updated = useAppStore.getState();
     expect(updated.categories).toHaveLength(initialCategoryCount - 1);
     expect(updated.categories.find((c) => c.id === 'cat_other')).toBeUndefined();
   });

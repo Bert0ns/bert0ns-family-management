@@ -138,9 +138,45 @@ export const useAppStore = create<AppState>()(
       },
 
       deleteMember: (id) => {
-        set((state) => ({
-          members: state.members.filter((m) => m.id !== id),
-        }));
+        const state = get();
+        if (state.members.length <= 1) {
+          return;
+        }
+
+        const remainingMembers = state.members.filter((m) => m.id !== id);
+
+        // Cascade delete: remove all expenses paid by this member,
+        // and remove this member from split breakdowns on remaining expenses
+        const updatedExpenses = state.expenses
+          .filter((e) => e.paid_by_member_id !== id)
+          .map((e) => {
+            if (!e.splits || e.splits.length === 0) return e;
+            const remainingSplits = e.splits.filter((s) => s.member_id !== id);
+            if (remainingSplits.length <= 1) {
+              return { ...e, splits: undefined };
+            }
+            const remainingMemberIds = remainingSplits.map((s) => s.member_id);
+            return {
+              ...e,
+              splits: calculateEqualSplits(e.amount, remainingMemberIds),
+            };
+          });
+
+        const newCurrentMemberId =
+          state.currentMemberId === id ? remainingMembers[0]?.id || '' : state.currentMemberId;
+
+        const updatedBatches = state.importBatches.map((b) =>
+          b.imported_by_member_id === id
+            ? { ...b, imported_by_member_id: remainingMembers[0]?.id || '' }
+            : b,
+        );
+
+        set({
+          members: remainingMembers,
+          expenses: updatedExpenses,
+          currentMemberId: newCurrentMemberId,
+          importBatches: updatedBatches,
+        });
       },
 
       addCategory: (categoryData) => {

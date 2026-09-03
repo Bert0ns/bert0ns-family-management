@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { ShieldCheck, User } from 'lucide-react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { ShieldCheck, User, Eye, ChevronRight } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { FamilyMember } from '@/types';
 import { Avatar } from '@/components/common/Avatar';
@@ -24,9 +24,33 @@ export const MemberCard: React.FC<MemberCardProps> = ({
   isCurrentUser = false,
   onSelect,
 }) => {
-  const { theme, spacing, radius, typography } = useTheme();
+  const { theme, spacing, typography } = useTheme();
 
-  return (
+  const getRoleIcon = () => {
+    switch (member.role) {
+      case 'ADMIN':
+        return <ShieldCheck size={12} color={theme.colors.brand} />;
+      case 'VIEWER':
+        return <Eye size={12} color={theme.colors.textSecondary} />;
+      case 'MEMBER':
+      default:
+        return <User size={12} color={theme.colors.textSecondary} />;
+    }
+  };
+
+  const getRoleBadgeColor = () => {
+    switch (member.role) {
+      case 'ADMIN':
+        return theme.colors.brand;
+      case 'VIEWER':
+        return theme.colors.textMuted;
+      case 'MEMBER':
+      default:
+        return theme.colors.textSecondary;
+    }
+  };
+
+  const content = (
     <Card padding="md" style={{ marginBottom: spacing.sm }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 }}>
@@ -56,16 +80,10 @@ export const MemberCard: React.FC<MemberCardProps> = ({
             >
               <Badge
                 label={member.role}
-                color={member.role === 'ADMIN' ? theme.colors.brand : theme.colors.textSecondary}
+                color={getRoleBadgeColor()}
                 size="sm"
                 variant="subtle"
-                icon={
-                  member.role === 'ADMIN' ? (
-                    <ShieldCheck size={12} color={theme.colors.brand} />
-                  ) : (
-                    <User size={12} color={theme.colors.textSecondary} />
-                  )
-                }
+                icon={getRoleIcon()}
               />
               <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
                 {transactionCount} transactions
@@ -74,22 +92,35 @@ export const MemberCard: React.FC<MemberCardProps> = ({
           </View>
         </View>
 
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}>
-            Total Spend
-          </Text>
-          <Text
-            style={{
-              color: theme.colors.textPrimary,
-              fontSize: typography.fontSizes.lg,
-              fontWeight: typography.fontWeights.bold,
-            }}
-          >
-            {currency}
-            {totalSpent.toFixed(2)}
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}>
+              Total Spend
+            </Text>
+            <Text
+              style={{
+                color: theme.colors.textPrimary,
+                fontSize: typography.fontSizes.lg,
+                fontWeight: typography.fontWeights.bold,
+              }}
+            >
+              {currency}
+              {totalSpent.toFixed(2)}
+            </Text>
+          </View>
+          {onSelect && <ChevronRight size={16} color={theme.colors.textMuted} />}
         </View>
       </View>
     </Card>
   );
+
+  if (onSelect) {
+    return (
+      <TouchableOpacity activeOpacity={0.7} onPress={onSelect}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return content;
 };
