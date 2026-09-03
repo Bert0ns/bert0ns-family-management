@@ -1,6 +1,7 @@
 import { Platform, Alert } from 'react-native';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import { exportLogger } from '@/services/logger';
 
 export type ExportMimeType = 'text/csv' | 'application/json';
 
@@ -14,6 +15,8 @@ export async function exportAndShareFile(
   fileName: string,
   mimeType: ExportMimeType = 'text/csv',
 ): Promise<boolean> {
+  exportLogger.info('Starting file export', { fileName, mimeType, platform: Platform.OS });
+
   if (Platform.OS === 'web') {
     if (typeof document !== 'undefined') {
       const blob = new Blob([content], { type: `${mimeType};charset=utf-8;` });
@@ -24,8 +27,10 @@ export async function exportAndShareFile(
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      exportLogger.info('Web blob download completed', { fileName });
       return true;
     }
+    exportLogger.warn('Web document object not found for file export');
     return false;
   }
 
@@ -44,13 +49,15 @@ export async function exportAndShareFile(
         dialogTitle: `Export ${fileName}`,
         UTI: mimeType === 'text/csv' ? 'public.comma-separated-values-text' : 'public.json',
       });
+      exportLogger.info('Native share sheet opened successfully', { fileName });
       return true;
     } else {
+      exportLogger.warn('Native sharing unavailable on device');
       Alert.alert('Sharing Unavailable', 'Native sharing is not supported on this device.');
       return false;
     }
   } catch (error: any) {
-    console.error('Failed to export file:', error);
+    exportLogger.error('Failed to export file', error);
     Alert.alert('Export Error', error?.message || 'Failed to export file on this device.');
     return false;
   }

@@ -1,5 +1,6 @@
 import { ExpenseReportImportSchema, RawExpenseReport } from '@/types';
 import { IReportValidator } from './interfaces';
+import { validatorLogger } from '@/services/logger';
 
 /**
  * ReportValidator enforces the Single Responsibility Principle (SRP)
@@ -18,10 +19,19 @@ export class ReportValidator implements IReportValidator {
         const errorMsg = firstIssue
           ? `${firstIssue.path.join('.')}: ${firstIssue.message}`
           : 'Invalid JSON format';
+        validatorLogger.warn('JSON import validation rejected', {
+          error: errorMsg,
+          issueCount: result.error.issues.length,
+        });
         return { success: false, error: errorMsg };
       }
+      validatorLogger.debug('JSON import validated successfully', {
+        expensesCount: result.data.expenses.length,
+        currency: result.data.currency,
+      });
       return { success: true, data: result.data };
     } catch (e: any) {
+      validatorLogger.error('JSON parsing exception', { error: e?.message });
       return { success: false, error: e?.message || 'Failed to parse JSON' };
     }
   }

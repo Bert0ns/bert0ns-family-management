@@ -18,6 +18,7 @@ import {
   INITIAL_EXPENSES,
 } from '@/data/mockData';
 import { calculateEqualSplits } from './splitCalculator';
+import { storeLogger } from '@/services/logger';
 
 interface AppState {
   family: Family;
@@ -101,22 +102,30 @@ export const useAppStore = create<AppState>()(
           created_at: new Date().toISOString(),
         };
         set((state) => ({ expenses: [newExpense, ...state.expenses] }));
+        storeLogger.info('Expense added', {
+          id: newExpense.id,
+          amount: newExpense.amount,
+          categoryId: newExpense.category_id,
+        });
         return newExpense;
       },
 
       updateExpense: (id, updates) => {
+        storeLogger.debug('Expense updated', { id, updates });
         set((state) => ({
           expenses: state.expenses.map((e) => (e.id === id ? { ...e, ...updates } : e)),
         }));
       },
 
       deleteExpense: (id) => {
+        storeLogger.info('Expense deleted', { id });
         set((state) => ({
           expenses: state.expenses.filter((e) => e.id !== id),
         }));
       },
 
       clearAllExpenses: () => {
+        storeLogger.warn('All expenses cleared from store');
         set({ expenses: [], importBatches: [] });
       },
 
@@ -127,11 +136,17 @@ export const useAppStore = create<AppState>()(
           id: `mem_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           family_id: state.family.id,
         };
+        storeLogger.info('Member added', {
+          id: newMember.id,
+          name: newMember.display_name,
+          role: newMember.role,
+        });
         set((state) => ({ members: [...state.members, newMember] }));
         return newMember;
       },
 
       updateMember: (id, updates) => {
+        storeLogger.info('Member updated', { id, updates });
         set((state) => ({
           members: state.members.map((m) => (m.id === id ? { ...m, ...updates } : m)),
         }));
@@ -140,6 +155,7 @@ export const useAppStore = create<AppState>()(
       deleteMember: (id) => {
         const state = get();
         if (state.members.length <= 1) {
+          storeLogger.warn('Attempted to delete the only remaining member', { id });
           return;
         }
 
@@ -170,6 +186,12 @@ export const useAppStore = create<AppState>()(
             ? { ...b, imported_by_member_id: remainingMembers[0]?.id || '' }
             : b,
         );
+
+        storeLogger.info('Member cascade deleted', {
+          id,
+          removedExpensesCount: state.expenses.length - updatedExpenses.length,
+          newCurrentMemberId,
+        });
 
         set({
           members: remainingMembers,
@@ -272,10 +294,18 @@ export const useAppStore = create<AppState>()(
           importBatches: [newBatch, ...state.importBatches],
         }));
 
+        storeLogger.info('Expense report imported into store', {
+          batchId,
+          fileName,
+          importedCount: newExpenses.length,
+          totalAmount,
+        });
+
         return { importedCount: newExpenses.length, totalAmount, batchId };
       },
 
       resetToSampleData: () => {
+        storeLogger.info('Store reset to sample data');
         set({
           family: INITIAL_FAMILY,
           members: INITIAL_MEMBERS,

@@ -62,6 +62,9 @@ importers:
       react-native-gifted-charts:
         specifier: ^1.4.78
         version: 1.4.78(expo-linear-gradient@57.0.1(expo@57.0.19)(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(react-native-svg@15.15.4(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
+      react-native-logs:
+        specifier: ^5.6.0
+        version: 5.6.0
       react-native-safe-area-context:
         specifier: ~5.7.0
         version: 5.7.0(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
@@ -3203,6 +3206,9 @@ packages:
     peerDependencies:
       react: '*'
       react-native: '*'
+
+  react-native-logs@5.6.0:
+    resolution: {integrity: sha512-+5A/AlepSGvaT2RE8YpoLOUNxfra8WBqUOM/GBjggCnfH5+RaCDThpKL6QnengAf+Limmoidm9YXPFzQ9cj3bQ==}
 
   react-native-reanimated@4.6.0:
     resolution: {integrity: sha512-9vbQmok5BPX2J3RLPFt2UnwmK2QQoMDPDi0VB4a9JWIiEc55pdzvwEsdH91V/JXKNErqM6a9fElTBMc/1cbtBA==}
@@ -7844,6 +7850,8 @@ snapshots:
     dependencies:
       react: 19.2.3
       react-native: 0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3)
+
+  react-native-logs@5.6.0: {}
 
   react-native-reanimated@4.6.0(react-native-worklets@0.12.1(@babel/core@7.29.7)(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3):
     dependencies:

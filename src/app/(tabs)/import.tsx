@@ -22,6 +22,7 @@ import { RawExpenseReport } from '@/types';
 import { SAMPLE_IMPORT_REPORT } from '@/data/mockData';
 import { csvExporter } from '@/services/csvExporter';
 import { exportAndShareFile } from '@/services/fileExporter';
+import { importLogger } from '@/services/logger';
 
 export default function ImportScreen() {
   const { theme, spacing, radius, typography } = useTheme();
@@ -34,6 +35,11 @@ export default function ImportScreen() {
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   const handleFileParsed = (report: RawExpenseReport, fileName: string) => {
+    importLogger.info('Staging expense report for preview', {
+      fileName,
+      expensesCount: report.expenses.length,
+      currency: report.currency,
+    });
     setStagedReport(report);
     setStagedFileName(fileName);
   };
@@ -41,6 +47,7 @@ export default function ImportScreen() {
   const handleConfirmImport = () => {
     if (!stagedReport) return;
 
+    importLogger.info('Confirming expense report import', { fileName: stagedFileName });
     const result = importExpenseReport(stagedReport, stagedFileName);
     setStagedReport(null);
     setSuccessNotice(
