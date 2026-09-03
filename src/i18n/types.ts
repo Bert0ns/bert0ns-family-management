@@ -64,6 +64,9 @@ export interface TranslationSchema {
     noExpensesMatch: string;
     resetFilters: string;
     transactionsCount: string;
+    filtersTitle: string;
+    filterByMember: string;
+    filterByCategory: string;
   };
   import: {
     dropzoneTitle: string;

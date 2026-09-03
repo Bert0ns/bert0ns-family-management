@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Search, Filter, Plus, X, ArrowDownUp } from 'lucide-react-native';
+import { Search, Filter, Plus, X, ArrowDownUp, UploadCloud } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import { ExpenseItem } from '@/components/ledger/ExpenseItem';
 import { ExpenseDetailModal } from '@/components/ledger/ExpenseDetailModal';
+import { FormModal } from '@/components/common/FormModal';
+import { OptionSelector } from '@/components/common/OptionSelector';
 import { Input } from '@/components/common/Input';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
@@ -29,6 +31,13 @@ export default function LedgerScreen() {
   } = useAppStore();
 
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+
+  const selectedMember = members.find((m) => m.id === filters.selectedMemberId);
+  const selectedCategory = categories.find((c) => c.id === filters.selectedCategoryId);
+  const hasActiveFilters = !!(filters.selectedMemberId || filters.selectedCategoryId);
+  const activeFiltersCount =
+    (filters.selectedMemberId ? 1 : 0) + (filters.selectedCategoryId ? 1 : 0);
 
   // Apply filters
   let filteredExpenses = expenses.filter((exp) => {
@@ -104,7 +113,7 @@ export default function LedgerScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      {/* Search & Filter Header */}
+      {/* Search & Action Header */}
       <View
         style={{
           padding: spacing.lg,
@@ -114,130 +123,200 @@ export default function LedgerScreen() {
           borderBottomColor: theme.colors.border,
         }}
       >
-        <Input
-          placeholder={t.ledger.searchPlaceholder}
-          value={filters.searchQuery}
-          onChangeText={(text) => setFilters({ searchQuery: text })}
-          leftIcon={<Search size={18} color={theme.colors.textMuted} />}
-          rightIcon={
-            filters.searchQuery ? (
-              <TouchableOpacity onPress={() => setFilters({ searchQuery: '' })}>
-                <X size={16} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            ) : undefined
-          }
-          containerStyle={{ marginBottom: spacing.sm }}
-        />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <View style={{ flex: 1 }}>
+            <Input
+              placeholder={t.ledger.searchPlaceholder}
+              value={filters.searchQuery}
+              onChangeText={(text) => setFilters({ searchQuery: text })}
+              leftIcon={<Search size={18} color={theme.colors.textMuted} />}
+              rightIcon={
+                filters.searchQuery ? (
+                  <TouchableOpacity onPress={() => setFilters({ searchQuery: '' })}>
+                    <X size={16} color={theme.colors.textSecondary} />
+                  </TouchableOpacity>
+                ) : undefined
+              }
+              containerStyle={{ marginBottom: 0 }}
+            />
+          </View>
 
-        {/* Filter Pills - Members */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing.xs, paddingBottom: spacing.xs }}
-        >
+          {/* Filter Modal Trigger */}
           <TouchableOpacity
-            onPress={() => setFilters({ selectedMemberId: undefined })}
+            activeOpacity={0.7}
+            onPress={() => setIsFilterModalVisible(true)}
             style={{
-              paddingVertical: 4,
-              paddingHorizontal: spacing.md,
-              borderRadius: radius.full,
-              backgroundColor: !filters.selectedMemberId
-                ? theme.colors.brand
-                : theme.colors.surfaceSubtle,
+              width: 44,
+              height: 44,
+              borderRadius: radius.md,
+              backgroundColor: hasActiveFilters ? theme.colors.brand : theme.colors.surfaceSubtle,
+              borderWidth: 1,
+              borderColor: hasActiveFilters ? theme.colors.brand : theme.colors.border,
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            <Text
-              style={{
-                color: !filters.selectedMemberId ? '#FFFFFF' : theme.colors.textSecondary,
-                fontSize: typography.fontSizes.xs,
-                fontWeight: typography.fontWeights.semibold,
-              }}
-            >
-              {t.ledger.allMembers}
-            </Text>
-          </TouchableOpacity>
-
-          {members.map((m) => {
-            const isSelected = filters.selectedMemberId === m.id;
-            return (
-              <TouchableOpacity
-                key={m.id}
-                onPress={() => setFilters({ selectedMemberId: isSelected ? undefined : m.id })}
+            <Filter size={18} color={hasActiveFilters ? '#FFFFFF' : theme.colors.textSecondary} />
+            {activeFiltersCount > 0 && (
+              <View
                 style={{
-                  paddingVertical: 4,
-                  paddingHorizontal: spacing.md,
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  backgroundColor: theme.colors.brand,
                   borderRadius: radius.full,
-                  backgroundColor: isSelected ? m.color_code : theme.colors.surfaceSubtle,
+                  width: 18,
+                  height: 18,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 2,
+                  borderColor: theme.colors.surface,
                 }}
               >
+                <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: 'bold' }}>
+                  {activeFiltersCount}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Quick Import Shortcut */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push('/(tabs)/import')}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: radius.md,
+              backgroundColor: theme.colors.surfaceSubtle,
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <UploadCloud size={18} color={theme.colors.brand} />
+          </TouchableOpacity>
+
+          {/* Quick Add Expense Shortcut */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push('/expense/add')}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: radius.md,
+              backgroundColor: theme.colors.brand,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Plus size={18} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Active Filter Chips (Only rendered when filters are active) */}
+        {hasActiveFilters && (
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              gap: spacing.xs,
+              marginTop: spacing.sm,
+              alignItems: 'center',
+            }}
+          >
+            {selectedMember && (
+              <TouchableOpacity
+                onPress={() => setFilters({ selectedMemberId: undefined })}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingVertical: 4,
+                  paddingHorizontal: spacing.sm,
+                  borderRadius: radius.full,
+                  backgroundColor: theme.colors.surfaceSubtle,
+                  borderWidth: 1,
+                  borderColor: selectedMember.color_code,
+                }}
+              >
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: selectedMember.color_code,
+                  }}
+                />
                 <Text
                   style={{
-                    color: isSelected ? '#FFFFFF' : theme.colors.textSecondary,
+                    color: theme.colors.textPrimary,
                     fontSize: typography.fontSizes.xs,
                     fontWeight: typography.fontWeights.semibold,
                   }}
                 >
-                  {m.display_name}
+                  {selectedMember.display_name}
                 </Text>
+                <X size={12} color={theme.colors.textSecondary} />
               </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+            )}
 
-        {/* Filter Pills - Categories */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing.xs, paddingTop: spacing.xs }}
-        >
-          <TouchableOpacity
-            onPress={() => setFilters({ selectedCategoryId: undefined })}
-            style={{
-              paddingVertical: 4,
-              paddingHorizontal: spacing.md,
-              borderRadius: radius.full,
-              backgroundColor: !filters.selectedCategoryId
-                ? theme.colors.brand
-                : theme.colors.surfaceSubtle,
-            }}
-          >
-            <Text
-              style={{
-                color: !filters.selectedCategoryId ? '#FFFFFF' : theme.colors.textSecondary,
-                fontSize: typography.fontSizes.xs,
-                fontWeight: typography.fontWeights.semibold,
-              }}
-            >
-              {t.ledger.allCategories}
-            </Text>
-          </TouchableOpacity>
-
-          {categories.map((c) => {
-            const isSelected = filters.selectedCategoryId === c.id;
-            return (
+            {selectedCategory && (
               <TouchableOpacity
-                key={c.id}
-                onPress={() => setFilters({ selectedCategoryId: isSelected ? undefined : c.id })}
+                onPress={() => setFilters({ selectedCategoryId: undefined })}
                 style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
                   paddingVertical: 4,
-                  paddingHorizontal: spacing.md,
+                  paddingHorizontal: spacing.sm,
                   borderRadius: radius.full,
-                  backgroundColor: isSelected ? c.color : theme.colors.surfaceSubtle,
+                  backgroundColor: theme.colors.surfaceSubtle,
+                  borderWidth: 1,
+                  borderColor: selectedCategory.color,
                 }}
               >
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: selectedCategory.color,
+                  }}
+                />
                 <Text
                   style={{
-                    color: isSelected ? '#FFFFFF' : theme.colors.textSecondary,
+                    color: theme.colors.textPrimary,
                     fontSize: typography.fontSizes.xs,
                     fontWeight: typography.fontWeights.semibold,
                   }}
                 >
-                  {c.name}
+                  {selectedCategory.name}
                 </Text>
+                <X size={12} color={theme.colors.textSecondary} />
               </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+            )}
+
+            <TouchableOpacity
+              onPress={() =>
+                setFilters({ selectedMemberId: undefined, selectedCategoryId: undefined })
+              }
+              style={{ paddingVertical: 4, paddingHorizontal: spacing.xs }}
+            >
+              <Text
+                style={{
+                  color: theme.colors.textMuted,
+                  fontSize: typography.fontSizes.xs,
+                  fontWeight: typography.fontWeights.medium,
+                  textDecorationLine: 'underline',
+                }}
+              >
+                {t.ledger.resetFilters}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Summary Count & Sort Bar */}
@@ -332,6 +411,62 @@ export default function LedgerScreen() {
         onClose={() => setSelectedExpense(null)}
         onDelete={deleteExpense}
       />
+
+      {/* Filter Modal */}
+      <FormModal
+        visible={isFilterModalVisible}
+        title={t.ledger.filtersTitle}
+        icon={<Filter size={20} color={theme.colors.brand} />}
+        onClose={() => setIsFilterModalVisible(false)}
+        onSubmit={() => setIsFilterModalVisible(false)}
+        submitTitle={t.common.save}
+        cancelTitle={t.common.close}
+      >
+        <View style={{ gap: spacing.lg }}>
+          <OptionSelector
+            label={t.ledger.filterByMember}
+            options={[
+              { value: 'ALL', label: t.ledger.allMembers },
+              ...members.map((m) => ({
+                value: m.id,
+                label: m.display_name,
+                sublabel: m.role,
+              })),
+            ]}
+            selectedValue={filters.selectedMemberId || 'ALL'}
+            onSelect={(val) =>
+              setFilters({ selectedMemberId: val === 'ALL' ? undefined : (val as string) })
+            }
+          />
+
+          <OptionSelector
+            label={t.ledger.filterByCategory}
+            options={[
+              { value: 'ALL', label: t.ledger.allCategories },
+              ...categories.map((c) => ({
+                value: c.id,
+                label: c.name,
+              })),
+            ]}
+            selectedValue={filters.selectedCategoryId || 'ALL'}
+            onSelect={(val) =>
+              setFilters({ selectedCategoryId: val === 'ALL' ? undefined : (val as string) })
+            }
+          />
+
+          {hasActiveFilters && (
+            <Button
+              title={t.ledger.resetFilters}
+              variant="outline"
+              size="sm"
+              onPress={() => {
+                setFilters({ selectedMemberId: undefined, selectedCategoryId: undefined });
+              }}
+              style={{ marginTop: spacing.xs }}
+            />
+          )}
+        </View>
+      </FormModal>
     </View>
   );
 }

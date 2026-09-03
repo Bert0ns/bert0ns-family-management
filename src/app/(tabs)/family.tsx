@@ -47,8 +47,8 @@ export default function FamilyScreen() {
         padding="md"
         style={{
           marginBottom: spacing.lg,
-          backgroundColor: theme.isDark ? '#1E1B4B' : '#EEF2FF',
-          borderColor: theme.colors.brandLight,
+          backgroundColor: theme.colors.brandLight,
+          borderColor: theme.colors.brand,
         }}
       >
         <View

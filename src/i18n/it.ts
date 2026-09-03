@@ -66,6 +66,9 @@ export const it: TranslationSchema = {
     noExpensesMatch: 'Nessuna spesa corrisponde ai filtri',
     resetFilters: 'Reimposta Filtri',
     transactionsCount: 'Transazioni',
+    filtersTitle: 'Filtri',
+    filterByMember: 'Filtra per Membro',
+    filterByCategory: 'Filtra per Categoria',
   },
   import: {
     dropzoneTitle: 'Tocca o Trascina il File JSON delle Spese',

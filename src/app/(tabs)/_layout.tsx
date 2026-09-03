@@ -43,14 +43,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="analytics"
-        options={{
-          title: t.tabs.analytics,
-          headerTitle: t.tabs.analytics,
-          tabBarIcon: ({ color, size }) => <PieChart size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="ledger"
         options={{
           title: t.tabs.ledger,
@@ -59,11 +51,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="import"
+        name="analytics"
         options={{
-          title: t.tabs.import,
-          headerTitle: t.tabs.import,
-          tabBarIcon: ({ color, size }) => <UploadCloud size={size} color={color} />,
+          title: t.tabs.analytics,
+          headerTitle: t.tabs.analytics,
+          tabBarIcon: ({ color, size }) => <PieChart size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -80,6 +72,14 @@ export default function TabsLayout() {
           title: t.tabs.settings,
           headerTitle: t.tabs.settings,
           tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="import"
+        options={{
+          href: null,
+          title: t.tabs.import,
+          headerTitle: t.tabs.import,
         }}
       />
     </Tabs>

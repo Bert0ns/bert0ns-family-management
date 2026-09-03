@@ -9,7 +9,6 @@ import {
   calculateMonthlyMetrics,
   calculateCategoryBreakdown,
   calculateMemberContributions,
-  calculateSpendingVelocity,
 } from '@/services/analytics';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -19,8 +18,6 @@ import { Badge } from '@/components/common/Badge';
 import { PeriodSelector } from '@/components/common/PeriodSelector';
 import { ExpenseItem } from '@/components/ledger/ExpenseItem';
 import { ExpenseDetailModal } from '@/components/ledger/ExpenseDetailModal';
-import { CategoryPieChart } from '@/components/charts/CategoryPieChart';
-import { SpendingVelocityChart } from '@/components/charts/SpendingVelocityChart';
 import { Expense } from '@/types';
 
 export default function DashboardScreen() {
@@ -59,11 +56,6 @@ export default function DashboardScreen() {
   const memberContributions = React.useMemo(
     () => calculateMemberContributions(periodExpenses, members),
     [periodExpenses, members],
-  );
-
-  const velocityData = React.useMemo(
-    () => calculateSpendingVelocity(expenses, selectedPeriod),
-    [expenses, selectedPeriod],
   );
 
   const recentExpenses = React.useMemo(() => {
@@ -144,8 +136,8 @@ export default function DashboardScreen() {
         padding="lg"
         style={{
           marginBottom: spacing.lg,
-          backgroundColor: theme.isDark ? '#1E1B4B' : '#EEF2FF',
-          borderColor: theme.colors.brandLight,
+          backgroundColor: theme.colors.brandLight,
+          borderColor: theme.colors.brand,
         }}
       >
         <View
@@ -262,22 +254,68 @@ export default function DashboardScreen() {
         </ScrollView>
       </View>
 
-      {/* Spending Velocity Chart */}
-      <View style={{ marginBottom: spacing.lg }}>
-        <SpendingVelocityChart data={velocityData} currency={family.currency} />
-      </View>
-
-      {/* Category Breakdown Pie Chart */}
-      <View style={{ marginBottom: spacing.lg }}>
-        <CategoryPieChart
-          data={categoryBreakdown}
-          currency={family.currency}
-          onSelectCategory={(catId) => {
-            setFilters({ selectedCategoryId: catId });
-            router.push('/(tabs)/ledger');
+      {/* Analytics Shortcut Banner */}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => router.push('/(tabs)/analytics')}
+        style={{ marginBottom: spacing.lg }}
+      >
+        <Card
+          padding="md"
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderLeftWidth: 4,
+            borderLeftColor: theme.colors.brand,
           }}
-        />
-      </View>
+        >
+          <View style={{ flex: 1, marginRight: spacing.sm }}>
+            <Text
+              style={{
+                color: theme.colors.textPrimary,
+                fontSize: typography.fontSizes.sm,
+                fontWeight: typography.fontWeights.bold,
+              }}
+            >
+              {t.tabs.analytics}
+            </Text>
+            <Text
+              style={{
+                color: theme.colors.textSecondary,
+                fontSize: typography.fontSizes.xs,
+                marginTop: 2,
+              }}
+            >
+              {categoryBreakdown.length > 0
+                ? `${t.analytics.categoriesTab}: ${categoryBreakdown[0].category.name} (${family.currency}${categoryBreakdown[0].total.toFixed(0)})`
+                : t.analytics.categoriesTab}
+            </Text>
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              backgroundColor: theme.colors.surfaceSubtle,
+              paddingHorizontal: spacing.sm,
+              paddingVertical: spacing.xs,
+              borderRadius: radius.full,
+            }}
+          >
+            <Text
+              style={{
+                color: theme.colors.brand,
+                fontSize: typography.fontSizes.xs,
+                fontWeight: typography.fontWeights.semibold,
+              }}
+            >
+              {t.dashboard.viewAll}
+            </Text>
+            <ArrowUpRight size={14} color={theme.colors.brand} />
+          </View>
+        </Card>
+      </TouchableOpacity>
 
       {/* Recent Expenses List */}
       <View>

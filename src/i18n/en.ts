@@ -66,6 +66,9 @@ export const en: TranslationSchema = {
     noExpensesMatch: 'No expenses match your filters',
     resetFilters: 'Reset Filters',
     transactionsCount: 'Transactions',
+    filtersTitle: 'Filters',
+    filterByMember: 'Filter by Member',
+    filterByCategory: 'Filter by Category',
   },
   import: {
     dropzoneTitle: 'Tap or Drop JSON Expense Report',
