@@ -51,13 +51,20 @@ export default function TabsLayout() {
           shadowOpacity: theme.isDark ? 0.4 : 0.12,
           shadowRadius: 20,
           elevation: 10,
+          paddingTop: 0,
+          paddingBottom: 0,
+          paddingHorizontal: 0,
           overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
         },
         tabBarItemStyle: {
+          flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
           height: 58,
+          padding: 0,
+          margin: 0,
         },
+        tabBarLabelPosition: 'beside-icon',
         headerStyle: {
           backgroundColor: theme.colors.surface,
         },
@@ -70,7 +77,7 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.dashboard,
           headerTitle: t.tabs.dashboard,
-          tabBarIcon: ({ color }) => <LayoutDashboard size={23} color={color} />,
+          tabBarIcon: ({ color }) => <LayoutDashboard size={22} color={color} />,
           tabBarAccessibilityLabel: t.tabs.dashboard,
         }}
       />
@@ -79,7 +86,7 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.ledger,
           headerTitle: t.tabs.ledger,
-          tabBarIcon: ({ color }) => <ReceiptText size={23} color={color} />,
+          tabBarIcon: ({ color }) => <ReceiptText size={22} color={color} />,
           tabBarAccessibilityLabel: t.tabs.ledger,
         }}
       />
@@ -88,7 +95,7 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.analytics,
           headerTitle: t.tabs.analytics,
-          tabBarIcon: ({ color }) => <PieChart size={23} color={color} />,
+          tabBarIcon: ({ color }) => <PieChart size={22} color={color} />,
           tabBarAccessibilityLabel: t.tabs.analytics,
         }}
       />
@@ -97,7 +104,7 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.family,
           headerTitle: t.tabs.family,
-          tabBarIcon: ({ color }) => <Users size={23} color={color} />,
+          tabBarIcon: ({ color }) => <Users size={22} color={color} />,
           tabBarAccessibilityLabel: t.tabs.family,
         }}
       />
@@ -106,7 +113,7 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.settings,
           headerTitle: t.tabs.settings,
-          tabBarIcon: ({ color }) => <Settings size={23} color={color} />,
+          tabBarIcon: ({ color }) => <Settings size={22} color={color} />,
           tabBarAccessibilityLabel: t.tabs.settings,
         }}
       />
