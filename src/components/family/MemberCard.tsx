@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { ShieldCheck, User, Eye, ChevronRight } from 'lucide-react-native';
+import { ShieldCheck, User, Eye, ChevronRight, ReceiptText } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { FamilyMember } from '@/types';
 import { Avatar } from '@/components/common/Avatar';
@@ -76,7 +76,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
             </View>
 
             <View
-              style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: 2 }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: 4 }}
             >
               <Badge
                 label={member.role}
@@ -85,18 +85,18 @@ export const MemberCard: React.FC<MemberCardProps> = ({
                 variant="subtle"
                 icon={getRoleIcon()}
               />
-              <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
-                {transactionCount} transactions
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                <ReceiptText size={11} color={theme.colors.textMuted} />
+                <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
+                  {transactionCount}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}>
-              Total Spend
-            </Text>
             <Text
               style={{
                 color: theme.colors.textPrimary,

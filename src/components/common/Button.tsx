@@ -15,7 +15,7 @@ type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
-  title: string;
+  title?: string;
   onPress: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -25,6 +25,7 @@ interface ButtonProps {
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   fullWidth?: boolean;
+  accessibilityLabel?: string;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -38,6 +39,7 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
   fullWidth = false,
+  accessibilityLabel,
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
 
@@ -67,6 +69,14 @@ export const Button: React.FC<ButtonProps> = ({
     ghost: theme.colors.textSecondary,
   };
 
+  const isIconOnly = !title && Boolean(icon);
+
+  const iconOnlyDimensionMap: Record<ButtonSize, number> = {
+    sm: 36,
+    md: 42,
+    lg: 48,
+  };
+
   const sizePaddingMap: Record<ButtonSize, { paddingVertical: number; paddingHorizontal: number }> =
     {
       sm: { paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
@@ -82,22 +92,27 @@ export const Button: React.FC<ButtonProps> = ({
 
   const bgColor = disabled ? theme.colors.surfaceSubtle : bgMap[variant] || theme.colors.brand;
   const textColor = disabled ? theme.colors.textMuted : textColorMap[variant] || '#FFFFFF';
-  const padding = sizePaddingMap[size] || sizePaddingMap.md;
+  const padding = isIconOnly ? { padding: 0 } : sizePaddingMap[size] || sizePaddingMap.md;
 
   const isOutline = variant === 'outline';
 
   const buttonStyle: ViewStyle = {
     backgroundColor: bgColor,
-    borderRadius: radius.md,
+    borderRadius: isIconOnly ? radius.md : radius.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    ...padding,
+    ...(isIconOnly
+      ? {
+          width: iconOnlyDimensionMap[size],
+          height: iconOnlyDimensionMap[size],
+        }
+      : padding),
     borderWidth: isOutline ? 1 : 0,
     borderColor: isOutline ? theme.colors.border : 'transparent',
     alignSelf: fullWidth ? 'stretch' : 'auto',
     opacity: disabled ? 0.6 : 1,
-    gap: spacing.sm,
+    gap: title && icon ? spacing.sm : 0,
   };
 
   const labelStyle: TextStyle = {
@@ -112,13 +127,14 @@ export const Button: React.FC<ButtonProps> = ({
       onPress={handlePress}
       style={[buttonStyle, style]}
       disabled={disabled || loading}
+      accessibilityLabel={accessibilityLabel || title}
     >
       {loading ? (
         <ActivityIndicator size="small" color={textColor} />
       ) : (
         <>
           {icon}
-          <Text style={[labelStyle, textStyle]}>{title}</Text>
+          {title ? <Text style={[labelStyle, textStyle]}>{title}</Text> : null}
         </>
       )}
     </TouchableOpacity>

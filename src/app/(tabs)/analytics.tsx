@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { PieChart, Users, TrendingUp, Calendar } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -74,52 +75,60 @@ export default function AnalyticsScreen() {
         style={{
           flexDirection: 'row',
           backgroundColor: theme.colors.surfaceSubtle,
-          borderRadius: radius.md,
+          borderRadius: radius.lg,
           padding: 4,
           marginBottom: spacing.lg,
         }}
       >
-        {(['categories', 'members', 'trends', 'heatmap'] as const).map((tab) => {
-          const isActive = activeTab === tab;
-          const label =
-            tab === 'categories'
-              ? t.analytics.categoriesTab
-              : tab === 'members'
-                ? t.analytics.membersTab
-                : tab === 'trends'
-                  ? t.analytics.trendsTab
-                  : t.analytics.heatmapTab;
+        {[
+          { id: 'categories' as const, label: t.analytics.categoriesTab, icon: PieChart },
+          { id: 'members' as const, label: t.analytics.membersTab, icon: Users },
+          { id: 'trends' as const, label: t.analytics.trendsTab, icon: TrendingUp },
+          { id: 'heatmap' as const, label: t.analytics.heatmapTab, icon: Calendar },
+        ].map(({ id, label, icon: TabIcon }) => {
+          const isActive = activeTab === id;
 
           return (
             <TouchableOpacity
-              key={tab}
+              key={id}
               activeOpacity={0.7}
-              onPress={() => setActiveTab(tab)}
+              onPress={() => setActiveTab(id)}
               style={{
-                flex: 1,
+                flex: isActive ? 1.4 : 1,
+                flexDirection: 'row',
+                gap: 6,
                 paddingVertical: spacing.sm,
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: radius.sm,
+                borderRadius: radius.md,
                 backgroundColor: isActive ? theme.colors.surface : 'transparent',
-                shadowColor: isActive ? theme.colors.shadow : 'transparent',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: isActive ? 0.1 : 0,
-                shadowRadius: 2,
-                elevation: isActive ? 1 : 0,
+                borderWidth: 1,
+                borderColor: isActive
+                  ? theme.isDark
+                    ? 'rgba(255, 255, 255, 0.12)'
+                    : 'rgba(255, 255, 255, 0.8)'
+                  : 'transparent',
+                shadowColor: isActive ? '#000' : 'transparent',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: isActive ? 0.08 : 0,
+                shadowRadius: 6,
+                elevation: isActive ? 2 : 0,
               }}
+              accessibilityLabel={label}
             >
-              <Text
-                style={{
-                  color: isActive ? theme.colors.brand : theme.colors.textSecondary,
-                  fontSize: typography.fontSizes.sm,
-                  fontWeight: isActive
-                    ? typography.fontWeights.bold
-                    : typography.fontWeights.medium,
-                }}
-              >
-                {label}
-              </Text>
+              <TabIcon size={16} color={isActive ? theme.colors.brand : theme.colors.textMuted} />
+              {isActive && (
+                <Text
+                  style={{
+                    color: theme.colors.brand,
+                    fontSize: typography.fontSizes.xs,
+                    fontWeight: typography.fontWeights.bold,
+                  }}
+                  numberOfLines={1}
+                >
+                  {label}
+                </Text>
+              )}
             </TouchableOpacity>
           );
         })}

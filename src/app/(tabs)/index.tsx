@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Upload, Flame, ArrowUpRight, Receipt, Users } from 'lucide-react-native';
+import { Plus, Upload, Flame, ArrowUpRight, ArrowRight, Receipt, Users } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -110,18 +110,18 @@ export default function DashboardScreen() {
 
         <View style={{ flexDirection: 'row', gap: spacing.xs }}>
           <Button
-            title={t.common.import}
             variant="secondary"
             size="sm"
-            icon={<Upload size={14} color={theme.colors.brand} />}
+            icon={<Upload size={16} color={theme.colors.brand} />}
             onPress={() => router.push('/(tabs)/import')}
+            accessibilityLabel={t.common.import}
           />
           <Button
-            title={t.common.add}
             variant="primary"
             size="sm"
-            icon={<Plus size={14} color="#FFFFFF" />}
+            icon={<Plus size={16} color="#FFFFFF" />}
             onPress={() => router.push('/expense/add')}
+            accessibilityLabel={t.common.add}
           />
         </View>
       </View>
@@ -339,18 +339,17 @@ export default function DashboardScreen() {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => router.push('/(tabs)/ledger')}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: radius.full,
+              backgroundColor: theme.colors.surfaceSubtle,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            accessibilityLabel={t.dashboard.viewAll}
           >
-            <Text
-              style={{
-                color: theme.colors.brand,
-                fontSize: typography.fontSizes.sm,
-                fontWeight: typography.fontWeights.semibold,
-              }}
-            >
-              {t.dashboard.viewAll}
-            </Text>
-            <ArrowUpRight size={14} color={theme.colors.brand} />
+            <ArrowRight size={16} color={theme.colors.brand} />
           </TouchableOpacity>
         </View>
 

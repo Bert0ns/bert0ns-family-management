@@ -108,11 +108,11 @@ export default function FamilyScreen() {
           </View>
 
           <Button
-            title={t.family.addMember}
             variant="secondary"
             size="sm"
-            icon={<UserPlus size={14} color={theme.colors.brand} />}
+            icon={<UserPlus size={16} color={theme.colors.brand} />}
             onPress={() => setIsAddMemberVisible(true)}
+            accessibilityLabel={t.family.addMember}
           />
         </View>
 
@@ -158,11 +158,11 @@ export default function FamilyScreen() {
           </View>
 
           <Button
-            title={t.family.addCategory}
             variant="secondary"
             size="sm"
-            icon={<Plus size={14} color={theme.colors.brand} />}
+            icon={<Plus size={16} color={theme.colors.brand} />}
             onPress={() => setIsAddCategoryVisible(true)}
+            accessibilityLabel={t.family.addCategory}
           />
         </View>
 

@@ -139,11 +139,11 @@ export default function SettingsScreen() {
                 />
               </View>
               <Button
-                title={t.common.save}
                 variant="primary"
-                size="sm"
-                icon={<Check size={14} color="#FFFFFF" />}
+                size="md"
+                icon={<Check size={18} color="#FFFFFF" />}
                 onPress={handleSaveFamilyName}
+                accessibilityLabel={t.common.save}
               />
             </View>
           ) : (
