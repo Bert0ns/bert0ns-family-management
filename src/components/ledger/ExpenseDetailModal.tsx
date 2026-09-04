@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { X, Trash2, Calendar, CreditCard, User, Tag, Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
@@ -63,14 +63,42 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
         }}
       >
         <View
-          style={{
-            backgroundColor: theme.colors.surface,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            padding: spacing.xl,
-            maxHeight: '85%',
-          }}
+          style={[
+            {
+              backgroundColor: theme.colors.surface,
+              borderTopLeftRadius: radius.xxl,
+              borderTopRightRadius: radius.xxl,
+              paddingHorizontal: spacing.xl,
+              paddingBottom: spacing.xl,
+              paddingTop: spacing.sm,
+              maxHeight: '85%',
+              borderWidth: 1,
+              borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.8)',
+              borderBottomWidth: 0,
+            },
+            Platform.OS === 'web' &&
+              ({
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                boxShadow: theme.isDark
+                  ? '0 -8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+                  : '0 -8px 32px rgba(148, 163, 184, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
+              } as any),
+          ]}
         >
+          {/* Apple Sheet Grabber Handle */}
+          <View
+            style={{ alignItems: 'center', paddingVertical: spacing.xs, marginBottom: spacing.md }}
+          >
+            <View
+              style={{
+                width: 36,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)',
+              }}
+            />
+          </View>
           {/* Header */}
           <View
             style={{

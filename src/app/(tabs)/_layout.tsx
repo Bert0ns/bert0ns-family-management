@@ -1,5 +1,7 @@
 import React from 'react';
+import { StyleSheet, Platform } from 'react-native';
 import { Tabs } from 'expo-router';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, PieChart, ReceiptText, Users, Settings } from 'lucide-react-native';
 import { useTheme } from '@/theme';
@@ -19,23 +21,40 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarShowLabel: true,
         tabBarAllowFontScaling: false,
+        tabBarBackground: () => (
+          <BlurView
+            intensity={85}
+            tint={theme.isDark ? 'dark' : 'light'}
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                borderRadius: 24,
+                overflow: 'hidden',
+                backgroundColor: theme.isDark
+                  ? 'rgba(22, 23, 31, 0.72)'
+                  : 'rgba(255, 255, 255, 0.75)',
+              },
+            ]}
+          />
+        ),
         tabBarStyle: {
           position: 'absolute',
           bottom: floatingBottom,
           left: 16,
           right: 16,
           height: 64,
-          backgroundColor: theme.colors.surface,
+          backgroundColor: 'transparent',
           borderRadius: 24,
           borderWidth: 1,
-          borderColor: theme.isDark ? theme.colors.border : 'rgba(0, 0, 0, 0.08)',
+          borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.85)',
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: theme.isDark ? 0.35 : 0.08,
-          shadowRadius: 12,
-          elevation: 8,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: theme.isDark ? 0.4 : 0.12,
+          shadowRadius: 20,
+          elevation: 10,
           paddingTop: 8,
           paddingBottom: 8,
+          overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
         },
         tabBarItemStyle: {
           paddingVertical: 2,

@@ -41,19 +41,47 @@ export const FormModal: React.FC<FormModalProps> = ({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{
           flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: theme.isDark ? 'rgba(0,0,0,0.65)' : 'rgba(15,23,42,0.35)',
           justifyContent: 'flex-end',
         }}
       >
         <View
-          style={{
-            backgroundColor: theme.colors.surface,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            padding: spacing.xl,
-            maxHeight: '90%',
-          }}
+          style={[
+            {
+              backgroundColor: theme.colors.surface,
+              borderTopLeftRadius: radius.xxl,
+              borderTopRightRadius: radius.xxl,
+              paddingHorizontal: spacing.xl,
+              paddingBottom: spacing.xl,
+              paddingTop: spacing.sm,
+              maxHeight: '90%',
+              borderWidth: 1,
+              borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.8)',
+              borderBottomWidth: 0,
+            },
+            Platform.OS === 'web' &&
+              ({
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                boxShadow: theme.isDark
+                  ? '0 -8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+                  : '0 -8px 32px rgba(148, 163, 184, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
+              } as any),
+          ]}
         >
+          {/* Apple Sheet Grabber Handle */}
+          <View
+            style={{ alignItems: 'center', paddingVertical: spacing.xs, marginBottom: spacing.md }}
+          >
+            <View
+              style={{
+                width: 36,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)',
+              }}
+            />
+          </View>
           {/* Header */}
           <View
             style={{

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { Expense, Category, FamilyMember } from '@/types';
@@ -33,30 +33,52 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
   });
 
   const isSplit = expense.splits && expense.splits.length > 0;
+  const isWeb = Platform.OS === 'web';
+
+  const webGlassStyles = isWeb
+    ? ({
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        boxShadow: theme.isDark
+          ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+          : '0 4px 16px rgba(148, 163, 184, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+      } as any)
+    : {
+        shadowColor: theme.colors.shadow,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: theme.isDark ? 0.3 : 0.06,
+        shadowRadius: 10,
+        elevation: 2,
+      };
 
   return (
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onPress}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: spacing.md,
-        paddingHorizontal: spacing.md,
-        backgroundColor: theme.colors.card,
-        borderRadius: radius.md,
-        borderWidth: 1,
-        borderColor: theme.colors.cardBorder,
-        marginBottom: spacing.sm,
-      }}
+      style={[
+        {
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingVertical: spacing.md,
+          paddingHorizontal: spacing.md,
+          backgroundColor: theme.colors.card,
+          borderRadius: radius.lg,
+          borderWidth: 1,
+          borderColor: theme.colors.cardBorder,
+          marginBottom: spacing.sm,
+          ...webGlassStyles,
+        },
+      ]}
     >
       {/* Category Icon */}
       <View
         style={{
-          width: 40,
-          height: 40,
+          width: 42,
+          height: 42,
           borderRadius: radius.md,
-          backgroundColor: `${catColor}18`,
+          backgroundColor: `${catColor}14`,
+          borderWidth: 1,
+          borderColor: `${catColor}24`,
           alignItems: 'center',
           justifyContent: 'center',
           marginRight: spacing.md,

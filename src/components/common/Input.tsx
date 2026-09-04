@@ -7,6 +7,7 @@ import {
   TextInputProps,
   ViewStyle,
   TextStyle,
+  Platform,
 } from 'react-native';
 import { useTheme } from '@/theme';
 
@@ -28,17 +29,28 @@ export const Input: React.FC<InputProps> = ({
   ...props
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const isWeb = Platform.OS === 'web';
+  const webGlass = isWeb
+    ? ({
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        boxShadow: theme.isDark
+          ? 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+          : 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 8px rgba(148, 163, 184, 0.06)',
+      } as any)
+    : {};
 
   const wrapperStyle: ViewStyle = {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.inputBg,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: error ? theme.colors.danger : theme.colors.inputBorder,
     paddingHorizontal: spacing.md,
     height: 48,
     gap: spacing.sm,
+    ...webGlass,
   };
 
   const inputStyle: TextStyle = {
