@@ -3,11 +3,27 @@ import { z } from 'zod';
 export type UserRole = 'ADMIN' | 'MEMBER' | 'VIEWER';
 export type SupportedCurrency = '€' | 'EUR';
 
+export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error';
+export type MutationOperation = 'INSERT' | 'UPDATE' | 'DELETE';
+export type MutationEntity = 'expense' | 'category' | 'member' | 'family';
+
+export interface OutboxMutation {
+  id: string;
+  entity: MutationEntity;
+  operation: MutationOperation;
+  entity_id: string;
+  payload: any;
+  created_at: string;
+  retry_count: number;
+}
+
 export interface Family {
   id: string;
   name: string;
   currency: '€';
+  invite_code?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface FamilyMember {
@@ -19,6 +35,8 @@ export interface FamilyMember {
   avatar_url?: string;
   color_code: string;
   is_current_user?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Category {
@@ -28,12 +46,16 @@ export interface Category {
   icon: string;
   color: string;
   is_default?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ExpenseSplit {
   member_id: string;
   share_amount: number;
   percentage?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Expense {
@@ -51,6 +73,7 @@ export interface Expense {
   is_verified?: boolean;
   splits?: ExpenseSplit[];
   created_at: string;
+  updated_at?: string;
 }
 
 export interface ImportBatch {
@@ -61,6 +84,7 @@ export interface ImportBatch {
   total_records: number;
   total_amount: number;
   created_at: string;
+  updated_at?: string;
   raw_payload?: any;
 }
 

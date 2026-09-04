@@ -179,4 +179,35 @@ export interface TranslationSchema {
     splitBreakdown: string;
     notes: string;
   };
+  sync: {
+    connectCloud: string;
+    connectedAs: string;
+    signInTitle: string;
+    signInSubtitle: string;
+    emailLabel: string;
+    emailPlaceholder: string;
+    sendOtpButton: string;
+    otpCodeLabel: string;
+    otpCodePlaceholder: string;
+    verifyButton: string;
+    signOutButton: string;
+    syncNowButton: string;
+    statusSynced: string;
+    statusSyncing: string;
+    statusOffline: string;
+    statusError: string;
+    lastSynced: string;
+    neverSynced: string;
+    familyPairingTitle: string;
+    inviteCodeLabel: string;
+    copyCodeButton: string;
+    copiedNotice: string;
+    joinFamilyTitle: string;
+    joinFamilySubtitle: string;
+    joinCodePlaceholder: string;
+    joinButton: string;
+    invalidCodeError: string;
+    migrationPrompt: string;
+    migrateSuccess: string;
+  };
 }

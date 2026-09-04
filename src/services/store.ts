@@ -19,6 +19,7 @@ import {
 } from '@/data/mockData';
 import { calculateEqualSplits } from './splitCalculator';
 import { storeLogger } from '@/services/logger';
+import { generateUUID } from '@/utils/uuid';
 
 interface AppState {
   family: Family;
@@ -60,7 +61,40 @@ interface AppState {
 
   // Data Reset
   resetToSampleData: () => void;
+
+  // Remote Sync Actions
+  setFamily: (family: Family) => void;
+  reconcileRemoteExpenses: (expenses: Expense[]) => void;
+  reconcileRemoteCategories: (categories: Category[]) => void;
+  reconcileRemoteMembers: (members: FamilyMember[]) => void;
+  removeRemoteExpense: (id: string) => void;
+  removeRemoteCategory: (id: string) => void;
+  removeRemoteMember: (id: string) => void;
 }
+
+export type StoreMutationEvent = {
+  entity: 'expense' | 'category' | 'member' | 'family';
+  operation: 'INSERT' | 'UPDATE' | 'DELETE';
+  entity_id: string;
+  payload: any;
+};
+
+type StoreMutationListener = (event: StoreMutationEvent) => void;
+let mutationListener: StoreMutationListener | null = null;
+
+export const registerStoreMutationListener = (listener: StoreMutationListener | null) => {
+  mutationListener = listener;
+};
+
+const notifyStoreMutation = (event: StoreMutationEvent) => {
+  if (mutationListener) {
+    try {
+      mutationListener(event);
+    } catch (err) {
+      storeLogger.error('Error in store mutation listener', { error: err });
+    }
+  }
+};
 
 const DEFAULT_FILTERS: FilterOptions = {
   searchQuery: '',
@@ -84,22 +118,31 @@ export const useAppStore = create<AppState>()(
       resetFilters: () => set({ filters: DEFAULT_FILTERS }),
 
       updateFamilySettings: (updates) => {
-        set((state) => ({
-          family: {
-            ...state.family,
-            name: updates.name ?? state.family.name,
-            currency: '€',
-          },
-        }));
+        const now = new Date().toISOString();
+        const updatedFamily: Family = {
+          ...get().family,
+          name: updates.name ?? get().family.name,
+          currency: '€',
+          updated_at: now,
+        };
+        set({ family: updatedFamily });
+        notifyStoreMutation({
+          entity: 'family',
+          operation: 'UPDATE',
+          entity_id: updatedFamily.id,
+          payload: updatedFamily,
+        });
       },
 
       addExpense: (expenseData) => {
         const state = get();
+        const now = new Date().toISOString();
         const newExpense: Expense = {
           ...expenseData,
-          id: `exp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          id: generateUUID(),
           family_id: state.family.id,
-          created_at: new Date().toISOString(),
+          created_at: now,
+          updated_at: now,
         };
         set((state) => ({ expenses: [newExpense, ...state.expenses] }));
         storeLogger.info('Expense added', {
@@ -107,14 +150,36 @@ export const useAppStore = create<AppState>()(
           amount: newExpense.amount,
           categoryId: newExpense.category_id,
         });
+        notifyStoreMutation({
+          entity: 'expense',
+          operation: 'INSERT',
+          entity_id: newExpense.id,
+          payload: newExpense,
+        });
         return newExpense;
       },
 
       updateExpense: (id, updates) => {
+        const now = new Date().toISOString();
+        let updatedExp: Expense | undefined;
         storeLogger.debug('Expense updated', { id, updates });
         set((state) => ({
-          expenses: state.expenses.map((e) => (e.id === id ? { ...e, ...updates } : e)),
+          expenses: state.expenses.map((e) => {
+            if (e.id === id) {
+              updatedExp = { ...e, ...updates, updated_at: now };
+              return updatedExp;
+            }
+            return e;
+          }),
         }));
+        if (updatedExp) {
+          notifyStoreMutation({
+            entity: 'expense',
+            operation: 'UPDATE',
+            entity_id: id,
+            payload: updatedExp,
+          });
+        }
       },
 
       deleteExpense: (id) => {
@@ -122,6 +187,12 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           expenses: state.expenses.filter((e) => e.id !== id),
         }));
+        notifyStoreMutation({
+          entity: 'expense',
+          operation: 'DELETE',
+          entity_id: id,
+          payload: { id },
+        });
       },
 
       clearAllExpenses: () => {
@@ -131,10 +202,13 @@ export const useAppStore = create<AppState>()(
 
       addMember: (memberData) => {
         const state = get();
+        const now = new Date().toISOString();
         const newMember: FamilyMember = {
           ...memberData,
-          id: `mem_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          id: generateUUID(),
           family_id: state.family.id,
+          created_at: now,
+          updated_at: now,
         };
         storeLogger.info('Member added', {
           id: newMember.id,
@@ -142,14 +216,36 @@ export const useAppStore = create<AppState>()(
           role: newMember.role,
         });
         set((state) => ({ members: [...state.members, newMember] }));
+        notifyStoreMutation({
+          entity: 'member',
+          operation: 'INSERT',
+          entity_id: newMember.id,
+          payload: newMember,
+        });
         return newMember;
       },
 
       updateMember: (id, updates) => {
+        const now = new Date().toISOString();
+        let updatedMember: FamilyMember | undefined;
         storeLogger.info('Member updated', { id, updates });
         set((state) => ({
-          members: state.members.map((m) => (m.id === id ? { ...m, ...updates } : m)),
+          members: state.members.map((m) => {
+            if (m.id === id) {
+              updatedMember = { ...m, ...updates, updated_at: now };
+              return updatedMember;
+            }
+            return m;
+          }),
         }));
+        if (updatedMember) {
+          notifyStoreMutation({
+            entity: 'member',
+            operation: 'UPDATE',
+            entity_id: id,
+            payload: updatedMember,
+          });
+        }
       },
 
       deleteMember: (id) => {
@@ -199,16 +295,31 @@ export const useAppStore = create<AppState>()(
           currentMemberId: newCurrentMemberId,
           importBatches: updatedBatches,
         });
+        notifyStoreMutation({
+          entity: 'member',
+          operation: 'DELETE',
+          entity_id: id,
+          payload: { id },
+        });
       },
 
       addCategory: (categoryData) => {
         const state = get();
+        const now = new Date().toISOString();
         const newCategory: Category = {
           ...categoryData,
-          id: `cat_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          id: generateUUID(),
           family_id: state.family.id,
+          created_at: now,
+          updated_at: now,
         };
         set((state) => ({ categories: [...state.categories, newCategory] }));
+        notifyStoreMutation({
+          entity: 'category',
+          operation: 'INSERT',
+          entity_id: newCategory.id,
+          payload: newCategory,
+        });
         return newCategory;
       },
 
@@ -216,6 +327,12 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           categories: state.categories.filter((c) => c.id !== id),
         }));
+        notifyStoreMutation({
+          entity: 'category',
+          operation: 'DELETE',
+          entity_id: id,
+          payload: { id },
+        });
       },
 
       importExpenseReport: (report, fileName) => {
@@ -316,6 +433,88 @@ export const useAppStore = create<AppState>()(
           selectedPeriod: '2026-08',
           filters: DEFAULT_FILTERS,
         });
+      },
+
+      setFamily: (family) => {
+        set({ family });
+      },
+
+      reconcileRemoteExpenses: (remoteList) => {
+        set((state) => {
+          const current = [...state.expenses];
+          remoteList.forEach((remote) => {
+            const idx = current.findIndex((e) => e.id === remote.id);
+            if (idx === -1) {
+              current.unshift(remote);
+            } else {
+              const local = current[idx];
+              const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
+              const localTime = local.updated_at ? new Date(local.updated_at).getTime() : 0;
+              if (remoteTime >= localTime) {
+                current[idx] = remote;
+              }
+            }
+          });
+          return { expenses: current };
+        });
+      },
+
+      reconcileRemoteCategories: (remoteList) => {
+        set((state) => {
+          const current = [...state.categories];
+          remoteList.forEach((remote) => {
+            const idx = current.findIndex((c) => c.id === remote.id);
+            if (idx === -1) {
+              current.push(remote);
+            } else {
+              const local = current[idx];
+              const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
+              const localTime = local.updated_at ? new Date(local.updated_at).getTime() : 0;
+              if (remoteTime >= localTime) {
+                current[idx] = remote;
+              }
+            }
+          });
+          return { categories: current };
+        });
+      },
+
+      reconcileRemoteMembers: (remoteList) => {
+        set((state) => {
+          const current = [...state.members];
+          remoteList.forEach((remote) => {
+            const idx = current.findIndex((m) => m.id === remote.id);
+            if (idx === -1) {
+              current.push(remote);
+            } else {
+              const local = current[idx];
+              const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
+              const localTime = local.updated_at ? new Date(local.updated_at).getTime() : 0;
+              if (remoteTime >= localTime) {
+                current[idx] = { ...remote, is_current_user: local.is_current_user };
+              }
+            }
+          });
+          return { members: current };
+        });
+      },
+
+      removeRemoteExpense: (id) => {
+        set((state) => ({
+          expenses: state.expenses.filter((e) => e.id !== id),
+        }));
+      },
+
+      removeRemoteCategory: (id) => {
+        set((state) => ({
+          categories: state.categories.filter((c) => c.id !== id),
+        }));
+      },
+
+      removeRemoteMember: (id) => {
+        set((state) => ({
+          members: state.members.filter((m) => m.id !== id),
+        }));
       },
     }),
     {

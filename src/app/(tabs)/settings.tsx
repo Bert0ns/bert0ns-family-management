@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import {
   Sun,
@@ -11,6 +11,10 @@ import {
   Check,
   Edit2,
   Building,
+  Users,
+  RefreshCw,
+  LogOut,
+  Sparkles,
 } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, SupportedLocale } from '@/i18n';
@@ -22,6 +26,12 @@ import { Input } from '@/components/common/Input';
 import { OptionSelector } from '@/components/common/OptionSelector';
 import { isSupabaseConfigured } from '@/services/supabase';
 import { exportAndShareFile } from '@/services/fileExporter';
+import { authService } from '@/services/authService';
+import { syncEngine } from '@/services/syncEngine';
+import { realtimeSync } from '@/services/realtimeSync';
+import { AuthModal } from '@/components/sync/AuthModal';
+import { FamilyPairingModal } from '@/components/sync/FamilyPairingModal';
+import { SyncBadge } from '@/components/common/SyncBadge';
 
 export default function SettingsScreen() {
   const { theme, colorSchemePreference, setColorSchemePreference, spacing, radius, typography } =
@@ -41,6 +51,42 @@ export default function SettingsScreen() {
 
   const [isEditingFamilyName, setIsEditingFamilyName] = useState(false);
   const [familyNameInput, setFamilyNameInput] = useState(family.name);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPairingModal, setShowPairingModal] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    authService.getUser().then((user) => {
+      setUserEmail(user?.email || null);
+      if (user && family?.id) {
+        realtimeSync.startRealtimeSync(family.id);
+      }
+    });
+
+    const sub = authService.onAuthStateChange((_session, user) => {
+      setUserEmail(user?.email || null);
+      if (user && family?.id) {
+        realtimeSync.startRealtimeSync(family.id);
+      } else {
+        realtimeSync.stopRealtimeSync();
+      }
+    });
+
+    return () => sub.unsubscribe();
+  }, [family?.id]);
+
+  const handleManualSync = async () => {
+    await syncEngine.flushOutbox();
+    if (family?.id) {
+      await syncEngine.fetchDelta(family.id);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await authService.signOut();
+    realtimeSync.stopRealtimeSync();
+    setUserEmail(null);
+  };
 
   const handleSaveFamilyName = () => {
     if (familyNameInput.trim()) {
@@ -254,61 +300,157 @@ export default function SettingsScreen() {
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            gap: spacing.xs,
+            justifyContent: 'space-between',
             marginBottom: spacing.sm,
           }}
         >
-          <Cloud size={18} color={theme.colors.brand} />
-          <Text
-            style={{
-              color: theme.colors.textPrimary,
-              fontSize: typography.fontSizes.lg,
-              fontWeight: typography.fontWeights.bold,
-            }}
-          >
-            {t.settings.cloudSyncTitle}
-          </Text>
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            backgroundColor: theme.colors.surfaceSubtle,
-            padding: spacing.md,
-            borderRadius: radius.md,
-            marginBottom: spacing.xs,
-          }}
-        >
-          <View style={{ flex: 1, marginRight: spacing.sm }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Cloud size={18} color={theme.colors.brand} />
             <Text
               style={{
                 color: theme.colors.textPrimary,
-                fontSize: typography.fontSizes.sm,
-                fontWeight: typography.fontWeights.semibold,
+                fontSize: typography.fontSizes.lg,
+                fontWeight: typography.fontWeights.bold,
               }}
             >
-              {t.settings.cloudStatusLocal}
-            </Text>
-            <Text
-              style={{
-                color: theme.colors.textMuted,
-                fontSize: typography.fontSizes.xs,
-                marginTop: 2,
-              }}
-            >
-              {t.settings.cloudSyncSubtitle}
+              {t.settings.cloudSyncTitle}
             </Text>
           </View>
-
-          <Badge label="Local-First" color={theme.colors.success} size="sm" variant="solid" />
+          <SyncBadge />
         </View>
+
+        {userEmail ? (
+          <View style={{ gap: spacing.sm }}>
+            <View
+              style={{
+                backgroundColor: theme.colors.surfaceSubtle,
+                padding: spacing.md,
+                borderRadius: radius.md,
+              }}
+            >
+              <Text
+                style={{
+                  color: theme.colors.textSecondary,
+                  fontSize: typography.fontSizes.xs,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  fontWeight: typography.fontWeights.semibold,
+                }}
+              >
+                {t.sync.connectedAs}
+              </Text>
+              <Text
+                style={{
+                  color: theme.colors.textPrimary,
+                  fontSize: typography.fontSizes.sm,
+                  fontWeight: typography.fontWeights.bold,
+                  marginTop: 2,
+                }}
+              >
+                {userEmail}
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <View style={{ flex: 1 }}>
+                <Button
+                  title={t.sync.syncNowButton}
+                  variant="outline"
+                  size="sm"
+                  icon={<RefreshCw size={14} color={theme.colors.textPrimary} />}
+                  onPress={handleManualSync}
+                  fullWidth
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button
+                  title={t.sync.familyPairingTitle.split(' ')[0]}
+                  variant="outline"
+                  size="sm"
+                  icon={<Users size={14} color={theme.colors.textPrimary} />}
+                  onPress={() => setShowPairingModal(true)}
+                  fullWidth
+                />
+              </View>
+            </View>
+
+            <Button
+              title={t.sync.signOutButton}
+              variant="secondary"
+              size="sm"
+              icon={<LogOut size={14} color={theme.colors.textMuted} />}
+              onPress={handleSignOut}
+              fullWidth
+            />
+          </View>
+        ) : (
+          <View style={{ gap: spacing.sm }}>
+            <View
+              style={{
+                backgroundColor: theme.colors.surfaceSubtle,
+                padding: spacing.md,
+                borderRadius: radius.md,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    color: theme.colors.textPrimary,
+                    fontSize: typography.fontSizes.sm,
+                    fontWeight: typography.fontWeights.semibold,
+                  }}
+                >
+                  {t.settings.cloudStatusLocal}
+                </Text>
+                <Badge label="Local-First" color={theme.colors.success} size="sm" variant="solid" />
+              </View>
+              <Text
+                style={{
+                  color: theme.colors.textMuted,
+                  fontSize: typography.fontSizes.xs,
+                  marginTop: 4,
+                  lineHeight: 18,
+                }}
+              >
+                {t.sync.signInSubtitle}
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <View style={{ flex: 1 }}>
+                <Button
+                  title={t.sync.connectCloud}
+                  variant="primary"
+                  size="sm"
+                  icon={<Cloud size={14} color="#FFFFFF" />}
+                  onPress={() => setShowAuthModal(true)}
+                  fullWidth
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button
+                  title={t.sync.familyPairingTitle.split(' ')[0]}
+                  variant="outline"
+                  size="sm"
+                  icon={<Users size={14} color={theme.colors.textPrimary} />}
+                  onPress={() => setShowPairingModal(true)}
+                  fullWidth
+                />
+              </View>
+            </View>
+          </View>
+        )}
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.xs }}>
           <Lock size={12} color={theme.colors.textMuted} />
           <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
-            {t.settings.privacyGuaranteeTitle}: 100% On-Device Persistence
+            {t.settings.privacyGuaranteeTitle}: 100% On-Device Persistence + Supabase Free Tier ($0)
           </Text>
         </View>
       </Card>
@@ -434,6 +576,15 @@ export default function SettingsScreen() {
           {t.settings.appVersion}
         </Text>
       </Card>
+
+      <AuthModal
+        visible={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          authService.getUser().then((u) => setUserEmail(u?.email || null));
+        }}
+      />
+      <FamilyPairingModal visible={showPairingModal} onClose={() => setShowPairingModal(false)} />
     </ScrollView>
   );
 }

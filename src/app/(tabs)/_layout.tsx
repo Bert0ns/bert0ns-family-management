@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, PieChart, ReceiptText, Users, Settings } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
+import { SyncBadge } from '@/components/common/SyncBadge';
 
 export default function TabsLayout() {
   const { theme } = useTheme();
@@ -70,6 +71,8 @@ export default function TabsLayout() {
         },
         headerTintColor: theme.colors.textPrimary,
         headerShadowVisible: false,
+        headerRight: () => <SyncBadge />,
+        headerRightContainerStyle: { paddingRight: 16 },
       }}
     >
       <Tabs.Screen
