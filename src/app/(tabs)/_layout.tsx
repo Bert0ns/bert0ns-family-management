@@ -19,8 +19,7 @@ export default function TabsLayout() {
       screenOptions={{
         tabBarActiveTintColor: theme.colors.brand,
         tabBarInactiveTintColor: theme.colors.textMuted,
-        tabBarShowLabel: true,
-        tabBarAllowFontScaling: false,
+        tabBarShowLabel: false,
         tabBarBackground: () => (
           <BlurView
             intensity={85}
@@ -40,9 +39,9 @@ export default function TabsLayout() {
         tabBarStyle: {
           position: 'absolute',
           bottom: floatingBottom,
-          left: 16,
-          right: 16,
-          height: 64,
+          left: 20,
+          right: 20,
+          height: 58,
           backgroundColor: 'transparent',
           borderRadius: 24,
           borderWidth: 1,
@@ -52,24 +51,12 @@ export default function TabsLayout() {
           shadowOpacity: theme.isDark ? 0.4 : 0.12,
           shadowRadius: 20,
           elevation: 10,
-          paddingTop: 8,
-          paddingBottom: 8,
           overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
         },
         tabBarItemStyle: {
-          paddingVertical: 2,
-          paddingHorizontal: 2,
           justifyContent: 'center',
           alignItems: 'center',
-        },
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '600',
-          letterSpacing: -0.2,
-          marginTop: 2,
-          marginBottom: 0,
-          textAlign: 'center',
-          includeFontPadding: false,
+          height: 58,
         },
         headerStyle: {
           backgroundColor: theme.colors.surface,
@@ -83,7 +70,8 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.dashboard,
           headerTitle: t.tabs.dashboard,
-          tabBarIcon: ({ color }) => <LayoutDashboard size={20} color={color} />,
+          tabBarIcon: ({ color }) => <LayoutDashboard size={23} color={color} />,
+          tabBarAccessibilityLabel: t.tabs.dashboard,
         }}
       />
       <Tabs.Screen
@@ -91,7 +79,8 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.ledger,
           headerTitle: t.tabs.ledger,
-          tabBarIcon: ({ color }) => <ReceiptText size={20} color={color} />,
+          tabBarIcon: ({ color }) => <ReceiptText size={23} color={color} />,
+          tabBarAccessibilityLabel: t.tabs.ledger,
         }}
       />
       <Tabs.Screen
@@ -99,7 +88,8 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.analytics,
           headerTitle: t.tabs.analytics,
-          tabBarIcon: ({ color }) => <PieChart size={20} color={color} />,
+          tabBarIcon: ({ color }) => <PieChart size={23} color={color} />,
+          tabBarAccessibilityLabel: t.tabs.analytics,
         }}
       />
       <Tabs.Screen
@@ -107,7 +97,8 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.family,
           headerTitle: t.tabs.family,
-          tabBarIcon: ({ color }) => <Users size={20} color={color} />,
+          tabBarIcon: ({ color }) => <Users size={23} color={color} />,
+          tabBarAccessibilityLabel: t.tabs.family,
         }}
       />
       <Tabs.Screen
@@ -115,7 +106,8 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.settings,
           headerTitle: t.tabs.settings,
-          tabBarIcon: ({ color }) => <Settings size={20} color={color} />,
+          tabBarIcon: ({ color }) => <Settings size={23} color={color} />,
+          tabBarAccessibilityLabel: t.tabs.settings,
         }}
       />
       <Tabs.Screen
