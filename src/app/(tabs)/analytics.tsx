@@ -61,7 +61,7 @@ export default function AnalyticsScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.huge }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 100 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Interactive Month Stepper */}

@@ -89,7 +89,7 @@ export default function ImportScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.huge }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 100 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Success Notification Alert */}
