@@ -69,6 +69,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
+    "lint-staged": "lint-staged",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check-all": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
@@ -80,7 +81,7 @@
       "eslint --fix --no-warn-ignored --max-warnings=0",
       "prettier --write"
     ],
-    "*.{json,md,yml,yaml}": [
+    "*.{json,md,yml,yaml,html,css,scss}": [
       "prettier --write"
     ]
   },
