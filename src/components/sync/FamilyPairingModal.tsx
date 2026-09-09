@@ -67,7 +67,7 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
         if (Platform.OS === 'web') {
           window.alert(t.sync.migrateSuccess);
         } else {
-          Alert.alert('Joined Household', t.sync.migrateSuccess);
+          Alert.alert(t.sync.joinedHouseholdTitle, t.sync.migrateSuccess);
         }
         return;
       }
@@ -107,7 +107,7 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
       if (Platform.OS === 'web') {
         window.alert(t.sync.migrateSuccess);
       } else {
-        Alert.alert('Joined Household', t.sync.migrateSuccess);
+        Alert.alert(t.sync.joinedHouseholdTitle, t.sync.migrateSuccess);
       }
     } catch (err: any) {
       setError(err?.message || t.sync.invalidCodeError);

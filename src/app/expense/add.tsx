@@ -3,34 +3,32 @@ import {
   View,
   Text,
   TextInput,
-  ScrollView,
   TouchableOpacity,
-  StyleSheet,
+  ScrollView,
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {
-  Building,
-  Calendar,
-  FileText,
   Check,
+  Calendar,
+  Building,
+  FileText,
   ChevronDown,
   ChevronUp,
-  Clock,
-  Sparkles,
   FileJson,
 } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName } from '@/i18n';
 import { useAppStore } from '@/services/store';
-import { Input } from '@/components/common/Input';
-import { Avatar } from '@/components/common/Avatar';
 import { IconHelper } from '@/components/common/IconHelper';
+import { Avatar } from '@/components/common/Avatar';
+import { Input } from '@/components/common/Input';
 import { SplitCalculator } from '@/components/ledger/SplitCalculator';
 import { ExpenseSplit } from '@/types';
 
-const getTodayLocalIso = () => {
+// Native-safe local ISO date string helper
+const getTodayLocalIso = (): string => {
   const d = new Date();
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -38,7 +36,7 @@ const getTodayLocalIso = () => {
   return `${year}-${month}-${day}`;
 };
 
-const getYesterdayLocalIso = () => {
+const getYesterdayLocalIso = (): string => {
   const d = new Date();
   d.setDate(d.getDate() - 1);
   const year = d.getFullYear();
@@ -69,7 +67,7 @@ export default function AddExpenseScreen() {
   const amountInputRef = useRef<TextInput>(null);
 
   const selectedCategory = categories.find((c) => c.id === selectedCategoryId) || categories[0];
-  const localizedCategoryName = selectedCategory ? getLocalizedCategoryName(selectedCategory, t) : 'Spesa';
+  const localizedCategoryName = selectedCategory ? getLocalizedCategoryName(selectedCategory, t) : t.categories.other;
 
   const activeDate =
     dateMode === 'today'

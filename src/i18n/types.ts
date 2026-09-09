@@ -16,6 +16,9 @@ export interface TranslationSchema {
     total: string;
     confirm: string;
     optional: string;
+    of: string;
+    previousMonth: string;
+    nextMonth: string;
   };
   tabs: {
     dashboard: string;
@@ -41,6 +44,7 @@ export interface TranslationSchema {
     quickAddButton: string;
     thisMonthSpending: string;
     bulkImportButton: string;
+    ofTotal: string;
   };
   analytics: {
     categoriesTab: string;
@@ -155,6 +159,10 @@ export interface TranslationSchema {
     categoryNamePlaceholder: string;
     selectIcon: string;
     selectColor: string;
+    currentUser: string;
+    relatedData: string;
+    splitShares: string;
+    splitParticipations: string;
   };
   settings: {
     title: string;
@@ -189,6 +197,8 @@ export interface TranslationSchema {
     privacyGuaranteeTitle: string;
     privacyGuaranteeBadge: string;
     privacyGuaranteeDescription: string;
+    localFirstBadge: string;
+    privacyGuaranteeFooter: string;
   };
   addExpense: {
     title: string;
@@ -278,5 +288,10 @@ export interface TranslationSchema {
     invalidCodeError: string;
     migrationPrompt: string;
     migrateSuccess: string;
+    pairingButton: string;
+    invalidEmailError: string;
+    invalidOtpError: string;
+    changeEmailOrResend: string;
+    joinedHouseholdTitle: string;
   };
 }

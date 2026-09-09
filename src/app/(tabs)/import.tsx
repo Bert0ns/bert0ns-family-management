@@ -285,7 +285,7 @@ export default function ImportScreen() {
                   </Text>
                 </View>
                 <Badge
-                  label={`${batch.total_records} txs • ${family.currency}${batch.total_amount.toFixed(2)}`}
+                  label={`${batch.total_records} ${t.dashboard.txs} • ${family.currency}${batch.total_amount.toFixed(2)}`}
                   color={theme.colors.brand}
                   size="sm"
                 />

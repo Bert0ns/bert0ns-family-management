@@ -18,6 +18,9 @@ export const en: TranslationSchema = {
     total: 'Total',
     confirm: 'Confirm',
     optional: 'Optional',
+    of: 'of',
+    previousMonth: 'Previous month',
+    nextMonth: 'Next month',
   },
   tabs: {
     dashboard: 'Dashboard',
@@ -43,6 +46,7 @@ export const en: TranslationSchema = {
     quickAddButton: 'Add Expense',
     thisMonthSpending: 'This Month Spending',
     bulkImportButton: 'Bulk Import Expenses',
+    ofTotal: 'of total',
   },
   analytics: {
     categoriesTab: 'Categories',
@@ -161,6 +165,10 @@ export const en: TranslationSchema = {
     categoryNamePlaceholder: 'e.g. Pets, Subscriptions, Vacation',
     selectIcon: 'Select Icon',
     selectColor: 'Select Color',
+    currentUser: 'You',
+    relatedData: 'Related Data',
+    splitShares: 'split shares',
+    splitParticipations: 'split participations',
   },
   settings: {
     title: 'Settings & Preferences',
@@ -199,6 +207,8 @@ export const en: TranslationSchema = {
     privacyGuaranteeBadge: 'Zero Cloud AI',
     privacyGuaranteeDescription:
       'Your financial data remains strictly local and private. No cloud AI or third-party tracking services process your family expenses.',
+    localFirstBadge: 'Local-First',
+    privacyGuaranteeFooter: '100% On-Device Persistence + Supabase Free Tier ($0)',
   },
   addExpense: {
     title: 'Add New Expense',
@@ -289,5 +299,10 @@ export const en: TranslationSchema = {
     invalidCodeError: 'Invalid invite code or family not found.',
     migrationPrompt: 'Migrate local data to household?',
     migrateSuccess: 'Successfully synchronized data to cloud!',
+    pairingButton: 'Invite / Pair',
+    invalidEmailError: 'Please enter a valid email address',
+    invalidOtpError: 'Please enter the full 6-digit code',
+    changeEmailOrResend: 'Change Email / Resend',
+    joinedHouseholdTitle: 'Joined Household',
   },
 };

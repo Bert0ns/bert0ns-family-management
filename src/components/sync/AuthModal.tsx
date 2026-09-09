@@ -46,7 +46,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
   const handleSendOtp = async () => {
     const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedEmail || !trimmedEmail.includes('@')) {
-      setError('Please enter a valid email address');
+      setError(t.sync.invalidEmailError);
       return;
     }
 
@@ -66,7 +66,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
   const handleVerifyOtp = async () => {
     const trimmedOtp = otp.trim();
     if (trimmedOtp.length < 6) {
-      setError('Please enter the full 6-digit code');
+      setError(t.sync.invalidOtpError);
       return;
     }
 
@@ -198,7 +198,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
                   fontWeight: typography.fontWeights.medium,
                 }}
               >
-                Change Email / Resend
+                {t.sync.changeEmailOrResend}
               </Text>
             </TouchableOpacity>
           </View>

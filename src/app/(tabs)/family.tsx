@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Users, Plus, Tag, UserPlus } from 'lucide-react-native';
 import { useTheme } from '@/theme';
-import { useI18n } from '@/i18n';
+import { useI18n, getLocalizedCategoryName } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import { MemberCard } from '@/components/family/MemberCard';
 import { AddMemberModal } from '@/components/family/AddMemberModal';
@@ -202,7 +202,7 @@ export default function FamilyScreen() {
                         fontWeight: typography.fontWeights.semibold,
                       }}
                     >
-                      {category.name}
+                      {getLocalizedCategoryName(category, t)}
                     </Text>
                     <Text
                       style={{

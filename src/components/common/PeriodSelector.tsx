@@ -14,7 +14,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
   onPeriodChange,
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
-  const { locale } = useI18n();
+  const { t, locale } = useI18n();
 
   const [yearStr, monthStr] = selectedPeriod.split('-');
   const year = parseInt(yearStr, 10);
@@ -66,7 +66,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
       <TouchableOpacity
         onPress={handlePrev}
         activeOpacity={0.7}
-        accessibilityLabel="Previous month"
+        accessibilityLabel={t.common.previousMonth}
         style={{
           width: 46,
           height: 46,
@@ -96,7 +96,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
       <TouchableOpacity
         onPress={handleNext}
         activeOpacity={0.7}
-        accessibilityLabel="Next month"
+        accessibilityLabel={t.common.nextMonth}
         style={{
           width: 46,
           height: 46,
