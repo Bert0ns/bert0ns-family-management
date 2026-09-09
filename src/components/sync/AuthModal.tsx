@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
 import { Cloud, Mail, KeyRound, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react-native';
 import { FormModal } from '@/components/common/FormModal';
 import { Input } from '@/components/common/Input';
@@ -52,7 +52,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
     setIsLoading(true);
     setError(null);
 
-    const res = await authService.sendOtp(trimmedEmail);
+    const redirectUrl =
+      Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined;
+    const res = await authService.sendOtp(trimmedEmail, redirectUrl);
     setIsLoading(false);
 
     if (res.error) {
@@ -176,6 +178,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
               maxLength={8}
               leftIcon={<KeyRound size={16} color={theme.colors.textMuted} />}
             />
+            <Text
+              style={{
+                color: theme.colors.textMuted,
+                fontSize: typography.fontSizes.xs,
+                lineHeight: 16,
+              }}
+            >
+              {t.sync.otpCodeHelper}
+            </Text>
             <TouchableOpacity
               onPress={() => {
                 setStep('email');

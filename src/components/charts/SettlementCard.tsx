@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import { ArrowRight, CheckCircle2 } from 'lucide-react-native';
+import { View, Text, Platform, Alert } from 'react-native';
+import { ArrowRight, CheckCircle2, Check } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
-import { SettlementSummary } from '@/services/splitCalculator';
+import { SettlementSummary, SettlementTransfer } from '@/services/splitCalculator';
 import { Card } from '@/components/common/Card';
 import { Avatar } from '@/components/common/Avatar';
+import { Button } from '@/components/common/Button';
+import { useAppStore } from '@/services/store';
 
 interface SettlementCardProps {
   summary: SettlementSummary;
@@ -15,6 +17,39 @@ interface SettlementCardProps {
 export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currency = '€' }) => {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
+  const { recordSettlement } = useAppStore();
+
+  const handleSettle = (transfer: SettlementTransfer) => {
+    const confirmMsg = t.notifications.settleConfirmMessage
+      .replace('{amount}', transfer.amount.toFixed(2))
+      .replace('{from}', transfer.fromMember.display_name)
+      .replace('{to}', transfer.toMember.display_name);
+
+    const execute = () => {
+      recordSettlement({
+        from_member_id: transfer.fromMember.id,
+        to_member_id: transfer.toMember.id,
+        amount: transfer.amount,
+        notes: `Settled ${currency}${transfer.amount.toFixed(2)} to ${transfer.toMember.display_name}`,
+      });
+      if (Platform.OS === 'web') {
+        window.alert(t.notifications.settleSuccessToast);
+      } else {
+        Alert.alert(t.common.confirm, t.notifications.settleSuccessToast);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`${t.notifications.settleConfirmTitle}\n\n${confirmMsg}`)) {
+        execute();
+      }
+    } else {
+      Alert.alert(t.notifications.settleConfirmTitle, confirmMsg, [
+        { text: t.common.cancel, style: 'cancel' },
+        { text: t.common.confirm, onPress: execute },
+      ]);
+    }
+  };
 
   return (
     <Card padding="lg">
@@ -183,6 +218,18 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                     {transfer.toMember.display_name}
                   </Text>
                 </Text>
+              </View>
+
+              {/* Settle Debt Button */}
+              <View style={{ marginTop: spacing.sm }}>
+                <Button
+                  title={`${t.notifications.settleUpButton} (${currency}${transfer.amount.toFixed(2)})`}
+                  variant="primary"
+                  size="sm"
+                  icon={<Check size={14} color="#FFFFFF" />}
+                  onPress={() => handleSettle(transfer)}
+                  fullWidth
+                />
               </View>
             </View>
           ))}

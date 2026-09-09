@@ -11,6 +11,9 @@ import {
   ImportBatch,
   RawExpenseReport,
   MutationOperation,
+  NotificationPreferences,
+  AppNotification,
+  Settlement,
 } from '@/types';
 import {
   INITIAL_EXPENSES,
@@ -23,6 +26,15 @@ import { generateUUID } from '@/utils/uuid';
 import { CATEGORY_I18N_KEY_MAP } from '@/i18n/categories';
 import { storeLogger } from '@/services/logger';
 
+export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  push_enabled: true,
+  notify_batch_import: true, // A3
+  notify_expense_updates: true, // A4
+  notify_settlements: true, // B1
+  notify_member_joined: true, // E1
+  notify_role_changed: true, // E2
+};
+
 export interface AppState {
   // Domain entities
   family: Family;
@@ -30,6 +42,9 @@ export interface AppState {
   categories: Category[];
   expenses: Expense[];
   importBatches: ImportBatch[];
+  settlements: Settlement[];
+  notifications: AppNotification[];
+  notificationPreferences: NotificationPreferences;
 
   // App UI State
   currentMemberId: string;
@@ -60,6 +75,15 @@ export interface AppState {
   addCategory: (category: Omit<Category, 'id' | 'family_id'>) => Category;
   deleteCategory: (id: string) => void;
 
+  // Actions - Settlements & Notifications
+  recordSettlement: (settlement: Omit<Settlement, 'id' | 'created_at' | 'family_id'>) => Settlement;
+  reconcileRemoteSettlements: (settlements: Settlement[]) => void;
+  updateNotificationPreferences: (preferences: Partial<NotificationPreferences>) => void;
+  addNotification: (notification: AppNotification) => void;
+  markNotificationAsRead: (id: string) => void;
+  markAllNotificationsAsRead: () => void;
+  clearNotifications: () => void;
+
   // Actions - Import
   importExpenseReport: (
     report: RawExpenseReport,
@@ -80,7 +104,7 @@ export interface AppState {
 }
 
 export type StoreMutationEvent = {
-  entity: 'expense' | 'category' | 'member' | 'family';
+  entity: 'expense' | 'category' | 'member' | 'family' | 'settlement' | 'notification_preference';
   operation: MutationOperation;
   entity_id: string;
   payload: any;
@@ -121,6 +145,9 @@ export const useAppStore = create<AppState>()(
       categories: INITIAL_CATEGORIES,
       expenses: INITIAL_EXPENSES,
       importBatches: [],
+      settlements: [],
+      notifications: [],
+      notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
       currentMemberId: 'mem_1',
       selectedPeriod: '2026-08',
       filters: DEFAULT_FILTERS,
@@ -416,6 +443,86 @@ export const useAppStore = create<AppState>()(
           });
       },
 
+      recordSettlement: (settlementData) => {
+        const state = get();
+        const now = new Date().toISOString();
+        const newSettlement: Settlement = {
+          ...settlementData,
+          id: generateUUID(),
+          family_id: state.family.id,
+          created_at: now,
+        };
+        storeLogger.info('Settlement recorded', {
+          id: newSettlement.id,
+          from: newSettlement.from_member_id,
+          to: newSettlement.to_member_id,
+          amount: newSettlement.amount,
+        });
+        set((s) => ({ settlements: [newSettlement, ...s.settlements] }));
+        notifyStoreMutation({
+          entity: 'settlement',
+          operation: 'INSERT',
+          entity_id: newSettlement.id,
+          payload: newSettlement,
+        });
+        return newSettlement;
+      },
+
+      reconcileRemoteSettlements: (remoteList) => {
+        set((state) => {
+          const map = new Map(state.settlements.map((s) => [s.id, s]));
+          remoteList.forEach((remote) => {
+            map.set(remote.id, remote);
+          });
+          const sorted = Array.from(map.values()).sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          );
+          return { settlements: sorted };
+        });
+      },
+
+      updateNotificationPreferences: (prefs) => {
+        const state = get();
+        const updated = { ...state.notificationPreferences, ...prefs };
+        storeLogger.info('Updating notification preferences', updated);
+        set({ notificationPreferences: updated });
+        notifyStoreMutation({
+          entity: 'notification_preference',
+          operation: 'UPDATE',
+          entity_id: state.currentMemberId,
+          payload: { member_id: state.currentMemberId, ...updated },
+        });
+      },
+
+      addNotification: (notification) => {
+        set((state) => {
+          if (state.notifications.some((n) => n.id === notification.id)) {
+            return state;
+          }
+          return {
+            notifications: [notification, ...state.notifications].slice(0, 50),
+          };
+        });
+      },
+
+      markNotificationAsRead: (id) => {
+        set((state) => ({
+          notifications: state.notifications.map((n) =>
+            n.id === id ? { ...n, is_read: true } : n,
+          ),
+        }));
+      },
+
+      markAllNotificationsAsRead: () => {
+        set((state) => ({
+          notifications: state.notifications.map((n) => ({ ...n, is_read: true })),
+        }));
+      },
+
+      clearNotifications: () => {
+        set({ notifications: [] });
+      },
+
       importExpenseReport: (report, fileName) => {
         const state = get();
         storeLogger.info('Importing expense report', {
@@ -527,6 +634,9 @@ export const useAppStore = create<AppState>()(
           categories: INITIAL_CATEGORIES,
           expenses: INITIAL_EXPENSES,
           importBatches: [],
+          settlements: [],
+          notifications: [],
+          notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
           currentMemberId: 'mem_1',
           selectedPeriod: '2026-08',
           filters: DEFAULT_FILTERS,
@@ -635,6 +745,9 @@ export const useAppStore = create<AppState>()(
         members: state.members,
         categories: state.categories,
         expenses: state.expenses,
+        settlements: state.settlements,
+        notifications: state.notifications,
+        notificationPreferences: state.notificationPreferences,
         importBatches: state.importBatches.map(({ raw_payload, ...rest }) => rest as ImportBatch),
         currentMemberId: state.currentMemberId,
         selectedPeriod: state.selectedPeriod,
@@ -652,3 +765,6 @@ export const selectCurrentMemberId = (state: AppState) => state.currentMemberId;
 export const selectSelectedPeriod = (state: AppState) => state.selectedPeriod;
 export const selectFilters = (state: AppState) => state.filters;
 export const selectImportBatches = (state: AppState) => state.importBatches;
+export const selectNotificationPreferences = (state: AppState) => state.notificationPreferences;
+export const selectNotifications = (state: AppState) => state.notifications;
+export const selectSettlements = (state: AppState) => state.settlements;

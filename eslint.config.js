@@ -13,6 +13,7 @@ module.exports = defineConfig([
       '.agents/**',
       'docs/**',
       '*.config.js',
+      'supabase/**',
     ],
   },
   {
