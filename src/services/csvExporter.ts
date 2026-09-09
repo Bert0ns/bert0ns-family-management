@@ -69,7 +69,9 @@ export class CsvExporter {
         if (typeof document !== 'undefined' && document?.body && document.body.contains(link)) {
           document.body.removeChild(link);
         }
-        if (typeof URL.revokeObjectURL === "function") { URL.revokeObjectURL(url); }
+        if (typeof URL.revokeObjectURL === 'function') {
+          URL.revokeObjectURL(url);
+        }
       }, 100);
     }
   }

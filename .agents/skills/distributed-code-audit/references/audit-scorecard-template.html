@@ -24,8 +24,7 @@
       }
       body {
         font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-          Arial, sans-serif;
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         background: var(--bg);
         color: var(--text);
         padding: 32px 24px;
@@ -248,21 +247,15 @@
           <div class="stat-label">Total Findings</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number" style="color: var(--critical)">
-            {{CRITICAL_COUNT}}
-          </div>
+          <div class="stat-number" style="color: var(--critical)">{{CRITICAL_COUNT}}</div>
           <div class="stat-label">Critical</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number" style="color: var(--important)">
-            {{IMPORTANT_COUNT}}
-          </div>
+          <div class="stat-number" style="color: var(--important)">{{IMPORTANT_COUNT}}</div>
           <div class="stat-label">Important</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number" style="color: var(--suggestion)">
-            {{SUGGESTION_COUNT}}
-          </div>
+          <div class="stat-number" style="color: var(--suggestion)">{{SUGGESTION_COUNT}}</div>
           <div class="stat-label">Suggestions</div>
         </div>
         <div class="stat-card">
@@ -294,16 +287,10 @@
         </div>
         <div class="filters-row">
           <div class="severity-group">
-            <button class="filter-btn active" data-filter="all">
-              All Severities
-            </button>
+            <button class="filter-btn active" data-filter="all">All Severities</button>
             <button class="filter-btn" data-filter="critical">Critical</button>
-            <button class="filter-btn" data-filter="important">
-              Important
-            </button>
-            <button class="filter-btn" data-filter="suggestion">
-              Suggestions
-            </button>
+            <button class="filter-btn" data-filter="important">Important</button>
+            <button class="filter-btn" data-filter="suggestion">Suggestions</button>
             <button class="filter-btn" data-filter="nit">Nits</button>
           </div>
         </div>
@@ -344,33 +331,31 @@
           {{FINDINGS_TABLE_ROWS}}
         </tbody>
       </table>
-      <div id="emptyState" class="empty-state">
-        No findings match the current filter selection.
-      </div>
+      <div id="emptyState" class="empty-state">No findings match the current filter selection.</div>
     </div>
 
     <script>
-      const searchInput = document.getElementById("searchInput");
-      const partitionFilter = document.getElementById("partitionFilter");
-      const axisFilter = document.getElementById("axisFilter");
-      const filterButtons = document.querySelectorAll(".filter-btn");
-      const emptyState = document.getElementById("emptyState");
+      const searchInput = document.getElementById('searchInput');
+      const partitionFilter = document.getElementById('partitionFilter');
+      const axisFilter = document.getElementById('axisFilter');
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      const emptyState = document.getElementById('emptyState');
 
-      let currentSeverity = "all";
-      let currentPartition = "all";
-      let currentAxis = "all";
-      let searchQuery = "";
+      let currentSeverity = 'all';
+      let currentPartition = 'all';
+      let currentAxis = 'all';
+      let searchQuery = '';
 
       // Populate unique partitions into dropdown dynamically
       function initPartitionDropdown() {
-        const rows = document.querySelectorAll("#findingsBody tr");
+        const rows = document.querySelectorAll('#findingsBody tr');
         const partitions = new Set();
         rows.forEach((row) => {
-          const p = row.getAttribute("data-partition");
+          const p = row.getAttribute('data-partition');
           if (p) partitions.add(p);
         });
         partitions.forEach((p) => {
-          const opt = document.createElement("option");
+          const opt = document.createElement('option');
           opt.value = p;
           opt.textContent = p;
           partitionFilter.appendChild(opt);
@@ -378,55 +363,49 @@
       }
 
       function updateVisibility() {
-        const rows = document.querySelectorAll("#findingsBody tr");
+        const rows = document.querySelectorAll('#findingsBody tr');
         let visibleCount = 0;
 
         rows.forEach((row) => {
-          const severity = (
-            row.getAttribute("data-severity") || ""
-          ).toLowerCase();
-          const partition = row.getAttribute("data-partition") || "";
-          const axis = (row.getAttribute("data-axis") || "").toLowerCase();
+          const severity = (row.getAttribute('data-severity') || '').toLowerCase();
+          const partition = row.getAttribute('data-partition') || '';
+          const axis = (row.getAttribute('data-axis') || '').toLowerCase();
           const text = row.innerText.toLowerCase();
 
-          const matchesSeverity =
-            currentSeverity === "all" || severity === currentSeverity;
-          const matchesPartition =
-            currentPartition === "all" || partition === currentPartition;
-          const matchesAxis =
-            currentAxis === "all" || axis.includes(currentAxis.toLowerCase());
+          const matchesSeverity = currentSeverity === 'all' || severity === currentSeverity;
+          const matchesPartition = currentPartition === 'all' || partition === currentPartition;
+          const matchesAxis = currentAxis === 'all' || axis.includes(currentAxis.toLowerCase());
           const matchesSearch = !searchQuery || text.includes(searchQuery);
 
-          const isVisible =
-            matchesSeverity && matchesPartition && matchesAxis && matchesSearch;
+          const isVisible = matchesSeverity && matchesPartition && matchesAxis && matchesSearch;
 
-          row.style.display = isVisible ? "" : "none";
+          row.style.display = isVisible ? '' : 'none';
           if (isVisible) visibleCount++;
         });
 
-        emptyState.style.display = visibleCount === 0 ? "block" : "none";
+        emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
       }
 
       filterButtons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          filterButtons.forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          currentSeverity = btn.getAttribute("data-filter");
+        btn.addEventListener('click', () => {
+          filterButtons.forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentSeverity = btn.getAttribute('data-filter');
           updateVisibility();
         });
       });
 
-      partitionFilter.addEventListener("change", (e) => {
+      partitionFilter.addEventListener('change', (e) => {
         currentPartition = e.target.value;
         updateVisibility();
       });
 
-      axisFilter.addEventListener("change", (e) => {
+      axisFilter.addEventListener('change', (e) => {
         currentAxis = e.target.value;
         updateVisibility();
       });
 
-      searchInput.addEventListener("input", (e) => {
+      searchInput.addEventListener('input', (e) => {
         searchQuery = e.target.value.toLowerCase().trim();
         updateVisibility();
       });

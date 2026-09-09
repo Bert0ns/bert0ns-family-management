@@ -1,7 +1,16 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, ScrollView, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Search, Filter, Plus, X, ArrowDownUp, Coins, RotateCcw, FileJson } from 'lucide-react-native';
+import {
+  Search,
+  Filter,
+  Plus,
+  X,
+  ArrowDownUp,
+  Coins,
+  RotateCcw,
+  FileJson,
+} from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -536,7 +545,12 @@ export default function LedgerScreen() {
         ListEmptyComponent={
           <Card
             padding="lg"
-            style={{ alignItems: 'center', justifyContent: 'center', marginTop: spacing.xl, gap: spacing.md }}
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginTop: spacing.xl,
+              gap: spacing.md,
+            }}
           >
             <Text
               style={{
@@ -548,7 +562,14 @@ export default function LedgerScreen() {
             >
               {t.ledger.noExpensesMatch}
             </Text>
-            <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                gap: spacing.sm,
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+              }}
+            >
               <Button
                 title={t.ledger.resetFilters}
                 variant="outline"

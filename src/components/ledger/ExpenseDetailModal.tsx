@@ -58,21 +58,17 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
       return;
     }
 
-    Alert.alert(
-      t.common.delete,
-      t.common.delete + '?',
-      [
-        { text: t.common.cancel, style: 'cancel' },
-        {
-          text: t.common.delete,
-          style: 'destructive',
-          onPress: () => {
-            onDelete(expense.id);
-            onClose();
-          },
+    Alert.alert(t.common.delete, t.common.delete + '?', [
+      { text: t.common.cancel, style: 'cancel' },
+      {
+        text: t.common.delete,
+        style: 'destructive',
+        onPress: () => {
+          onDelete(expense.id);
+          onClose();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (

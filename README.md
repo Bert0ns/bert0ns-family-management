@@ -19,7 +19,7 @@ A modern, privacy-first, cross-platform family expense tracking and financial an
 - **📥 Structured JSON Import & Backup Export**:
   - Drag-and-drop or select structured `.json` expense reports with instant Zod schema validation.
   - Full local backup export (JSON) and spreadsheet ledger export (CSV).
-- **🌍 Internationalization & Theming**:
+- **🌐 Internationalization & Theming**:
   - Full English (EN) and Italian (IT) localization.
   - Automatic Light, Dark, and System theme support with typed tokens.
 
@@ -161,9 +161,7 @@ bert0ns-family-management/
 ### Prerequisites
 
 - **Node.js**: v18+ or v20+
-- **pnpm**: v9+ (`npm install -g pnpm`)
-
-> **Note**: This repository is configured strictly for `pnpm`. Please use `pnpm` exclusively to avoid package dependency conflicts.
+- **pnpm**: v9+ (`npm install -g pnpm`)\n\n> **Note**: This repository is configured strictly for `pnpm`. Please use `pnpm` exclusively to avoid package dependency conflicts.
 
 ### Installation
 
@@ -220,4 +218,4 @@ npx expo export -p web
 
 ## 📄 License
 
-This project is licensed under the [MIT License](file:///home/berto/bert0ns-family-management/LICENSE).
+This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](file:///home/berto/bert0ns-family-management/LICENSE).

@@ -3,7 +3,7 @@
 > **Target Project:** Bert0n's Family Management  
 > **Source Audit Report:** [`docs/reports/codebase-audit-and-review-report.html`](../reports/codebase-audit-and-review-report.html)  
 > **Authoring Date:** September 9, 2026  
-> **Status:** Completed & Verified (17/17 Test Suites, 0 TypeScript Errors)  
+> **Status:** Completed & Verified (17/17 Test Suites, 0 TypeScript Errors)
 
 ---
 
@@ -12,6 +12,7 @@
 The comprehensive audit identified **51 findings** across 4 functional domains. This Master Plan structures the remediation into 4 sequential, non-breaking phases aligned with the repository's semantic partitions.
 
 Each phase guarantees:
+
 1. **Zero Regression Guarantee:** Every phase must pass `pnpm typecheck` and all Jest test suites with 100% success before moving to the next.
 2. **Defensive Mathematical & Concurrency Invariants:** Cents-based arithmetic, concurrency mutex locks, soft-delete tombstones, and RLS defense-in-depth.
 3. **Senior-First Ergonomics:** 48px+ touch targets, zero clutter, high-contrast tokens, and complete 1:1 English/Italian localization parity.
@@ -22,6 +23,7 @@ Each phase guarantees:
 ## Phase 1: Partition 1 — Core Domain, State Management, Storage & Data Models
 
 ### 1.1 Remediation Tasks
+
 - [x] **Task 1.1: Fix Batch Import Store Mutation Synchronization (`store.ts:299-387`)**
   - Problem: `importExpenseReport` writes imported expenses to Zustand but omits `notifyStoreMutation`.
   - Fix: Loop over newly inserted expenses and emit `notifyStoreMutation({ entity: 'expense', operation: 'INSERT', entity_id: exp.id, payload: exp })`.
@@ -47,19 +49,28 @@ Each phase guarantees:
   - Fix: Use a `Set<StoreMutationListener>` and return `() => mutationListeners.delete(listener)`.
 
 ### 1.2 Required Unit Test Sketches (`__tests__/store_remediation.test.ts`)
+
 ```typescript
 describe('Store Remediation Tests', () => {
   it('emits store mutation events for all imported expenses in importExpenseReport', () => {
     const mutations: StoreMutationEvent[] = [];
     const unsubscribe = registerStoreMutationListener((event) => mutations.push(event));
-    
+
     useAppStore.getState().importExpenseReport({
       version: '1.0',
       source: 'Test Import',
-      expenses: [{ date: '2026-09-01', amount: 50, merchant: 'Test Merchant', category: 'Groceries', paid_by: 'Marco' }],
+      expenses: [
+        {
+          date: '2026-09-01',
+          amount: 50,
+          merchant: 'Test Merchant',
+          category: 'Groceries',
+          paid_by: 'Marco',
+        },
+      ],
     });
 
-    expect(mutations.some(m => m.entity === 'expense' && m.operation === 'INSERT')).toBe(true);
+    expect(mutations.some((m) => m.entity === 'expense' && m.operation === 'INSERT')).toBe(true);
     unsubscribe();
   });
 
@@ -67,9 +78,17 @@ describe('Store Remediation Tests', () => {
     useAppStore.getState().importExpenseReport({
       version: '1.0',
       source: 'UUID Test',
-      expenses: [{ date: '2026-09-01', amount: 20, merchant: 'UUID Store', category: 'Groceries', paid_by: 'Marco' }],
+      expenses: [
+        {
+          date: '2026-09-01',
+          amount: 20,
+          merchant: 'UUID Store',
+          category: 'Groceries',
+          paid_by: 'Marco',
+        },
+      ],
     });
-    const imported = useAppStore.getState().expenses.find(e => e.merchant_name === 'UUID Store');
+    const imported = useAppStore.getState().expenses.find((e) => e.merchant_name === 'UUID Store');
     expect(imported?.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
   });
 
@@ -77,14 +96,16 @@ describe('Store Remediation Tests', () => {
     const deletedEvents: StoreMutationEvent[] = [];
     registerStoreMutationListener((e) => deletedEvents.push(e));
     useAppStore.getState().deleteMember('mem_1');
-    const expenseDeletions = deletedEvents.filter(e => e.entity === 'expense' && e.operation === 'DELETE');
+    const expenseDeletions = deletedEvents.filter(
+      (e) => e.entity === 'expense' && e.operation === 'DELETE',
+    );
     expect(expenseDeletions.length).toBeGreaterThan(0);
   });
 
   it('recalculates equal splits when an expense amount is updated without explicit splits', () => {
     const exp = useAppStore.getState().expenses[0];
     useAppStore.getState().updateExpense(exp.id, { amount: 300 });
-    const updated = useAppStore.getState().expenses.find(e => e.id === exp.id);
+    const updated = useAppStore.getState().expenses.find((e) => e.id === exp.id);
     const sumSplits = updated?.splits?.reduce((s, x) => s + x.computed_amount, 0);
     expect(sumSplits).toBeCloseTo(300, 2);
   });
@@ -96,6 +117,7 @@ describe('Store Remediation Tests', () => {
 ## Phase 2: Partition 2 — Business Logic, Math, Validation & Exporters
 
 ### 2.1 Remediation Tasks
+
 - [x] **Task 2.1: Neutralize CSV Formula Injection / CWE-1236 (`csvExporter.ts:25-39`)**
   - Problem: Unsanitized fields starting with `=`, `+`, `-`, `@`, `\t`, `\r` execute formulas in Excel/Sheets.
   - Fix: Prepend apostrophe `'` to any cell value matching `/^[=+\-@\t\r]/` before enclosing in quotes.
@@ -123,43 +145,48 @@ describe('Store Remediation Tests', () => {
   - Create full test suite for `fileExporter` on web and native environments.
 
 ### 2.2 Required Unit Test Sketches (`__tests__/business_logic_remediation.test.ts`)
+
 ```typescript
 describe('Business Logic Remediation Tests', () => {
   it('neutralizes CSV formula injection payloads starting with =, +, -, @', () => {
-    const maliciousExpenses: Expense[] = [{
-      id: 'exp_malicious',
-      family_id: 'fam_1',
-      category_id: 'cat_groceries',
-      paid_by_member_id: 'mem_1',
-      amount: 10,
-      transaction_date: '2026-09-01',
-      merchant_name: '=cmd|"/C calc"!A0',
-      notes: '+SUM(1,2)',
-      created_at: '',
-      updated_at: '',
-    }];
+    const maliciousExpenses: Expense[] = [
+      {
+        id: 'exp_malicious',
+        family_id: 'fam_1',
+        category_id: 'cat_groceries',
+        paid_by_member_id: 'mem_1',
+        amount: 10,
+        transaction_date: '2026-09-01',
+        merchant_name: '=cmd|"/C calc"!A0',
+        notes: '+SUM(1,2)',
+        created_at: '',
+        updated_at: '',
+      },
+    ];
     const csv = generateCsvExport(maliciousExpenses, mockCategories, mockMembers);
-    expect(csv).toContain("\"'=cmd|\\\"/C calc\\\"!A0\"");
-    expect(csv).toContain("\"'+SUM(1,2)\"");
+    expect(csv).toContain('"\'=cmd|\\"/C calc\\"!A0"');
+    expect(csv).toContain('"\'+SUM(1,2)"');
     expect(csv.startsWith('\uFEFF')).toBe(true);
   });
 
   it('settles 1-cent debt balances without dropping them', () => {
-    const expenses: Expense[] = [{
-      id: 'exp_1cent',
-      family_id: 'fam_1',
-      category_id: 'cat_1',
-      paid_by_member_id: 'mem_1',
-      amount: 0.02,
-      transaction_date: '2026-09-01',
-      merchant_name: 'Penny Candy',
-      splits: [
-        { member_id: 'mem_1', computed_amount: 0.01 },
-        { member_id: 'mem_2', computed_amount: 0.01 },
-      ],
-      created_at: '',
-      updated_at: '',
-    }];
+    const expenses: Expense[] = [
+      {
+        id: 'exp_1cent',
+        family_id: 'fam_1',
+        category_id: 'cat_1',
+        paid_by_member_id: 'mem_1',
+        amount: 0.02,
+        transaction_date: '2026-09-01',
+        merchant_name: 'Penny Candy',
+        splits: [
+          { member_id: 'mem_1', computed_amount: 0.01 },
+          { member_id: 'mem_2', computed_amount: 0.01 },
+        ],
+        created_at: '',
+        updated_at: '',
+      },
+    ];
     const summary = simplifyDebts(expenses, mockMembers);
     expect(summary.transfers.length).toBe(1);
     expect(summary.transfers[0].amount).toBe(0.01);
@@ -170,23 +197,33 @@ describe('Business Logic Remediation Tests', () => {
     const result = ExpenseReportSchema.safeParse({
       version: '1.0',
       source: 'Test',
-      expenses: [{ date: '2026-09-01', amount: Infinity, merchant: 'Inf Store', category: 'Groceries', paid_by: 'Marco' }],
+      expenses: [
+        {
+          date: '2026-09-01',
+          amount: Infinity,
+          merchant: 'Inf Store',
+          category: 'Groceries',
+          paid_by: 'Marco',
+        },
+      ],
     });
     expect(result.success).toBe(false);
   });
 
   it('avoids false duplicate matches on short merchant names', () => {
-    const existing: Expense[] = [{
-      id: 'e1',
-      family_id: 'fam_1',
-      category_id: 'c1',
-      paid_by_member_id: 'm1',
-      amount: 5,
-      transaction_date: '2026-09-01',
-      merchant_name: 'Bar Sport',
-      created_at: '',
-      updated_at: '',
-    }];
+    const existing: Expense[] = [
+      {
+        id: 'e1',
+        family_id: 'fam_1',
+        category_id: 'c1',
+        paid_by_member_id: 'm1',
+        amount: 5,
+        transaction_date: '2026-09-01',
+        merchant_name: 'Bar Sport',
+        created_at: '',
+        updated_at: '',
+      },
+    ];
     const candidate = { date: '2026-09-01', amount: 5, merchant: 'Apple Barbecue' };
     const dup = checkDuplicate(candidate, existing);
     expect(dup).toBeNull();
@@ -199,6 +236,7 @@ describe('Business Logic Remediation Tests', () => {
 ## Phase 3: Partition 3 — Synchronization, Authentication & Cloud Architecture
 
 ### 3.1 Remediation Tasks
+
 - [x] **Task 3.1: Fortify Row-Level Security (RLS) in `supabase_schema.sql` (`supabase_schema.sql:119-145`)**
   - Problem: Authenticated users can view all families and invite codes, and insert themselves into any family without invite code verification. Budgets and import batches lack RLS policies.
   - Fix: Restrict `families` `SELECT` strictly to verified family members (`is_member_of_family(id)`).
@@ -239,18 +277,24 @@ describe('Business Logic Remediation Tests', () => {
   - Fix: Use `expo-clipboard` with try/catch fallback.
 
 ### 3.2 Required Unit Test Sketches (`__tests__/sync_remediation.test.ts`)
+
 ```typescript
 describe('Sync & Cloud Architecture Remediation Tests', () => {
   it('prevents concurrent flushOutbox execution via mutex lock', async () => {
     let callCount = 0;
     jest.spyOn(syncEngine, 'executeMutation').mockImplementation(async () => {
       callCount++;
-      await new Promise(r => setTimeout(r, 50));
+      await new Promise((r) => setTimeout(r, 50));
       return true;
     });
 
-    await syncEngine.enqueueMutation({ entity: 'expense', operation: 'INSERT', entity_id: 'e1', payload: {} as any });
-    
+    await syncEngine.enqueueMutation({
+      entity: 'expense',
+      operation: 'INSERT',
+      entity_id: 'e1',
+      payload: {} as any,
+    });
+
     // Launch two concurrent flushes
     const [res1, res2] = await Promise.all([syncEngine.flushOutbox(), syncEngine.flushOutbox()]);
     expect(res1.processed + res2.processed).toBe(1);
@@ -261,16 +305,26 @@ describe('Sync & Cloud Architecture Remediation Tests', () => {
     jest.spyOn(syncEngine, 'executeMutation').mockImplementation(async (item) => {
       if (item.entity_id === 'e1') {
         // Enqueue e2 while e1 is processing
-        await syncEngine.enqueueMutation({ entity: 'expense', operation: 'INSERT', entity_id: 'e2', payload: {} as any });
+        await syncEngine.enqueueMutation({
+          entity: 'expense',
+          operation: 'INSERT',
+          entity_id: 'e2',
+          payload: {} as any,
+        });
       }
       return true;
     });
 
-    await syncEngine.enqueueMutation({ entity: 'expense', operation: 'INSERT', entity_id: 'e1', payload: {} as any });
+    await syncEngine.enqueueMutation({
+      entity: 'expense',
+      operation: 'INSERT',
+      entity_id: 'e1',
+      payload: {} as any,
+    });
     await syncEngine.flushOutbox();
 
     const remaining = await syncEngine.getOutbox();
-    expect(remaining.some(m => m.entity_id === 'e2')).toBe(true);
+    expect(remaining.some((m) => m.entity_id === 'e2')).toBe(true);
   });
 
   it('preserves existing local splits when realtime expense payload omits splits', () => {
@@ -282,21 +336,26 @@ describe('Sync & Cloud Architecture Remediation Tests', () => {
       amount: 100,
       transaction_date: '2026-09-01',
       merchant_name: 'Supermarket',
-      splits: [{ member_id: 'm1', computed_amount: 50 }, { member_id: 'm2', computed_amount: 50 }],
+      splits: [
+        { member_id: 'm1', computed_amount: 50 },
+        { member_id: 'm2', computed_amount: 50 },
+      ],
       created_at: '2026-09-01T10:00:00Z',
       updated_at: '2026-09-01T10:00:00Z',
     };
     useAppStore.setState({ expenses: [initialExpense] });
 
     // Remote update arrived without splits relation
-    useAppStore.getState().reconcileRemoteExpenses([{
-      ...initialExpense,
-      merchant_name: 'Supermarket Updated',
-      updated_at: '2026-09-01T11:00:00Z',
-      splits: undefined,
-    }]);
+    useAppStore.getState().reconcileRemoteExpenses([
+      {
+        ...initialExpense,
+        merchant_name: 'Supermarket Updated',
+        updated_at: '2026-09-01T11:00:00Z',
+        splits: undefined,
+      },
+    ]);
 
-    const updated = useAppStore.getState().expenses.find(e => e.id === initialExpense.id);
+    const updated = useAppStore.getState().expenses.find((e) => e.id === initialExpense.id);
     expect(updated?.merchant_name).toBe('Supermarket Updated');
     expect(updated?.splits?.length).toBe(2);
   });
@@ -308,6 +367,7 @@ describe('Sync & Cloud Architecture Remediation Tests', () => {
 ## Phase 4: Partition 4 — Application UI, Accessibility, Routing, i18n & Charts
 
 ### 4.1 Remediation Tasks
+
 - [x] **Task 4.1: Eliminate `NaN` and Zero-Division SVG Crash Paths (`SpendingVelocityChart.tsx:44-58`, `MemberBarChart.tsx:32-38`, `CategoryPieChart.tsx:28-36`)**
   - Problem: When spending amounts are 0 or empty, SVG scaling produces `NaN` or `-Infinity`, crashing `react-native-svg` and Yoga native layout.
   - Fix: Guard with `Number.isFinite()`, enforce `Math.max(1, ...)` divisors, and clamp coordinate outputs.
@@ -347,10 +407,14 @@ describe('Sync & Cloud Architecture Remediation Tests', () => {
   - Fix: Wrap provider values in `useMemo`.
 
 ### 4.2 Required Unit Test Sketches (`__tests__/ui_remediation.test.ts`)
+
 ```typescript
 describe('UI & Accessibility Remediation Tests', () => {
   it('formats ISO date strings consistently regardless of local timezone', () => {
-    const formatted = formatIsoDateString('2026-09-09', 'en-US', { month: 'short', day: 'numeric' });
+    const formatted = formatIsoDateString('2026-09-09', 'en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
     expect(formatted).toContain('Sep 9');
   });
 
@@ -363,7 +427,9 @@ describe('UI & Accessibility Remediation Tests', () => {
 
   it('rejects NaN amounts in SplitCalculator without generating NaN shares', () => {
     let capturedSplits: any = 'initial';
-    handleAmountChangeInSplitCalc(NaN, ['m1', 'm2'], (splits) => { capturedSplits = splits; });
+    handleAmountChangeInSplitCalc(NaN, ['m1', 'm2'], (splits) => {
+      capturedSplits = splits;
+    });
     expect(capturedSplits).toBeUndefined();
   });
 });
@@ -374,6 +440,7 @@ describe('UI & Accessibility Remediation Tests', () => {
 ## Phase 5: Verification, Validation & Acceptance Criteria
 
 Upon completion of Phases 1–4:
+
 1. **Automated Verification:**
    - Run `pnpm typecheck` (must exit with 0 errors).
    - Run `pnpm test` (all suites must pass, including new remediation tests).

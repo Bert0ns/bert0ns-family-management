@@ -31,7 +31,9 @@ export async function exportAndShareFile(
         if (document.body.contains(link)) {
           document.body.removeChild(link);
         }
-        if (typeof URL.revokeObjectURL === "function") { URL.revokeObjectURL(url); }
+        if (typeof URL.revokeObjectURL === 'function') {
+          URL.revokeObjectURL(url);
+        }
       }, 100);
       exportLogger.info('Web blob download completed', { fileName });
       return true;

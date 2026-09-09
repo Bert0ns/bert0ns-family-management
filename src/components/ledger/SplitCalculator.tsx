@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { Users, Check, Split } from 'lucide-react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Check, Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { FamilyMember, ExpenseSplit } from '@/types';
 import { calculateEqualSplits } from '@/services/splitCalculator';
 import { Avatar } from '@/components/common/Avatar';
-import { Badge } from '@/components/common/Badge';
 
 interface SplitCalculatorProps {
   totalAmount: number;
@@ -44,7 +43,7 @@ export const SplitCalculator: React.FC<SplitCalculatorProps> = ({
 
     const splits = calculateEqualSplits(totalAmount, selectedMemberIds);
     onSplitsChange(splits.length > 0 ? splits : undefined);
-  }, [isSplitEnabled, selectedMemberIds, totalAmount]);
+  }, [isSplitEnabled, selectedMemberIds, totalAmount, onSplitsChange]);
 
   const toggleMember = (memberId: string) => {
     if (selectedMemberIds.includes(memberId)) {
@@ -118,7 +117,8 @@ export const SplitCalculator: React.FC<SplitCalculatorProps> = ({
       {isSplitEnabled && (
         <View style={{ gap: spacing.sm }}>
           <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}>
-            {t.addExpense.splitSelectMembers} ({selectedMemberIds.length} {t.common.of} {members.length}):
+            {t.addExpense.splitSelectMembers} ({selectedMemberIds.length} {t.common.of}{' '}
+            {members.length}):
           </Text>
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>

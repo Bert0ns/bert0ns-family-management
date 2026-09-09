@@ -3,7 +3,6 @@ import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Cloud, Mail, KeyRound, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react-native';
 import { FormModal } from '@/components/common/FormModal';
 import { Input } from '@/components/common/Input';
-import { Button } from '@/components/common/Button';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { authService } from '@/services/authService';

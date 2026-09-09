@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
@@ -16,9 +16,9 @@ interface MemberBarChartProps {
 export const MemberBarChart: React.FC<MemberBarChartProps> = ({
   data,
   currency = '€',
-  onSelectMember,
+  onSelectMember: _onSelectMember,
 }) => {
-  const { theme, spacing, radius, typography } = useTheme();
+  const { theme, spacing, typography } = useTheme();
   const { t } = useI18n();
 
   const maxTotal = Math.max(...data.map((d) => d.total), 100);

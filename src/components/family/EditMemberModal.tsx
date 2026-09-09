@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
 import { UserCog, Check, ShieldCheck, User, Eye, Trash2 } from 'lucide-react-native';
 import { useTheme } from '@/theme';
@@ -19,12 +19,23 @@ interface EditMemberModalProps {
   onDelete: (memberId: string) => void;
 }
 
-export const EditMemberModal: React.FC<EditMemberModalProps> = ({
+interface EditMemberContentProps {
+  visible: boolean;
+  member: FamilyMember;
+  expenses: Expense[];
+  isOnlyMember: boolean;
+  currency: string;
+  onClose: () => void;
+  onSave: (updates: { display_name: string; role: UserRole; color_code: string }) => void;
+  onDelete: (memberId: string) => void;
+}
+
+const EditMemberContent: React.FC<EditMemberContentProps> = ({
   visible,
   member,
   expenses,
   isOnlyMember,
-  currency = '€',
+  currency,
   onClose,
   onSave,
   onDelete,
@@ -32,21 +43,10 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
   const { theme, spacing, radius, typography, memberColors } = useTheme();
   const { t } = useI18n();
 
-  const [name, setName] = useState('');
-  const [role, setRole] = useState<UserRole>('MEMBER');
-  const [colorCode, setColorCode] = useState(memberColors[0].bg);
+  const [name, setName] = useState(member.display_name);
+  const [role, setRole] = useState<UserRole>(member.role);
+  const [colorCode, setColorCode] = useState(member.color_code || memberColors[0].bg);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (member) {
-      setName(member.display_name);
-      setRole(member.role);
-      setColorCode(member.color_code || memberColors[0].bg);
-      setError(null);
-    }
-  }, [member]);
-
-  if (!member) return null;
 
   const memberExpenses = expenses.filter((e) => e.paid_by_member_id === member.id);
   const totalSpent = memberExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -75,10 +75,17 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
       return;
     }
 
-    const confirmMessage = `${t.family.deleteMemberConfirmMessage}\n\n• ${memberExpenses.length} ${t.dashboard.totalTransactions.toLowerCase()} (${currency}${totalSpent.toFixed(2)})\n• ${splitInvolvements} ${t.family.splitShares}`;
+    const confirmMessage = `${t.family.deleteMemberConfirmMessage}
+
+â¢ ${memberExpenses.length} ${t.dashboard.totalTransactions.toLowerCase()} (${currency}${totalSpent.toFixed(2)})
+â¢ ${splitInvolvements} ${t.family.splitShares}`;
 
     if (Platform.OS === 'web') {
-      if (window.confirm(`${t.family.deleteMemberConfirmTitle}\n\n${confirmMessage}`)) {
+      if (
+        window.confirm(`${t.family.deleteMemberConfirmTitle}
+
+${confirmMessage}`)
+      ) {
         onDelete(member.id);
         onClose();
       }
@@ -97,7 +104,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
     }
   };
 
-  const roleOptions: Array<{ role: UserRole; title: string; desc: string; icon: typeof User }> = [
+  const roleOptions: { role: UserRole; title: string; desc: string; icon: typeof User }[] = [
     {
       role: 'ADMIN',
       title: t.family.roleAdmin,
@@ -281,7 +288,8 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
               fontSize: typography.fontSizes.xs,
             }}
           >
-            {t.family.relatedData}: {memberExpenses.length} {t.dashboard.totalTransactions.toLowerCase()} ({currency}
+            {t.family.relatedData}: {memberExpenses.length}{' '}
+            {t.dashboard.totalTransactions.toLowerCase()} ({currency}
             {totalSpent.toFixed(2)}), {splitInvolvements} {t.family.splitParticipations}
           </Text>
         </View>
@@ -297,5 +305,32 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
         )}
       </View>
     </FormModal>
+  );
+};
+
+export const EditMemberModal: React.FC<EditMemberModalProps> = ({
+  visible,
+  member,
+  expenses,
+  isOnlyMember,
+  currency = 'â¬',
+  onClose,
+  onSave,
+  onDelete,
+}) => {
+  if (!member) return null;
+
+  return (
+    <EditMemberContent
+      key={member.id}
+      visible={visible}
+      member={member}
+      expenses={expenses}
+      isOnlyMember={isOnlyMember}
+      currency={currency}
+      onClose={onClose}
+      onSave={onSave}
+      onDelete={onDelete}
+    />
   );
 };

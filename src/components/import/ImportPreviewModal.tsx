@@ -238,7 +238,12 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 
           {/* Action Buttons */}
           <View style={{ flexDirection: 'row', gap: spacing.md }}>
-            <Button title={t.common.cancel} variant="outline" onPress={onClose} style={{ flex: 1 }} />
+            <Button
+              title={t.common.cancel}
+              variant="outline"
+              onPress={onClose}
+              style={{ flex: 1 }}
+            />
             <Button
               title={`${t.import.importTransactions} (${report.expenses.length})`}
               variant="primary"

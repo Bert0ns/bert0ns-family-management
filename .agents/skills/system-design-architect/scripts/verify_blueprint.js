@@ -8,18 +8,18 @@
  *  4. 100% Native Mermaid diagram syntax & zero-ASCII-art gating
  */
 
-const fs = require("fs");
-const path = require("path");
-const { CANONICAL_MODULES, buildBreadcrumb } = require("./assemble_blueprint");
+const fs = require('fs');
+const path = require('path');
+const { CANONICAL_MODULES, buildBreadcrumb } = require('./assemble_blueprint');
 const {
   lintMermaidBlock,
   extractMermaidBlocks,
   lintDocumentForForbiddenAscii,
-} = require("./verify_mermaid");
+} = require('./verify_mermaid');
 
 function verifyBlueprint(targetDir, options = {}) {
   const rootDir = process.cwd();
-  const archDir = targetDir || path.join(rootDir, "docs/architecture");
+  const archDir = targetDir || path.join(rootDir, 'docs/architecture');
 
   const results = {
     modulesChecked: 0,
@@ -46,14 +46,14 @@ function verifyBlueprint(targetDir, options = {}) {
       continue;
     }
 
-    const content = fs.readFileSync(modPath, "utf8");
-    const lines = content.split("\n");
+    const content = fs.readFileSync(modPath, 'utf8');
+    const lines = content.split('\n');
     const expectedBreadcrumb = buildBreadcrumb(mod);
 
     // 2. Breadcrumb Verification (Top & Bottom)
     let hasTopBreadcrumb = false;
     for (let i = 0; i < Math.min(15, lines.length); i++) {
-      if (lines[i].includes("[Index](./index.md)")) {
+      if (lines[i].includes('[Index](./index.md)')) {
         hasTopBreadcrumb = true;
         break;
       }
@@ -66,7 +66,7 @@ function verifyBlueprint(targetDir, options = {}) {
 
     let hasBottomBreadcrumb = false;
     for (let i = lines.length - 1; i >= Math.max(0, lines.length - 15); i--) {
-      if (lines[i].includes("[Index](./index.md)")) {
+      if (lines[i].includes('[Index](./index.md)')) {
         hasBottomBreadcrumb = true;
         break;
       }
@@ -92,14 +92,13 @@ function verifyBlueprint(targetDir, options = {}) {
     }
 
     // 4. Code Symbol Link File Existence Check
-    const fileLinkRegex =
-      /\[([^\]]+)\]\((file:\/\/\/(?:[^\s()]+|\([^\s()]+\))+)\)/g;
+    const fileLinkRegex = /\[([^\]]+)\]\((file:\/\/\/(?:[^\s()]+|\([^\s()]+\))+)\)/g;
     let fileMatch;
     while ((fileMatch = fileLinkRegex.exec(content)) !== null) {
       results.linksChecked++;
       const fileUri = fileMatch[2];
       // Extract absolute path from file:///...#L10-L20 and handle URL encoding
-      const rawPath = fileUri.replace(/^file:\/\//, "").split("#")[0];
+      const rawPath = fileUri.replace(/^file:\/\//, '').split('#')[0];
       const cleanPath = decodeURIComponent(rawPath);
       if (!fs.existsSync(cleanPath)) {
         results.warnings.push(
@@ -112,9 +111,7 @@ function verifyBlueprint(targetDir, options = {}) {
     if (lintDocumentForForbiddenAscii) {
       const asciiErrors = lintDocumentForForbiddenAscii(content, mod.file);
       for (const ae of asciiErrors) {
-        results.errors.push(
-          `[ASCII_ART_ERROR] ${mod.file}:L${ae.line} [${ae.rule}] ${ae.message}`,
-        );
+        results.errors.push(`[ASCII_ART_ERROR] ${mod.file}:L${ae.line} [${ae.rule}] ${ae.message}`);
       }
     }
 
@@ -124,14 +121,10 @@ function verifyBlueprint(targetDir, options = {}) {
       results.diagramsChecked++;
       const { errors: mErrors, warnings: mWarnings } = lintMermaidBlock(b);
       for (const me of mErrors) {
-        results.errors.push(
-          `[MERMAID_ERROR] ${mod.file}:L${me.line} [${me.rule}] ${me.message}`,
-        );
+        results.errors.push(`[MERMAID_ERROR] ${mod.file}:L${me.line} [${me.rule}] ${me.message}`);
       }
       for (const mw of mWarnings) {
-        results.warnings.push(
-          `[MERMAID_WARN] ${mod.file}:L${mw.line} [${mw.rule}] ${mw.message}`,
-        );
+        results.warnings.push(`[MERMAID_WARN] ${mod.file}:L${mw.line} [${mw.rule}] ${mw.message}`);
       }
     }
   }
@@ -142,9 +135,8 @@ function verifyBlueprint(targetDir, options = {}) {
 function runVerificationCli() {
   const args = process.argv.slice(2);
   const targetDir =
-    args.find((a) => !a.startsWith("--")) ||
-    path.join(process.cwd(), "docs/architecture");
-  const isJson = args.includes("--json");
+    args.find((a) => !a.startsWith('--')) || path.join(process.cwd(), 'docs/architecture');
+  const isJson = args.includes('--json');
 
   const results = verifyBlueprint(targetDir);
 
@@ -153,37 +145,31 @@ function runVerificationCli() {
     process.exit(results.errors.length > 0 ? 1 : 0);
   }
 
-  console.log(
-    `\n🔍 Architecture Blueprint Unified Quality Gate: ${targetDir}\n`,
-  );
+  console.log(`\n🔍 Architecture Blueprint Unified Quality Gate: ${targetDir}\n`);
   console.log(`- Canonical Modules Checked: ${results.modulesChecked}/10`);
   console.log(`- Diagram Blocks Validated:  ${results.diagramsChecked}`);
   console.log(`- Links & Symbol Citations:  ${results.linksChecked}`);
   console.log(`- Total Errors:              ${results.errors.length}`);
   console.log(`- Total Warnings:            ${results.warnings.length}`);
-  console.log("─".repeat(60) + "\n");
+  console.log('─'.repeat(60) + '\n');
 
   if (results.warnings.length > 0) {
-    console.log("⚠️  Warnings:");
+    console.log('⚠️  Warnings:');
     for (const w of results.warnings) {
       console.warn(`  - ${w}`);
     }
-    console.log("");
+    console.log('');
   }
 
   if (results.errors.length > 0) {
-    console.error("❌ Quality Gate Failures:");
+    console.error('❌ Quality Gate Failures:');
     for (const e of results.errors) {
       console.error(`  - ${e}`);
     }
-    console.error(
-      "\n💥 Unified Architecture Quality Gate failed. Please resolve above errors.\n",
-    );
+    console.error('\n💥 Unified Architecture Quality Gate failed. Please resolve above errors.\n');
     process.exit(1);
   } else {
-    console.log(
-      "✨ All 10 architecture blueprint modules passed all quality gates!\n",
-    );
+    console.log('✨ All 10 architecture blueprint modules passed all quality gates!\n');
     process.exit(0);
   }
 }
