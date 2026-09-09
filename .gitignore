@@ -48,3 +48,6 @@ yarn-error.*
 coverage/
 .fallow/
 
+# Supabase CLI temp files
+supabase/.temp/
+supabase/.branches/
