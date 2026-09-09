@@ -1,5 +1,4 @@
 import {
-  AnalyticsCalculator,
   calculateMonthlyMetrics,
   calculateCategoryBreakdown,
   calculateMemberContributions,
@@ -70,8 +69,6 @@ describe('AnalyticsCalculator (Unit Tests & Edge Cases)', () => {
       created_at: '2026-08-15T00:00:00Z',
     },
   ];
-
-  const calculator = new AnalyticsCalculator();
 
   describe('Monthly KPI Metrics', () => {
     it('calculates accurate total spend and burn rate during active month', () => {

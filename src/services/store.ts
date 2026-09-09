@@ -135,8 +135,7 @@ export const useAppStore = create<AppState>()(
         set({ selectedPeriod: period });
       },
 
-      setFilters: (filters) =>
-        set((state) => ({ filters: { ...state.filters, ...filters } })),
+      setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
       resetFilters: () => set({ filters: DEFAULT_FILTERS }),
 
       updateFamilySettings: (updates) => {
@@ -559,7 +558,8 @@ export const useAppStore = create<AppState>()(
           });
 
           const sorted = Array.from(map.values()).sort(
-            (a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime(),
+            (a, b) =>
+              new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime(),
           );
           return { expenses: sorted };
         });

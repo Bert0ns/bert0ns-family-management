@@ -1,12 +1,5 @@
-import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Platform,
-} from 'react-native';
+import { useState, useRef } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {
@@ -67,7 +60,9 @@ export default function AddExpenseScreen() {
   const amountInputRef = useRef<TextInput>(null);
 
   const selectedCategory = categories.find((c) => c.id === selectedCategoryId) || categories[0];
-  const localizedCategoryName = selectedCategory ? getLocalizedCategoryName(selectedCategory, t) : t.categories.other;
+  const localizedCategoryName = selectedCategory
+    ? getLocalizedCategoryName(selectedCategory, t)
+    : t.categories.other;
 
   const activeDate =
     dateMode === 'today'

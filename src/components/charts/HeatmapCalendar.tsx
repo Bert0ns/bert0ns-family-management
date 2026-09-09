@@ -14,7 +14,7 @@ interface HeatmapCalendarProps {
 export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   data,
   period,
-  currency = '€',
+  currency: _currency = '€',
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
   const { t, locale } = useI18n();
@@ -144,13 +144,28 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           }}
         />
         <View
-          style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: `${theme.colors.brand}30` }}
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: 2,
+            backgroundColor: `${theme.colors.brand}30`,
+          }}
         />
         <View
-          style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: `${theme.colors.brand}60` }}
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: 2,
+            backgroundColor: `${theme.colors.brand}60`,
+          }}
         />
         <View
-          style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: `${theme.colors.brand}A0` }}
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: 2,
+            backgroundColor: `${theme.colors.brand}A0`,
+          }}
         />
         <View
           style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: theme.colors.brand }}

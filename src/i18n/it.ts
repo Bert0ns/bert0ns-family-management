@@ -115,8 +115,7 @@ export const it: TranslationSchema = {
     exportCsv: 'Esporta CSV',
     exportJson: 'Esporta JSON',
     importHistory: 'Cronologia Importazioni',
-    duplicatesDetected:
-      'possibili duplicati rilevati. Verranno comunque importati se confermi.',
+    duplicatesDetected: 'possibili duplicati rilevati. Verranno comunque importati se confermi.',
     successNotice: 'Transazioni importate con successo nel registro!',
     schemaTitle: 'Formato JSON Atteso',
     schemaSubtitle: 'Carica un file JSON ben formattato corrispondente allo schema:',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import {
   Sun,
@@ -14,7 +14,6 @@ import {
   Users,
   RefreshCw,
   LogOut,
-  Sparkles,
 } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, SupportedLocale } from '@/i18n';
@@ -24,7 +23,6 @@ import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { Input } from '@/components/common/Input';
 import { OptionSelector } from '@/components/common/OptionSelector';
-import { isSupabaseConfigured } from '@/services/supabase';
 import { exportAndShareFile } from '@/services/fileExporter';
 import { authService } from '@/services/authService';
 import { syncEngine } from '@/services/syncEngine';
@@ -408,7 +406,12 @@ export default function SettingsScreen() {
                 >
                   {t.settings.cloudStatusLocal}
                 </Text>
-                <Badge label={t.settings.localFirstBadge} color={theme.colors.success} size="sm" variant="solid" />
+                <Badge
+                  label={t.settings.localFirstBadge}
+                  color={theme.colors.success}
+                  size="sm"
+                  variant="solid"
+                />
               </View>
               <Text
                 style={{

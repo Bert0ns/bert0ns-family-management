@@ -86,7 +86,9 @@ export const MemberCard: React.FC<MemberCardProps> = ({
               >
                 {member.display_name}
               </Text>
-              {isCurrentUser && <Badge label={t.family.currentUser} color={theme.colors.brand} size="sm" />}
+              {isCurrentUser && (
+                <Badge label={t.family.currentUser} color={theme.colors.brand} size="sm" />
+              )}
             </View>
 
             <View

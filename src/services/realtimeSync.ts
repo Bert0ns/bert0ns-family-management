@@ -161,7 +161,7 @@ export const realtimeSync = {
       supabaseLogger.info('Realtime subscription status update', { status });
       if (status === 'SUBSCRIBED') {
         // Run catch-up delta sync in case anything was missed
-        syncEngine.fetchDelta(familyId).catch((err) => {
+        syncEngine.fetchDelta(familyId).catch((err: unknown) => {
           supabaseLogger.debug('Catch-up delta error', { error: err });
         });
       }

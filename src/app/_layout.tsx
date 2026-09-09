@@ -1,10 +1,10 @@
-import React from 'react';
 import { Stack } from 'expo-router';
-export { ErrorBoundary } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '@/theme';
 import { I18nProvider, useI18n } from '@/i18n';
+
+export { ErrorBoundary } from 'expo-router';
 
 function RootLayoutNav() {
   const { theme, isDark } = useTheme();

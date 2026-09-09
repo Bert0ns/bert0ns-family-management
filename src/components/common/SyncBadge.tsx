@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Cloud, CloudOff, Check, RefreshCw, AlertCircle } from 'lucide-react-native';
+import { Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { CloudOff, Check, AlertCircle } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { syncEngine } from '@/services/syncEngine';

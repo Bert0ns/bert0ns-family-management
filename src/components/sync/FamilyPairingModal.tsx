@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, Alert, Platform } from 'react-native';
 import { Users, Copy, Check, LogIn, AlertCircle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { FormModal } from '@/components/common/FormModal';
@@ -12,7 +12,6 @@ import { useAppStore } from '@/services/store';
 import { supabase, isSupabaseConfigured } from '@/services/supabase';
 import { syncEngine } from '@/services/syncEngine';
 import { realtimeSync } from '@/services/realtimeSync';
-import { generateInviteCode } from '@/utils/uuid';
 
 interface FamilyPairingModalProps {
   visible: boolean;

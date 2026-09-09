@@ -40,10 +40,10 @@ describe('Business Logic & Math Remediation Tests (Partition 2)', () => {
       expect(csv).not.toBe('');
 
       // Check formula neutralization
-      expect(csv).toContain("\"'=cmd|’ /C calc’!A0\"");
-      expect(csv).toContain("\"'+1234567890\"");
-      expect(csv).toContain("\"'@SUM(1+1)\"");
-      expect(csv).toContain("\"'-HYPERLINK(\"\"http://evil.com\"\")\"");
+      expect(csv).toContain('"\'=cmd|’ /C calc’!A0"');
+      expect(csv).toContain('"\'+1234567890"');
+      expect(csv).toContain('"\'@SUM(1+1)"');
+      expect(csv).toContain('"\'-HYPERLINK(""http://evil.com"")"');
     });
   });
 

@@ -5,7 +5,7 @@ import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { DailySpendPoint } from '@/services/interfaces';
 import { Card } from '@/components/common/Card';
-import { TrendingUp, Info } from 'lucide-react-native';
+import { Info } from 'lucide-react-native';
 
 interface SpendingVelocityChartProps {
   data: DailySpendPoint[];
@@ -31,7 +31,9 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
   const innerWidth = Math.max(chartWidth - paddingLeft - paddingRight, 100);
   const innerHeight = chartHeight - paddingTop - paddingBottom;
 
-  const safeAmounts = data.map((d) => (Number.isFinite(d.cumulativeAmount) ? d.cumulativeAmount : 0));
+  const safeAmounts = data.map((d) =>
+    Number.isFinite(d.cumulativeAmount) ? d.cumulativeAmount : 0,
+  );
   const maxVal = Math.max(...safeAmounts, 50) * 1.15;
   const totalDays = data.length;
 

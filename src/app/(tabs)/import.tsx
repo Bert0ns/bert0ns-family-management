@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
-import {
-  UploadCloud,
-  CheckCircle2,
-  History,
-  FileSpreadsheet,
-  FileJson,
-} from 'lucide-react-native';
+import { UploadCloud, CheckCircle2, History, FileSpreadsheet, FileJson } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -280,7 +274,9 @@ export default function ImportScreen() {
                   >
                     {batch.file_name}
                   </Text>
-                  <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
+                  <Text
+                    style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}
+                  >
                     {new Date(batch.created_at).toLocaleDateString()}
                   </Text>
                 </View>

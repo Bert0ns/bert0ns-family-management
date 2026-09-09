@@ -269,7 +269,7 @@ CREATE OR REPLACE FUNCTION public.join_family_via_invite_code(
     p_invite_code TEXT,
     p_display_name TEXT DEFAULT 'New Member'
 )
-RETURNS JSONB AS 43831
+RETURNS JSONB AS $$
 DECLARE
     v_family_id UUID;
     v_member_id UUID;
@@ -312,7 +312,7 @@ BEGIN
 
     RETURN jsonb_build_object('family_id', v_family_id, 'member_id', v_member_id, 'status', 'success');
 END;
-43831 LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 12. Performance Optimization Indexes for High-Frequency Sync Queries
 CREATE INDEX IF NOT EXISTS idx_family_members_user_fam ON public.family_members(user_id, family_id);

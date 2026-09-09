@@ -138,7 +138,7 @@ export const syncEngine = {
               };
               failedMap.set(item.id, updatedItem);
             }
-          } catch (err) {
+          } catch {
             errors++;
             const updatedItem = {
               ...item,
@@ -288,7 +288,6 @@ export const syncEngine = {
       if (memErr) throw memErr;
 
       let count = 0;
-      const store = useAppStore.getState();
 
       if (remoteExpenses && remoteExpenses.length > 0) {
         const mappedExpenses: Expense[] = remoteExpenses.map((re: any) => ({

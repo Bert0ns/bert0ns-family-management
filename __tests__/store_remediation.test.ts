@@ -1,8 +1,4 @@
-import {
-  useAppStore,
-  registerStoreMutationListener,
-  StoreMutationEvent,
-} from '@/services/store';
+import { useAppStore, registerStoreMutationListener, StoreMutationEvent } from '@/services/store';
 import { RawExpenseReport, Expense } from '@/types';
 
 describe('Store Remediation Tests (Partition 1)', () => {

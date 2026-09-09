@@ -24,8 +24,7 @@
       }
       body {
         font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-          Arial, sans-serif;
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         background: var(--bg);
         color: var(--text);
         padding: 32px 24px;
@@ -248,21 +247,15 @@
           <div class="stat-label">Total Findings</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number" style="color: var(--critical)">
-            17
-          </div>
+          <div class="stat-number" style="color: var(--critical)">17</div>
           <div class="stat-label">Critical</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number" style="color: var(--important)">
-            25
-          </div>
+          <div class="stat-number" style="color: var(--important)">25</div>
           <div class="stat-label">Important</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number" style="color: var(--suggestion)">
-            8
-          </div>
+          <div class="stat-number" style="color: var(--suggestion)">8</div>
           <div class="stat-label">Suggestions</div>
         </div>
         <div class="stat-card">
@@ -294,16 +287,10 @@
         </div>
         <div class="filters-row">
           <div class="severity-group">
-            <button class="filter-btn active" data-filter="all">
-              All Severities
-            </button>
+            <button class="filter-btn active" data-filter="all">All Severities</button>
             <button class="filter-btn" data-filter="critical">Critical</button>
-            <button class="filter-btn" data-filter="important">
-              Important
-            </button>
-            <button class="filter-btn" data-filter="suggestion">
-              Suggestions
-            </button>
+            <button class="filter-btn" data-filter="important">Important</button>
+            <button class="filter-btn" data-filter="suggestion">Suggestions</button>
             <button class="filter-btn" data-filter="nit">Nits</button>
           </div>
         </div>
@@ -341,512 +328,1386 @@
                  </td>
                </tr>
                ============================================================ -->
-                    <tr data-severity="critical" data-partition="P1: Core Domain &amp; State" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P1: Core Domain &amp; State"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P1: Core Domain &amp; State</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P1: Core Domain &amp; State</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/services/store.ts:299-387</span></td>
-            <td><strong>[P1-01] Missing Store Mutation Notifications on Batch Import Leading to Sync Omission</strong><br/>When importExpenseReport executes, it appends expenses to Zustand via set(), but never calls notifyStoreMutation. The syncEngine is never notified, so imported transactions remain local-only and are never uploaded to Supabase or shared with family members.</td>
-            <td><div class="code-block">// src/services/store.ts: inside importExpenseReport
-set((state) =&gt; ({
-  expenses: [...newExpenses, ...state.expenses],
-  importBatches: [newBatch, ...state.importBatches],
-}));
-
-// Notify outbox of each new expense
-newExpenses.forEach((exp) =&gt; {
-  notifyStoreMutation({
-    entity: &#039;expense&#039;,
-    operation: &#039;INSERT&#039;,
-    entity_id: exp.id,
-    payload: exp,
-  });
-});</div></td>
+            <td>
+              <strong
+                >[P1-01] Missing Store Mutation Notifications on Batch Import Leading to Sync
+                Omission</strong
+              ><br />When importExpenseReport executes, it appends expenses to Zustand via set(),
+              but never calls notifyStoreMutation. The syncEngine is never notified, so imported
+              transactions remain local-only and are never uploaded to Supabase or shared with
+              family members.
+            </td>
+            <td>
+              <div class="code-block">
+                // src/services/store.ts: inside importExpenseReport set((state) =&gt; ({ expenses:
+                [...newExpenses, ...state.expenses], importBatches: [newBatch,
+                ...state.importBatches], })); // Notify outbox of each new expense
+                newExpenses.forEach((exp) =&gt; { notifyStoreMutation({ entity: &#039;expense&#039;,
+                operation: &#039;INSERT&#039;, entity_id: exp.id, payload: exp, }); });
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P1: Core Domain &amp; State" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P1: Core Domain &amp; State"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P1: Core Domain &amp; State</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P1: Core Domain &amp; State</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/services/store.ts:214-266</span></td>
-            <td><strong>[P1-02] Partial Mutation Notification on Cascade Deletion Causing Database Inconsistency</strong><br/>deleteMember cascades deletion to all expenses paid by that member and modifies joint splits in local state. However, it only emits a single DELETE event for the member. The backend database and peer devices are never told that those expenses were deleted, violating foreign key constraints and desynchronizing family balances.</td>
-            <td><div class="code-block">// src/services/store.ts: deleteMember
-const expensesToDelete = state.expenses.filter((e) =&gt; e.paid_by_member_id === id);
-// Notify all cascaded expense deletions
-expensesToDelete.forEach((e) =&gt;
-  notifyStoreMutation({ entity: &#039;expense&#039;, operation: &#039;DELETE&#039;, entity_id: e.id, payload: { id: e.id } })
-);
-notifyStoreMutation({ entity: &#039;member&#039;, operation: &#039;DELETE&#039;, entity_id: id, payload: { id } });</div></td>
+            <td>
+              <strong
+                >[P1-02] Partial Mutation Notification on Cascade Deletion Causing Database
+                Inconsistency</strong
+              ><br />deleteMember cascades deletion to all expenses paid by that member and modifies
+              joint splits in local state. However, it only emits a single DELETE event for the
+              member. The backend database and peer devices are never told that those expenses were
+              deleted, violating foreign key constraints and desynchronizing family balances.
+            </td>
+            <td>
+              <div class="code-block">
+                // src/services/store.ts: deleteMember const expensesToDelete =
+                state.expenses.filter((e) =&gt; e.paid_by_member_id === id); // Notify all cascaded
+                expense deletions expensesToDelete.forEach((e) =&gt; notifyStoreMutation({ entity:
+                &#039;expense&#039;, operation: &#039;DELETE&#039;, entity_id: e.id, payload: { id:
+                e.id } }) ); notifyStoreMutation({ entity: &#039;member&#039;, operation:
+                &#039;DELETE&#039;, entity_id: id, payload: { id } });
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P1: Core Domain &amp; State" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P1: Core Domain &amp; State"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P1: Core Domain &amp; State</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P1: Core Domain &amp; State</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/services/store.ts:348</span></td>
-            <td><strong>[P1-03] Non-UUID ID Generation in importExpenseReport Breaking Remote DB Sync</strong><br/>importExpenseReport generates IDs formatted as exp_imp_${Date.now()}... whereas Supabase schema defines expenses.id as UUID NOT NULL. When the syncEngine attempts to sync imported expenses, PostgreSQL rejects them with code 22P02: invalid input syntax for type uuid.</td>
-            <td><div class="code-block">// src/services/store.ts: importExpenseReport
-import { generateUUID } from &#039;@/utils/uuid&#039;;
-
-// In mapped expense creation:
-id: generateUUID(),
-import_batch_id: batchId,</div></td>
+            <td>
+              <strong
+                >[P1-03] Non-UUID ID Generation in importExpenseReport Breaking Remote DB
+                Sync</strong
+              ><br />importExpenseReport generates IDs formatted as exp_imp_${Date.now()}... whereas
+              Supabase schema defines expenses.id as UUID NOT NULL. When the syncEngine attempts to
+              sync imported expenses, PostgreSQL rejects them with code 22P02: invalid input syntax
+              for type uuid.
+            </td>
+            <td>
+              <div class="code-block">
+                // src/services/store.ts: importExpenseReport import { generateUUID } from
+                &#039;@/utils/uuid&#039;; // In mapped expense creation: id: generateUUID(),
+                import_batch_id: batchId,
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P1: Core Domain &amp; State" data-axis="Correctness">
+          <tr
+            data-severity="important"
+            data-partition="P1: Core Domain &amp; State"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P1: Core Domain &amp; State</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P1: Core Domain &amp; State</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/services/store.ts:144-162</span></td>
-            <td><strong>[P1-04] Split De-synchronization on Expense Amount Update</strong><br/>When updateExpense is called with a modified amount, existing splits are retained unchanged unless explicitly supplied. A 100€ split (50€ each) updated to 200€ continues reporting 50€ shares, corrupting family debt calculations.</td>
-            <td><div class="code-block">// Recalculate equal splits if amount changes without explicit new splits
-if (updates.amount !== undefined &amp;&amp; updates.amount !== e.amount &amp;&amp; nextSplits &amp;&amp; nextSplits.length &gt; 0) {
-  nextSplits = calculateEqualSplits(updates.amount, nextSplits.map((s) =&gt; s.member_id));
-}</div></td>
+            <td>
+              <strong>[P1-04] Split De-synchronization on Expense Amount Update</strong><br />When
+              updateExpense is called with a modified amount, existing splits are retained unchanged
+              unless explicitly supplied. A 100€ split (50€ each) updated to 200€ continues
+              reporting 50€ shares, corrupting family debt calculations.
+            </td>
+            <td>
+              <div class="code-block">
+                // Recalculate equal splits if amount changes without explicit new splits if
+                (updates.amount !== undefined &amp;&amp; updates.amount !== e.amount &amp;&amp;
+                nextSplits &amp;&amp; nextSplits.length &gt; 0) { nextSplits =
+                calculateEqualSplits(updates.amount, nextSplits.map((s) =&gt; s.member_id)); }
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P1: Core Domain &amp; State" data-axis="Performance">
+          <tr
+            data-severity="important"
+            data-partition="P1: Core Domain &amp; State"
+            data-axis="Performance"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P1: Core Domain &amp; State</strong><br/><span class="axis-tag">Performance</span></td>
+            <td>
+              <strong>P1: Core Domain &amp; State</strong><br /><span class="axis-tag"
+                >Performance</span
+              >
+            </td>
             <td><span class="file-path">src/services/store.ts:104-120</span></td>
-            <td><strong>[P1-05] Root Store Re-renders Caused by Missing Selector Ergonomics</strong><br/>useAppStore is consumed across all screens without selectors or shallow equality checks. Any state update (such as typing a character in the ledger search bar) triggers a full-app re-render cascade across all active tab screens.</td>
-            <td><div class="code-block">export const useExpenses = () =&gt; useAppStore((s) =&gt; s.expenses);
-export const useMembers = () =&gt; useAppStore((s) =&gt; s.members);
-export const useCategories = () =&gt; useAppStore((s) =&gt; s.categories);
-export const useAppStoreShallow = &lt;T&gt;(selector: (state: AppState) =&gt; T): T =&gt; useAppStore(useShallow(selector));</div></td>
+            <td>
+              <strong>[P1-05] Root Store Re-renders Caused by Missing Selector Ergonomics</strong
+              ><br />useAppStore is consumed across all screens without selectors or shallow
+              equality checks. Any state update (such as typing a character in the ledger search
+              bar) triggers a full-app re-render cascade across all active tab screens.
+            </td>
+            <td>
+              <div class="code-block">
+                export const useExpenses = () =&gt; useAppStore((s) =&gt; s.expenses); export const
+                useMembers = () =&gt; useAppStore((s) =&gt; s.members); export const useCategories =
+                () =&gt; useAppStore((s) =&gt; s.categories); export const useAppStoreShallow =
+                &lt;T&gt;(selector: (state: AppState) =&gt; T): T =&gt;
+                useAppStore(useShallow(selector));
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P1: Core Domain &amp; State" data-axis="Performance">
+          <tr
+            data-severity="important"
+            data-partition="P1: Core Domain &amp; State"
+            data-axis="Performance"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P1: Core Domain &amp; State</strong><br/><span class="axis-tag">Performance</span></td>
+            <td>
+              <strong>P1: Core Domain &amp; State</strong><br /><span class="axis-tag"
+                >Performance</span
+              >
+            </td>
             <td><span class="file-path">src/services/store.ts:33, 114, 118</span></td>
-            <td><strong>[P1-06] Filter State Contamination of Core Domain Store &amp; Keystroke Storms</strong><br/>filters: FilterOptions is stored in the persistent AppState. Keystrokes in the search bar trigger AsyncStorage partialize serializations and root-level state invalidations on every frame.</td>
-            <td><div class="code-block">// Decouple filter UI state into an unpersisted useFilterStore slice or manage locally in LedgerScreen.
-export const useFilterStore = create&lt;FilterState&gt;((set) =&gt; ({
-  filters: initialFilters,
-  setFilters: (filters) =&gt; set({ filters }),
-}));</div></td>
+            <td>
+              <strong
+                >[P1-06] Filter State Contamination of Core Domain Store &amp; Keystroke
+                Storms</strong
+              ><br />filters: FilterOptions is stored in the persistent AppState. Keystrokes in the
+              search bar trigger AsyncStorage partialize serializations and root-level state
+              invalidations on every frame.
+            </td>
+            <td>
+              <div class="code-block">
+                // Decouple filter UI state into an unpersisted useFilterStore slice or manage
+                locally in LedgerScreen. export const useFilterStore =
+                create&lt;FilterState&gt;((set) =&gt; ({ filters: initialFilters, setFilters:
+                (filters) =&gt; set({ filters }), }));
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P1: Core Domain &amp; State" data-axis="Performance">
+          <tr
+            data-severity="important"
+            data-partition="P1: Core Domain &amp; State"
+            data-axis="Performance"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P1: Core Domain &amp; State</strong><br/><span class="axis-tag">Performance</span></td>
+            <td>
+              <strong>P1: Core Domain &amp; State</strong><br /><span class="axis-tag"
+                >Performance</span
+              >
+            </td>
             <td><span class="file-path">src/services/store.ts:427, 518-526</span></td>
-            <td><strong>[P1-07] Heavy Raw Payload Persistence in AsyncStorage via ImportBatch</strong><br/>ImportBatch records store raw_payload: report (unparsed multi-megabyte JSON). The persist middleware runs JSON.stringify on the entire state on every update, blocking the JS thread and hitting Android AsyncStorage row limits.</td>
-            <td><div class="code-block">// In partialize, strip raw_payload:
-importBatches: state.importBatches.map(({ raw_payload, ...batch }) =&gt; batch),</div></td>
+            <td>
+              <strong>[P1-07] Heavy Raw Payload Persistence in AsyncStorage via ImportBatch</strong
+              ><br />ImportBatch records store raw_payload: report (unparsed multi-megabyte JSON).
+              The persist middleware runs JSON.stringify on the entire state on every update,
+              blocking the JS thread and hitting Android AsyncStorage row limits.
+            </td>
+            <td>
+              <div class="code-block">
+                // In partialize, strip raw_payload: importBatches: state.importBatches.map(({
+                raw_payload, ...batch }) =&gt; batch),
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P1: Core Domain &amp; State" data-axis="Architecture">
+          <tr
+            data-severity="important"
+            data-partition="P1: Core Domain &amp; State"
+            data-axis="Architecture"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P1: Core Domain &amp; State</strong><br/><span class="axis-tag">Architecture</span></td>
+            <td>
+              <strong>P1: Core Domain &amp; State</strong><br /><span class="axis-tag"
+                >Architecture</span
+              >
+            </td>
             <td><span class="file-path">src/services/store.ts:79-88</span></td>
-            <td><strong>[P1-08] Single Global Mutation Listener with No Multi-Subscriber or Unsubscribe Lifecycle</strong><br/>Mutation listener is a single module variable (let mutationListener). Registering another listener clobbers syncEngine silently, and no unsubscribe function is returned.</td>
-            <td><div class="code-block">const mutationListeners = new Set&lt;StoreMutationListener&gt;();
-export const registerStoreMutationListener = (listener: StoreMutationListener): (() =&gt; void) =&gt; {
-  mutationListeners.add(listener);
-  return () =&gt; { mutationListeners.delete(listener); };
-};</div></td>
+            <td>
+              <strong
+                >[P1-08] Single Global Mutation Listener with No Multi-Subscriber or Unsubscribe
+                Lifecycle</strong
+              ><br />Mutation listener is a single module variable (let mutationListener).
+              Registering another listener clobbers syncEngine silently, and no unsubscribe function
+              is returned.
+            </td>
+            <td>
+              <div class="code-block">
+                const mutationListeners = new Set&lt;StoreMutationListener&gt;(); export const
+                registerStoreMutationListener = (listener: StoreMutationListener): (() =&gt; void)
+                =&gt; { mutationListeners.add(listener); return () =&gt; {
+                mutationListeners.delete(listener); }; };
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P1: Core Domain &amp; State" data-axis="Correctness">
+          <tr
+            data-severity="important"
+            data-partition="P1: Core Domain &amp; State"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P1: Core Domain &amp; State</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P1: Core Domain &amp; State</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/services/store.ts:268-297</span></td>
-            <td><strong>[P1-09] Non-Defensive Category Deletion Causing Orphaned Foreign Keys</strong><br/>If only 1 category exists, fallbackCat evaluates to the very category being deleted. Also default categories (is_default: true) can be deleted, leaving the app without standard taxonomy.</td>
-            <td><div class="code-block">if (state.categories.length &lt;= 1) return;
-const target = state.categories.find((c) =&gt; c.id === id);
-if (target?.is_default) return;</div></td>
+            <td>
+              <strong>[P1-09] Non-Defensive Category Deletion Causing Orphaned Foreign Keys</strong
+              ><br />If only 1 category exists, fallbackCat evaluates to the very category being
+              deleted. Also default categories (is_default: true) can be deleted, leaving the app
+              without standard taxonomy.
+            </td>
+            <td>
+              <div class="code-block">
+                if (state.categories.length &lt;= 1) return; const target =
+                state.categories.find((c) =&gt; c.id === id); if (target?.is_default) return;
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P1: Core Domain &amp; State" data-axis="Performance">
+          <tr
+            data-severity="important"
+            data-partition="P1: Core Domain &amp; State"
+            data-axis="Performance"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P1: Core Domain &amp; State</strong><br/><span class="axis-tag">Performance</span></td>
+            <td>
+              <strong>P1: Core Domain &amp; State</strong><br /><span class="axis-tag"
+                >Performance</span
+              >
+            </td>
             <td><span class="file-path">src/services/store.ts:404-453</span></td>
-            <td><strong>[P1-10] O(N x M) Complexity and Array Unshifting in Remote Reconciliation</strong><br/>reconcileRemoteExpenses performs nested findIndex lookups and uses unshift(), causing O(N^2) memory copies on large transaction histories.</td>
-            <td><div class="code-block">// Use a Map&lt;string, Expense&gt; index for O(N + M) reconciliation and sort once after merging.
-const map = new Map(current.map((e) =&gt; [e.id, e]));
-remoteList.forEach((remote) =&gt; {
-  // LWW timestamp check...
-  map.set(remote.id, remote);
-});
-return { expenses: Array.from(map.values()).sort(sortByDateDesc) };</div></td>
+            <td>
+              <strong
+                >[P1-10] O(N x M) Complexity and Array Unshifting in Remote Reconciliation</strong
+              ><br />reconcileRemoteExpenses performs nested findIndex lookups and uses unshift(),
+              causing O(N^2) memory copies on large transaction histories.
+            </td>
+            <td>
+              <div class="code-block">
+                // Use a Map&lt;string, Expense&gt; index for O(N + M) reconciliation and sort once
+                after merging. const map = new Map(current.map((e) =&gt; [e.id, e]));
+                remoteList.forEach((remote) =&gt; { // LWW timestamp check... map.set(remote.id,
+                remote); }); return { expenses: Array.from(map.values()).sort(sortByDateDesc) };
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P1: Core Domain &amp; State" data-axis="Architecture">
+          <tr
+            data-severity="important"
+            data-partition="P1: Core Domain &amp; State"
+            data-axis="Architecture"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P1: Core Domain &amp; State</strong><br/><span class="axis-tag">Architecture</span></td>
+            <td>
+              <strong>P1: Core Domain &amp; State</strong><br /><span class="axis-tag"
+                >Architecture</span
+              >
+            </td>
             <td><span class="file-path">src/services/store.ts:504-517</span></td>
-            <td><strong>[P1-11] Direct State Mutation during Rehydration Hook in onRehydrateStorage</strong><br/>Mutating state.categories = [...] directly in onRehydrateStorage callback bypasses Zustand internal subscription notifications and does not mark state dirty.</td>
-            <td><div class="code-block">useAppStore.setState((state) =&gt; ({
-  categories: [...state.categories, bankCat],
-}));</div></td>
+            <td>
+              <strong
+                >[P1-11] Direct State Mutation during Rehydration Hook in onRehydrateStorage</strong
+              ><br />Mutating state.categories = [...] directly in onRehydrateStorage callback
+              bypasses Zustand internal subscription notifications and does not mark state dirty.
+            </td>
+            <td>
+              <div class="code-block">
+                useAppStore.setState((state) =&gt; ({ categories: [...state.categories, bankCat],
+                }));
+              </div>
+            </td>
           </tr>
-          <tr data-severity="suggestion" data-partition="P1: Core Domain &amp; State" data-axis="Architecture">
+          <tr
+            data-severity="suggestion"
+            data-partition="P1: Core Domain &amp; State"
+            data-axis="Architecture"
+          >
             <td><span class="badge badge-suggestion">SUGGESTION</span></td>
-            <td><strong>P1: Core Domain &amp; State</strong><br/><span class="axis-tag">Architecture</span></td>
-            <td><span class="file-path">src/services/store.ts:76, src/types/index.ts:13, 67</span></td>
-            <td><strong>[P1-12] Untyped any in Mutation Payloads Violating TypeScript Rigor</strong><br/>StoreMutationEvent.payload: any and OutboxMutation.payload: any bypass TypeScript compiler checking in store and sync engine.</td>
-            <td><div class="code-block">export type StoreMutationEvent =
-  | { entity: &#039;expense&#039;; operation: MutationOperation; entity_id: string; payload: Expense | { id: string } }
-  | { entity: &#039;member&#039;; operation: MutationOperation; entity_id: string; payload: FamilyMember | { id: string } }
-  | { entity: &#039;category&#039;; operation: MutationOperation; entity_id: string; payload: Category | { id: string } };</div></td>
+            <td>
+              <strong>P1: Core Domain &amp; State</strong><br /><span class="axis-tag"
+                >Architecture</span
+              >
+            </td>
+            <td>
+              <span class="file-path">src/services/store.ts:76, src/types/index.ts:13, 67</span>
+            </td>
+            <td>
+              <strong>[P1-12] Untyped any in Mutation Payloads Violating TypeScript Rigor</strong
+              ><br />StoreMutationEvent.payload: any and OutboxMutation.payload: any bypass
+              TypeScript compiler checking in store and sync engine.
+            </td>
+            <td>
+              <div class="code-block">
+                export type StoreMutationEvent = | { entity: &#039;expense&#039;; operation:
+                MutationOperation; entity_id: string; payload: Expense | { id: string } } | {
+                entity: &#039;member&#039;; operation: MutationOperation; entity_id: string;
+                payload: FamilyMember | { id: string } } | { entity: &#039;category&#039;;
+                operation: MutationOperation; entity_id: string; payload: Category | { id: string }
+                };
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P2: Business Logic &amp; Export" data-axis="Security">
+          <tr
+            data-severity="critical"
+            data-partition="P2: Business Logic &amp; Export"
+            data-axis="Security"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P2: Business Logic &amp; Export</strong><br/><span class="axis-tag">Security</span></td>
+            <td>
+              <strong>P2: Business Logic &amp; Export</strong><br /><span class="axis-tag"
+                >Security</span
+              >
+            </td>
             <td><span class="file-path">src/services/csvExporter.ts:25-39</span></td>
-            <td><strong>[P2-01] CSV Formula Injection (CWE-1236) in CSV Exporter</strong><br/>User input in merchant_name, notes, or payment_method beginning with =, +, -, @, \t, \r is wrapped in quotes but not prepended with an apostrophe. Opening the exported CSV in Excel or Google Sheets executes arbitrary formulas/DDE commands.</td>
-            <td><div class="code-block">const escapeCell = (val: string | number | boolean | undefined): string =&gt; {
-  if (val === undefined || val === null) return &#039;&quot;&quot;&#039;;
-  let str = String(val).replace(/&quot;/g, &#039;&quot;&quot;&#039;);
-  if (/^[=+\-@\t\r]/.test(str)) str = `&#039;${str}`;
-  return `&quot;${str}&quot;`;
-};</div></td>
+            <td>
+              <strong>[P2-01] CSV Formula Injection (CWE-1236) in CSV Exporter</strong><br />User
+              input in merchant_name, notes, or payment_method beginning with =, +, -, @, \t, \r is
+              wrapped in quotes but not prepended with an apostrophe. Opening the exported CSV in
+              Excel or Google Sheets executes arbitrary formulas/DDE commands.
+            </td>
+            <td>
+              <div class="code-block">
+                const escapeCell = (val: string | number | boolean | undefined): string =&gt; { if
+                (val === undefined || val === null) return &#039;&quot;&quot;&#039;; let str =
+                String(val).replace(/&quot;/g, &#039;&quot;&quot;&#039;); if
+                (/^[=+\-@\t\r]/.test(str)) str = `&#039;${str}`; return `&quot;${str}&quot;`; };
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P2: Business Logic &amp; Export" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P2: Business Logic &amp; Export"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P2: Business Logic &amp; Export</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P2: Business Logic &amp; Export</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/services/splitCalculator.ts:89-148</span></td>
-            <td><strong>[P2-02] Silent 1-Cent Debt Erasure and False isBalanced in Debt Simplification</strong><br/>Balances with net of +0.01 or -0.01 are discarded by b.net &lt; -0.01 and b.net &gt; 0.01. Furthermore, if remaining debts cannot be paired with creditors, transfers is empty and isBalanced: transfers.length === 0 falsely reports true.</td>
-            <td><div class="code-block">// Operate in integer cents throughout. Retain debts where Math.abs(cents) &gt;= 1.
-const debtors = balances.filter((b) =&gt; b.netCents &lt; 0);
-const creditors = balances.filter((b) =&gt; b.netCents &gt; 0);
-// Verify isBalanced accurately:
-const isBalanced = debtors.length === 0 &amp;&amp; creditors.length === 0;</div></td>
+            <td>
+              <strong
+                >[P2-02] Silent 1-Cent Debt Erasure and False isBalanced in Debt
+                Simplification</strong
+              ><br />Balances with net of +0.01 or -0.01 are discarded by b.net &lt; -0.01 and b.net
+              &gt; 0.01. Furthermore, if remaining debts cannot be paired with creditors, transfers
+              is empty and isBalanced: transfers.length === 0 falsely reports true.
+            </td>
+            <td>
+              <div class="code-block">
+                // Operate in integer cents throughout. Retain debts where Math.abs(cents) &gt;= 1.
+                const debtors = balances.filter((b) =&gt; b.netCents &lt; 0); const creditors =
+                balances.filter((b) =&gt; b.netCents &gt; 0); // Verify isBalanced accurately: const
+                isBalanced = debtors.length === 0 &amp;&amp; creditors.length === 0;
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P2: Business Logic &amp; Export" data-axis="Performance">
+          <tr
+            data-severity="critical"
+            data-partition="P2: Business Logic &amp; Export"
+            data-axis="Performance"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P2: Business Logic &amp; Export</strong><br/><span class="axis-tag">Performance</span></td>
+            <td>
+              <strong>P2: Business Logic &amp; Export</strong><br /><span class="axis-tag"
+                >Performance</span
+              >
+            </td>
             <td><span class="file-path">src/services/duplicateDetector.ts:14-43</span></td>
-            <td><strong>[P2-03] O(N x M) Duplicate Detection &amp; False Positives from Substring Matching</strong><br/>checkDuplicate runs an array find() per candidate on every modal render. Merchant matching uses substring containment (exp.includes(candidate)), causing short names like &quot;Bar&quot; or &quot;Apple&quot; to match unrelated businesses.</td>
-            <td><div class="code-block">// Build a date+cents composite Map index: key = `${date}_${cents}`
-const expenseMap = new Map&lt;string, Expense[]&gt;();
-existingExpenses.forEach((exp) =&gt; {
-  const key = `${exp.transaction_date}_${Math.round(exp.amount * 100)}`;
-  const list = expenseMap.get(key) || [];
-  list.push(exp);
-  expenseMap.set(key, list);
-});
-// Exact merchant matching or normalized tokens rather than substring containment</div></td>
+            <td>
+              <strong
+                >[P2-03] O(N x M) Duplicate Detection &amp; False Positives from Substring
+                Matching</strong
+              ><br />checkDuplicate runs an array find() per candidate on every modal render.
+              Merchant matching uses substring containment (exp.includes(candidate)), causing short
+              names like &quot;Bar&quot; or &quot;Apple&quot; to match unrelated businesses.
+            </td>
+            <td>
+              <div class="code-block">
+                // Build a date+cents composite Map index: key = `${date}_${cents}` const expenseMap
+                = new Map&lt;string, Expense[]&gt;(); existingExpenses.forEach((exp) =&gt; { const
+                key = `${exp.transaction_date}_${Math.round(exp.amount * 100)}`; const list =
+                expenseMap.get(key) || []; list.push(exp); expenseMap.set(key, list); }); // Exact
+                merchant matching or normalized tokens rather than substring containment
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P2: Business Logic &amp; Export" data-axis="Security">
+          <tr
+            data-severity="important"
+            data-partition="P2: Business Logic &amp; Export"
+            data-axis="Security"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P2: Business Logic &amp; Export</strong><br/><span class="axis-tag">Security</span></td>
+            <td>
+              <strong>P2: Business Logic &amp; Export</strong><br /><span class="axis-tag"
+                >Security</span
+              >
+            </td>
             <td><span class="file-path">src/types/index.ts:74-98</span></td>
-            <td><strong>[P2-04] Absence of .finite() and Upper Bounds in Import Schema</strong><br/>z.number().positive() does not reject Infinity (Infinity &gt; 0 is true). Passing Infinity crashes downstream analytics calculations. Missing string length bounds allow unbounded payloads to exhaust memory.</td>
-            <td><div class="code-block">amount: z.number().positive().finite().max(1_000_000).refine((val) =&gt; Number(val.toFixed(2)) === val),
-merchant: z.string().trim().min(1).max(200),</div></td>
+            <td>
+              <strong>[P2-04] Absence of .finite() and Upper Bounds in Import Schema</strong
+              ><br />z.number().positive() does not reject Infinity (Infinity &gt; 0 is true).
+              Passing Infinity crashes downstream analytics calculations. Missing string length
+              bounds allow unbounded payloads to exhaust memory.
+            </td>
+            <td>
+              <div class="code-block">
+                amount: z.number().positive().finite().max(1_000_000).refine((val) =&gt;
+                Number(val.toFixed(2)) === val), merchant: z.string().trim().min(1).max(200),
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P2: Business Logic &amp; Export" data-axis="Readability">
+          <tr
+            data-severity="important"
+            data-partition="P2: Business Logic &amp; Export"
+            data-axis="Readability"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P2: Business Logic &amp; Export</strong><br/><span class="axis-tag">Readability</span></td>
+            <td>
+              <strong>P2: Business Logic &amp; Export</strong><br /><span class="axis-tag"
+                >Readability</span
+              >
+            </td>
             <td><span class="file-path">src/services/csvExporter.ts:40-50</span></td>
-            <td><strong>[P2-05] Missing Excel UTF-8 BOM Causing Mojibake for Euro Symbol and Accents</strong><br/>Without a UTF-8 Byte Order Mark (\uFEFF), Excel on Windows and macOS interprets CSV files using legacy Windows-1252/ANSI, rendering € as â‚¬ and corrupting Italian characters like Caffè.</td>
-            <td><div class="code-block">return &#039;\uFEFF&#039; + [headers.join(&#039;,&#039;), ...rows].join(&#039;\r\n&#039;);</div></td>
+            <td>
+              <strong
+                >[P2-05] Missing Excel UTF-8 BOM Causing Mojibake for Euro Symbol and
+                Accents</strong
+              ><br />Without a UTF-8 Byte Order Mark (\uFEFF), Excel on Windows and macOS interprets
+              CSV files using legacy Windows-1252/ANSI, rendering € as â‚¬ and corrupting Italian
+              characters like Caffè.
+            </td>
+            <td>
+              <div class="code-block">
+                return &#039;\uFEFF&#039; + [headers.join(&#039;,&#039;),
+                ...rows].join(&#039;\r\n&#039;);
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P2: Business Logic &amp; Export" data-axis="Performance">
+          <tr
+            data-severity="important"
+            data-partition="P2: Business Logic &amp; Export"
+            data-axis="Performance"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P2: Business Logic &amp; Export</strong><br/><span class="axis-tag">Performance</span></td>
+            <td>
+              <strong>P2: Business Logic &amp; Export</strong><br /><span class="axis-tag"
+                >Performance</span
+              >
+            </td>
             <td><span class="file-path">src/services/fileExporter.ts:18-32, 43-50</span></td>
-            <td><strong>[P2-06] Memory Leak on Web from Unrevoked Blob URLs &amp; UI Coupling</strong><br/>URL.createObjectURL(blob) is never released via URL.revokeObjectURL. Furthermore, fileExporter directly invokes Alert.alert with hardcoded English strings instead of returning a typed result to UI callers.</td>
-            <td><div class="code-block">setTimeout(() =&gt; URL.revokeObjectURL(url), 1000);
-// Return typed ExportResult: { success: boolean; error?: string }</div></td>
+            <td>
+              <strong>[P2-06] Memory Leak on Web from Unrevoked Blob URLs &amp; UI Coupling</strong
+              ><br />URL.createObjectURL(blob) is never released via URL.revokeObjectURL.
+              Furthermore, fileExporter directly invokes Alert.alert with hardcoded English strings
+              instead of returning a typed result to UI callers.
+            </td>
+            <td>
+              <div class="code-block">
+                setTimeout(() =&gt; URL.revokeObjectURL(url), 1000); // Return typed ExportResult: {
+                success: boolean; error?: string }
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P2: Business Logic &amp; Export" data-axis="Readability">
+          <tr
+            data-severity="important"
+            data-partition="P2: Business Logic &amp; Export"
+            data-axis="Readability"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P2: Business Logic &amp; Export</strong><br/><span class="axis-tag">Readability</span></td>
+            <td>
+              <strong>P2: Business Logic &amp; Export</strong><br /><span class="axis-tag"
+                >Readability</span
+              >
+            </td>
             <td><span class="file-path">src/services/validator.ts:17-29</span></td>
-            <td><strong>[P2-07] Single-Issue Truncation &amp; Cryptic Error Paths in Report Validator</strong><br/>ReportValidator discards all validation issues except the first, forcing tedious one-by-one fixes. Paths like expenses.14.date confuse non-technical users.</td>
-            <td><div class="code-block">// Return an array of all errors formatted for humans:
-return issues.map((issue) =&gt; {
-  const rowMatch = issue.path[1];
-  const field = issue.path[issue.path.length - 1];
-  return `Row ${Number(rowMatch) + 1} (${field}): ${issue.message}`;
-});</div></td>
+            <td>
+              <strong
+                >[P2-07] Single-Issue Truncation &amp; Cryptic Error Paths in Report
+                Validator</strong
+              ><br />ReportValidator discards all validation issues except the first, forcing
+              tedious one-by-one fixes. Paths like expenses.14.date confuse non-technical users.
+            </td>
+            <td>
+              <div class="code-block">
+                // Return an array of all errors formatted for humans: return issues.map((issue)
+                =&gt; { const rowMatch = issue.path[1]; const field = issue.path[issue.path.length -
+                1]; return `Row ${Number(rowMatch) + 1} (${field}): ${issue.message}`; });
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P2: Business Logic &amp; Export" data-axis="Correctness">
+          <tr
+            data-severity="important"
+            data-partition="P2: Business Logic &amp; Export"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P2: Business Logic &amp; Export</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P2: Business Logic &amp; Export</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/services/analytics.ts:70-85, 102-120</span></td>
-            <td><strong>[P2-08] Silent Dropping of Expenses with Unmapped Categories in Analytics</strong><br/>calculateCategoryBreakdown loops strictly over categories. Any expense with a deleted or unmapped category ID is dropped, causing category totals to not sum up to totalSpend.</td>
-            <td><div class="code-block">// Iterate over expense category IDs and fall back to an &quot;Uncategorized / Other&quot; placeholder category.</div></td>
+            <td>
+              <strong
+                >[P2-08] Silent Dropping of Expenses with Unmapped Categories in Analytics</strong
+              ><br />calculateCategoryBreakdown loops strictly over categories. Any expense with a
+              deleted or unmapped category ID is dropped, causing category totals to not sum up to
+              totalSpend.
+            </td>
+            <td>
+              <div class="code-block">
+                // Iterate over expense category IDs and fall back to an &quot;Uncategorized /
+                Other&quot; placeholder category.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="suggestion" data-partition="P2: Business Logic &amp; Export" data-axis="Correctness">
+          <tr
+            data-severity="suggestion"
+            data-partition="P2: Business Logic &amp; Export"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-suggestion">SUGGESTION</span></td>
-            <td><strong>P2: Business Logic &amp; Export</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P2: Business Logic &amp; Export</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/services/analytics.ts:56-57, 87-107</span></td>
-            <td><strong>[P2-09] Asymmetric Zero-Spend Top Spender Reporting in Analytics</strong><br/>In months with 0 expenses, topCategory is undefined, but topSpender returns an arbitrary family member with €0.00 spend.</td>
-            <td><div class="code-block">topSpender: memSummaries[0] &amp;&amp; memSummaries[0].total &gt; 0 ? memSummaries[0] : undefined,</div></td>
+            <td>
+              <strong>[P2-09] Asymmetric Zero-Spend Top Spender Reporting in Analytics</strong
+              ><br />In months with 0 expenses, topCategory is undefined, but topSpender returns an
+              arbitrary family member with €0.00 spend.
+            </td>
+            <td>
+              <div class="code-block">
+                topSpender: memSummaries[0] &amp;&amp; memSummaries[0].total &gt; 0 ?
+                memSummaries[0] : undefined,
+              </div>
+            </td>
           </tr>
-          <tr data-severity="suggestion" data-partition="P2: Business Logic &amp; Export" data-axis="Architecture">
+          <tr
+            data-severity="suggestion"
+            data-partition="P2: Business Logic &amp; Export"
+            data-axis="Architecture"
+          >
             <td><span class="badge badge-suggestion">SUGGESTION</span></td>
-            <td><strong>P2: Business Logic &amp; Export</strong><br/><span class="axis-tag">Architecture</span></td>
+            <td>
+              <strong>P2: Business Logic &amp; Export</strong><br /><span class="axis-tag"
+                >Architecture</span
+              >
+            </td>
             <td><span class="file-path">__tests__/fileExporter.test.ts</span></td>
-            <td><strong>[P2-10] Missing Unit Test Suite for fileExporter.ts</strong><br/>fileExporter.ts has 0% test coverage across web DOM and native expo-sharing branches.</td>
-            <td><div class="code-block">// Create __tests__/fileExporter.test.ts with mocked Platform.OS, DOM elements, and expo-sharing.</div></td>
+            <td>
+              <strong>[P2-10] Missing Unit Test Suite for fileExporter.ts</strong
+              ><br />fileExporter.ts has 0% test coverage across web DOM and native expo-sharing
+              branches.
+            </td>
+            <td>
+              <div class="code-block">
+                // Create __tests__/fileExporter.test.ts with mocked Platform.OS, DOM elements, and
+                expo-sharing.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Security">
+          <tr
+            data-severity="critical"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Security"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Security</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Security</span
+              >
+            </td>
             <td><span class="file-path">src/data/supabase_schema.sql:133-145</span></td>
-            <td><strong>[P3-01] Critical RLS Privilege Escalation: Global Family Enumeration &amp; Membership Hijacking</strong><br/>families SELECT policy permits any authenticated user to view all families and invite codes. family_members INSERT policy allows any authenticated user to join any family without invite code verification.</td>
-            <td><div class="code-block">-- Restrict families SELECT strictly to verified members
-CREATE POLICY &quot;Only members view families&quot; ON public.families FOR SELECT USING (public.is_member_of_family(id));
--- Secure invite code redemption RPC with SECURITY DEFINER
-CREATE FUNCTION join_family_by_code(p_code TEXT) ...</div></td>
+            <td>
+              <strong
+                >[P3-01] Critical RLS Privilege Escalation: Global Family Enumeration &amp;
+                Membership Hijacking</strong
+              ><br />families SELECT policy permits any authenticated user to view all families and
+              invite codes. family_members INSERT policy allows any authenticated user to join any
+              family without invite code verification.
+            </td>
+            <td>
+              <div class="code-block">
+                -- Restrict families SELECT strictly to verified members CREATE POLICY &quot;Only
+                members view families&quot; ON public.families FOR SELECT USING
+                (public.is_member_of_family(id)); -- Secure invite code redemption RPC with SECURITY
+                DEFINER CREATE FUNCTION join_family_by_code(p_code TEXT) ...
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/services/realtimeSync.ts:41-72</span></td>
-            <td><strong>[P3-02] Realtime Ingest Wipes Out Expense Splits in Local Store</strong><br/>Supabase Realtime events for expenses table do not include split relations, mapping to splits: undefined. Reconciling remote expenses unconditionally overwrites local records, wiping out all split allocations.</td>
-            <td><div class="code-block">// Preserve existing splits if remote payload does not supply splits
-current[idx] = {
-  ...remote,
-  splits: remote.splits !== undefined ? remote.splits : local.splits,
-};</div></td>
+            <td>
+              <strong>[P3-02] Realtime Ingest Wipes Out Expense Splits in Local Store</strong
+              ><br />Supabase Realtime events for expenses table do not include split relations,
+              mapping to splits: undefined. Reconciling remote expenses unconditionally overwrites
+              local records, wiping out all split allocations.
+            </td>
+            <td>
+              <div class="code-block">
+                // Preserve existing splits if remote payload does not supply splits current[idx] =
+                { ...remote, splits: remote.splits !== undefined ? remote.splits : local.splits, };
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/services/syncEngine.ts:79-136</span></td>
-            <td><strong>[P3-03] Outbox Concurrency Race Condition Drops Pending Mutations</strong><br/>flushOutbox lacks an isFlushing mutex. While an async flush is awaiting network I/O, concurrent enqueueMutation calls append items to AsyncStorage. When flushOutbox finishes, it overwrites storage with its stale snapshot, permanently losing newly enqueued mutations.</td>
-            <td><div class="code-block">let isFlushing = false;
-// Introduce isFlushing lock. Upon flush completion, atomically filter out only successfully processed mutation IDs from the latest stored array.</div></td>
+            <td>
+              <strong>[P3-03] Outbox Concurrency Race Condition Drops Pending Mutations</strong
+              ><br />flushOutbox lacks an isFlushing mutex. While an async flush is awaiting network
+              I/O, concurrent enqueueMutation calls append items to AsyncStorage. When flushOutbox
+              finishes, it overwrites storage with its stale snapshot, permanently losing newly
+              enqueued mutations.
+            </td>
+            <td>
+              <div class="code-block">
+                let isFlushing = false; // Introduce isFlushing lock. Upon flush completion,
+                atomically filter out only successfully processed mutation IDs from the latest
+                stored array.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/services/syncEngine.ts:208-235</span></td>
-            <td><strong>[P3-04] Permanent Zombie Records in Delta Sync Due to Missing Deletion Tombstones</strong><br/>Delta sync queries updated_at &gt; lastSync. Hard SQL DELETE removes the row completely, so offline clients never receive deletion notices and retain permanent zombie records.</td>
-            <td><div class="code-block">ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
-ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
-// In delta sync, if deleted_at IS NOT NULL, remove from local store.</div></td>
+            <td>
+              <strong
+                >[P3-04] Permanent Zombie Records in Delta Sync Due to Missing Deletion
+                Tombstones</strong
+              ><br />Delta sync queries updated_at &gt; lastSync. Hard SQL DELETE removes the row
+              completely, so offline clients never receive deletion notices and retain permanent
+              zombie records.
+            </td>
+            <td>
+              <div class="code-block">
+                ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ; ALTER
+                TABLE public.categories ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ; // In delta
+                sync, if deleted_at IS NOT NULL, remove from local store.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/components/sync/AuthModal.tsx:75-84</span></td>
-            <td><strong>[P3-05] Blind Migration on Login Overwrites Cloud Household with Local Default State</strong><br/>AuthModal unconditionally invokes migrateLocalDataToSupabase upon OTP verification. A user logging in on a secondary device with initial mock state overwrites established cloud data.</td>
-            <td><div class="code-block">// Query user existing family memberships in Supabase first.
-const memberships = await fetchUserFamilies(userId);
-if (memberships.length &gt; 0) {
-  await syncEngine.fetchDelta(memberships[0].family_id);
-} else {
-  await migrationService.migrateLocalDataToSupabase(family.id, userId);
-}</div></td>
+            <td>
+              <strong
+                >[P3-05] Blind Migration on Login Overwrites Cloud Household with Local Default
+                State</strong
+              ><br />AuthModal unconditionally invokes migrateLocalDataToSupabase upon OTP
+              verification. A user logging in on a secondary device with initial mock state
+              overwrites established cloud data.
+            </td>
+            <td>
+              <div class="code-block">
+                // Query user existing family memberships in Supabase first. const memberships =
+                await fetchUserFamilies(userId); if (memberships.length &gt; 0) { await
+                syncEngine.fetchDelta(memberships[0].family_id); } else { await
+                migrationService.migrateLocalDataToSupabase(family.id, userId); }
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Security">
+          <tr
+            data-severity="critical"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Security"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Security</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Security</span
+              >
+            </td>
             <td><span class="file-path">src/data/supabase_schema.sql:119-126</span></td>
-            <td><strong>[P3-06] Missing RLS Policies on budgets and import_batches Tables</strong><br/>RLS is enabled on budgets and import_batches without creating any policies. In PostgreSQL, this results in default-deny for all authenticated and anonymous roles.</td>
-            <td><div class="code-block">CREATE POLICY &quot;Family members can view budgets&quot; ON public.budgets FOR SELECT USING (public.is_member_of_family(family_id));
-CREATE POLICY &quot;Family members can manage budgets&quot; ON public.budgets FOR ALL USING (public.is_member_of_family(family_id));</div></td>
+            <td>
+              <strong>[P3-06] Missing RLS Policies on budgets and import_batches Tables</strong
+              ><br />RLS is enabled on budgets and import_batches without creating any policies. In
+              PostgreSQL, this results in default-deny for all authenticated and anonymous roles.
+            </td>
+            <td>
+              <div class="code-block">
+                CREATE POLICY &quot;Family members can view budgets&quot; ON public.budgets FOR
+                SELECT USING (public.is_member_of_family(family_id)); CREATE POLICY &quot;Family
+                members can manage budgets&quot; ON public.budgets FOR ALL USING
+                (public.is_member_of_family(family_id));
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/components/sync/FamilyPairingModal.tsx:50-98</span></td>
-            <td><strong>[P3-07] Family Pairing Fails to Insert Member Record and Contaminates Cross-Family Store State</strong><br/>Joining a family updates local store family ID but never creates a family_members row in Supabase (causing subsequent RLS blocks), and fails to wipe previous family records from the local store.</td>
-            <td><div class="code-block">// Call join_family_by_code RPC, cleanse local store prior to delta sync, and update currentMemberId to a member belonging to the new family.</div></td>
+            <td>
+              <strong
+                >[P3-07] Family Pairing Fails to Insert Member Record and Contaminates Cross-Family
+                Store State</strong
+              ><br />Joining a family updates local store family ID but never creates a
+              family_members row in Supabase (causing subsequent RLS blocks), and fails to wipe
+              previous family records from the local store.
+            </td>
+            <td>
+              <div class="code-block">
+                // Call join_family_by_code RPC, cleanse local store prior to delta sync, and update
+                currentMemberId to a member belonging to the new family.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Correctness">
+          <tr
+            data-severity="important"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/components/sync/AuthModal.tsx:23, 86-88</span></td>
-            <td><strong>[P3-08] Stale Closure in AuthModal Subscribes Realtime Sync to Obsolete ID</strong><br/>family.id captured in AuthModal closure is fam_1. After migration generates a new UUID, realtimeSync subscribes to fam_1 instead of the new UUID.</td>
-            <td><div class="code-block">const currentFamilyId = useAppStore.getState().family.id;
-realtimeSync.startRealtimeSync(currentFamilyId);</div></td>
+            <td>
+              <strong
+                >[P3-08] Stale Closure in AuthModal Subscribes Realtime Sync to Obsolete ID</strong
+              ><br />family.id captured in AuthModal closure is fam_1. After migration generates a
+              new UUID, realtimeSync subscribes to fam_1 instead of the new UUID.
+            </td>
+            <td>
+              <div class="code-block">
+                const currentFamilyId = useAppStore.getState().family.id;
+                realtimeSync.startRealtimeSync(currentFamilyId);
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Architecture">
+          <tr
+            data-severity="important"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Architecture"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Architecture</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Architecture</span
+              >
+            </td>
             <td><span class="file-path">src/services/syncEngine.ts:114-131</span></td>
-            <td><strong>[P3-09] Non-Discriminant Retry Limit Silently Discards Outbox Mutations in Offline Mode</strong><br/>Mutations fail when offline. After 5 retries, mutations are permanently deleted from the queue without distinguishing between offline timeouts and fatal 4xx errors.</td>
-            <td><div class="code-block">// Distinguish transient network errors from permanent 4xx errors; retain offline mutations with exponential backoff.</div></td>
+            <td>
+              <strong
+                >[P3-09] Non-Discriminant Retry Limit Silently Discards Outbox Mutations in Offline
+                Mode</strong
+              ><br />Mutations fail when offline. After 5 retries, mutations are permanently deleted
+              from the queue without distinguishing between offline timeouts and fatal 4xx errors.
+            </td>
+            <td>
+              <div class="code-block">
+                // Distinguish transient network errors from permanent 4xx errors; retain offline
+                mutations with exponential backoff.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Security">
+          <tr
+            data-severity="important"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Security"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Security</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Security</span
+              >
+            </td>
             <td><span class="file-path">src/services/supabase.ts:18-25</span></td>
-            <td><strong>[P3-10] Insecure Plaintext Auth Token Storage in AsyncStorage</strong><br/>Supabase JWT access and refresh tokens are stored unencrypted in AsyncStorage on iOS and Android.</td>
-            <td><div class="code-block">import * as SecureStore from &#039;expo-secure-store&#039;;
-// Implement ExpoSecureStoreAdapter for Supabase auth persistence on native.</div></td>
+            <td>
+              <strong>[P3-10] Insecure Plaintext Auth Token Storage in AsyncStorage</strong
+              ><br />Supabase JWT access and refresh tokens are stored unencrypted in AsyncStorage
+              on iOS and Android.
+            </td>
+            <td>
+              <div class="code-block">
+                import * as SecureStore from &#039;expo-secure-store&#039;; // Implement
+                ExpoSecureStoreAdapter for Supabase auth persistence on native.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Performance">
+          <tr
+            data-severity="important"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Performance"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Performance</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Performance</span
+              >
+            </td>
             <td><span class="file-path">src/data/supabase_schema.sql:26-117</span></td>
-            <td><strong>[P3-11] Missing Foreign Key Indexes Causing Sequential Scans on Every RLS Check</strong><br/>No B-tree indexes exist on family_members(family_id, user_id) or expenses(family_id, updated_at). Every RLS evaluation triggers sequential table scans.</td>
-            <td><div class="code-block">CREATE INDEX idx_family_members_lookup ON public.family_members(family_id, user_id);
-CREATE INDEX idx_expenses_family_updated ON public.expenses(family_id, updated_at);
-CREATE INDEX idx_expense_splits_exp_id ON public.expense_splits(expense_id);</div></td>
+            <td>
+              <strong
+                >[P3-11] Missing Foreign Key Indexes Causing Sequential Scans on Every RLS
+                Check</strong
+              ><br />No B-tree indexes exist on family_members(family_id, user_id) or
+              expenses(family_id, updated_at). Every RLS evaluation triggers sequential table scans.
+            </td>
+            <td>
+              <div class="code-block">
+                CREATE INDEX idx_family_members_lookup ON public.family_members(family_id, user_id);
+                CREATE INDEX idx_expenses_family_updated ON public.expenses(family_id, updated_at);
+                CREATE INDEX idx_expense_splits_exp_id ON public.expense_splits(expense_id);
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Architecture">
+          <tr
+            data-severity="important"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Architecture"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Architecture</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Architecture</span
+              >
+            </td>
             <td><span class="file-path">src/services/realtimeSync.ts:25-30, 153-178</span></td>
-            <td><strong>[P3-12] Realtime Channel Silently Hangs on Error with Zero AppState Lifecycle Recovery</strong><br/>Channel errors never clear activeChannel, blocking re-subscription. Realtime is only bound in the settings tab, and app backgrounding/foregrounding is not tracked.</td>
-            <td><div class="code-block">// Implement exponential backoff re-subscription on error, wire realtime at root _layout.tsx, and re-sync on AppState foreground events.</div></td>
+            <td>
+              <strong
+                >[P3-12] Realtime Channel Silently Hangs on Error with Zero AppState Lifecycle
+                Recovery</strong
+              ><br />Channel errors never clear activeChannel, blocking re-subscription. Realtime is
+              only bound in the settings tab, and app backgrounding/foregrounding is not tracked.
+            </td>
+            <td>
+              <div class="code-block">
+                // Implement exponential backoff re-subscription on error, wire realtime at root
+                _layout.tsx, and re-sync on AppState foreground events.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Architecture">
+          <tr
+            data-severity="important"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Architecture"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Architecture</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Architecture</span
+              >
+            </td>
             <td><span class="file-path">src/services/syncEngine.ts:143-167</span></td>
-            <td><strong>[P3-13] Non-Atomic Split Replacements Subject to Mid-Operation Data Loss</strong><br/>Expenses and splits are modified in separate HTTP calls. Network drops after deleting splits leave expenses orphaned with 0 splits.</td>
-            <td><div class="code-block">// Wrap expense upsert and split replacements in a single PostgreSQL RPC function (upsert_expense_with_splits).</div></td>
+            <td>
+              <strong
+                >[P3-13] Non-Atomic Split Replacements Subject to Mid-Operation Data Loss</strong
+              ><br />Expenses and splits are modified in separate HTTP calls. Network drops after
+              deleting splits leave expenses orphaned with 0 splits.
+            </td>
+            <td>
+              <div class="code-block">
+                // Wrap expense upsert and split replacements in a single PostgreSQL RPC function
+                (upsert_expense_with_splits).
+              </div>
+            </td>
           </tr>
-          <tr data-severity="suggestion" data-partition="P3: Sync, Auth &amp; Cloud" data-axis="Readability">
+          <tr
+            data-severity="suggestion"
+            data-partition="P3: Sync, Auth &amp; Cloud"
+            data-axis="Readability"
+          >
             <td><span class="badge badge-suggestion">SUGGESTION</span></td>
-            <td><strong>P3: Sync, Auth &amp; Cloud</strong><br/><span class="axis-tag">Readability</span></td>
+            <td>
+              <strong>P3: Sync, Auth &amp; Cloud</strong><br /><span class="axis-tag"
+                >Readability</span
+              >
+            </td>
             <td><span class="file-path">src/components/sync/FamilyPairingModal.tsx:31-45</span></td>
-            <td><strong>[P3-14] Phantom Clipboard Copy on Native Mobile in FamilyPairingModal</strong><br/>navigator.clipboard is undefined on native iOS/Android, but modal shows success haptic and copied banner anyway.</td>
-            <td><div class="code-block">import * as Clipboard from &#039;expo-clipboard&#039;;
-await Clipboard.setStringAsync(currentInviteCode);</div></td>
+            <td>
+              <strong>[P3-14] Phantom Clipboard Copy on Native Mobile in FamilyPairingModal</strong
+              ><br />navigator.clipboard is undefined on native iOS/Android, but modal shows success
+              haptic and copied banner anyway.
+            </td>
+            <td>
+              <div class="code-block">
+                import * as Clipboard from &#039;expo-clipboard&#039;; await
+                Clipboard.setStringAsync(currentInviteCode);
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P4: UI, A11y &amp; Charts" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Correctness</span></td>
-            <td><span class="file-path">src/components/charts/SpendingVelocityChart.tsx:44-58</span></td>
-            <td><strong>[P4-01] NaN and Zero-Division Propagation in SVG Chart Components</strong><br/>When spend totals are 0 or empty, getY produces NaN or -Infinity. Passing NaN to React Native SVG Path elements causes native thread crashes or visual corruption.</td>
-            <td><div class="code-block">const maxVal = Math.max(1, ...data.map((d) =&gt; d.actualSpend || 0), ...data.map((d) =&gt; d.projectedSpend || 0));
-const getY = (val: number) =&gt; {
-  if (!Number.isFinite(val) || isNaN(val)) return paddingTop + innerHeight;
-  return paddingTop + innerHeight - Math.min(Math.max(val / maxVal, 0), 1) * innerHeight;
-};</div></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
+            <td>
+              <span class="file-path">src/components/charts/SpendingVelocityChart.tsx:44-58</span>
+            </td>
+            <td>
+              <strong>[P4-01] NaN and Zero-Division Propagation in SVG Chart Components</strong
+              ><br />When spend totals are 0 or empty, getY produces NaN or -Infinity. Passing NaN
+              to React Native SVG Path elements causes native thread crashes or visual corruption.
+            </td>
+            <td>
+              <div class="code-block">
+                const maxVal = Math.max(1, ...data.map((d) =&gt; d.actualSpend || 0),
+                ...data.map((d) =&gt; d.projectedSpend || 0)); const getY = (val: number) =&gt; { if
+                (!Number.isFinite(val) || isNaN(val)) return paddingTop + innerHeight; return
+                paddingTop + innerHeight - Math.min(Math.max(val / maxVal, 0), 1) * innerHeight; };
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P4: UI, A11y &amp; Charts" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/components/ledger/SplitCalculator.tsx:30-38</span></td>
-            <td><strong>[P4-02] NaN Input in SplitCalculator Corrupts Stored Expense Splits</strong><br/>When amount is empty, numericAmount is NaN. Because NaN &lt;= 0 evaluates to false in JavaScript, calculateEqualSplits(NaN, ...) executes, persisting NaN split shares.</td>
-            <td><div class="code-block">if (!isSplitEnabled || selectedMemberIds.length === 0 || !totalAmount || isNaN(totalAmount) || totalAmount &lt;= 0) {
-  onSplitsChange(undefined);
-  return;
-}</div></td>
+            <td>
+              <strong>[P4-02] NaN Input in SplitCalculator Corrupts Stored Expense Splits</strong
+              ><br />When amount is empty, numericAmount is NaN. Because NaN &lt;= 0 evaluates to
+              false in JavaScript, calculateEqualSplits(NaN, ...) executes, persisting NaN split
+              shares.
+            </td>
+            <td>
+              <div class="code-block">
+                if (!isSplitEnabled || selectedMemberIds.length === 0 || !totalAmount ||
+                isNaN(totalAmount) || totalAmount &lt;= 0) { onSplitsChange(undefined); return; }
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P4: UI, A11y &amp; Charts" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/components/common/Avatar.tsx:29-35</span></td>
-            <td><strong>[P4-03] Avatar Primitive Crashes on Null, Undefined, or Whitespace-Only Name</strong><br/>Avatar performs name.split(&#039; &#039;) without null guarding. When rendering an expense with an unknown or deleted member, it crashes with TypeError: Cannot read properties of undefined (reading &#039;split&#039;).</td>
-            <td><div class="code-block">const initials = (name || &#039;?&#039;)
-  .trim()
-  .split(/\s+/)
-  .filter(Boolean)
-  .map((part) =&gt; part[0] || &#039;&#039;)
-  .join(&#039;&#039;)
-  .toUpperCase()
-  .substring(0, 2) || &#039;?&#039;;</div></td>
+            <td>
+              <strong
+                >[P4-03] Avatar Primitive Crashes on Null, Undefined, or Whitespace-Only
+                Name</strong
+              ><br />Avatar performs name.split(&#039; &#039;) without null guarding. When rendering
+              an expense with an unknown or deleted member, it crashes with TypeError: Cannot read
+              properties of undefined (reading &#039;split&#039;).
+            </td>
+            <td>
+              <div class="code-block">
+                const initials = (name || &#039;?&#039;) .trim() .split(/\s+/) .filter(Boolean)
+                .map((part) =&gt; part[0] || &#039;&#039;) .join(&#039;&#039;) .toUpperCase()
+                .substring(0, 2) || &#039;?&#039;;
+              </div>
+            </td>
           </tr>
-          <tr data-severity="critical" data-partition="P4: UI, A11y &amp; Charts" data-axis="Correctness">
+          <tr
+            data-severity="critical"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-critical">CRITICAL</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Correctness</span></td>
-            <td><span class="file-path">src/components/ledger/ExpenseDetailModal.tsx:44-47, 295-300</span></td>
-            <td><strong>[P4-04] Unconfirmed Destructive Expense Deletion</strong><br/>Tapping Delete in ExpenseDetailModal immediately deletes the expense without confirmation, leading to accidental transaction loss when users miss the close button.</td>
-            <td><div class="code-block">Alert.alert(t.common.delete, `${expense.merchant_name} (${currency}${expense.amount.toFixed(2)})?`, [
-  { text: t.common.cancel, style: &#039;cancel&#039; },
-  { text: t.common.delete, style: &#039;destructive&#039;, onPress: () =&gt; { onDelete(expense.id); onClose(); } },
-]);</div></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
+            <td>
+              <span class="file-path"
+                >src/components/ledger/ExpenseDetailModal.tsx:44-47, 295-300</span
+              >
+            </td>
+            <td>
+              <strong>[P4-04] Unconfirmed Destructive Expense Deletion</strong><br />Tapping Delete
+              in ExpenseDetailModal immediately deletes the expense without confirmation, leading to
+              accidental transaction loss when users miss the close button.
+            </td>
+            <td>
+              <div class="code-block">
+                Alert.alert(t.common.delete, `${expense.merchant_name}
+                (${currency}${expense.amount.toFixed(2)})?`, [ { text: t.common.cancel, style:
+                &#039;cancel&#039; }, { text: t.common.delete, style: &#039;destructive&#039;,
+                onPress: () =&gt; { onDelete(expense.id); onClose(); } }, ]);
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P4: UI, A11y &amp; Charts" data-axis="Correctness">
+          <tr
+            data-severity="important"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/components/ledger/ExpenseItem.tsx:18-24</span></td>
-            <td><strong>[P4-05] Crash on Missing Member/Category Lookups Due to Orphaned Foreign Keys</strong><br/>If a category or member was deleted or modified remotely, lookups return undefined. Components access category.name without null checks, crashing with unhandled TypeError.</td>
-            <td><div class="code-block">const displayCategory = category || DEFAULT_FALLBACK_CATEGORY;
-const displayMember = member || DEFAULT_FALLBACK_MEMBER;</div></td>
+            <td>
+              <strong
+                >[P4-05] Crash on Missing Member/Category Lookups Due to Orphaned Foreign
+                Keys</strong
+              ><br />If a category or member was deleted or modified remotely, lookups return
+              undefined. Components access category.name without null checks, crashing with
+              unhandled TypeError.
+            </td>
+            <td>
+              <div class="code-block">
+                const displayCategory = category || DEFAULT_FALLBACK_CATEGORY; const displayMember =
+                member || DEFAULT_FALLBACK_MEMBER;
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P4: UI, A11y &amp; Charts" data-axis="Correctness">
+          <tr
+            data-severity="important"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Correctness"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Correctness</span></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Correctness</span
+              >
+            </td>
             <td><span class="file-path">src/components/ledger/ExpenseItem.tsx:28-31</span></td>
-            <td><strong>[P4-06] UTC Timezone Parsing Causes 1-Day Date Shift in Expense Displays</strong><br/>new Date(&quot;YYYY-MM-DD&quot;) parses as UTC midnight, shifting back one day in negative timezones when converted to local time.</td>
-            <td><div class="code-block">const [year, month, day] = isoDateString.split(&#039;-&#039;).map(Number);
-const localDate = new Date(year, month - 1, day, 12, 0, 0);</div></td>
+            <td>
+              <strong
+                >[P4-06] UTC Timezone Parsing Causes 1-Day Date Shift in Expense Displays</strong
+              ><br />new Date(&quot;YYYY-MM-DD&quot;) parses as UTC midnight, shifting back one day
+              in negative timezones when converted to local time.
+            </td>
+            <td>
+              <div class="code-block">
+                const [year, month, day] = isoDateString.split(&#039;-&#039;).map(Number); const
+                localDate = new Date(year, month - 1, day, 12, 0, 0);
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P4: UI, A11y &amp; Charts" data-axis="Readability">
+          <tr
+            data-severity="important"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Readability"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Readability</span></td>
-            <td><span class="file-path">src/components/ledger/SplitCalculator.tsx:74, 92, 99</span></td>
-            <td><strong>[P4-07] Total I18n Omission in SplitCalculator and Hardcoded Strings Across Screens</strong><br/>SplitCalculator.tsx does not import useI18n() and displays hardcoded English strings despite localization keys existing. Screens like index.tsx also contain hardcoded Italian phrases.</td>
-            <td><div class="code-block">import { useI18n } from &#039;@/i18n&#039;;
-// Replace hardcoded strings with t.addExpense.split* keys</div></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Readability</span
+              >
+            </td>
+            <td>
+              <span class="file-path">src/components/ledger/SplitCalculator.tsx:74, 92, 99</span>
+            </td>
+            <td>
+              <strong
+                >[P4-07] Total I18n Omission in SplitCalculator and Hardcoded Strings Across
+                Screens</strong
+              ><br />SplitCalculator.tsx does not import useI18n() and displays hardcoded English
+              strings despite localization keys existing. Screens like index.tsx also contain
+              hardcoded Italian phrases.
+            </td>
+            <td>
+              <div class="code-block">
+                import { useI18n } from &#039;@/i18n&#039;; // Replace hardcoded strings with
+                t.addExpense.split* keys
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P4: UI, A11y &amp; Charts" data-axis="Accessibility">
+          <tr
+            data-severity="important"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Accessibility"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Accessibility</span></td>
-            <td><span class="file-path">src/components/family/AddCategoryModal.tsx:112-145</span></td>
-            <td><strong>[P4-08] Sub-48px Touch Targets for Color, Icon, and Split Selectors</strong><br/>Color pickers (36px) and member chips in modals violate the WCAG AAA senior accessibility directive requiring 48-64px touch targets.</td>
-            <td><div class="code-block">Enforce minWidth: 48, minHeight: 48, and hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} across all modal selectors.</div></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Accessibility</span
+              >
+            </td>
+            <td>
+              <span class="file-path">src/components/family/AddCategoryModal.tsx:112-145</span>
+            </td>
+            <td>
+              <strong>[P4-08] Sub-48px Touch Targets for Color, Icon, and Split Selectors</strong
+              ><br />Color pickers (36px) and member chips in modals violate the WCAG AAA senior
+              accessibility directive requiring 48-64px touch targets.
+            </td>
+            <td>
+              <div class="code-block">
+                Enforce minWidth: 48, minHeight: 48, and hitSlop={{ top: 8, bottom: 8, left: 8,
+                right: 8 }} across all modal selectors.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P4: UI, A11y &amp; Charts" data-axis="Performance">
+          <tr
+            data-severity="important"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Performance"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Performance</span></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Performance</span
+              >
+            </td>
             <td><span class="file-path">src/app/(tabs)/ledger.tsx:70-130</span></td>
-            <td><strong>[P4-09] Unmemoized Sorting and Multi-Pass Filtering in Render Bodies</strong><br/>Full dataset filtering and sorting runs synchronously in the render body on every keystroke, while ExpenseItem is not wrapped in React.memo.</td>
-            <td><div class="code-block">Wrap filteredExpenses in useMemo and export ExpenseItem with React.memo.</div></td>
+            <td>
+              <strong>[P4-09] Unmemoized Sorting and Multi-Pass Filtering in Render Bodies</strong
+              ><br />Full dataset filtering and sorting runs synchronously in the render body on
+              every keystroke, while ExpenseItem is not wrapped in React.memo.
+            </td>
+            <td>
+              <div class="code-block">
+                Wrap filteredExpenses in useMemo and export ExpenseItem with React.memo.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="important" data-partition="P4: UI, A11y &amp; Charts" data-axis="Architecture">
+          <tr
+            data-severity="important"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Architecture"
+          >
             <td><span class="badge badge-important">IMPORTANT</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Architecture</span></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Architecture</span
+              >
+            </td>
             <td><span class="file-path">src/app/(tabs)/ledger.tsx:432-435</span></td>
-            <td><strong>[P4-10] Nested ScrollView Inside FormModal Generating Gesture Conflicts</strong><br/>FormModal wraps children in a vertical ScrollView. LedgerScreen wraps filter content in an additional ScrollView, causing Android touch cancellation and console warnings.</td>
-            <td><div class="code-block">Remove inner ScrollView from ledger filter modal; FormModal already handles scrolling.</div></td>
+            <td>
+              <strong
+                >[P4-10] Nested ScrollView Inside FormModal Generating Gesture Conflicts</strong
+              ><br />FormModal wraps children in a vertical ScrollView. LedgerScreen wraps filter
+              content in an additional ScrollView, causing Android touch cancellation and console
+              warnings.
+            </td>
+            <td>
+              <div class="code-block">
+                Remove inner ScrollView from ledger filter modal; FormModal already handles
+                scrolling.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="suggestion" data-partition="P4: UI, A11y &amp; Charts" data-axis="Architecture">
+          <tr
+            data-severity="suggestion"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Architecture"
+          >
             <td><span class="badge badge-suggestion">SUGGESTION</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Architecture</span></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Architecture</span
+              >
+            </td>
             <td><span class="file-path">src/app/expense/add.tsx:392-416</span></td>
-            <td><strong>[P4-11] Modal Pushing Tab Route Causes Navigation Hierarchy Corruption</strong><br/>Modal screen pushes tab route router.push(&#039;/(tabs)/import&#039;), leaving modal context stacked above tab navigator.</td>
-            <td><div class="code-block">router.dismiss();
-router.navigate(&#039;/(tabs)/import&#039;);</div></td>
+            <td>
+              <strong>[P4-11] Modal Pushing Tab Route Causes Navigation Hierarchy Corruption</strong
+              ><br />Modal screen pushes tab route router.push(&#039;/(tabs)/import&#039;), leaving
+              modal context stacked above tab navigator.
+            </td>
+            <td>
+              <div class="code-block">
+                router.dismiss(); router.navigate(&#039;/(tabs)/import&#039;);
+              </div>
+            </td>
           </tr>
-          <tr data-severity="suggestion" data-partition="P4: UI, A11y &amp; Charts" data-axis="Performance">
+          <tr
+            data-severity="suggestion"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Performance"
+          >
             <td><span class="badge badge-suggestion">SUGGESTION</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Performance</span></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Performance</span
+              >
+            </td>
             <td><span class="file-path">src/theme/ThemeContext.tsx:64-80</span></td>
-            <td><strong>[P4-12] Missing Context Value Memoization in ThemeProvider and I18nProvider</strong><br/>Context providers recreate fresh object values on every render, triggering full tree re-evaluations.</td>
-            <td><div class="code-block">Wrap context provider values in useMemo([theme, isDark, ...]).</div></td>
+            <td>
+              <strong
+                >[P4-12] Missing Context Value Memoization in ThemeProvider and I18nProvider</strong
+              ><br />Context providers recreate fresh object values on every render, triggering full
+              tree re-evaluations.
+            </td>
+            <td>
+              <div class="code-block">
+                Wrap context provider values in useMemo([theme, isDark, ...]).
+              </div>
+            </td>
           </tr>
-          <tr data-severity="suggestion" data-partition="P4: UI, A11y &amp; Charts" data-axis="Accessibility">
+          <tr
+            data-severity="suggestion"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Accessibility"
+          >
             <td><span class="badge badge-suggestion">SUGGESTION</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Accessibility</span></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Accessibility</span
+              >
+            </td>
             <td><span class="file-path">src/components/charts/HeatmapCalendar.tsx:68-100</span></td>
-            <td><strong>[P4-13] Missing Accessibility Semantics on Custom Charts and Pickers</strong><br/>Heatmap cells and velocity charts lack accessibilityLabel and accessibilityRole for screen readers.</td>
-            <td><div class="code-block">Add accessible={true} and informative accessibilityLabel describing daily spend.</div></td>
+            <td>
+              <strong>[P4-13] Missing Accessibility Semantics on Custom Charts and Pickers</strong
+              ><br />Heatmap cells and velocity charts lack accessibilityLabel and accessibilityRole
+              for screen readers.
+            </td>
+            <td>
+              <div class="code-block">
+                Add accessible={true} and informative accessibilityLabel describing daily spend.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="suggestion" data-partition="P4: UI, A11y &amp; Charts" data-axis="Readability">
+          <tr
+            data-severity="suggestion"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Readability"
+          >
             <td><span class="badge badge-suggestion">SUGGESTION</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Readability</span></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Readability</span
+              >
+            </td>
             <td><span class="file-path">src/components/charts/CategoryPieChart.tsx:32-47</span></td>
-            <td><strong>[P4-14] Category Pie Chart Slice Truncation Distorts Proportions</strong><br/>Truncates data to 6 items without grouping remaining categories into an &quot;Other&quot; slice, causing donut slices to sum to &lt;100%.</td>
-            <td><div class="code-block">Aggregate categories beyond index 5 into a localized &quot;Other&quot; slice.</div></td>
+            <td>
+              <strong>[P4-14] Category Pie Chart Slice Truncation Distorts Proportions</strong
+              ><br />Truncates data to 6 items without grouping remaining categories into an
+              &quot;Other&quot; slice, causing donut slices to sum to &lt;100%.
+            </td>
+            <td>
+              <div class="code-block">
+                Aggregate categories beyond index 5 into a localized &quot;Other&quot; slice.
+              </div>
+            </td>
           </tr>
-          <tr data-severity="nit" data-partition="P4: UI, A11y &amp; Charts" data-axis="Performance">
+          <tr
+            data-severity="nit"
+            data-partition="P4: UI, A11y &amp; Charts"
+            data-axis="Performance"
+          >
             <td><span class="badge badge-nit">NIT</span></td>
-            <td><strong>P4: UI, A11y &amp; Charts</strong><br/><span class="axis-tag">Performance</span></td>
+            <td>
+              <strong>P4: UI, A11y &amp; Charts</strong><br /><span class="axis-tag"
+                >Performance</span
+              >
+            </td>
             <td><span class="file-path">src/app/(tabs)/ledger.tsx:270-320</span></td>
-            <td><strong>[P4-15] FlatList Missing Virtualization Tuning in Ledger</strong><br/>FlatList in ledger.tsx defines renderItem inline and omits initialNumToRender and windowSize props.</td>
-            <td><div class="code-block">Extract renderItem with useCallback and add initialNumToRender={15} and windowSize={5}.</div></td>
+            <td>
+              <strong>[P4-15] FlatList Missing Virtualization Tuning in Ledger</strong
+              ><br />FlatList in ledger.tsx defines renderItem inline and omits initialNumToRender
+              and windowSize props.
+            </td>
+            <td>
+              <div class="code-block">
+                Extract renderItem with useCallback and add initialNumToRender={15} and
+                windowSize={5}.
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
-      <div id="emptyState" class="empty-state">
-        No findings match the current filter selection.
-      </div>
+      <div id="emptyState" class="empty-state">No findings match the current filter selection.</div>
     </div>
 
     <script>
-      const searchInput = document.getElementById("searchInput");
-      const partitionFilter = document.getElementById("partitionFilter");
-      const axisFilter = document.getElementById("axisFilter");
-      const filterButtons = document.querySelectorAll(".filter-btn");
-      const emptyState = document.getElementById("emptyState");
+      const searchInput = document.getElementById('searchInput');
+      const partitionFilter = document.getElementById('partitionFilter');
+      const axisFilter = document.getElementById('axisFilter');
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      const emptyState = document.getElementById('emptyState');
 
-      let currentSeverity = "all";
-      let currentPartition = "all";
-      let currentAxis = "all";
-      let searchQuery = "";
+      let currentSeverity = 'all';
+      let currentPartition = 'all';
+      let currentAxis = 'all';
+      let searchQuery = '';
 
       // Populate unique partitions into dropdown dynamically
       function initPartitionDropdown() {
-        const rows = document.querySelectorAll("#findingsBody tr");
+        const rows = document.querySelectorAll('#findingsBody tr');
         const partitions = new Set();
         rows.forEach((row) => {
-          const p = row.getAttribute("data-partition");
+          const p = row.getAttribute('data-partition');
           if (p) partitions.add(p);
         });
         partitions.forEach((p) => {
-          const opt = document.createElement("option");
+          const opt = document.createElement('option');
           opt.value = p;
           opt.textContent = p;
           partitionFilter.appendChild(opt);
@@ -854,55 +1715,49 @@ router.navigate(&#039;/(tabs)/import&#039;);</div></td>
       }
 
       function updateVisibility() {
-        const rows = document.querySelectorAll("#findingsBody tr");
+        const rows = document.querySelectorAll('#findingsBody tr');
         let visibleCount = 0;
 
         rows.forEach((row) => {
-          const severity = (
-            row.getAttribute("data-severity") || ""
-          ).toLowerCase();
-          const partition = row.getAttribute("data-partition") || "";
-          const axis = (row.getAttribute("data-axis") || "").toLowerCase();
+          const severity = (row.getAttribute('data-severity') || '').toLowerCase();
+          const partition = row.getAttribute('data-partition') || '';
+          const axis = (row.getAttribute('data-axis') || '').toLowerCase();
           const text = row.innerText.toLowerCase();
 
-          const matchesSeverity =
-            currentSeverity === "all" || severity === currentSeverity;
-          const matchesPartition =
-            currentPartition === "all" || partition === currentPartition;
-          const matchesAxis =
-            currentAxis === "all" || axis.includes(currentAxis.toLowerCase());
+          const matchesSeverity = currentSeverity === 'all' || severity === currentSeverity;
+          const matchesPartition = currentPartition === 'all' || partition === currentPartition;
+          const matchesAxis = currentAxis === 'all' || axis.includes(currentAxis.toLowerCase());
           const matchesSearch = !searchQuery || text.includes(searchQuery);
 
-          const isVisible =
-            matchesSeverity && matchesPartition && matchesAxis && matchesSearch;
+          const isVisible = matchesSeverity && matchesPartition && matchesAxis && matchesSearch;
 
-          row.style.display = isVisible ? "" : "none";
+          row.style.display = isVisible ? '' : 'none';
           if (isVisible) visibleCount++;
         });
 
-        emptyState.style.display = visibleCount === 0 ? "block" : "none";
+        emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
       }
 
       filterButtons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          filterButtons.forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          currentSeverity = btn.getAttribute("data-filter");
+        btn.addEventListener('click', () => {
+          filterButtons.forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentSeverity = btn.getAttribute('data-filter');
           updateVisibility();
         });
       });
 
-      partitionFilter.addEventListener("change", (e) => {
+      partitionFilter.addEventListener('change', (e) => {
         currentPartition = e.target.value;
         updateVisibility();
       });
 
-      axisFilter.addEventListener("change", (e) => {
+      axisFilter.addEventListener('change', (e) => {
         currentAxis = e.target.value;
         updateVisibility();
       });
 
-      searchInput.addEventListener("input", (e) => {
+      searchInput.addEventListener('input', (e) => {
         searchQuery = e.target.value.toLowerCase().trim();
         updateVisibility();
       });

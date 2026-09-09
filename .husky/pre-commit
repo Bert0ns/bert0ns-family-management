@@ -1,0 +1,5 @@
+echo "🔍 Enforcing type safety..."
+pnpm typecheck
+
+echo "🧹 Running staged linters and formatters..."
+pnpm exec lint-staged
