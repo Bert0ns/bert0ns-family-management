@@ -79,11 +79,32 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
     });
 
     const summaries: CategorySummary[] = [];
+    const seenCategoryIds = new Set<string>();
+
     categories.forEach((cat) => {
+      seenCategoryIds.add(cat.id);
       const data = catMap.get(cat.id);
       if (data && data.total > 0) {
         summaries.push({
           category: cat,
+          total: data.total,
+          percentage: totalSpend > 0 ? (data.total / totalSpend) * 100 : 0,
+          transactionCount: data.count,
+        });
+      }
+    });
+
+    // Account for orphaned or unmapped category IDs
+    catMap.forEach((data, catId) => {
+      if (!seenCategoryIds.has(catId) && data.total > 0) {
+        summaries.push({
+          category: {
+            id: catId,
+            family_id: '',
+            name: 'Uncategorized',
+            icon: 'HelpCircle',
+            color: '#94A3B8',
+          },
           total: data.total,
           percentage: totalSpend > 0 ? (data.total / totalSpend) * 100 : 0,
           transactionCount: data.count,
@@ -107,7 +128,10 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
     });
 
     const summaries: MemberSummary[] = [];
+    const seenMemberIds = new Set<string>();
+
     members.forEach((mem) => {
+      seenMemberIds.add(mem.id);
       const data = memMap.get(mem.id);
       if (data && data.total > 0) {
         summaries.push({
@@ -122,6 +146,24 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
           total: 0,
           percentage: 0,
           transactionCount: 0,
+        });
+      }
+    });
+
+    // Account for former or unknown member IDs
+    memMap.forEach((data, memId) => {
+      if (!seenMemberIds.has(memId) && data.total > 0) {
+        summaries.push({
+          member: {
+            id: memId,
+            family_id: '',
+            display_name: 'Former / Unknown Member',
+            role: 'MEMBER',
+            color_code: '#94A3B8',
+          },
+          total: data.total,
+          percentage: totalSpend > 0 ? (data.total / totalSpend) * 100 : 0,
+          transactionCount: data.count,
         });
       }
     });

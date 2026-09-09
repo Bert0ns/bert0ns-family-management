@@ -3,6 +3,7 @@ import { Expense, Category, FamilyMember } from '@/types';
 /**
  * CsvExporter follows Single Responsibility Principle (SRP)
  * to format transaction logs into clean CSV format.
+ * Defends against CSV Formula Injection (CWE-1236) and fixes UTF-8 BOM on export.
  */
 export class CsvExporter {
   generateCsv(
@@ -29,7 +30,12 @@ export class CsvExporter {
 
       const escapeCell = (val: string | number | boolean | undefined) => {
         if (val === undefined || val === null) return '""';
-        const str = String(val).replace(/"/g, '""');
+        let str = String(val);
+        // Neutralize CSV Formula Injection (CWE-1236)
+        if (/^[=+\-@\t\r]/.test(str)) {
+          str = `'${str}`;
+        }
+        str = str.replace(/"/g, '""');
         return `"${str}"`;
       };
 
@@ -50,15 +56,21 @@ export class CsvExporter {
   }
 
   downloadCsv(csvContent: string, fileName: string): void {
-    if (typeof document !== 'undefined') {
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    if (typeof document !== 'undefined' && document?.body) {
+      // Prepend UTF-8 BOM so spreadsheet applications (Excel, Numbers) open UTF-8 chars (e.g. €) correctly
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      setTimeout(() => {
+        if (typeof document !== 'undefined' && document?.body && document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+        if (typeof URL.revokeObjectURL === "function") { URL.revokeObjectURL(url); }
+      }, 100);
     }
   }
 }

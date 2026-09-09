@@ -91,18 +91,22 @@ export interface ImportBatch {
 // Zod validation schemas for structured JSON imports
 export const ExpenseItemSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
-  merchant: z.string().min(1, 'Merchant name is required'),
-  amount: z.number().positive('Amount must be greater than 0'),
-  category: z.string().default('Uncategorized'),
-  notes: z.string().optional(),
-  paid_by: z.string().optional(),
-  payment_method: z.string().optional(),
+  merchant: z.string().trim().min(1, 'Merchant name is required').max(120, 'Merchant name too long'),
+  amount: z
+    .number()
+    .positive('Amount must be greater than 0')
+    .finite('Amount must be a finite number')
+    .max(10_000_000, 'Amount must not exceed 10,000,000'),
+  category: z.string().trim().max(80).default('Uncategorized'),
+  notes: z.string().trim().max(500).optional(),
+  paid_by: z.string().trim().max(100).optional(),
+  payment_method: z.string().trim().max(50).optional(),
   is_recurring: z.boolean().default(false),
   split: z
     .object({
       is_split: z.boolean().default(false),
       type: z.enum(['EQUAL', 'PERCENTAGE', 'EXACT']).default('EQUAL'),
-      members: z.array(z.string()).optional(),
+      members: z.array(z.string().trim().max(100)).optional(),
     })
     .optional(),
 });

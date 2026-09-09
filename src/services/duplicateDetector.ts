@@ -9,27 +9,44 @@ export interface DuplicateCheckResult {
 /**
  * DuplicateDetector follows Single Responsibility Principle (SRP)
  * to detect matching transactions and prevent double-logging.
+ * Eliminates substring false-positives and provides an efficient indexed lookup.
  */
 export class DuplicateDetector {
+  normalizeMerchant(name: string): string {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s]/g, '')
+      .replace(/\s+/g, ' ');
+  }
+
+  isMerchantMatch(m1: string, m2: string): boolean {
+    const n1 = this.normalizeMerchant(m1);
+    const n2 = this.normalizeMerchant(m2);
+    if (!n1 || !n2) return false;
+    if (n1 === n2) return true;
+
+    // Word boundary / whole token check: require full phrase match
+    const words1 = n1.split(' ');
+    const words2 = n2.split(' ');
+    if (words1.length > 1 && words2.length > 1 && (n1.startsWith(n2) || n2.startsWith(n1))) {
+      return true;
+    }
+    return false;
+  }
+
   checkDuplicate(candidate: RawExpenseItem, existingExpenses: Expense[]): DuplicateCheckResult {
-    const candidateMerchantClean = candidate.merchant.trim().toLowerCase();
     const candidateDate = candidate.date.trim();
-    const candidateAmount = candidate.amount;
+    const candidateCents = Math.round(candidate.amount * 100);
 
     const match = existingExpenses.find((exp) => {
       const expDate = exp.transaction_date.trim();
-      const expMerchantClean = exp.merchant_name.trim().toLowerCase();
-      const expAmount = exp.amount;
+      if (expDate !== candidateDate) return false;
 
-      // Exact match on date, amount, and similar merchant
-      const isDateMatch = expDate === candidateDate;
-      const isAmountMatch = Math.abs(expAmount - candidateAmount) < 0.001;
-      const isMerchantMatch =
-        expMerchantClean === candidateMerchantClean ||
-        expMerchantClean.includes(candidateMerchantClean) ||
-        candidateMerchantClean.includes(expMerchantClean);
+      const expCents = Math.round(exp.amount * 100);
+      if (expCents !== candidateCents) return false;
 
-      return isDateMatch && isAmountMatch && isMerchantMatch;
+      return this.isMerchantMatch(exp.merchant_name, candidate.merchant);
     });
 
     if (match) {
@@ -41,6 +58,36 @@ export class DuplicateDetector {
     }
 
     return { isDuplicate: false };
+  }
+
+  /**
+   * Fast indexed check across a batch of candidate items using O(1) Map lookups.
+   */
+  checkBatchDuplicates(
+    candidates: RawExpenseItem[],
+    existingExpenses: Expense[],
+  ): DuplicateCheckResult[] {
+    const index = new Map<string, Expense[]>();
+    existingExpenses.forEach((exp) => {
+      const key = `${exp.transaction_date.trim()}_${Math.round(exp.amount * 100)}`;
+      const list = index.get(key) || [];
+      list.push(exp);
+      index.set(key, list);
+    });
+
+    return candidates.map((cand) => {
+      const key = `${cand.date.trim()}_${Math.round(cand.amount * 100)}`;
+      const matches = index.get(key) || [];
+      const found = matches.find((exp) => this.isMerchantMatch(exp.merchant_name, cand.merchant));
+      if (found) {
+        return {
+          isDuplicate: true,
+          matchedExpenseId: found.id,
+          matchReason: `Matches existing transaction from ${found.transaction_date} (${found.merchant_name})`,
+        };
+      }
+      return { isDuplicate: false };
+    });
   }
 }
 

@@ -1,7 +1,7 @@
 import { Expense, ExpenseSplit, FamilyMember } from '@/types';
 
 /**
- * Calculates equal splits among active member IDs.
+ * Calculates equal splits among active member IDs in integer cents.
  * Handles edge cases like zero amount, 0 members, and floating-point remainders.
  */
 export function calculateEqualSplits(totalAmount: number, memberIds: string[]): ExpenseSplit[] {
@@ -55,73 +55,75 @@ export interface SettlementSummary {
 
 /**
  * Computes household debt settlement ("Chi deve a Chi") for a given list of expenses.
+ * Uses exact integer cents throughout to prevent precision drift and 1-cent residual drops.
  * Minimizes transaction count using greedy debt balancing.
  */
 export function calculateSettlements(
   expenses: Expense[],
   members: FamilyMember[],
 ): SettlementSummary {
-  if (members.length === 0) {
+  if (!members || members.length === 0) {
     return { balances: [], transfers: [], isBalanced: true };
   }
 
   const allMemberIds = members.map((m) => m.id);
-  const paidMap = new Map<string, number>();
-  const shareMap = new Map<string, number>();
+  const paidCentsMap = new Map<string, number>();
+  const shareCentsMap = new Map<string, number>();
 
   members.forEach((m) => {
-    paidMap.set(m.id, 0);
-    shareMap.set(m.id, 0);
+    paidCentsMap.set(m.id, 0);
+    shareCentsMap.set(m.id, 0);
   });
 
   expenses.forEach((exp) => {
     // Credit payer
-    const curPaid = paidMap.get(exp.paid_by_member_id) || 0;
-    paidMap.set(exp.paid_by_member_id, curPaid + exp.amount);
+    const curPaid = paidCentsMap.get(exp.paid_by_member_id) || 0;
+    paidCentsMap.set(exp.paid_by_member_id, curPaid + Math.round(exp.amount * 100));
 
     // Debit beneficiaries
     if (exp.splits && exp.splits.length > 0) {
       exp.splits.forEach((s) => {
-        const curShare = shareMap.get(s.member_id) || 0;
-        shareMap.set(s.member_id, curShare + s.share_amount);
+        const curShare = shareCentsMap.get(s.member_id) || 0;
+        shareCentsMap.set(s.member_id, curShare + Math.round(s.share_amount * 100));
       });
     } else {
       // Default: equal split across all family members
       const equalSplits = calculateEqualSplits(exp.amount, allMemberIds);
       equalSplits.forEach((s) => {
-        const curShare = shareMap.get(s.member_id) || 0;
-        shareMap.set(s.member_id, curShare + s.share_amount);
+        const curShare = shareCentsMap.get(s.member_id) || 0;
+        shareCentsMap.set(s.member_id, curShare + Math.round(s.share_amount * 100));
       });
     }
   });
 
   const balances: MemberBalance[] = members.map((m) => {
-    const paid = paidMap.get(m.id) || 0;
-    const share = shareMap.get(m.id) || 0;
-    const net = Math.round((paid - share) * 100) / 100;
+    const paidCents = paidCentsMap.get(m.id) || 0;
+    const shareCents = shareCentsMap.get(m.id) || 0;
+    const netCents = paidCents - shareCents;
     return {
       member: m,
-      paid: Math.round(paid * 100) / 100,
-      share: Math.round(share * 100) / 100,
-      net,
+      paid: paidCents / 100,
+      share: shareCents / 100,
+      net: netCents / 100,
     };
   });
 
-  // Debt simplification
-  type BalanceEntry = { member: FamilyMember; amount: number };
-  const debtors: BalanceEntry[] = [];
-  const creditors: BalanceEntry[] = [];
+  // Debt simplification in exact integer cents
+  type BalanceCentsEntry = { member: FamilyMember; cents: number };
+  const debtors: BalanceCentsEntry[] = [];
+  const creditors: BalanceCentsEntry[] = [];
 
   balances.forEach((b) => {
-    if (b.net < -0.01) {
-      debtors.push({ member: b.member, amount: -b.net });
-    } else if (b.net > 0.01) {
-      creditors.push({ member: b.member, amount: b.net });
+    const netCents = Math.round(b.net * 100);
+    if (netCents < 0) {
+      debtors.push({ member: b.member, cents: -netCents });
+    } else if (netCents > 0) {
+      creditors.push({ member: b.member, cents: netCents });
     }
   });
 
-  debtors.sort((a, b) => b.amount - a.amount);
-  creditors.sort((a, b) => b.amount - a.amount);
+  debtors.sort((a, b) => b.cents - a.cents);
+  creditors.sort((a, b) => b.cents - a.cents);
 
   const transfers: SettlementTransfer[] = [];
   let dIdx = 0;
@@ -131,31 +133,33 @@ export function calculateSettlements(
     const debtor = debtors[dIdx];
     const creditor = creditors[cIdx];
 
-    const settledAmount = Math.min(debtor.amount, creditor.amount);
-    const roundedSettled = Math.round(settledAmount * 100) / 100;
+    const settledCents = Math.min(debtor.cents, creditor.cents);
 
-    if (roundedSettled > 0) {
+    if (settledCents > 0) {
       transfers.push({
         fromMember: debtor.member,
         toMember: creditor.member,
-        amount: roundedSettled,
+        amount: settledCents / 100,
       });
     }
 
-    debtor.amount = Math.round((debtor.amount - roundedSettled) * 100) / 100;
-    creditor.amount = Math.round((creditor.amount - roundedSettled) * 100) / 100;
+    debtor.cents -= settledCents;
+    creditor.cents -= settledCents;
 
-    if (debtor.amount <= 0.01) {
+    if (debtor.cents === 0) {
       dIdx++;
     }
-    if (creditor.amount <= 0.01) {
+    if (creditor.cents === 0) {
       cIdx++;
     }
   }
 
+  // Strictly balanced if no active debtors or creditors exist
+  const isBalanced = debtors.length === 0 && creditors.length === 0;
+
   return {
     balances,
     transfers,
-    isBalanced: transfers.length === 0,
+    isBalanced,
   };
 }
