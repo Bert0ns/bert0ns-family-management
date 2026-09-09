@@ -64,6 +64,36 @@ Let me know if you need anything else!`;
     expect(result.data).toEqual({ expenses: [] });
   });
 
+  it('forgivingly parses JSON with trailing commas produced by LLMs', () => {
+    const jsonWithTrailingCommas = `\`\`\`json
+{
+  "report_title": "Bank Statement",
+  "currency": "EUR",
+  "expenses": [
+    {
+      "date": "2026-09-01",
+      "merchant": "Bakery",
+      "amount": 4.5,
+    },
+  ],
+}
+\`\`\``;
+
+    const result = jsonExtractor.extract(jsonWithTrailingCommas);
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({
+      report_title: 'Bank Statement',
+      currency: 'EUR',
+      expenses: [
+        {
+          date: '2026-09-01',
+          merchant: 'Bakery',
+          amount: 4.5,
+        },
+      ],
+    });
+  });
+
   it('rejects empty input or strings without JSON objects', () => {
     expect(jsonExtractor.extract('').success).toBe(false);
     expect(jsonExtractor.extract('   ').success).toBe(false);

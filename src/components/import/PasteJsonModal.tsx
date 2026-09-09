@@ -141,6 +141,8 @@ export const PasteJsonModal: React.FC<PasteJsonModalProps> = ({
 
             <TouchableOpacity
               onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.close}
               style={{
                 width: 36,
                 height: 36,
@@ -172,6 +174,8 @@ export const PasteJsonModal: React.FC<PasteJsonModalProps> = ({
               <TouchableOpacity
                 onPress={handlePasteFromClipboard}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={t.import.pasteFromClipboard}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -198,6 +202,8 @@ export const PasteJsonModal: React.FC<PasteJsonModalProps> = ({
                 <TouchableOpacity
                   onPress={handleClear}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear"
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -243,7 +249,7 @@ export const PasteJsonModal: React.FC<PasteJsonModalProps> = ({
                 style={{
                   color: theme.colors.textPrimary,
                   fontSize: typography.fontSizes.sm,
-                  fontFamily: 'monospace',
+                  fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
                   textAlignVertical: 'top',
                   flex: 1,
                   minHeight: 260,

@@ -2,7 +2,8 @@
  * AI JSON Payload Extractor & Sanitizer
  *
  * Safely extracts and parses JSON payloads returned by AI assistants,
- * stripping markdown code fences, backticks, and conversational prefixes/suffixes.
+ * stripping markdown code fences, backticks, conversational prefixes/suffixes,
+ * and forgiving trailing commas.
  */
 
 export interface JsonExtractionResult {
@@ -37,15 +38,21 @@ export class JsonExtractor {
       candidate = candidate.substring(firstBrace, lastBrace + 1);
     }
 
-    // 3. Attempt JSON parse
+    // 3. Attempt JSON parse (with fallback sanitization for trailing commas common in LLM outputs)
     try {
       const parsed = JSON.parse(candidate);
       return { success: true, data: parsed };
-    } catch (err: any) {
-      return {
-        success: false,
-        error: `JSON syntax error: ${err?.message || 'Could not parse payload'}`,
-      };
+    } catch (initialErr: any) {
+      try {
+        const withoutTrailingCommas = candidate.replace(/,\s*([\]}])/g, '$1');
+        const parsed = JSON.parse(withoutTrailingCommas);
+        return { success: true, data: parsed };
+      } catch {
+        return {
+          success: false,
+          error: `JSON syntax error: ${initialErr?.message || 'Could not parse payload'}`,
+        };
+      }
     }
   }
 }

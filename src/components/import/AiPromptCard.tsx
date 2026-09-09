@@ -7,7 +7,11 @@ import { useI18n } from '@/i18n';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
-import { generateBankStatementPrompt, PromptCategoryItem } from '@/services/aiPromptGenerator';
+import {
+  generateBankStatementPrompt,
+  normalizeCategories,
+  PromptCategoryItem,
+} from '@/services/aiPromptGenerator';
 
 interface AiPromptCardProps {
   categories: (string | PromptCategoryItem)[];
@@ -27,6 +31,11 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
 
   const [copied, setCopied] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+
+  // Normalized active categories (handles fallbacks when empty)
+  const activeCategories = React.useMemo(() => {
+    return normalizeCategories(categories);
+  }, [categories]);
 
   // Generate dynamic prompt from active categories and household info
   const dynamicPrompt = React.useMemo(() => {
@@ -156,7 +165,8 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
               flex: 1,
             }}
           >
-            {t.import.step1Label} ({categories.length} {t.common.items})
+            {t.import.step1Label} (
+            {t.import.categoriesIncluded.replace('{count}', activeCategories.length.toString())})
           </Text>
         </View>
 
@@ -257,6 +267,7 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
         <TouchableOpacity
           onPress={onOpenPasteModal}
           activeOpacity={0.7}
+          accessibilityRole="button"
           style={{
             marginTop: spacing.sm,
             flexDirection: 'row',
@@ -315,12 +326,17 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
                   marginTop: 2,
                 }}
               >
-                {t.import.promptModalSubtitle.replace('{count}', categories.length.toString())}
+                {t.import.promptModalSubtitle.replace(
+                  '{count}',
+                  activeCategories.length.toString(),
+                )}
               </Text>
             </View>
 
             <TouchableOpacity
               onPress={() => setModalVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.close}
               style={{
                 width: 36,
                 height: 36,
