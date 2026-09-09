@@ -258,8 +258,8 @@ export interface TranslationSchema {
   categories: {
     groceries: string;
     dining: string;
-    utilities: string;
     transportation: string;
+    utilities: string;
     housing: string;
     healthcare: string;
     entertainment: string;
@@ -285,6 +285,7 @@ export interface TranslationSchema {
     sendOtpButton: string;
     otpCodeLabel: string;
     otpCodePlaceholder: string;
+    otpCodeHelper?: string;
     verifyButton: string;
     signOutButton: string;
     syncNowButton: string;
@@ -311,5 +312,32 @@ export interface TranslationSchema {
     changeEmailOrResend: string;
     joinedHouseholdTitle: string;
     authRequiredToJoin: string;
+  };
+  notifications: {
+    title: string;
+    subtitle: string;
+    pushEnabledLabel: string;
+    pushEnabledDesc: string;
+    activityGroup: string;
+    batchImportLabel: string;
+    batchImportDesc: string;
+    expenseUpdatesLabel: string;
+    expenseUpdatesDesc: string;
+    debtsGroup: string;
+    settlementLabel: string;
+    settlementDesc: string;
+    familyGroup: string;
+    memberJoinedLabel: string;
+    memberJoinedDesc: string;
+    roleChangedLabel: string;
+    roleChangedDesc: string;
+    emptyTitle: string;
+    emptyDesc: string;
+    markAllAsRead: string;
+    clearAll: string;
+    settleUpButton: string;
+    settleConfirmTitle: string;
+    settleConfirmMessage: string;
+    settleSuccessToast: string;
   };
 }

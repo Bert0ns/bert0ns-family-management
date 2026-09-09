@@ -13,17 +13,21 @@ export interface AuthState {
 export const authService = {
   isConfigured: () => isSupabaseConfigured(),
 
-  async sendOtp(email: string): Promise<{ error: string | null }> {
+  async sendOtp(email: string, redirectTo?: string): Promise<{ error: string | null }> {
     if (!isSupabaseConfigured()) {
       return { error: 'Supabase is not configured. Please set environment variables.' };
     }
     try {
       supabaseLogger.info('Sending Supabase OTP to email', { email });
+      const options: { shouldCreateUser: boolean; emailRedirectTo?: string } = {
+        shouldCreateUser: true,
+      };
+      if (redirectTo) {
+        options.emailRedirectTo = redirectTo;
+      }
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
-        options: {
-          shouldCreateUser: true,
-        },
+        options,
       });
       if (error) {
         supabaseLogger.error('Failed to send Supabase OTP', { error: error.message });

@@ -3,7 +3,7 @@ import { supabase, isSupabaseConfigured } from './supabase';
 import { supabaseLogger } from './logger';
 import { useAppStore } from './store';
 import { syncEngine } from './syncEngine';
-import { Expense, Category, FamilyMember } from '@/types';
+import { Expense, Category, FamilyMember, Settlement, AppNotification } from '@/types';
 
 let activeChannel: RealtimeChannel | null = null;
 let currentSubscribedFamilyId: string | null = null;
@@ -152,6 +152,65 @@ export const realtimeSync = {
           if (oldRecord?.id) {
             store.removeRemoteMember(oldRecord.id);
           }
+        }
+      },
+    );
+
+    // 4. Settlements channel listener
+    channel.on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'settlements',
+        filter: `family_id=eq.${familyId}`,
+      },
+      (payload) => {
+        supabaseLogger.info('Realtime settlement event received');
+        const raw = payload.new as any;
+        const mapped: Settlement = {
+          id: raw.id,
+          family_id: raw.family_id,
+          from_member_id: raw.from_member_id,
+          to_member_id: raw.to_member_id,
+          amount: Number(raw.amount),
+          notes: raw.notes,
+          created_at: raw.created_at,
+        };
+        useAppStore.getState().reconcileRemoteSettlements([mapped]);
+      },
+    );
+
+    // 5. In-App Notifications channel listener
+    channel.on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `family_id=eq.${familyId}`,
+      },
+      (payload) => {
+        const raw = payload.new as any;
+        const store = useAppStore.getState();
+        // Only deliver if directed to this member
+        if (raw.recipient_member_id === store.currentMemberId) {
+          supabaseLogger.info('Realtime notification received for current member', {
+            type: raw.type,
+          });
+          const mapped: AppNotification = {
+            id: raw.id,
+            family_id: raw.family_id,
+            recipient_member_id: raw.recipient_member_id,
+            actor_member_id: raw.actor_member_id,
+            type: raw.type,
+            title: raw.title,
+            body: raw.body,
+            data: raw.data,
+            is_read: raw.is_read || false,
+            created_at: raw.created_at,
+          };
+          store.addNotification(mapped);
         }
       },
     );
