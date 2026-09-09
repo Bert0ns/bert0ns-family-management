@@ -147,9 +147,9 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Families Policies
-CREATE POLICY "Members or invite code lookups can view families"
+CREATE POLICY "Family members can view their family"
 ON public.families FOR SELECT
-USING (public.is_member_of_family(id) OR auth.uid() IS NOT NULL);
+USING (public.is_member_of_family(id));
 
 CREATE POLICY "Authenticated users can create families"
 ON public.families FOR INSERT
@@ -263,3 +263,62 @@ ALTER TABLE public.categories REPLICA IDENTITY FULL;
 ALTER TABLE public.expenses REPLICA IDENTITY FULL;
 ALTER TABLE public.expense_splits REPLICA IDENTITY FULL;
 ALTER TABLE public.budgets REPLICA IDENTITY FULL;
+
+-- 11. Secure RPC for joining a family via invite code
+CREATE OR REPLACE FUNCTION public.join_family_via_invite_code(
+    p_invite_code TEXT,
+    p_display_name TEXT DEFAULT 'New Member'
+)
+RETURNS JSONB AS 43831
+DECLARE
+    v_family_id UUID;
+    v_member_id UUID;
+BEGIN
+    IF auth.uid() IS NULL THEN
+        RAISE EXCEPTION 'Not authenticated';
+    END IF;
+
+    SELECT id INTO v_family_id
+    FROM public.families
+    WHERE UPPER(invite_code) = UPPER(TRIM(p_invite_code));
+
+    IF v_family_id IS NULL THEN
+        RAISE EXCEPTION 'Invalid invite code';
+    END IF;
+
+    -- Check if user is already a member
+    SELECT id INTO v_member_id
+    FROM public.family_members
+    WHERE family_id = v_family_id AND user_id = auth.uid();
+
+    IF v_member_id IS NOT NULL THEN
+        RETURN jsonb_build_object('family_id', v_family_id, 'member_id', v_member_id, 'status', 'already_joined');
+    END IF;
+
+    -- Insert new family member
+    INSERT INTO public.family_members (
+        family_id,
+        user_id,
+        display_name,
+        role,
+        color_code
+    ) VALUES (
+        v_family_id,
+        auth.uid(),
+        COALESCE(p_display_name, 'New Member'),
+        'MEMBER',
+        '#3B82F6'
+    ) RETURNING id INTO v_member_id;
+
+    RETURN jsonb_build_object('family_id', v_family_id, 'member_id', v_member_id, 'status', 'success');
+END;
+43831 LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 12. Performance Optimization Indexes for High-Frequency Sync Queries
+CREATE INDEX IF NOT EXISTS idx_family_members_user_fam ON public.family_members(user_id, family_id);
+CREATE INDEX IF NOT EXISTS idx_family_members_fam ON public.family_members(family_id);
+CREATE INDEX IF NOT EXISTS idx_expenses_fam_updated ON public.expenses(family_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_expenses_fam_date ON public.expenses(family_id, transaction_date DESC);
+CREATE INDEX IF NOT EXISTS idx_expense_splits_exp_id ON public.expense_splits(expense_id);
+CREATE INDEX IF NOT EXISTS idx_categories_fam_id ON public.categories(family_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_families_invite_code ON public.families(UPPER(invite_code)) WHERE invite_code IS NOT NULL;

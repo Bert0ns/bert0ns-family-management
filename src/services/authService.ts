@@ -1,5 +1,6 @@
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from './supabase';
+import { realtimeSync } from './realtimeSync';
 import { supabaseLogger } from './logger';
 
 export interface AuthState {
@@ -66,6 +67,7 @@ export const authService = {
     }
     try {
       supabaseLogger.info('Signing out from Supabase');
+      realtimeSync.stopRealtimeSync();
       const { error } = await supabase.auth.signOut();
       if (error) {
         supabaseLogger.error('Failed to sign out from Supabase', { error: error.message });
