@@ -1,5 +1,5 @@
+echo "🎨 Formatting and linting staged files with Prettier & ESLint..."
+pnpm exec lint-staged
+
 echo "🔍 Enforcing type safety..."
 pnpm typecheck
-
-echo "🧹 Running staged linters and formatters..."
-pnpm exec lint-staged

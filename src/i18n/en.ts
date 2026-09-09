@@ -131,6 +131,26 @@ export const en: TranslationSchema = {
     totalAmount: 'Total Amount',
     importTransactions: 'Import Transactions',
     duplicateWarning: 'potential duplicate(s) detected. They will still be imported if confirmed.',
+    aiPromptTitle: 'Extract Expenses with AI',
+    aiPromptSubtitle:
+      'Copy a tailored prompt for ChatGPT, Claude, or Gemini to convert your bank statement PDF into an importable JSON file.',
+    copyPrompt: 'Copy AI Prompt',
+    promptCopied: 'Prompt copied to clipboard!',
+    viewPrompt: 'View Prompt',
+    promptModalTitle: 'Bank Statement AI Prompt',
+    promptModalSubtitle: 'Dynamically generated with your {count} active expense categories.',
+    pasteJsonTitle: 'Paste Raw JSON',
+    pasteJsonSubtitle:
+      'Directly paste the JSON output from your AI assistant without saving files.',
+    pasteJsonButton: 'Parse & Stage Expenses',
+    pasteJsonPlaceholder:
+      'Paste JSON here (markdown ```json code blocks are automatically cleaned)...',
+    pasteFromClipboard: 'Paste from Clipboard',
+    pasteActionPrompt: 'Or paste JSON text directly',
+    step1Label: '1. Copy AI Prompt',
+    step2Label: '2. Attach PDF in ChatGPT / Claude',
+    step3Label: '3. Paste or Drop JSON',
+    categoriesIncluded: '{count} categories included',
   },
   family: {
     activeWorkspace: 'Active Workspace',
