@@ -110,6 +110,7 @@ Organize code cleanly across distinct architectural layers:
 ## 5. Coding Standards & TypeScript Discipline
 
 - **Strict Type Safety**:
+  - Strict compiler checks (`noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `noImplicitOverride`, `forceConsistentCasingInFileNames`) are enabled in `tsconfig.json`.
   - `noImplicitAny` is strictly enforced. Avoid `any` at all costs. Use `unknown` with type guards or schema parsers when dealing with raw inputs.
   - Use discriminated unions for modeling lifecycle states, operation results, and variant types.
 - **Explicit Returns & Contracts**:
@@ -123,16 +124,17 @@ Organize code cleanly across distinct architectural layers:
 
 ## 6. Testing & Verification Standards
 
-Quality in this project is verified systematically through automated tests and strict type checking:
+Quality in this project is verified systematically through automated pre-commit gates and targeted tests:
 
-1. **Unit Test Coverage for Domain Logic**:
+1. **Automated Pre-Commit Quality Gate**:
+   - Strict type safety (`pnpm typecheck`), linting (`eslint --fix --no-warn-ignored --max-warnings=0`), and formatting (`prettier --write`) are automatically enforced at the git commit phase via Husky and lint-staged.
+   - **Do not run redundant check commands**: There is no need to manually invoke repetitive `typecheck`, `lint`, or `format` commands multiple times during editing sessions. Staged changes are validated and formatted automatically upon committing.
+2. **Unit Test Coverage for Domain Logic**:
    - All financial calculators, duplicate detectors, validators, and exporters must maintain comprehensive unit test suites covering edge cases (zero values, negative numbers, leap years, rounding remainders, empty arrays).
-2. **Contract & Regression Prevention**:
-   - Before completing any task or proposing changes, verify that the entire test suite and type checking pass cleanly:
-     - `pnpm test` (Runs all Jest suites)
-     - `pnpm typecheck` (Runs TypeScript compiler validation with `--noEmit`)
-     - `pnpm format:check` (Checks formatting compliance)
-3. **Avoid Fragile Mocking**:
+   - Run `pnpm test` (or targeted test files with `pnpm test <filename>`) when modifying business logic or financial calculations.
+3. **Single Full Verification**:
+   - If full end-to-end verification is desired before pushing, use `pnpm check-all` once rather than invoking individual scripts repeatedly.
+4. **Avoid Fragile Mocking**:
    - Because business logic is decoupled from infrastructure, test domain services directly with plain input objects rather than elaborate mocks.
 
 ---
@@ -144,4 +146,6 @@ When working on this repository, agents must adhere to the following workflow:
 1. **Context Assessment**: Understand the relevant architectural layer before modifying code. Ask: _Is this domain logic, infrastructure, state orchestration, or UI presentation?_
 2. **Minimal & Cohesive Changes**: Solve the user request with focused edits. Avoid sweeping refactors or unnecessary package additions unless explicitly requested.
 3. **Respect Existing Patterns**: Follow the established directory layout, naming conventions, and interface definitions.
-4. **Mandatory Verification**: Always run `pnpm typecheck` and `pnpm test` after modifying code to guarantee zero regressions.
+4. **Streamlined Verification**:
+   - Do not call redundant typecheck/lint/format commands repeatedly. Trust the pre-commit hook (Husky + lint-staged) which automatically runs `pnpm typecheck`, ESLint, and Prettier on `git commit`.
+   - Run `pnpm test` only when changing functional logic or updating test suites.
