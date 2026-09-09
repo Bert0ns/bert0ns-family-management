@@ -29,12 +29,16 @@ export const Avatar: React.FC<AvatarProps> = ({
   const { theme, radius, typography } = useTheme();
   const config = SIZE_CONFIG[size] || SIZE_CONFIG.md;
 
-  const initials = name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-    .substring(0, 2);
+  const safeName = (name || '').trim();
+  const initials = safeName
+    ? safeName
+        .split(/\s+/)
+        .map((part) => part[0])
+        .filter(Boolean)
+        .join('')
+        .toUpperCase()
+        .substring(0, 2)
+    : '?';
 
   const containerStyle: ViewStyle = {
     width: config.dim,
@@ -59,7 +63,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       {avatarUrl ? (
         <Image
           source={{ uri: avatarUrl }}
-          style={{ width: config.dim, height: config.dim }}
+          style={{ width: config.dim, height: config.dim, borderRadius: radius.full }}
           resizeMode="cover"
         />
       ) : (

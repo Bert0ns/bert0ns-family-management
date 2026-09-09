@@ -9,7 +9,7 @@ const OUTBOX_STORAGE_KEY = '@bert0ns_sync_outbox';
 const LAST_SYNC_STORAGE_KEY = '@bert0ns_last_sync_timestamp';
 
 let currentSyncStatus: SyncStatus = 'offline';
-let isFlushing = false;
+let activeFlushPromise: Promise<{ processed: number; errors: number }> | null = null;
 const statusListeners = new Set<(status: SyncStatus) => void>();
 
 function notifyStatus(status: SyncStatus) {
@@ -102,36 +102,43 @@ export const syncEngine = {
   },
 
   async flushOutbox(): Promise<{ processed: number; errors: number }> {
-    if (isFlushing) {
-      supabaseLogger.debug('flushOutbox already in progress, skipping concurrent run');
-      return { processed: 0, errors: 0 };
+    if (activeFlushPromise) {
+      return activeFlushPromise;
     }
     if (!isSupabaseConfigured()) {
       notifyStatus('offline');
       return { processed: 0, errors: 0 };
     }
 
-    isFlushing = true;
-    try {
-      const outbox = await this.getOutbox();
-      if (outbox.length === 0) {
-        notifyStatus('synced');
-        return { processed: 0, errors: 0 };
-      }
+    activeFlushPromise = (async () => {
+      try {
+        const outbox = await this.getOutbox();
+        if (outbox.length === 0) {
+          notifyStatus('synced');
+          return { processed: 0, errors: 0 };
+        }
 
-      notifyStatus('syncing');
-      let processed = 0;
-      let errors = 0;
-      const succeededIds = new Set<string>();
-      const failedMap = new Map<string, OutboxMutation>();
+        notifyStatus('syncing');
+        let processed = 0;
+        let errors = 0;
+        const succeededIds = new Set<string>();
+        const failedMap = new Map<string, OutboxMutation>();
 
-      for (const item of outbox) {
-        try {
-          const success = await this.executeMutation(item);
-          if (success) {
-            processed++;
-            succeededIds.add(item.id);
-          } else {
+        for (const item of outbox) {
+          try {
+            const success = await this.executeMutation(item);
+            if (success) {
+              processed++;
+              succeededIds.add(item.id);
+            } else {
+              errors++;
+              const updatedItem = {
+                ...item,
+                retry_count: (item.retry_count || 0) + 1,
+              };
+              failedMap.set(item.id, updatedItem);
+            }
+          } catch (err) {
             errors++;
             const updatedItem = {
               ...item,
@@ -139,29 +146,24 @@ export const syncEngine = {
             };
             failedMap.set(item.id, updatedItem);
           }
-        } catch (err) {
-          errors++;
-          const updatedItem = {
-            ...item,
-            retry_count: (item.retry_count || 0) + 1,
-          };
-          failedMap.set(item.id, updatedItem);
         }
+
+        // Re-read current outbox to safely preserve any mutations enqueued concurrently
+        const freshOutbox = await this.getOutbox();
+        const updatedOutbox = freshOutbox
+          .filter((m) => !succeededIds.has(m.id))
+          .map((m) => failedMap.get(m.id) || m)
+          .filter((m) => (m.retry_count || 0) < 5);
+
+        await AsyncStorage.setItem(OUTBOX_STORAGE_KEY, JSON.stringify(updatedOutbox));
+        notifyStatus(errors > 0 ? 'error' : 'synced');
+        return { processed, errors };
+      } finally {
+        activeFlushPromise = null;
       }
+    })();
 
-      // Re-read current outbox to safely preserve any mutations enqueued concurrently
-      const freshOutbox = await this.getOutbox();
-      const updatedOutbox = freshOutbox
-        .filter((m) => !succeededIds.has(m.id))
-        .map((m) => failedMap.get(m.id) || m)
-        .filter((m) => (m.retry_count || 0) < 5);
-
-      await AsyncStorage.setItem(OUTBOX_STORAGE_KEY, JSON.stringify(updatedOutbox));
-      notifyStatus(errors > 0 ? 'error' : 'synced');
-      return { processed, errors };
-    } finally {
-      isFlushing = false;
-    }
+    return activeFlushPromise;
   },
 
   async executeMutation(item: OutboxMutation): Promise<boolean> {

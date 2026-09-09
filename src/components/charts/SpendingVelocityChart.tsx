@@ -31,21 +31,28 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
   const innerWidth = Math.max(chartWidth - paddingLeft - paddingRight, 100);
   const innerHeight = chartHeight - paddingTop - paddingBottom;
 
-  const maxVal = Math.max(...data.map((d) => d.cumulativeAmount), 50) * 1.15;
+  const safeAmounts = data.map((d) => (Number.isFinite(d.cumulativeAmount) ? d.cumulativeAmount : 0));
+  const maxVal = Math.max(...safeAmounts, 50) * 1.15;
   const totalDays = data.length;
 
   const getX = (index: number) => {
     if (totalDays <= 1) return paddingLeft + innerWidth / 2;
-    return paddingLeft + (index / (totalDays - 1)) * innerWidth;
+    const pos = paddingLeft + (index / (totalDays - 1)) * innerWidth;
+    return Number.isFinite(pos) ? pos : paddingLeft;
   };
 
   const getY = (val: number) => {
+    if (!Number.isFinite(val) || maxVal <= 0) return paddingTop + innerHeight;
     const normalized = Math.min(Math.max(val / maxVal, 0), 1);
-    return paddingTop + innerHeight - normalized * innerHeight;
+    const pos = paddingTop + innerHeight - normalized * innerHeight;
+    return Number.isFinite(pos) ? pos : paddingTop + innerHeight;
   };
 
   // Generate SVG path for the line
-  const points = data.map((d, idx) => ({ x: getX(idx), y: getY(d.cumulativeAmount) }));
+  const points = data.map((d, idx) => ({
+    x: getX(idx),
+    y: getY(Number.isFinite(d.cumulativeAmount) ? d.cumulativeAmount : 0),
+  }));
 
   let linePath = '';
   let areaPath = '';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, ScrollView, Platform, Alert } from 'react-native';
 import { X, Trash2, Calendar, CreditCard, User, Tag, Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName, getLocalizedPaymentMethod } from '@/i18n';
@@ -50,8 +50,29 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
   const localizedPaymentMethod = getLocalizedPaymentMethod(expense.payment_method, t);
 
   const handleDelete = () => {
-    onDelete(expense.id);
-    onClose();
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.confirm) {
+      if (window.confirm(t.common.delete + '?')) {
+        onDelete(expense.id);
+        onClose();
+      }
+      return;
+    }
+
+    Alert.alert(
+      t.common.delete,
+      t.common.delete + '?',
+      [
+        { text: t.common.cancel, style: 'cancel' },
+        {
+          text: t.common.delete,
+          style: 'destructive',
+          onPress: () => {
+            onDelete(expense.id);
+            onClose();
+          },
+        },
+      ]
+    );
   };
 
   return (
