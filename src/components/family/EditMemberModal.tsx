@@ -75,7 +75,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
       return;
     }
 
-    const confirmMessage = `${t.family.deleteMemberConfirmMessage}\n\n• ${memberExpenses.length} transactions (${currency}${totalSpent.toFixed(2)})\n• ${splitInvolvements} split shares`;
+    const confirmMessage = `${t.family.deleteMemberConfirmMessage}\n\n• ${memberExpenses.length} ${t.dashboard.totalTransactions.toLowerCase()} (${currency}${totalSpent.toFixed(2)})\n• ${splitInvolvements} ${t.family.splitShares}`;
 
     if (Platform.OS === 'web') {
       if (window.confirm(`${t.family.deleteMemberConfirmTitle}\n\n${confirmMessage}`)) {
@@ -281,8 +281,8 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
               fontSize: typography.fontSizes.xs,
             }}
           >
-            Related Data: {memberExpenses.length} transactions ({currency}
-            {totalSpent.toFixed(2)}), {splitInvolvements} split participations
+            {t.family.relatedData}: {memberExpenses.length} {t.dashboard.totalTransactions.toLowerCase()} ({currency}
+            {totalSpent.toFixed(2)}), {splitInvolvements} {t.family.splitParticipations}
           </Text>
         </View>
 

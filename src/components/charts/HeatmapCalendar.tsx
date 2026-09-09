@@ -17,7 +17,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   currency = '€',
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const maxDaily = data.reduce((max, d) => Math.max(max, d.dailyAmount), 10);
 
@@ -38,7 +38,11 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
 
   const daysInMonth = new Date(year, month, 0).getDate();
 
-  const dayHeaders = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const dateLocale = locale === 'it' ? 'it-IT' : 'en-US';
+  const dayHeaders = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date(2024, 0, 1 + i);
+    return d.toLocaleDateString(dateLocale, { weekday: 'narrow' }).toUpperCase();
+  });
   const colWidth = `${100 / 7}%` as const;
 
   return (
@@ -140,28 +144,13 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           }}
         />
         <View
-          style={{
-            width: 12,
-            height: 12,
-            borderRadius: 2,
-            backgroundColor: `${theme.colors.brand}30`,
-          }}
+          style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: `${theme.colors.brand}30` }}
         />
         <View
-          style={{
-            width: 12,
-            height: 12,
-            borderRadius: 2,
-            backgroundColor: `${theme.colors.brand}60`,
-          }}
+          style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: `${theme.colors.brand}60` }}
         />
         <View
-          style={{
-            width: 12,
-            height: 12,
-            borderRadius: 2,
-            backgroundColor: `${theme.colors.brand}A0`,
-          }}
+          style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: `${theme.colors.brand}A0` }}
         />
         <View
           style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: theme.colors.brand }}

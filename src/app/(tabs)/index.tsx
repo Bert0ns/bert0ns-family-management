@@ -244,7 +244,7 @@ export default function DashboardScreen() {
                         fontSize: typography.fontSizes.xs,
                       }}
                     >
-                      {mc.percentage.toFixed(0)}% del totale
+                      {mc.percentage.toFixed(0)}% {t.dashboard.ofTotal}
                     </Text>
                   </View>
                 </View>

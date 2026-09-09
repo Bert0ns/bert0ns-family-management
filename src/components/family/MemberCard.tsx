@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { ShieldCheck, User, Eye, ChevronRight, ReceiptText } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { FamilyMember } from '@/types';
 import { Avatar } from '@/components/common/Avatar';
 import { Badge } from '@/components/common/Badge';
@@ -25,6 +26,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
   onSelect,
 }) => {
   const { theme, spacing, typography } = useTheme();
+  const { t } = useI18n();
 
   const getRoleIcon = () => {
     switch (member.role) {
@@ -50,6 +52,18 @@ export const MemberCard: React.FC<MemberCardProps> = ({
     }
   };
 
+  const getRoleLabel = () => {
+    switch (member.role) {
+      case 'ADMIN':
+        return t.family.roleAdmin;
+      case 'VIEWER':
+        return t.family.roleViewer;
+      case 'MEMBER':
+      default:
+        return t.family.roleMember;
+    }
+  };
+
   const content = (
     <Card padding="md" style={{ marginBottom: spacing.sm }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -72,14 +86,14 @@ export const MemberCard: React.FC<MemberCardProps> = ({
               >
                 {member.display_name}
               </Text>
-              {isCurrentUser && <Badge label="You" color={theme.colors.brand} size="sm" />}
+              {isCurrentUser && <Badge label={t.family.currentUser} color={theme.colors.brand} size="sm" />}
             </View>
 
             <View
               style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: 4 }}
             >
               <Badge
-                label={member.role}
+                label={getRoleLabel()}
                 color={getRoleBadgeColor()}
                 size="sm"
                 variant="subtle"

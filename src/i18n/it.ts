@@ -18,6 +18,9 @@ export const it: TranslationSchema = {
     total: 'Totale',
     confirm: 'Conferma',
     optional: 'Opzionale',
+    of: 'di',
+    previousMonth: 'Mese precedente',
+    nextMonth: 'Mese successivo',
   },
   tabs: {
     dashboard: 'Panoramica',
@@ -43,6 +46,7 @@ export const it: TranslationSchema = {
     quickAddButton: 'Aggiungi Spesa',
     thisMonthSpending: 'Spesa di Questo Mese',
     bulkImportButton: 'Importa Spese in Blocco',
+    ofTotal: 'del totale',
   },
   analytics: {
     categoriesTab: 'Categorie',
@@ -160,6 +164,10 @@ export const it: TranslationSchema = {
     categoryNamePlaceholder: 'es. Animali, Abbonamenti, Vacanze',
     selectIcon: 'Seleziona Icona',
     selectColor: 'Seleziona Colore',
+    currentUser: 'Tu',
+    relatedData: 'Dati correlati',
+    splitShares: 'quote condivise',
+    splitParticipations: 'quote condivise',
   },
   settings: {
     title: 'Impostazioni & Preferenze',
@@ -198,6 +206,8 @@ export const it: TranslationSchema = {
     privacyGuaranteeBadge: 'Zero Cloud AI',
     privacyGuaranteeDescription:
       'I tuoi dati finanziari rimangono strettamente privati e locali. Nessun servizio IA di terze parti analizza le tue spese.',
+    localFirstBadge: 'Locale',
+    privacyGuaranteeFooter: 'Persistenza 100% sul Dispositivo + Supabase Piano Gratuito ($0)',
   },
   addExpense: {
     title: 'Aggiungi Nuova Spesa',
@@ -288,5 +298,10 @@ export const it: TranslationSchema = {
     invalidCodeError: 'Codice non valido o famiglia non trovata.',
     migrationPrompt: 'Migrare i dati locali nel nucleo familiare?',
     migrateSuccess: 'Dati sincronizzati nel cloud con successo!',
+    pairingButton: 'Invito / Associa',
+    invalidEmailError: 'Inserisci un indirizzo email valido',
+    invalidOtpError: 'Inserisci il codice completo a 6 cifre',
+    changeEmailOrResend: 'Modifica Email / Reinvia',
+    joinedHouseholdTitle: 'Nucleo Familiare Associato',
   },
 };

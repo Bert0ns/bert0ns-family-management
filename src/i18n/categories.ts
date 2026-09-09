@@ -79,7 +79,7 @@ export function getLocalizedCategoryName(
   category: Category | string | undefined | null,
   t: TranslationSchema,
 ): string {
-  if (!category) return t.expenseDetail.uncategorized || 'Spesa';
+  if (!category) return t.expenseDetail.uncategorized || t.categories.other;
 
   const catId = typeof category === 'string' ? category : category.id;
   const rawName = typeof category === 'string' ? category : category.name;
@@ -100,7 +100,7 @@ export function getLocalizedCategoryName(
     return rawName;
   }
 
-  return t.expenseDetail.uncategorized || 'Spesa';
+  return t.expenseDetail.uncategorized || t.categories.other;
 }
 
 /**

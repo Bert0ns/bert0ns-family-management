@@ -27,7 +27,7 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
   const catColor = category?.color || theme.colors.brand;
   const catIcon = category?.icon || 'Tag';
   const catName = getLocalizedCategoryName(category, t);
-  const memberName = member?.display_name || 'Famiglia';
+  const memberName = member?.display_name || t.tabs.family;
 
   const dateLocale = locale === 'it' ? 'it-IT' : 'en-US';
   const formattedDate = new Date(expense.transaction_date).toLocaleDateString(dateLocale, {
@@ -152,7 +152,7 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
         <Text
           style={{
             color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.lg,
+            fontSize: typography.fontSizes.xl,
             fontWeight: typography.fontWeights.heavy,
           }}
         >

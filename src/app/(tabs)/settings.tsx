@@ -364,7 +364,7 @@ export default function SettingsScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Button
-                  title={t.sync.familyPairingTitle.split(' ')[0]}
+                  title={t.sync.pairingButton}
                   variant="outline"
                   size="sm"
                   icon={<Users size={14} color={theme.colors.textPrimary} />}
@@ -408,7 +408,7 @@ export default function SettingsScreen() {
                 >
                   {t.settings.cloudStatusLocal}
                 </Text>
-                <Badge label="Local-First" color={theme.colors.success} size="sm" variant="solid" />
+                <Badge label={t.settings.localFirstBadge} color={theme.colors.success} size="sm" variant="solid" />
               </View>
               <Text
                 style={{
@@ -435,7 +435,7 @@ export default function SettingsScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Button
-                  title={t.sync.familyPairingTitle.split(' ')[0]}
+                  title={t.sync.pairingButton}
                   variant="outline"
                   size="sm"
                   icon={<Users size={14} color={theme.colors.textPrimary} />}
@@ -450,7 +450,7 @@ export default function SettingsScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.xs }}>
           <Lock size={12} color={theme.colors.textMuted} />
           <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
-            {t.settings.privacyGuaranteeTitle}: 100% On-Device Persistence + Supabase Free Tier ($0)
+            {t.settings.privacyGuaranteeTitle}: {t.settings.privacyGuaranteeFooter}
           </Text>
         </View>
       </Card>

@@ -44,7 +44,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
   const catColor = resolvedCategory?.color || theme.colors.brand;
   const catIcon = resolvedCategory?.icon || 'Tag';
   const catName = getLocalizedCategoryName(resolvedCategory, t);
-  const memberName = resolvedMember?.display_name || 'Family';
+  const memberName = resolvedMember?.display_name || t.tabs.family;
 
   const dateLocale = locale === 'it' ? 'it-IT' : 'en-US';
   const localizedPaymentMethod = getLocalizedPaymentMethod(expense.payment_method, t);
@@ -273,7 +273,10 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                     <CreditCard size={18} color={theme.colors.textSecondary} />
                     <Text
-                      style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.sm }}
+                      style={{
+                        color: theme.colors.textSecondary,
+                        fontSize: typography.fontSizes.sm,
+                      }}
                     >
                       {t.expenseDetail.paymentMethod}
                     </Text>
@@ -284,12 +287,12 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                       fontWeight: typography.fontWeights.semibold,
                     }}
                   >
-                    {localizedPaymentMethod || expense.payment_method}
+                    {localizedPaymentMethod}
                   </Text>
                 </View>
               )}
 
-              {/* Split Breakdown (if shared) */}
+              {/* Split Breakdown */}
               {expense.splits && expense.splits.length > 0 && (
                 <View
                   style={{
@@ -303,7 +306,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                       flexDirection: 'row',
                       alignItems: 'center',
                       gap: spacing.xs,
-                      marginBottom: spacing.xs,
+                      marginBottom: spacing.sm,
                     }}
                   >
                     <Split size={16} color={theme.colors.brand} />
@@ -336,7 +339,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                               fontSize: typography.fontSizes.xs,
                             }}
                           >
-                            {splitMember?.display_name || 'Member'}
+                            {splitMember?.display_name || t.family.roleMember}
                           </Text>
                           <Text
                             style={{

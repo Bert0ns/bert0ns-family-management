@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Users, Check, Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { FamilyMember, ExpenseSplit } from '@/types';
 import { calculateEqualSplits } from '@/services/splitCalculator';
 import { Avatar } from '@/components/common/Avatar';
@@ -23,6 +24,7 @@ export const SplitCalculator: React.FC<SplitCalculatorProps> = ({
   onSplitsChange,
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
 
   const [isSplitEnabled, setIsSplitEnabled] = useState<boolean>(
     initialSplits && initialSplits.length > 0 ? true : false,
@@ -84,7 +86,7 @@ export const SplitCalculator: React.FC<SplitCalculatorProps> = ({
               fontWeight: typography.fontWeights.bold,
             }}
           >
-            Split this Expense
+            {t.addExpense.splitExpense}
           </Text>
         </View>
 
@@ -107,7 +109,7 @@ export const SplitCalculator: React.FC<SplitCalculatorProps> = ({
               fontWeight: typography.fontWeights.semibold,
             }}
           >
-            {isSplitEnabled ? 'Enabled' : 'Disabled'}
+            {isSplitEnabled ? t.addExpense.splitEnabled : t.addExpense.splitDisabled}
           </Text>
         </TouchableOpacity>
       </View>
@@ -116,7 +118,7 @@ export const SplitCalculator: React.FC<SplitCalculatorProps> = ({
       {isSplitEnabled && (
         <View style={{ gap: spacing.sm }}>
           <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}>
-            Select members sharing this cost ({selectedMemberIds.length} of {members.length}):
+            {t.addExpense.splitSelectMembers} ({selectedMemberIds.length} {t.common.of} {members.length}):
           </Text>
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
@@ -175,7 +177,7 @@ export const SplitCalculator: React.FC<SplitCalculatorProps> = ({
             }}
           >
             <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}>
-              Each member owes:
+              {t.addExpense.eachMemberOwes}
             </Text>
             <Text
               style={{
