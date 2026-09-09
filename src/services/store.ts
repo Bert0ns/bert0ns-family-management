@@ -2,59 +2,65 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  Family,
-  FamilyMember,
-  Category,
   Expense,
-  ImportBatch,
+  Category,
+  FamilyMember,
+  Family,
   FilterOptions,
-  RawExpenseReport,
   ExpenseSplit,
+  ImportBatch,
+  RawExpenseReport,
+  MutationOperation,
 } from '@/types';
 import {
-  INITIAL_FAMILY,
-  INITIAL_MEMBERS,
-  INITIAL_CATEGORIES,
   INITIAL_EXPENSES,
+  INITIAL_CATEGORIES,
+  INITIAL_MEMBERS,
+  INITIAL_FAMILY,
 } from '@/data/mockData';
-import { calculateEqualSplits } from './splitCalculator';
-import { storeLogger } from '@/services/logger';
+import { calculateEqualSplits } from '@/services/splitCalculator';
 import { generateUUID } from '@/utils/uuid';
 import { CATEGORY_I18N_KEY_MAP } from '@/i18n/categories';
+import { storeLogger } from '@/services/logger';
 
-interface AppState {
+export interface AppState {
+  // Domain entities
   family: Family;
   members: FamilyMember[];
   categories: Category[];
   expenses: Expense[];
   importBatches: ImportBatch[];
+
+  // App UI State
   currentMemberId: string;
-  selectedPeriod: string; // YYYY-MM
+  selectedPeriod: string; // "YYYY-MM" format
   filters: FilterOptions;
 
-  // Actions
+  // Actions - UI & Navigation
   setCurrentMemberId: (id: string) => void;
   setSelectedPeriod: (period: string) => void;
   setFilters: (filters: Partial<FilterOptions>) => void;
   resetFilters: () => void;
 
-  // Expense CRUD
-  addExpense: (expense: Omit<Expense, 'id' | 'created_at' | 'family_id'>) => Expense;
+  // Actions - Expenses
+  addExpense: (expense: Omit<Expense, 'id' | 'created_at' | 'updated_at' | 'family_id'>) => Expense;
   updateExpense: (id: string, updates: Partial<Expense>) => void;
   deleteExpense: (id: string) => void;
   clearAllExpenses: () => void;
 
-  // Family & Member Actions
-  updateFamilySettings: (updates: { name?: string }) => void;
-  addMember: (member: Omit<FamilyMember, 'id' | 'family_id'>) => FamilyMember;
+  // Actions - Family & Members
+  updateFamilySettings: (updates: { name?: string; invite_code?: string }) => void;
+  addMember: (
+    member: Omit<FamilyMember, 'id' | 'created_at' | 'updated_at' | 'family_id'>,
+  ) => FamilyMember;
   updateMember: (id: string, updates: Partial<FamilyMember>) => void;
   deleteMember: (id: string) => void;
 
-  // Category Actions
+  // Actions - Categories
   addCategory: (category: Omit<Category, 'id' | 'family_id'>) => Category;
   deleteCategory: (id: string) => void;
 
-  // Import JSON Actions
+  // Actions - Import
   importExpenseReport: (
     report: RawExpenseReport,
     fileName: string,
@@ -75,26 +81,32 @@ interface AppState {
 
 export type StoreMutationEvent = {
   entity: 'expense' | 'category' | 'member' | 'family';
-  operation: 'INSERT' | 'UPDATE' | 'DELETE';
+  operation: MutationOperation;
   entity_id: string;
   payload: any;
 };
 
 type StoreMutationListener = (event: StoreMutationEvent) => void;
-let mutationListener: StoreMutationListener | null = null;
+const mutationListeners = new Set<StoreMutationListener>();
 
-export const registerStoreMutationListener = (listener: StoreMutationListener | null) => {
-  mutationListener = listener;
+export const registerStoreMutationListener = (
+  listener: StoreMutationListener | null,
+): (() => void) => {
+  if (!listener) return () => {};
+  mutationListeners.add(listener);
+  return () => {
+    mutationListeners.delete(listener);
+  };
 };
 
 const notifyStoreMutation = (event: StoreMutationEvent) => {
-  if (mutationListener) {
+  mutationListeners.forEach((listener) => {
     try {
-      mutationListener(event);
+      listener(event);
     } catch (err) {
       storeLogger.error('Error in store mutation listener', { error: err });
     }
-  }
+  });
 };
 
 const DEFAULT_FILTERS: FilterOptions = {
@@ -113,9 +125,18 @@ export const useAppStore = create<AppState>()(
       selectedPeriod: '2026-08',
       filters: DEFAULT_FILTERS,
 
-      setCurrentMemberId: (id) => set({ currentMemberId: id }),
-      setSelectedPeriod: (period) => set({ selectedPeriod: period }),
-      setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
+      setCurrentMemberId: (id) => {
+        storeLogger.debug('Active member changed', { id });
+        set({ currentMemberId: id });
+      },
+
+      setSelectedPeriod: (period) => {
+        storeLogger.debug('Active period changed', { period });
+        set({ selectedPeriod: period });
+      },
+
+      setFilters: (filters) =>
+        set((state) => ({ filters: { ...state.filters, ...filters } })),
       resetFilters: () => set({ filters: DEFAULT_FILTERS }),
 
       updateFamilySettings: (updates) => {
@@ -125,7 +146,7 @@ export const useAppStore = create<AppState>()(
           notifyStoreMutation({
             entity: 'family',
             operation: 'UPDATE',
-            entity_id: updatedFamily.id,
+            entity_id: state.family.id,
             payload: updatedFamily,
           });
           return { family: updatedFamily };
@@ -164,7 +185,19 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           expenses: state.expenses.map((e) => {
             if (e.id === id) {
-              updatedExpense = { ...e, ...updates, updated_at: now };
+              let nextSplits = updates.splits !== undefined ? updates.splits : e.splits;
+              if (
+                updates.amount !== undefined &&
+                updates.amount !== e.amount &&
+                updates.splits === undefined &&
+                nextSplits &&
+                nextSplits.length > 0
+              ) {
+                const memberIds = nextSplits.map((s) => s.member_id);
+                nextSplits = calculateEqualSplits(updates.amount, memberIds);
+              }
+
+              updatedExpense = { ...e, ...updates, splits: nextSplits, updated_at: now };
               return updatedExpense;
             }
             return e;
@@ -255,21 +288,27 @@ export const useAppStore = create<AppState>()(
 
         const remainingMembers = state.members.filter((m) => m.id !== id);
 
-        // Cascade delete: remove all expenses paid by this member,
-        // and remove this member from split breakdowns on remaining expenses
+        const cascadedDeletedExpenses = state.expenses.filter((e) => e.paid_by_member_id === id);
+        const modifiedJointExpenses: Expense[] = [];
+
         const updatedExpenses = state.expenses
           .filter((e) => e.paid_by_member_id !== id)
           .map((e) => {
             if (!e.splits || e.splits.length === 0) return e;
             const remainingSplits = e.splits.filter((s) => s.member_id !== id);
             if (remainingSplits.length <= 1) {
-              return { ...e, splits: undefined };
+              const modified = { ...e, splits: undefined, updated_at: new Date().toISOString() };
+              modifiedJointExpenses.push(modified);
+              return modified;
             }
             const remainingMemberIds = remainingSplits.map((s) => s.member_id);
-            return {
+            const modified = {
               ...e,
               splits: calculateEqualSplits(e.amount, remainingMemberIds),
+              updated_at: new Date().toISOString(),
             };
+            modifiedJointExpenses.push(modified);
+            return modified;
           });
 
         const newCurrentMemberId =
@@ -284,12 +323,32 @@ export const useAppStore = create<AppState>()(
         storeLogger.info('Member deleted with cascade', {
           id,
           remainingMembersCount: remainingMembers.length,
+          cascadedDeletedExpensesCount: cascadedDeletedExpenses.length,
         });
+
         set({
           members: remainingMembers,
           expenses: updatedExpenses,
           currentMemberId: newCurrentMemberId,
           importBatches: updatedBatches,
+        });
+
+        cascadedDeletedExpenses.forEach((exp) => {
+          notifyStoreMutation({
+            entity: 'expense',
+            operation: 'DELETE',
+            entity_id: exp.id,
+            payload: { id: exp.id },
+          });
+        });
+
+        modifiedJointExpenses.forEach((exp) => {
+          notifyStoreMutation({
+            entity: 'expense',
+            operation: 'UPDATE',
+            entity_id: exp.id,
+            payload: exp,
+          });
         });
 
         notifyStoreMutation({
@@ -320,20 +379,42 @@ export const useAppStore = create<AppState>()(
 
       deleteCategory: (id) => {
         const state = get();
-        const fallbackCat = state.categories.find((c) => c.id !== id) || state.categories[0];
+        if (state.categories.length <= 1) {
+          storeLogger.warn('Attempted to delete the only remaining category', { id });
+          return;
+        }
+
+        const fallbackCat = state.categories.find((c) => c.id !== id);
+        if (!fallbackCat) return;
+
         storeLogger.info('Category deleted', { id, fallbackId: fallbackCat?.id });
+        const now = new Date().toISOString();
+        const updatedExpenses = state.expenses.map((e) =>
+          e.category_id === id ? { ...e, category_id: fallbackCat?.id || '', updated_at: now } : e,
+        );
+
         set((state) => ({
           categories: state.categories.filter((c) => c.id !== id),
-          expenses: state.expenses.map((e) =>
-            e.category_id === id ? { ...e, category_id: fallbackCat?.id || '' } : e,
-          ),
+          expenses: updatedExpenses,
         }));
+
         notifyStoreMutation({
           entity: 'category',
           operation: 'DELETE',
           entity_id: id,
           payload: { id },
         });
+
+        updatedExpenses
+          .filter((e) => e.category_id === fallbackCat?.id && e.updated_at === now)
+          .forEach((exp) => {
+            notifyStoreMutation({
+              entity: 'expense',
+              operation: 'UPDATE',
+              entity_id: exp.id,
+              payload: exp,
+            });
+          });
       },
 
       importExpenseReport: (report, fileName) => {
@@ -343,13 +424,13 @@ export const useAppStore = create<AppState>()(
           totalExpenses: report.expenses.length,
         });
 
-        const batchId = `batch_${Date.now()}`;
+        const batchId = generateUUID();
         const totalAmount = report.expenses.reduce((sum, e) => sum + e.amount, 0);
 
         const uploaderMember =
           state.members.find((m) => m.id === state.currentMemberId) || state.members[0];
 
-        const newExpenses: Expense[] = report.expenses.map((rawExp, index) => {
+        const newExpenses: Expense[] = report.expenses.map((rawExp) => {
           let paidMember = uploaderMember;
           if (rawExp.paid_by) {
             const found = state.members.find(
@@ -358,7 +439,6 @@ export const useAppStore = create<AppState>()(
             if (found) paidMember = found;
           }
 
-          // Match category name or id or normalized key, fallback to "General & Other"
           const rawCat = rawExp.category ? rawExp.category.toLowerCase().trim() : '';
           const mappedKey = CATEGORY_I18N_KEY_MAP[rawCat];
           const matchedCat =
@@ -374,7 +454,6 @@ export const useAppStore = create<AppState>()(
             state.categories.find((c) => c.id === 'cat_other') ||
             state.categories[0];
 
-          // Retain and calculate splits if defined in the import payload
           let splits: ExpenseSplit[] | undefined = undefined;
           if (rawExp.split?.is_split) {
             let targetMemberIds: string[] = [];
@@ -393,8 +472,9 @@ export const useAppStore = create<AppState>()(
             splits = calculateEqualSplits(rawExp.amount, targetMemberIds);
           }
 
+          const now = new Date().toISOString();
           return {
-            id: `exp_imp_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 6)}`,
+            id: generateUUID(),
             family_id: state.family.id,
             paid_by_member_id: paidMember?.id || 'mem_1',
             category_id: matchedCat?.id || 'cat_other',
@@ -407,7 +487,8 @@ export const useAppStore = create<AppState>()(
             is_recurring: rawExp.is_recurring,
             is_verified: true,
             splits: splits && splits.length > 0 ? splits : undefined,
-            created_at: new Date().toISOString(),
+            created_at: now,
+            updated_at: now,
           };
         });
 
@@ -426,6 +507,15 @@ export const useAppStore = create<AppState>()(
           expenses: [...newExpenses, ...state.expenses],
           importBatches: [newBatch, ...state.importBatches],
         }));
+
+        newExpenses.forEach((exp) => {
+          notifyStoreMutation({
+            entity: 'expense',
+            operation: 'INSERT',
+            entity_id: exp.id,
+            payload: exp,
+          });
+        });
 
         return { importedCount: newExpenses.length, totalAmount, batchId };
       },
@@ -450,56 +540,57 @@ export const useAppStore = create<AppState>()(
 
       reconcileRemoteExpenses: (remoteList) => {
         set((state) => {
-          const current = [...state.expenses];
+          const map = new Map(state.expenses.map((e) => [e.id, e]));
+
           remoteList.forEach((remote) => {
-            const idx = current.findIndex((e) => e.id === remote.id);
-            if (idx === -1) {
-              current.unshift(remote);
+            const local = map.get(remote.id);
+            if (!local) {
+              map.set(remote.id, remote);
             } else {
-              const local = current[idx];
               const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
               const localTime = local.updated_at ? new Date(local.updated_at).getTime() : 0;
               if (remoteTime >= localTime) {
-                current[idx] = remote;
+                map.set(remote.id, {
+                  ...remote,
+                  splits: remote.splits !== undefined ? remote.splits : local.splits,
+                });
               }
             }
           });
-          return { expenses: current };
+
+          const sorted = Array.from(map.values()).sort(
+            (a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime(),
+          );
+          return { expenses: sorted };
         });
       },
 
       reconcileRemoteCategories: (remoteList) => {
         set((state) => {
-          const current = [...state.categories];
+          const map = new Map(state.categories.map((c) => [c.id, c]));
           remoteList.forEach((remote) => {
-            const idx = current.findIndex((c) => c.id === remote.id);
-            if (idx === -1) {
-              current.push(remote);
-            } else {
-              current[idx] = remote;
-            }
+            map.set(remote.id, remote);
           });
-          return { categories: current };
+          return { categories: Array.from(map.values()) };
         });
       },
 
       reconcileRemoteMembers: (remoteList) => {
         set((state) => {
-          const current = [...state.members];
+          const map = new Map(state.members.map((m) => [m.id, m]));
           remoteList.forEach((remote) => {
-            const idx = current.findIndex((m) => m.id === remote.id);
-            if (idx === -1) {
-              current.push(remote);
+            const local = map.get(remote.id);
+            if (!local) {
+              map.set(remote.id, remote);
             } else {
-              const local = current[idx];
               const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
               const localTime = local.updated_at ? new Date(local.updated_at).getTime() : 0;
               if (remoteTime >= localTime) {
-                current[idx] = { ...remote, is_current_user: local.is_current_user };
+                map.set(remote.id, { ...remote, is_current_user: local.is_current_user });
               }
             }
           });
-          return { members: current };
+          return { members: Array.from(map.values()) };
         });
       },
 
@@ -532,7 +623,9 @@ export const useAppStore = create<AppState>()(
           if (!hasBankRelated) {
             const bankCat = INITIAL_CATEGORIES.find((c) => c.id === 'cat_bank_related');
             if (bankCat) {
-              state.categories = [...state.categories, bankCat];
+              useAppStore.setState((s) => ({
+                categories: [...s.categories, bankCat],
+              }));
             }
           }
         }
@@ -542,10 +635,20 @@ export const useAppStore = create<AppState>()(
         members: state.members,
         categories: state.categories,
         expenses: state.expenses,
-        importBatches: state.importBatches,
+        importBatches: state.importBatches.map(({ raw_payload, ...rest }) => rest as ImportBatch),
         currentMemberId: state.currentMemberId,
         selectedPeriod: state.selectedPeriod,
       }),
     },
   ),
 );
+
+// Atomic Selector Helpers to avoid full-tree re-render storms
+export const selectExpenses = (state: AppState) => state.expenses;
+export const selectMembers = (state: AppState) => state.members;
+export const selectCategories = (state: AppState) => state.categories;
+export const selectFamily = (state: AppState) => state.family;
+export const selectCurrentMemberId = (state: AppState) => state.currentMemberId;
+export const selectSelectedPeriod = (state: AppState) => state.selectedPeriod;
+export const selectFilters = (state: AppState) => state.filters;
+export const selectImportBatches = (state: AppState) => state.importBatches;

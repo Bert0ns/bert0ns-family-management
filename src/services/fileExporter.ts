@@ -7,13 +7,14 @@ export type ExportMimeType = 'text/csv' | 'application/json';
 
 /**
  * Cross-platform file exporter.
- * On Web: downloads via Blob URL.
+ * On Web: downloads via Blob URL and promptly revokes the object URL.
  * On iOS/Android: writes to cache directory using expo-file-system and opens native share sheet with expo-sharing.
  */
 export async function exportAndShareFile(
   content: string,
   fileName: string,
   mimeType: ExportMimeType = 'text/csv',
+  showAlertOnFailure: boolean = true,
 ): Promise<boolean> {
   exportLogger.info('Starting file export', { fileName, mimeType, platform: Platform.OS });
 
@@ -26,7 +27,12 @@ export async function exportAndShareFile(
       link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+        if (typeof URL.revokeObjectURL === "function") { URL.revokeObjectURL(url); }
+      }, 100);
       exportLogger.info('Web blob download completed', { fileName });
       return true;
     }
@@ -34,8 +40,9 @@ export async function exportAndShareFile(
     return false;
   }
 
+  let file: File | undefined;
   try {
-    const file = new File(Paths.cache, fileName);
+    file = new File(Paths.cache, fileName);
     if (file.exists) {
       file.delete();
     }
@@ -53,12 +60,21 @@ export async function exportAndShareFile(
       return true;
     } else {
       exportLogger.warn('Native sharing unavailable on device');
-      Alert.alert('Sharing Unavailable', 'Native sharing is not supported on this device.');
+      if (showAlertOnFailure) {
+        Alert.alert('Sharing Unavailable', 'Native sharing is not supported on this device.');
+      }
       return false;
     }
   } catch (error: any) {
     exportLogger.error('Failed to export file', error);
-    Alert.alert('Export Error', error?.message || 'Failed to export file on this device.');
+    if (file && file.exists) {
+      try {
+        file.delete();
+      } catch {}
+    }
+    if (showAlertOnFailure) {
+      Alert.alert('Export Error', error?.message || 'Failed to export file on this device.');
+    }
     return false;
   }
 }
