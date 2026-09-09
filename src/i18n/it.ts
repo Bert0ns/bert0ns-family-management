@@ -129,6 +129,26 @@ export const it: TranslationSchema = {
     totalAmount: 'Importo Totale',
     importTransactions: 'Importa Transazioni',
     duplicateWarning: 'possibili duplicati rilevati. Verranno comunque importati se confermi.',
+    aiPromptTitle: 'Estrai Spese con l’AI',
+    aiPromptSubtitle:
+      'Copia un prompt ottimizzato per ChatGPT, Claude o Gemini per convertire l’estratto conto PDF bancario in un file JSON importabile.',
+    copyPrompt: 'Copia Prompt AI',
+    promptCopied: 'Prompt copiato negli appunti!',
+    viewPrompt: 'Visualizza Prompt',
+    promptModalTitle: 'Prompt AI Estratto Conto',
+    promptModalSubtitle: 'Generato dinamicamente con le tue {count} categorie di spesa attive.',
+    pasteJsonTitle: 'Incolla Testo JSON',
+    pasteJsonSubtitle:
+      'Incolla direttamente l’output JSON del tuo assistente AI senza dover salvare file.',
+    pasteJsonButton: 'Elabora e Mostra Spese',
+    pasteJsonPlaceholder:
+      'Incolla qui il JSON (i blocchi di codice markdown ```json vengono rimossi automaticamente)...',
+    pasteFromClipboard: 'Incolla dagli Appunti',
+    pasteActionPrompt: 'Oppure incolla direttamente il testo JSON',
+    step1Label: '1. Copia Prompt AI',
+    step2Label: '2. Allega PDF in ChatGPT / Claude',
+    step3Label: '3. Incolla o Trascina JSON',
+    categoriesIncluded: '{count} categorie incluse',
   },
   family: {
     activeWorkspace: 'Spazio Attivo',

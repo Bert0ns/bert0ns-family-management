@@ -126,6 +126,23 @@ export interface TranslationSchema {
     totalAmount: string;
     importTransactions: string;
     duplicateWarning: string;
+    aiPromptTitle: string;
+    aiPromptSubtitle: string;
+    copyPrompt: string;
+    promptCopied: string;
+    viewPrompt: string;
+    promptModalTitle: string;
+    promptModalSubtitle: string;
+    pasteJsonTitle: string;
+    pasteJsonSubtitle: string;
+    pasteJsonButton: string;
+    pasteJsonPlaceholder: string;
+    pasteFromClipboard: string;
+    pasteActionPrompt: string;
+    step1Label: string;
+    step2Label: string;
+    step3Label: string;
+    categoriesIncluded: string;
   };
   family: {
     activeWorkspace: string;

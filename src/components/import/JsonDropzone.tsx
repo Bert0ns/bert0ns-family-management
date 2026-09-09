@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import { Upload, FileJson, AlertCircle } from 'lucide-react-native';
+import { Upload, FileJson, AlertCircle, ClipboardPaste } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { RawExpenseReport } from '@/types';
 import { reportValidator } from '@/services/validator';
+import { jsonExtractor } from '@/services/jsonExtractor';
 
 interface JsonDropzoneProps {
   onFileParsed: (report: RawExpenseReport, fileName: string) => void;
+  onOpenPasteModal?: () => void;
 }
 
-export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed }) => {
+export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpenPasteModal }) => {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
   const [loading, setLoading] = useState(false);
@@ -20,11 +22,18 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed }) => {
   const processJsonText = (jsonString: string, fileName: string) => {
     try {
       setErrorMessage(null);
-      const rawData = JSON.parse(jsonString);
-      const validationResult = reportValidator.validate(rawData);
+      // Use resilient jsonExtractor to clean markdown blocks or preambles
+      const extracted = jsonExtractor.extract(jsonString);
+      if (!extracted.success || !extracted.data) {
+        setErrorMessage(`JSON error: ${extracted.error || 'Invalid JSON format'}`);
+        return;
+      }
 
+      const validationResult = reportValidator.validate(extracted.data);
       if (!validationResult.success || !validationResult.data) {
-        setErrorMessage(`Validation error: ${validationResult.error || 'Invalid JSON format'}`);
+        setErrorMessage(
+          `Validation error: ${validationResult.error || 'Invalid expense report format'}`,
+        );
         return;
       }
 
@@ -48,7 +57,6 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed }) => {
         const file = result.assets[0];
 
         if (Platform.OS === 'web') {
-          // On Web, file.file or fetch URI
           if (file.file) {
             const text = await (file.file as any).text();
             processJsonText(text, file.name);
@@ -156,6 +164,35 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed }) => {
           )}
         </View>
       </TouchableOpacity>
+
+      {onOpenPasteModal && (
+        <TouchableOpacity
+          onPress={onOpenPasteModal}
+          activeOpacity={0.7}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: spacing.sm,
+            paddingVertical: spacing.sm,
+            backgroundColor: theme.colors.surface,
+            borderRadius: radius.md,
+            borderWidth: 1,
+            borderColor: theme.colors.border,
+          }}
+        >
+          <ClipboardPaste size={18} color={theme.colors.brand} />
+          <Text
+            style={{
+              color: theme.colors.brand,
+              fontWeight: typography.fontWeights.semibold,
+              fontSize: typography.fontSizes.sm,
+            }}
+          >
+            {t.import.pasteJsonTitle}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {errorMessage && (
         <View

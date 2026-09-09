@@ -7,6 +7,8 @@ import { useAppStore } from '@/services/store';
 import { JsonDropzone } from '@/components/import/JsonDropzone';
 import { ImportPreviewModal } from '@/components/import/ImportPreviewModal';
 import { SchemaViewer } from '@/components/import/SchemaViewer';
+import { AiPromptCard } from '@/components/import/AiPromptCard';
+import { PasteJsonModal } from '@/components/import/PasteJsonModal';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
@@ -25,6 +27,17 @@ export default function ImportScreen() {
   const [stagedReport, setStagedReport] = useState<RawExpenseReport | null>(null);
   const [stagedFileName, setStagedFileName] = useState<string>('');
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
+  const [isPasteModalOpen, setIsPasteModalOpen] = useState(false);
+
+  // Dynamic category names from household store
+  const categoryNames = React.useMemo(() => {
+    return categories.map((cat) => cat.name);
+  }, [categories]);
+
+  // Family member names from household store
+  const memberNames = React.useMemo(() => {
+    return members.map((member) => member.display_name);
+  }, [members]);
 
   const handleFileParsed = (report: RawExpenseReport, fileName: string) => {
     importLogger.info('Staging expense report for preview', {
@@ -178,9 +191,22 @@ export default function ImportScreen() {
         />
       </Card>
 
+      {/* AI Bank Statement Prompt Generator Card */}
+      <View style={{ marginBottom: spacing.lg }}>
+        <AiPromptCard
+          categories={categoryNames}
+          currency={family.currency}
+          familyMembers={memberNames}
+          onOpenPasteModal={() => setIsPasteModalOpen(true)}
+        />
+      </View>
+
       {/* Main Upload Dropzone */}
       <View style={{ marginBottom: spacing.lg }}>
-        <JsonDropzone onFileParsed={handleFileParsed} />
+        <JsonDropzone
+          onFileParsed={handleFileParsed}
+          onOpenPasteModal={() => setIsPasteModalOpen(true)}
+        />
       </View>
 
       {/* Schema Template Viewer */}
@@ -290,6 +316,13 @@ export default function ImportScreen() {
           </View>
         </View>
       )}
+
+      {/* Direct Paste JSON Modal */}
+      <PasteJsonModal
+        visible={isPasteModalOpen}
+        onClose={() => setIsPasteModalOpen(false)}
+        onReportParsed={handleFileParsed}
+      />
 
       {/* Staged Report Confirmation Modal */}
       <ImportPreviewModal
