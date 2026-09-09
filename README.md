@@ -31,13 +31,13 @@ The application includes a built-in import engine for bulk transaction ingestion
 
 ### JSON Schema Specification
 
-| Field              | Type     |   Required   | Description                                                                     |
-| :----------------- | :------- | :----------: | :------------------------------------------------------------------------------ |
-| `report_title`     | `string` |   Optional   | Title of the statement or export batch                                          |
-| `currency`         | `string` |   Optional   | Currency symbol or code (e.g. `"EUR"`, `"€"`, `"USD"`, `"$"`, default: `"EUR"`) |
-| `statement_period` | `object` |   Optional   | `{ start_date?: "YYYY-MM-DD", end_date?: "YYYY-MM-DD" }`                        |
-| `uploaded_by`      | `string` |   Optional   | Name of the uploader                                                            |
-| `expenses`         | `array`  | **Required** | Array of expense objects (minimum 1 item)                                       |
+| Field              | Type     |   Required   | Description                                                           |
+| :----------------- | :------- | :----------: | :-------------------------------------------------------------------- |
+| `report_title`     | `string` |   Optional   | Title of the statement or export batch                                |
+| `currency`         | `string` |   Optional   | Currency symbol or code (strictly `"EUR"` or `"€"`, default: `"EUR"`) |
+| `statement_period` | `object` |   Optional   | `{ start_date?: "YYYY-MM-DD", end_date?: "YYYY-MM-DD" }`              |
+| `uploaded_by`      | `string` |   Optional   | Name of the uploader                                                  |
+| `expenses`         | `array`  | **Required** | Array of expense objects (minimum 1 item)                             |
 
 ### Expense Object Fields
 
@@ -120,38 +120,57 @@ The application includes a built-in import engine for bulk transaction ingestion
 
 ```
 bert0ns-family-management/
-├── __tests__/                  # Unit & integration test suites (99.4% coverage)
+├── .github/workflows/          # Automated GitHub Actions
+│   ├── ci.yml                  # PR & merge quality checks (tsc, lint, prettier, jest)
+│   ├── build-android-apk.yml   # Native GitHub Actions APK compilation & artifact upload
+│   └── supabase-keepalive.yml  # Scheduled cron ping preventing free-tier inactivity pause
+├── __tests__/                  # 17 Unit & integration test suites (99 tests, 100% pass)
 │   ├── analytics.test.ts       # KPI, burn rate, velocity, and heatmap tests
+│   ├── authService.test.ts     # Supabase authentication & session handling tests
+│   ├── business_logic_remediation.test.ts # Business logic remediation edge-case tests
 │   ├── csvExporter.test.ts     # CSV generation & escape tests
 │   ├── duplicateDetector.test.ts # Duplicate transaction detection tests
 │   ├── i18n.test.ts            # Dictionary parity & completeness tests
+│   ├── logger.test.ts          # Scoped logger & trace level tests
+│   ├── migrationService.test.ts # Schema migration & versioning tests
+│   ├── realtimeSync.test.ts    # Supabase Realtime broadcast & delta sync tests
 │   ├── splitCalculator.test.ts # Remainder-exact split math tests
-│   ├── store.test.ts           # State mutations & CRUD tests
+│   ├── store.test.ts           # State mutations, persistence & CRUD tests
+│   ├── store_remediation.test.ts # State recovery & atomic transition tests
+│   ├── syncEngine.test.ts      # Cloud synchronization & offline queue tests
+│   ├── sync_remediation.test.ts # Conflict resolution & delta replay tests
+│   ├── ui_remediation.test.ts  # Component rendering & accessibility tests
+│   ├── uuid.test.ts            # Cryptographically secure UUID generator tests
 │   └── validator.test.ts       # Zod JSON schema validation tests
 ├── src/
-│   ├── app/                    # Expo Router tab screens & navigation
+│   ├── app/                    # Expo Router screens & navigation
 │   │   ├── (tabs)/
-│   │   │   ├── _layout.tsx     # 6-tab navigation layout
+│   │   │   ├── _layout.tsx     # 5-tab navigation layout + import route
 │   │   │   ├── index.tsx       # Dashboard overview & quick actions
 │   │   │   ├── analytics.tsx   # Visual charts & trend tabs
 │   │   │   ├── ledger.tsx      # Filterable transaction ledger
 │   │   │   ├── import.tsx      # JSON dropzone & CSV export
 │   │   │   ├── family.tsx      # Household members & custom categories
-│   │   │   └── settings.tsx    # Preferences, currency, themes & data reset
+│   │   │   └── settings.tsx    # Preferences, currency, themes, cloud sync & data reset
 │   │   └── expense/
 │   │       └── add.tsx         # Add expense modal screen
 │   ├── components/
-│   │   ├── charts/             # CategoryPieChart, MemberBarChart, SpendingVelocityChart (SVG), HeatmapCalendar
-│   │   ├── common/             # Button, Card, Avatar, Badge, KPIStat, OptionSelector, FormModal, IconHelper
-│   │   ├── family/             # MemberCard, AddMemberModal, AddCategoryModal
+│   │   ├── charts/             # CategoryPieChart, MemberBarChart, SpendingVelocityChart, HeatmapCalendar, SettlementCard
+│   │   ├── common/             # Button, Card, Avatar, Badge, KPIStat, OptionSelector, FormModal, IconHelper, Input, PeriodSelector, SyncBadge
+│   │   ├── family/             # MemberCard, AddMemberModal, EditMemberModal, AddCategoryModal
 │   │   ├── import/             # JsonDropzone, ImportPreviewModal, SchemaViewer
-│   │   └── ledger/             # ExpenseItem, ExpenseDetailModal, SplitCalculator
+│   │   ├── ledger/             # ExpenseItem, ExpenseDetailModal, SplitCalculator
+│   │   └── sync/               # AuthModal (OTP login), FamilyPairingModal (household code sharing)
 │   ├── data/                   # Mock seed data & Supabase SQL schema
-│   ├── i18n/                   # Typed translation dictionaries (EN & IT)
-│   ├── services/               # AnalyticsCalculator, SplitCalculator, DuplicateDetector, CsvExporter, Store
+│   ├── i18n/                   # Typed translation dictionaries (EN & IT), categories & context
+│   ├── services/               # Analytics, Split, Duplicate, Sync, Realtime, Auth, Logger, Store, Migration
 │   ├── theme/                  # Design tokens (colors, spacing, typography, radii) & ThemeContext
-│   └── types/                  # Core domain models & Zod schemas
-└── package.json                # Project dependencies & pnpm configuration
+│   ├── types/                  # Core domain models & Zod schemas
+│   └── utils/                  # Cryptographic UUID generator
+├── AGENTS.md                   # Agent & Contributor engineering standards (SOLID principles)
+├── eas.json                    # Local WSL and standalone APK build profile
+├── package.json                # Project dependencies & pnpm configuration
+└── vercel.json                 # Web / PWA deployment configuration
 ```
 
 ---
@@ -167,7 +186,7 @@ bert0ns-family-management/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/bert0ns-family-management.git
+git clone https://github.com/Bert0ns/bert0ns-family-management.git
 cd bert0ns-family-management
 
 # Install dependencies with pnpm
@@ -193,17 +212,26 @@ pnpm ios
 ### Code Quality & Testing
 
 ```bash
-# Run all Jest test suites with coverage report
+# Run all quality checks (typecheck + lint + format:check + test)
+pnpm check-all
+
+# Run all 17 Jest test suites with coverage report
 pnpm test --coverage
 
-# Run TypeScript typecheck
+# Run strict TypeScript typecheck
 pnpm typecheck
+
+# Lint codebase with ESLint
+pnpm lint
 
 # Format code with Prettier
 pnpm format
 
-# Production Web Export
-npx expo export -p web
+# Production Web / PWA Export
+pnpm build:web
+
+# Build standalone Android APK locally in WSL (free, no cloud tokens needed)
+pnpm build:apk:local
 ```
 
 ---
