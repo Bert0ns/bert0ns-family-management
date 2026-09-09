@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 interface PeriodSelectorProps {
   selectedPeriod: string; // YYYY-MM
@@ -13,12 +14,14 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
   onPeriodChange,
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const { locale } = useI18n();
 
   const [yearStr, monthStr] = selectedPeriod.split('-');
   const year = parseInt(yearStr, 10);
   const month = parseInt(monthStr, 10);
 
-  const formattedPeriod = new Date(year, month - 1, 1).toLocaleDateString(undefined, {
+  const dateLocale = locale === 'it' ? 'it-IT' : 'en-US';
+  const formattedPeriod = new Date(year, month - 1, 1).toLocaleDateString(dateLocale, {
     month: 'long',
     year: 'numeric',
   });
@@ -51,36 +54,39 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: theme.colors.surface,
-        borderRadius: radius.md,
-        borderWidth: 1,
+        backgroundColor: theme.colors.card,
+        borderRadius: radius.xl,
+        borderWidth: 1.5,
         borderColor: theme.colors.border,
         paddingHorizontal: spacing.sm,
         paddingVertical: spacing.xs,
+        minHeight: 56,
       }}
     >
       <TouchableOpacity
         onPress={handlePrev}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        activeOpacity={0.7}
+        accessibilityLabel="Previous month"
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: radius.sm,
+          width: 46,
+          height: 46,
+          borderRadius: radius.lg,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: theme.colors.surfaceSubtle,
         }}
       >
-        <ChevronLeft size={18} color={theme.colors.textPrimary} />
+        <ChevronLeft size={24} color={theme.colors.textPrimary} />
       </TouchableOpacity>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-        <Calendar size={16} color={theme.colors.brand} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+        <Calendar size={20} color={theme.colors.brand} />
         <Text
           style={{
             color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.sm,
-            fontWeight: typography.fontWeights.bold,
+            fontSize: typography.fontSizes.md,
+            fontWeight: typography.fontWeights.heavy,
+            textTransform: 'capitalize',
           }}
         >
           {formattedPeriod}
@@ -89,17 +95,18 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
 
       <TouchableOpacity
         onPress={handleNext}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        activeOpacity={0.7}
+        accessibilityLabel="Next month"
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: radius.sm,
+          width: 46,
+          height: 46,
+          borderRadius: radius.lg,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: theme.colors.surfaceSubtle,
         }}
       >
-        <ChevronRight size={18} color={theme.colors.textPrimary} />
+        <ChevronRight size={24} color={theme.colors.textPrimary} />
       </TouchableOpacity>
     </View>
   );

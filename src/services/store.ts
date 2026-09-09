@@ -20,6 +20,7 @@ import {
 import { calculateEqualSplits } from './splitCalculator';
 import { storeLogger } from '@/services/logger';
 import { generateUUID } from '@/utils/uuid';
+import { CATEGORY_I18N_KEY_MAP } from '@/i18n/categories';
 
 interface AppState {
   family: Family;
@@ -118,19 +119,16 @@ export const useAppStore = create<AppState>()(
       resetFilters: () => set({ filters: DEFAULT_FILTERS }),
 
       updateFamilySettings: (updates) => {
-        const now = new Date().toISOString();
-        const updatedFamily: Family = {
-          ...get().family,
-          name: updates.name ?? get().family.name,
-          currency: '€',
-          updated_at: now,
-        };
-        set({ family: updatedFamily });
-        notifyStoreMutation({
-          entity: 'family',
-          operation: 'UPDATE',
-          entity_id: updatedFamily.id,
-          payload: updatedFamily,
+        storeLogger.info('Updating family settings', updates);
+        set((state) => {
+          const updatedFamily = { ...state.family, ...updates };
+          notifyStoreMutation({
+            entity: 'family',
+            operation: 'UPDATE',
+            entity_id: updatedFamily.id,
+            payload: updatedFamily,
+          });
+          return { family: updatedFamily };
         });
       },
 
@@ -144,12 +142,12 @@ export const useAppStore = create<AppState>()(
           created_at: now,
           updated_at: now,
         };
-        set((state) => ({ expenses: [newExpense, ...state.expenses] }));
         storeLogger.info('Expense added', {
           id: newExpense.id,
+          merchant: newExpense.merchant_name,
           amount: newExpense.amount,
-          categoryId: newExpense.category_id,
         });
+        set((state) => ({ expenses: [newExpense, ...state.expenses] }));
         notifyStoreMutation({
           entity: 'expense',
           operation: 'INSERT',
@@ -161,23 +159,23 @@ export const useAppStore = create<AppState>()(
 
       updateExpense: (id, updates) => {
         const now = new Date().toISOString();
-        let updatedExp: Expense | undefined;
-        storeLogger.debug('Expense updated', { id, updates });
+        let updatedExpense: Expense | undefined;
+        storeLogger.info('Expense updated', { id, updates });
         set((state) => ({
           expenses: state.expenses.map((e) => {
             if (e.id === id) {
-              updatedExp = { ...e, ...updates, updated_at: now };
-              return updatedExp;
+              updatedExpense = { ...e, ...updates, updated_at: now };
+              return updatedExpense;
             }
             return e;
           }),
         }));
-        if (updatedExp) {
+        if (updatedExpense) {
           notifyStoreMutation({
             entity: 'expense',
             operation: 'UPDATE',
             entity_id: id,
-            payload: updatedExp,
+            payload: updatedExpense,
           });
         }
       },
@@ -279,22 +277,21 @@ export const useAppStore = create<AppState>()(
 
         const updatedBatches = state.importBatches.map((b) =>
           b.imported_by_member_id === id
-            ? { ...b, imported_by_member_id: remainingMembers[0]?.id || '' }
+            ? { ...b, imported_by_member_id: remainingMembers[0]?.id || 'mem_1' }
             : b,
         );
 
-        storeLogger.info('Member cascade deleted', {
+        storeLogger.info('Member deleted with cascade', {
           id,
-          removedExpensesCount: state.expenses.length - updatedExpenses.length,
-          newCurrentMemberId,
+          remainingMembersCount: remainingMembers.length,
         });
-
         set({
           members: remainingMembers,
           expenses: updatedExpenses,
           currentMemberId: newCurrentMemberId,
           importBatches: updatedBatches,
         });
+
         notifyStoreMutation({
           entity: 'member',
           operation: 'DELETE',
@@ -303,16 +300,14 @@ export const useAppStore = create<AppState>()(
         });
       },
 
-      addCategory: (categoryData) => {
+      addCategory: (catData) => {
         const state = get();
-        const now = new Date().toISOString();
         const newCategory: Category = {
-          ...categoryData,
+          ...catData,
           id: generateUUID(),
           family_id: state.family.id,
-          created_at: now,
-          updated_at: now,
         };
+        storeLogger.info('Category added', { id: newCategory.id, name: newCategory.name });
         set((state) => ({ categories: [...state.categories, newCategory] }));
         notifyStoreMutation({
           entity: 'category',
@@ -324,8 +319,14 @@ export const useAppStore = create<AppState>()(
       },
 
       deleteCategory: (id) => {
+        const state = get();
+        const fallbackCat = state.categories.find((c) => c.id !== id) || state.categories[0];
+        storeLogger.info('Category deleted', { id, fallbackId: fallbackCat?.id });
         set((state) => ({
           categories: state.categories.filter((c) => c.id !== id),
+          expenses: state.expenses.map((e) =>
+            e.category_id === id ? { ...e, category_id: fallbackCat?.id || '' } : e,
+          ),
         }));
         notifyStoreMutation({
           entity: 'category',
@@ -337,6 +338,11 @@ export const useAppStore = create<AppState>()(
 
       importExpenseReport: (report, fileName) => {
         const state = get();
+        storeLogger.info('Importing expense report', {
+          fileName,
+          totalExpenses: report.expenses.length,
+        });
+
         const batchId = `batch_${Date.now()}`;
         const totalAmount = report.expenses.reduce((sum, e) => sum + e.amount, 0);
 
@@ -352,9 +358,19 @@ export const useAppStore = create<AppState>()(
             if (found) paidMember = found;
           }
 
-          // Match category name or fallback to "General & Other"
+          // Match category name or id or normalized key, fallback to "General & Other"
+          const rawCat = rawExp.category ? rawExp.category.toLowerCase().trim() : '';
+          const mappedKey = CATEGORY_I18N_KEY_MAP[rawCat];
           const matchedCat =
-            state.categories.find((c) => c.name.toLowerCase() === rawExp.category.toLowerCase()) ||
+            state.categories.find((c) => c.name.toLowerCase().trim() === rawCat) ||
+            state.categories.find((c) => c.id.toLowerCase() === rawCat) ||
+            (mappedKey
+              ? state.categories.find(
+                  (c) =>
+                    CATEGORY_I18N_KEY_MAP[c.id.toLowerCase()] === mappedKey ||
+                    CATEGORY_I18N_KEY_MAP[c.name.toLowerCase().trim()] === mappedKey,
+                )
+              : undefined) ||
             state.categories.find((c) => c.id === 'cat_other') ||
             state.categories[0];
 
@@ -411,13 +427,6 @@ export const useAppStore = create<AppState>()(
           importBatches: [newBatch, ...state.importBatches],
         }));
 
-        storeLogger.info('Expense report imported into store', {
-          batchId,
-          fileName,
-          importedCount: newExpenses.length,
-          totalAmount,
-        });
-
         return { importedCount: newExpenses.length, totalAmount, batchId };
       },
 
@@ -467,12 +476,7 @@ export const useAppStore = create<AppState>()(
             if (idx === -1) {
               current.push(remote);
             } else {
-              const local = current[idx];
-              const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
-              const localTime = local.updated_at ? new Date(local.updated_at).getTime() : 0;
-              if (remoteTime >= localTime) {
-                current[idx] = remote;
-              }
+              current[idx] = remote;
             }
           });
           return { categories: current };
@@ -520,6 +524,19 @@ export const useAppStore = create<AppState>()(
     {
       name: '@bert0ns_family_management_store',
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state && Array.isArray(state.categories)) {
+          const hasBankRelated = state.categories.some(
+            (c) => c.id === 'cat_bank_related' || c.name.toLowerCase() === 'bank related',
+          );
+          if (!hasBankRelated) {
+            const bankCat = INITIAL_CATEGORIES.find((c) => c.id === 'cat_bank_related');
+            if (bankCat) {
+              state.categories = [...state.categories, bankCat];
+            }
+          }
+        }
+      },
       partialize: (state) => ({
         family: state.family,
         members: state.members,

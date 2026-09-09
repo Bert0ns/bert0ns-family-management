@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { MemberSummary } from '@/services/analytics';
 import { Avatar } from '@/components/common/Avatar';
 import { Card } from '@/components/common/Card';
@@ -18,6 +19,7 @@ export const MemberBarChart: React.FC<MemberBarChartProps> = ({
   onSelectMember,
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
 
   const maxTotal = Math.max(...data.map((d) => d.total), 100);
 
@@ -50,7 +52,7 @@ export const MemberBarChart: React.FC<MemberBarChartProps> = ({
           marginBottom: spacing.md,
         }}
       >
-        Spending by Family Member
+        {t.analytics.memberSpendingTitle}
       </Text>
 
       <View style={{ alignItems: 'center', marginTop: spacing.sm }}>
@@ -119,7 +121,7 @@ export const MemberBarChart: React.FC<MemberBarChartProps> = ({
                 {item.total.toFixed(2)}
               </Text>
               <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
-                {item.percentage.toFixed(1)}% of total
+                {item.percentage.toFixed(1)}%
               </Text>
             </View>
           </View>

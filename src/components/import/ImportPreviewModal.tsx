@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, Text, Modal, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { X, CheckCircle2, AlertTriangle, FileJson, AlertCircle } from 'lucide-react-native';
+import { View, Text, Modal, ScrollView, TouchableOpacity } from 'react-native';
+import { X, CheckCircle2, AlertTriangle } from 'lucide-react-native';
 import { useTheme } from '@/theme';
-import { RawExpenseReport, Expense } from '@/types';
+import { useI18n, getLocalizedCategoryName } from '@/i18n';
+import { Expense, RawExpenseReport } from '@/types';
+import { duplicateDetector } from '@/services/duplicateDetector';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
-import { duplicateDetector } from '@/services/duplicateDetector';
 
 interface ImportPreviewModalProps {
   visible: boolean;
@@ -25,6 +26,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
   onConfirm,
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
 
   if (!report) return null;
 
@@ -78,7 +80,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                   fontWeight: typography.fontWeights.bold,
                 }}
               >
-                Review & Confirm Import
+                {t.import.reviewConfirm}
               </Text>
               <Text
                 style={{
@@ -87,7 +89,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                   marginTop: 2,
                 }}
               >
-                File: {fileName}
+                {t.import.fileLabel}: {fileName}
               </Text>
             </View>
             <TouchableOpacity
@@ -120,8 +122,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                   flex: 1,
                 }}
               >
-                {duplicateCount} potential duplicate{duplicateCount > 1 ? 's' : ''} detected. They
-                will still be imported if confirmed.
+                {duplicateCount} {t.import.duplicateWarning}
               </Text>
             </View>
           )}
@@ -141,7 +142,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
               <Text
                 style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}
               >
-                Total Transactions
+                {t.import.totalTransactions}
               </Text>
               <Text
                 style={{
@@ -150,14 +151,14 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                   fontWeight: typography.fontWeights.bold,
                 }}
               >
-                {report.expenses.length} Items
+                {report.expenses.length} {t.common.items}
               </Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
               <Text
                 style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}
               >
-                Total Amount
+                {t.import.totalAmount}
               </Text>
               <Text
                 style={{
@@ -203,7 +204,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                     </Text>
                     {exp.isDuplicate && (
                       <Badge
-                        label="Duplicate"
+                        label={t.common.duplicate}
                         color={theme.colors.warning}
                         size="sm"
                         variant="solid"
@@ -217,7 +218,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                       marginTop: 2,
                     }}
                   >
-                    {exp.date} • {exp.category}
+                    {exp.date} • {getLocalizedCategoryName(exp.category, t)}
                   </Text>
                 </View>
 
@@ -237,9 +238,9 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 
           {/* Action Buttons */}
           <View style={{ flexDirection: 'row', gap: spacing.md }}>
-            <Button title="Cancel" variant="outline" onPress={onClose} style={{ flex: 1 }} />
+            <Button title={t.common.cancel} variant="outline" onPress={onClose} style={{ flex: 1 }} />
             <Button
-              title={`Import (${report.expenses.length} Items)`}
+              title={`${t.import.importTransactions} (${report.expenses.length})`}
               variant="primary"
               icon={<CheckCircle2 size={18} color="#FFFFFF" />}
               onPress={onConfirm}

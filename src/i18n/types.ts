@@ -38,12 +38,16 @@ export interface TranslationSchema {
     noExpensesMonth: string;
     txs: string;
     totalTransactions: string;
+    quickAddButton: string;
+    thisMonthSpending: string;
+    bulkImportButton: string;
   };
   analytics: {
     categoriesTab: string;
     membersTab: string;
     trendsTab: string;
     heatmapTab: string;
+    settlementTab: string;
     topMerchants: string;
     noMerchantData: string;
     spendingVelocity: string;
@@ -52,6 +56,20 @@ export interface TranslationSchema {
     heatmapTitle: string;
     less: string;
     more: string;
+    whoOwesWho: string;
+    allSettledUp: string;
+    owes: string;
+    to: string;
+    toSettleInstruction: string;
+    categoryRank: string;
+    spendingPaceNotice: string;
+    balances: string;
+    paid: string;
+    fairShare: string;
+    velocityTitle: string;
+    velocitySubtitle: string;
+    totalSpend: string;
+    memberSpendingTitle: string;
   };
   ledger: {
     searchPlaceholder: string;
@@ -67,6 +85,19 @@ export interface TranslationSchema {
     filtersTitle: string;
     filterByMember: string;
     filterByCategory: string;
+    filterPresetAll: string;
+    filterPresetMonth: string;
+    filterPresetLastMonth: string;
+    filterPreset3Months: string;
+    filterPresetYear: string;
+    amountAll: string;
+    amountUnder20: string;
+    amount20to100: string;
+    amountOver100: string;
+    filterSummary: string;
+    applyFilters: string;
+    clearFilters: string;
+    bulkImportButton: string;
   };
   import: {
     dropzoneTitle: string;
@@ -83,6 +114,14 @@ export interface TranslationSchema {
     schemaTitle: string;
     schemaSubtitle: string;
     loadSample: string;
+    bulkImportTitle: string;
+    bulkImportSubtitle: string;
+    bulkImportButton: string;
+    fileLabel: string;
+    totalTransactions: string;
+    totalAmount: string;
+    importTransactions: string;
+    duplicateWarning: string;
   };
   family: {
     activeWorkspace: string;
@@ -169,6 +208,15 @@ export interface TranslationSchema {
     saveExpense: string;
     errorAmount: string;
     errorMerchant: string;
+    errorDate: string;
+    today: string;
+    yesterday: string;
+    customDate: string;
+    moreOptions: string;
+    fewerOptions: string;
+    optionalDetails: string;
+    quickAddSuccess: string;
+    bulkImportButton: string;
   };
   expenseDetail: {
     title: string;
@@ -178,6 +226,27 @@ export interface TranslationSchema {
     paymentMethod: string;
     splitBreakdown: string;
     notes: string;
+    uncategorized: string;
+  };
+  categories: {
+    groceries: string;
+    dining: string;
+    utilities: string;
+    transportation: string;
+    housing: string;
+    healthcare: string;
+    entertainment: string;
+    shopping: string;
+    education: string;
+    other: string;
+    bankRelated: string;
+  };
+  paymentMethods: {
+    creditCard: string;
+    bankTransfer: string;
+    cash: string;
+    debitCard: string;
+    other: string;
   };
   sync: {
     connectCloud: string;

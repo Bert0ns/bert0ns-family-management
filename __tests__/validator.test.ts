@@ -9,7 +9,7 @@ describe('ReportValidator (Zod Schema Validation Tests & Edge Cases)', () => {
 
     expect(result.success).toBe(true);
     expect(result.data).toBeDefined();
-    expect(result.data?.expenses).toHaveLength(5);
+    expect(result.data?.expenses).toHaveLength(SAMPLE_IMPORT_REPORT.expenses.length);
     expect(result.data?.currency).toBe('€');
   });
 

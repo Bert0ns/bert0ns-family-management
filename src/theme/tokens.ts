@@ -167,6 +167,13 @@ export const Radius = {
   full: 9999,
 };
 
+export const TouchTargets = {
+  sm: 48,
+  md: 56,
+  lg: 64,
+  xl: 72,
+};
+
 export const Typography = {
   fontSizes: {
     xs: 11,
@@ -177,6 +184,8 @@ export const Typography = {
     xxl: 24,
     xxxl: 30,
     display: 36,
+    giant: 40,
+    hero: 48,
   },
   fontWeights: {
     regular: '400' as const,

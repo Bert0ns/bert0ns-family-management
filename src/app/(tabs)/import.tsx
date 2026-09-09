@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import {
-  Download,
   UploadCloud,
   CheckCircle2,
   History,
-  Share2,
   FileSpreadsheet,
   FileJson,
 } from 'lucide-react-native';
@@ -119,6 +117,73 @@ export default function ImportScreen() {
         </Card>
       )}
 
+      {/* Prominent Bulk Import Action Card */}
+      <Card
+        padding="lg"
+        style={{
+          marginBottom: spacing.lg,
+          backgroundColor: theme.colors.card,
+          borderWidth: 2,
+          borderColor: theme.colors.brand,
+          shadowColor: theme.colors.brand,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.12,
+          shadowRadius: 10,
+          elevation: 3,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.md,
+            marginBottom: spacing.md,
+          }}
+        >
+          <View
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: radius.lg,
+              backgroundColor: theme.colors.brandLight,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <UploadCloud size={28} color={theme.colors.brand} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                color: theme.colors.textPrimary,
+                fontSize: typography.fontSizes.lg,
+                fontWeight: typography.fontWeights.heavy,
+              }}
+            >
+              {t.import.bulkImportTitle}
+            </Text>
+            <Text
+              style={{
+                color: theme.colors.textSecondary,
+                fontSize: typography.fontSizes.xs,
+                marginTop: 2,
+              }}
+            >
+              {t.import.bulkImportSubtitle}
+            </Text>
+          </View>
+        </View>
+
+        <Button
+          title={t.import.loadSample}
+          variant="secondary"
+          size="lg"
+          icon={<FileJson size={20} color={theme.colors.brand} />}
+          onPress={handleLoadSample}
+          style={{ width: '100%' }}
+        />
+      </Card>
+
       {/* Main Upload Dropzone */}
       <View style={{ marginBottom: spacing.lg }}>
         <JsonDropzone onFileParsed={handleFileParsed} />
@@ -201,8 +266,8 @@ export default function ImportScreen() {
                 padding="sm"
                 style={{
                   flexDirection: 'row',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
+                  justifyContent: 'space-between',
                 }}
               >
                 <View>
@@ -210,20 +275,17 @@ export default function ImportScreen() {
                     style={{
                       color: theme.colors.textPrimary,
                       fontSize: typography.fontSizes.sm,
-                      fontWeight: typography.fontWeights.semibold,
+                      fontWeight: typography.fontWeights.medium,
                     }}
                   >
                     {batch.file_name}
                   </Text>
-                  <Text
-                    style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}
-                  >
-                    {new Date(batch.created_at).toLocaleDateString()} • {batch.total_records}{' '}
-                    {t.common.items}
+                  <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
+                    {new Date(batch.created_at).toLocaleDateString()}
                   </Text>
                 </View>
                 <Badge
-                  label={`${family.currency}${batch.total_amount.toFixed(2)}`}
+                  label={`${batch.total_records} txs • ${family.currency}${batch.total_amount.toFixed(2)}`}
                   color={theme.colors.brand}
                   size="sm"
                 />
@@ -233,7 +295,7 @@ export default function ImportScreen() {
         </View>
       )}
 
-      {/* Staging Preview Modal with Duplicate Detection */}
+      {/* Staged Report Confirmation Modal */}
       <ImportPreviewModal
         visible={!!stagedReport}
         report={stagedReport}

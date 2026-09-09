@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { X, Trash2, Calendar, CreditCard, User, Tag, Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
-import { useI18n } from '@/i18n';
+import { useI18n, getLocalizedCategoryName, getLocalizedPaymentMethod } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import { Expense, Category, FamilyMember } from '@/types';
 import { Avatar } from '@/components/common/Avatar';
@@ -43,10 +43,11 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
 
   const catColor = resolvedCategory?.color || theme.colors.brand;
   const catIcon = resolvedCategory?.icon || 'Tag';
-  const catName = resolvedCategory?.name || 'Uncategorized';
+  const catName = getLocalizedCategoryName(resolvedCategory, t);
   const memberName = resolvedMember?.display_name || 'Family';
 
   const dateLocale = locale === 'it' ? 'it-IT' : 'en-US';
+  const localizedPaymentMethod = getLocalizedPaymentMethod(expense.payment_method, t);
 
   const handleDelete = () => {
     onDelete(expense.id);
@@ -105,7 +106,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: spacing.lg,
+              marginBottom: spacing.md,
             }}
           >
             <Text
@@ -261,30 +262,32 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               </View>
 
               {/* Payment Method */}
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                  <CreditCard size={18} color={theme.colors.textSecondary} />
-                  <Text
-                    style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.sm }}
-                  >
-                    {t.expenseDetail.paymentMethod}
-                  </Text>
-                </View>
-                <Text
+              {expense.payment_method && (
+                <View
                   style={{
-                    color: theme.colors.textPrimary,
-                    fontWeight: typography.fontWeights.semibold,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
                   }}
                 >
-                  {expense.payment_method || 'Standard'}
-                </Text>
-              </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                    <CreditCard size={18} color={theme.colors.textSecondary} />
+                    <Text
+                      style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.sm }}
+                    >
+                      {t.expenseDetail.paymentMethod}
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      color: theme.colors.textPrimary,
+                      fontWeight: typography.fontWeights.semibold,
+                    }}
+                  >
+                    {localizedPaymentMethod || expense.payment_method}
+                  </Text>
+                </View>
+              )}
 
               {/* Split Breakdown (if shared) */}
               {expense.splits && expense.splits.length > 0 && (

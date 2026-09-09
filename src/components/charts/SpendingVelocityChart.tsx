@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Svg, {
-  Path,
-  Line,
-  Circle,
-  Text as SvgText,
-  Defs,
-  LinearGradient,
-  Stop,
-} from 'react-native-svg';
+import { View, Text } from 'react-native';
+import Svg, { Path, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 import { DailySpendPoint } from '@/services/interfaces';
 import { Card } from '@/components/common/Card';
+import { TrendingUp, Info } from 'lucide-react-native';
 
 interface SpendingVelocityChartProps {
   data: DailySpendPoint[];
@@ -23,11 +17,12 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
   currency = '€',
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
   const [chartWidth, setChartWidth] = useState<number>(320);
 
   if (!data || data.length === 0) return null;
 
-  const chartHeight = 160;
+  const chartHeight = 170;
   const paddingLeft = 45;
   const paddingRight = 16;
   const paddingTop = 16;
@@ -70,153 +65,121 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
     areaPath = `${linePath} L ${lastPoint.x} ${bottomY} L ${firstPoint.x} ${bottomY} Z`;
   }
 
-  // Y-axis grid marks (0%, 50%, 100%)
-  const yTicks = [
-    { val: maxVal * 0.9, label: `${currency}${Math.round(maxVal * 0.9)}` },
-    { val: maxVal * 0.45, label: `${currency}${Math.round(maxVal * 0.45)}` },
-    { val: 0, label: `${currency}0` },
-  ];
-
-  // X-axis day marks
-  const xTicks = [1, 5, 10, 15, 20, 25, totalDays]
-    .filter((day) => day <= totalDays)
-    .map((day) => ({
-      day,
-      x: getX(day - 1),
-    }));
-
   const lastCumulative = data[data.length - 1]?.cumulativeAmount || 0;
-  const lastPoint = points[points.length - 1];
 
   return (
-    <Card padding="md">
+    <Card padding="lg">
       {/* Header */}
       <View
         style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: spacing.sm,
+          marginBottom: spacing.md,
         }}
       >
-        <Text
+        <View>
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              fontSize: typography.fontSizes.lg,
+              fontWeight: typography.fontWeights.heavy,
+            }}
+          >
+            {t.analytics.velocityTitle}
+          </Text>
+          <Text
+            style={{
+              color: theme.colors.textSecondary,
+              fontSize: typography.fontSizes.xs,
+              marginTop: 2,
+            }}
+          >
+            {t.analytics.velocitySubtitle}
+          </Text>
+        </View>
+
+        <View
           style={{
-            color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.lg,
-            fontWeight: typography.fontWeights.bold,
+            backgroundColor: theme.colors.brandLight,
+            paddingHorizontal: spacing.sm,
+            paddingVertical: spacing.xs,
+            borderRadius: radius.md,
+            alignItems: 'flex-end',
           }}
         >
-          Monthly Spend Velocity
-        </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          <View
-            style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.brand }}
-          />
-          <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}>
+          <Text
+            style={{
+              color: theme.colors.brand,
+              fontSize: typography.fontSizes.md,
+              fontWeight: typography.fontWeights.heavy,
+            }}
+          >
             {currency}
-            {lastCumulative.toFixed(0)} total
+            {lastCumulative.toFixed(0)}
           </Text>
         </View>
       </View>
 
-      {/* SVG Container */}
+      {/* SVG Trajectory Chart */}
       <View
         onLayout={(e) => {
-          const width = e.nativeEvent.layout.width;
-          if (width > 50) setChartWidth(width);
+          const { width } = e.nativeEvent.layout;
+          if (width > 0) setChartWidth(width);
         }}
-        style={{ width: '100%', height: chartHeight }}
+        style={{ height: chartHeight, width: '100%' }}
       >
         <Svg width={chartWidth} height={chartHeight}>
           <Defs>
-            <LinearGradient id="velocityGrad" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0%" stopColor={theme.colors.brand} stopOpacity="0.35" />
-              <Stop offset="100%" stopColor={theme.colors.brand} stopOpacity="0.02" />
+            <LinearGradient id="gradientArea" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0%" stopColor={theme.colors.brand} stopOpacity={0.35} />
+              <Stop offset="100%" stopColor={theme.colors.brand} stopOpacity={0.0} />
             </LinearGradient>
           </Defs>
 
-          {/* Grid lines & Y labels */}
-          {yTicks.map((tick, i) => {
-            const y = getY(tick.val);
-            return (
-              <React.Fragment key={`ytick-${i}`}>
-                <Line
-                  x1={paddingLeft}
-                  y1={y}
-                  x2={paddingLeft + innerWidth}
-                  y2={y}
-                  stroke={theme.colors.border}
-                  strokeWidth="1"
-                  strokeDasharray="4 4"
-                />
-                <SvgText
-                  x={paddingLeft - 6}
-                  y={y + 3}
-                  fill={theme.colors.textMuted}
-                  fontSize="9"
-                  textAnchor="end"
-                >
-                  {tick.label}
-                </SvgText>
-              </React.Fragment>
-            );
-          })}
-
           {/* Area Fill */}
-          {areaPath ? <Path d={areaPath} fill="url(#velocityGrad)" /> : null}
+          {areaPath ? <Path d={areaPath} fill="url(#gradientArea)" /> : null}
 
-          {/* Curve Line */}
+          {/* Bold Velocity Line */}
           {linePath ? (
             <Path
               d={linePath}
               fill="none"
               stroke={theme.colors.brand}
-              strokeWidth="2.5"
+              strokeWidth={3.5}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           ) : null}
-
-          {/* End Point Glow */}
-          {lastPoint ? (
-            <>
-              <Circle
-                cx={lastPoint.x}
-                cy={lastPoint.y}
-                r="6"
-                fill={theme.colors.brandLight}
-                opacity="0.6"
-              />
-              <Circle cx={lastPoint.x} cy={lastPoint.y} r="3.5" fill={theme.colors.brand} />
-            </>
-          ) : null}
-
-          {/* X Axis Labels */}
-          {xTicks.map((tick) => (
-            <SvgText
-              key={`xtick-${tick.day}`}
-              x={tick.x}
-              y={chartHeight - 6}
-              fill={theme.colors.textMuted}
-              fontSize="9"
-              textAnchor="middle"
-            >
-              {tick.day}
-            </SvgText>
-          ))}
         </Svg>
       </View>
 
-      <Text
+      {/* Plain-English Takeaway Banner for Seniors */}
+      <View
         style={{
-          color: theme.colors.textMuted,
-          fontSize: 10,
-          textAlign: 'center',
-          marginTop: 2,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+          backgroundColor: theme.colors.surfaceSubtle,
+          padding: spacing.md,
+          borderRadius: radius.lg,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+          marginTop: spacing.md,
         }}
       >
-        Day of month
-      </Text>
+        <Info size={20} color={theme.colors.brand} />
+        <Text
+          style={{
+            color: theme.colors.textPrimary,
+            fontSize: typography.fontSizes.sm,
+            fontWeight: typography.fontWeights.semibold,
+            flex: 1,
+          }}
+        >
+          {t.analytics.spendingPaceNotice}
+        </Text>
+      </View>
     </Card>
   );
 };

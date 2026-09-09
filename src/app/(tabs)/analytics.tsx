@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { PieChart, Users, TrendingUp, Calendar } from 'lucide-react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { PieChart, Users, TrendingUp, Calendar, ArrowLeftRight } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -9,13 +9,14 @@ import {
   calculateMemberContributions,
   calculateSpendingVelocity,
 } from '@/services/analytics';
+import { calculateSettlements } from '@/services/splitCalculator';
 import { Card } from '@/components/common/Card';
 import { PeriodSelector } from '@/components/common/PeriodSelector';
 import { CategoryPieChart } from '@/components/charts/CategoryPieChart';
 import { MemberBarChart } from '@/components/charts/MemberBarChart';
 import { SpendingVelocityChart } from '@/components/charts/SpendingVelocityChart';
 import { HeatmapCalendar } from '@/components/charts/HeatmapCalendar';
-import { IconHelper } from '@/components/common/IconHelper';
+import { SettlementCard } from '@/components/charts/SettlementCard';
 
 export default function AnalyticsScreen() {
   const { theme, spacing, radius, typography } = useTheme();
@@ -23,9 +24,9 @@ export default function AnalyticsScreen() {
   const { family, members, categories, expenses, selectedPeriod, setSelectedPeriod } =
     useAppStore();
 
-  const [activeTab, setActiveTab] = useState<'categories' | 'members' | 'trends' | 'heatmap'>(
-    'categories',
-  );
+  const [activeTab, setActiveTab] = useState<
+    'categories' | 'members' | 'settlement' | 'trends' | 'heatmap'
+  >('categories');
 
   const periodExpenses = useMemo(
     () => expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod)),
@@ -47,6 +48,11 @@ export default function AnalyticsScreen() {
     [expenses, selectedPeriod],
   );
 
+  const settlementSummary = useMemo(
+    () => calculateSettlements(periodExpenses, members),
+    [periodExpenses, members],
+  );
+
   // Top Merchants summary
   const topMerchants = useMemo(() => {
     const merchantMap = new Map<string, number>();
@@ -62,7 +68,7 @@ export default function AnalyticsScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 100 }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 120 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Interactive Month Stepper */}
@@ -71,17 +77,18 @@ export default function AnalyticsScreen() {
       </View>
 
       {/* Top Segmented Controls */}
-      <View
-        style={{
-          flexDirection: 'row',
-          backgroundColor: theme.colors.surfaceSubtle,
-          borderRadius: radius.lg,
-          padding: 4,
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          gap: spacing.xs,
+          paddingVertical: 4,
           marginBottom: spacing.lg,
         }}
       >
         {[
           { id: 'categories' as const, label: t.analytics.categoriesTab, icon: PieChart },
+          { id: 'settlement' as const, label: t.analytics.settlementTab, icon: ArrowLeftRight },
           { id: 'members' as const, label: t.analytics.membersTab, icon: Users },
           { id: 'trends' as const, label: t.analytics.trendsTab, icon: TrendingUp },
           { id: 'heatmap' as const, label: t.analytics.heatmapTab, icon: Calendar },
@@ -94,45 +101,36 @@ export default function AnalyticsScreen() {
               activeOpacity={0.7}
               onPress={() => setActiveTab(id)}
               style={{
-                flex: isActive ? 1.4 : 1,
                 flexDirection: 'row',
                 gap: 6,
-                paddingVertical: spacing.sm,
+                minHeight: 46,
+                paddingHorizontal: spacing.md,
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: radius.md,
-                backgroundColor: isActive ? theme.colors.surface : 'transparent',
-                borderWidth: 1,
-                borderColor: isActive
-                  ? theme.isDark
-                    ? 'rgba(255, 255, 255, 0.12)'
-                    : 'rgba(255, 255, 255, 0.8)'
-                  : 'transparent',
-                shadowColor: isActive ? '#000' : 'transparent',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: isActive ? 0.08 : 0,
-                shadowRadius: 6,
-                elevation: isActive ? 2 : 0,
+                borderRadius: radius.lg,
+                backgroundColor: isActive ? theme.colors.brand : theme.colors.surfaceSubtle,
+                borderWidth: 1.5,
+                borderColor: isActive ? theme.colors.brand : theme.colors.border,
               }}
               accessibilityLabel={label}
             >
-              <TabIcon size={16} color={isActive ? theme.colors.brand : theme.colors.textMuted} />
-              {isActive && (
-                <Text
-                  style={{
-                    color: theme.colors.brand,
-                    fontSize: typography.fontSizes.xs,
-                    fontWeight: typography.fontWeights.bold,
-                  }}
-                  numberOfLines={1}
-                >
-                  {label}
-                </Text>
-              )}
+              <TabIcon size={18} color={isActive ? '#FFFFFF' : theme.colors.textSecondary} />
+              <Text
+                style={{
+                  color: isActive ? '#FFFFFF' : theme.colors.textPrimary,
+                  fontSize: typography.fontSizes.sm,
+                  fontWeight: isActive
+                    ? typography.fontWeights.bold
+                    : typography.fontWeights.medium,
+                }}
+                numberOfLines={1}
+              >
+                {label}
+              </Text>
             </TouchableOpacity>
           );
         })}
-      </View>
+      </ScrollView>
 
       {/* Tab Panels */}
       {activeTab === 'categories' && (
@@ -140,12 +138,12 @@ export default function AnalyticsScreen() {
           <CategoryPieChart data={categoryBreakdown} currency={family.currency} />
 
           {/* Top Merchants Card */}
-          <Card padding="md">
+          <Card padding="lg">
             <Text
               style={{
                 color: theme.colors.textPrimary,
                 fontSize: typography.fontSizes.lg,
-                fontWeight: typography.fontWeights.bold,
+                fontWeight: typography.fontWeights.heavy,
                 marginBottom: spacing.md,
               }}
             >
@@ -180,7 +178,8 @@ export default function AnalyticsScreen() {
                         style={{
                           color: theme.colors.textMuted,
                           fontSize: typography.fontSizes.xs,
-                          width: 16,
+                          fontWeight: typography.fontWeights.bold,
+                          width: 20,
                         }}
                       >
                         #{idx + 1}
@@ -210,6 +209,12 @@ export default function AnalyticsScreen() {
               </View>
             )}
           </Card>
+        </View>
+      )}
+
+      {activeTab === 'settlement' && (
+        <View style={{ gap: spacing.lg }}>
+          <SettlementCard summary={settlementSummary} currency={family.currency} />
         </View>
       )}
 

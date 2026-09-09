@@ -127,6 +127,9 @@ export const ExpenseReportImportSchema = z.object({
 export type RawExpenseItem = z.infer<typeof ExpenseItemSchema>;
 export type RawExpenseReport = z.infer<typeof ExpenseReportImportSchema>;
 
+export type PeriodPreset = 'all' | 'this_month' | 'last_month' | 'last_3_months' | 'this_year';
+export type AmountBracket = 'all' | 'under_20' | '20_to_100' | 'over_100';
+
 export interface FilterOptions {
   searchQuery: string;
   selectedMemberId?: string;
@@ -136,4 +139,6 @@ export interface FilterOptions {
   minAmount?: number;
   maxAmount?: number;
   sortBy?: 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';
+  periodPreset?: PeriodPreset;
+  amountBracket?: AmountBracket;
 }

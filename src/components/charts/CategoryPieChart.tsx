@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { PieChart } from 'react-native-gifted-charts';
 import { useTheme } from '@/theme';
+import { useI18n, getLocalizedCategoryName } from '@/i18n';
 import { CategorySummary } from '@/services/analytics';
 import { IconHelper } from '@/components/common/IconHelper';
 import { Card } from '@/components/common/Card';
@@ -18,6 +19,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   onSelectCategory,
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const { t } = useI18n();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const totalSpend = data.reduce((sum, item) => sum + item.total, 0);
@@ -26,7 +28,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
     return (
       <Card padding="lg" style={{ alignItems: 'center', justifyContent: 'center', minHeight: 180 }}>
         <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.md }}>
-          No expenses recorded for this period
+          {t.dashboard.noExpensesMonth}
         </Text>
       </Card>
     );
@@ -51,18 +53,19 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   const activeCategory = selectedIndex !== null ? data[selectedIndex] : null;
 
   return (
-    <Card padding="md">
+    <Card padding="lg">
       <Text
         style={{
           color: theme.colors.textPrimary,
           fontSize: typography.fontSizes.lg,
-          fontWeight: typography.fontWeights.bold,
+          fontWeight: typography.fontWeights.heavy,
           marginBottom: spacing.md,
         }}
       >
-        Spending by Category
+        {t.analytics.categoryRank}
       </Text>
 
+      {/* Donut Chart Visual */}
       <View style={{ alignItems: 'center', justifyContent: 'center', marginVertical: spacing.sm }}>
         <PieChart
           data={pieData}
@@ -84,7 +87,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                     }}
                     numberOfLines={1}
                   >
-                    {activeCategory.category.name}
+                    {getLocalizedCategoryName(activeCategory.category, t)}
                   </Text>
                   <Text
                     style={{
@@ -108,7 +111,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                     fontWeight: typography.fontWeights.medium,
                   }}
                 >
-                  Total
+                  {t.analytics.totalSpend}
                 </Text>
                 <Text
                   style={{
@@ -126,10 +129,13 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
         />
       </View>
 
-      {/* Legend & Breakdown List */}
-      <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
-        {data.slice(0, 5).map((item, idx) => {
+      {/* Accessible Ranked Category Bars */}
+      <View style={{ marginTop: spacing.lg, gap: spacing.md }}>
+        {data.map((item, idx) => {
           const isSelected = selectedIndex === idx;
+          const pct = Math.min(Math.max(item.percentage, 0), 100);
+          const localizedCategoryName = getLocalizedCategoryName(item.category, t);
+
           return (
             <TouchableOpacity
               key={item.category.id}
@@ -141,62 +147,90 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                 }
               }}
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingVertical: spacing.xs,
-                paddingHorizontal: spacing.sm,
-                borderRadius: radius.sm,
-                backgroundColor: isSelected ? theme.colors.surfaceSubtle : 'transparent',
+                backgroundColor: isSelected ? theme.colors.surfaceSubtle : theme.colors.card,
+                padding: spacing.sm,
+                borderRadius: radius.lg,
+                borderWidth: isSelected ? 2 : 1,
+                borderColor: isSelected ? item.category.color : theme.colors.border,
               }}
             >
               <View
-                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 6,
+                }}
+              >
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}
+                >
+                  <View
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: radius.md,
+                      backgroundColor: `${item.category.color}20`,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <IconHelper name={item.category.icon} size={20} color={item.category.color} />
+                  </View>
+                  <Text
+                    style={{
+                      color: theme.colors.textPrimary,
+                      fontSize: typography.fontSizes.md,
+                      fontWeight: typography.fontWeights.bold,
+                      flex: 1,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {localizedCategoryName}
+                  </Text>
+                </View>
+
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text
+                    style={{
+                      color: theme.colors.textPrimary,
+                      fontSize: typography.fontSizes.md,
+                      fontWeight: typography.fontWeights.heavy,
+                    }}
+                  >
+                    {currency}
+                    {item.total.toFixed(2)}
+                  </Text>
+                  <Text
+                    style={{
+                      color: theme.colors.textSecondary,
+                      fontSize: typography.fontSizes.xs,
+                      fontWeight: typography.fontWeights.semibold,
+                    }}
+                  >
+                    {item.percentage.toFixed(0)}% • {item.transactionCount}{' '}
+                    {t.ledger.transactionsCount}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Visual Progress / Distribution Bar */}
+              <View
+                style={{
+                  height: 8,
+                  backgroundColor: theme.colors.surfaceSubtle,
+                  borderRadius: radius.full,
+                  overflow: 'hidden',
+                }}
               >
                 <View
                   style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: radius.sm,
-                    backgroundColor: `${item.category.color}20`,
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    height: '100%',
+                    width: `${pct}%`,
+                    backgroundColor: item.category.color,
+                    borderRadius: radius.full,
                   }}
-                >
-                  <IconHelper name={item.category.icon} size={15} color={item.category.color} />
-                </View>
-                <Text
-                  style={{
-                    color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.sm,
-                    fontWeight: typography.fontWeights.medium,
-                    flex: 1,
-                  }}
-                  numberOfLines={1}
-                >
-                  {item.category.name}
-                </Text>
-              </View>
-
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text
-                  style={{
-                    color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.sm,
-                    fontWeight: typography.fontWeights.bold,
-                  }}
-                >
-                  {currency}
-                  {item.total.toFixed(2)}
-                </Text>
-                <Text
-                  style={{
-                    color: theme.colors.textSecondary,
-                    fontSize: typography.fontSizes.xs,
-                  }}
-                >
-                  {item.percentage.toFixed(1)}% ({item.transactionCount})
-                </Text>
+                />
               </View>
             </TouchableOpacity>
           );

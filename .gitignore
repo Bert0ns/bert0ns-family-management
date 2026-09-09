@@ -45,3 +45,4 @@ yarn-error.*
 # test coverage & tooling cache
 coverage/
 .fallow/
+.agents/

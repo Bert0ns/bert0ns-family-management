@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useI18n, getLocalizedCategoryName } from '@/i18n';
 import { Expense, Category, FamilyMember } from '@/types';
 import { IconHelper } from '@/components/common/IconHelper';
 
@@ -21,13 +22,15 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
   onPress,
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const { t, locale } = useI18n();
 
   const catColor = category?.color || theme.colors.brand;
   const catIcon = category?.icon || 'Tag';
-  const catName = category?.name || 'Uncategorized';
-  const memberName = member?.display_name || 'Family';
+  const catName = getLocalizedCategoryName(category, t);
+  const memberName = member?.display_name || 'Famiglia';
 
-  const formattedDate = new Date(expense.transaction_date).toLocaleDateString(undefined, {
+  const dateLocale = locale === 'it' ? 'it-IT' : 'en-US';
+  const formattedDate = new Date(expense.transaction_date).toLocaleDateString(dateLocale, {
     month: 'short',
     day: 'numeric',
   });
@@ -59,11 +62,12 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
         {
           flexDirection: 'row',
           alignItems: 'center',
+          minHeight: 68,
           paddingVertical: spacing.md,
           paddingHorizontal: spacing.md,
           backgroundColor: theme.colors.card,
-          borderRadius: radius.lg,
-          borderWidth: 1,
+          borderRadius: radius.xl,
+          borderWidth: 1.5,
           borderColor: theme.colors.cardBorder,
           marginBottom: spacing.sm,
           ...webGlassStyles,
@@ -73,18 +77,18 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
       {/* Category Icon */}
       <View
         style={{
-          width: 42,
-          height: 42,
-          borderRadius: radius.md,
-          backgroundColor: `${catColor}14`,
-          borderWidth: 1,
-          borderColor: `${catColor}24`,
+          width: 48,
+          height: 48,
+          borderRadius: radius.lg,
+          backgroundColor: `${catColor}18`,
+          borderWidth: 1.5,
+          borderColor: `${catColor}30`,
           alignItems: 'center',
           justifyContent: 'center',
           marginRight: spacing.md,
         }}
       >
-        <IconHelper name={catIcon} size={20} color={catColor} />
+        <IconHelper name={catIcon} size={24} color={catColor} />
       </View>
 
       {/* Details */}
@@ -93,61 +97,69 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
           <Text
             style={{
               color: theme.colors.textPrimary,
-              fontSize: typography.fontSizes.md,
-              fontWeight: typography.fontWeights.semibold,
+              fontSize: typography.fontSizes.lg,
+              fontWeight: typography.fontWeights.bold,
               flex: 1,
             }}
             numberOfLines={1}
           >
             {expense.merchant_name}
           </Text>
-          {isSplit && <Split size={12} color={theme.colors.brand} />}
+          {isSplit && <Split size={14} color={theme.colors.brand} />}
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
           <Text
             style={{
               color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
+              fontSize: typography.fontSizes.sm,
               fontWeight: typography.fontWeights.medium,
             }}
           >
             {catName}
           </Text>
-          <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
+          <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.sm }}>
             •
           </Text>
-          <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.sm }}>
             {formattedDate}
           </Text>
-          <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
+          <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.sm }}>
             •
           </Text>
           <View
             style={{
-              width: 6,
-              height: 6,
-              borderRadius: 3,
+              width: 8,
+              height: 8,
+              borderRadius: 4,
               backgroundColor: member?.color_code || theme.colors.brand,
             }}
           />
-          <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}>
+          <Text
+            style={{
+              color: theme.colors.textSecondary,
+              fontSize: typography.fontSizes.sm,
+              fontWeight: typography.fontWeights.medium,
+            }}
+          >
             {memberName}
           </Text>
         </View>
       </View>
 
       {/* Amount */}
-      <Text
-        style={{
-          color: theme.colors.textPrimary,
-          fontSize: typography.fontSizes.md,
-          fontWeight: typography.fontWeights.bold,
-        }}
-      >
-        {currency}
-        {expense.amount.toFixed(2)}
-      </Text>
+      <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
+        <Text
+          style={{
+            color: theme.colors.textPrimary,
+            fontSize: typography.fontSizes.lg,
+            fontWeight: typography.fontWeights.heavy,
+          }}
+        >
+          {currency}
+          {expense.amount.toFixed(2)}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 };

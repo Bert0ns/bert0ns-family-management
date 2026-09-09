@@ -1,20 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Upload, Flame, ArrowUpRight, ArrowRight, Receipt, Users } from 'lucide-react-native';
+import { Plus, ArrowRight, FileJson } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
-import {
-  calculateMonthlyMetrics,
-  calculateCategoryBreakdown,
-  calculateMemberContributions,
-} from '@/services/analytics';
+import { calculateMonthlyMetrics, calculateMemberContributions } from '@/services/analytics';
 import { Card } from '@/components/common/Card';
-import { Button } from '@/components/common/Button';
-import { KPIStat } from '@/components/common/KPIStat';
 import { Avatar } from '@/components/common/Avatar';
-import { Badge } from '@/components/common/Badge';
 import { PeriodSelector } from '@/components/common/PeriodSelector';
 import { ExpenseItem } from '@/components/ledger/ExpenseItem';
 import { ExpenseDetailModal } from '@/components/ledger/ExpenseDetailModal';
@@ -34,297 +27,252 @@ export default function DashboardScreen() {
     expenses,
     selectedPeriod,
     setSelectedPeriod,
-    setFilters,
     deleteExpense,
   } = useAppStore();
 
-  const periodExpenses = React.useMemo(
-    () => expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod)),
-    [expenses, selectedPeriod],
-  );
-
-  const metrics = React.useMemo(
-    () => calculateMonthlyMetrics(expenses, categories, members, selectedPeriod),
-    [expenses, categories, members, selectedPeriod],
-  );
-
-  const categoryBreakdown = React.useMemo(
-    () => calculateCategoryBreakdown(periodExpenses, categories),
-    [periodExpenses, categories],
-  );
-
-  const memberContributions = React.useMemo(
-    () => calculateMemberContributions(periodExpenses, members),
-    [periodExpenses, members],
-  );
-
-  const recentExpenses = React.useMemo(() => {
-    return [...periodExpenses]
-      .sort(
-        (a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime(),
-      )
-      .slice(0, 5);
-  }, [periodExpenses]);
-
-  const onRefresh = () => {
+  const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
-  };
+    setTimeout(() => setRefreshing(false), 600);
+  }, []);
+
+  const metrics = calculateMonthlyMetrics(expenses, categories, members, selectedPeriod);
+  const periodExpensesAll = expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod));
+  const memberContributions = calculateMemberContributions(periodExpensesAll, members);
+
+  // Filter expenses for selected period, sorted newest first, top 5
+  const periodExpenses = expenses
+    .filter((e) => e.transaction_date.startsWith(selectedPeriod))
+    .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())
+    .slice(0, 5);
 
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 100 }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 120 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       showsVerticalScrollIndicator={false}
     >
-      {/* Top Header Card with Quick Actions */}
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: spacing.md,
-        }}
-      >
-        <View>
-          <Text
-            style={{
-              color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              fontWeight: typography.fontWeights.medium,
-            }}
-          >
-            {t.dashboard.householdOverview}
-          </Text>
-          <Text
-            style={{
-              color: theme.colors.textPrimary,
-              fontSize: typography.fontSizes.xl,
-              fontWeight: typography.fontWeights.bold,
-            }}
-          >
-            {family.name}
-          </Text>
-        </View>
-
-        <View style={{ flexDirection: 'row', gap: spacing.xs }}>
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<Upload size={16} color={theme.colors.brand} />}
-            onPress={() => router.push('/(tabs)/import')}
-            accessibilityLabel={t.common.import}
-          />
-          <Button
-            variant="primary"
-            size="sm"
-            icon={<Plus size={16} color="#FFFFFF" />}
-            onPress={() => router.push('/expense/add')}
-            accessibilityLabel={t.common.add}
-          />
-        </View>
-      </View>
-
-      {/* Interactive Month Stepper */}
-      <View style={{ marginBottom: spacing.md }}>
+      {/* Month Stepper */}
+      <View style={{ marginBottom: spacing.lg }}>
         <PeriodSelector selectedPeriod={selectedPeriod} onPeriodChange={setSelectedPeriod} />
       </View>
 
-      {/* Main Total Spending Card */}
-      <Card
-        padding="lg"
+      {/* Hero Total Spending Card */}
+      <View
         style={{
-          marginBottom: spacing.lg,
-          backgroundColor: theme.colors.brandLight,
+          backgroundColor: theme.colors.card,
+          borderRadius: radius.xxl,
+          paddingVertical: spacing.xl,
+          paddingHorizontal: spacing.xl,
+          borderWidth: 2,
           borderColor: theme.colors.brand,
+          alignItems: 'center',
+          marginBottom: spacing.lg,
+          shadowColor: theme.colors.shadow,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 16,
+          elevation: 4,
         }}
       >
-        <View
+        <Text
           style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
+            color: theme.colors.textSecondary,
+            fontSize: typography.fontSizes.md,
+            fontWeight: typography.fontWeights.semibold,
+            textTransform: 'uppercase',
+            letterSpacing: 1,
+            marginBottom: spacing.xs,
           }}
         >
-          <View>
-            <Text
-              style={{
-                color: theme.isDark ? '#A5B4FC' : theme.colors.brand,
-                fontSize: typography.fontSizes.sm,
-                fontWeight: typography.fontWeights.semibold,
-              }}
-            >
-              {t.dashboard.totalSpending}
-            </Text>
-            <Text
-              style={{
-                color: theme.colors.textPrimary,
-                fontSize: typography.fontSizes.display,
-                fontWeight: typography.fontWeights.heavy,
-                marginTop: 2,
-              }}
-            >
-              {family.currency}
-              {metrics.totalSpend.toFixed(2)}
-            </Text>
-          </View>
+          {t.dashboard.thisMonthSpending}
+        </Text>
 
-          <Badge
-            label={`${metrics.transactionCount} ${t.dashboard.txs}`}
-            color={theme.colors.brand}
-            variant="solid"
-            size="md"
-          />
-        </View>
-      </Card>
-
-      {/* Daily Average Burn KPI */}
-      <View style={{ marginBottom: spacing.lg }}>
-        <KPIStat
-          title={t.dashboard.dailyAverage}
-          value={`${family.currency}${metrics.dailyAverageBurn.toFixed(0)}`}
-          subtitle={t.dashboard.burnRatePerDay}
-          icon={<Flame size={18} color={theme.colors.warning} />}
-          variant="warning"
-        />
-      </View>
-
-      {/* Member Spending Horizontal Carousel */}
-      <View style={{ marginBottom: spacing.lg }}>
         <Text
           style={{
             color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.lg,
-            fontWeight: typography.fontWeights.bold,
-            marginBottom: spacing.sm,
+            fontSize: 42,
+            fontWeight: '800',
+            textAlign: 'center',
+            marginVertical: 4,
           }}
         >
-          {t.dashboard.familyMembers}
+          {family.currency}
+          {metrics.totalSpend.toFixed(2)}
         </Text>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing.sm }}
-        >
-          {memberContributions.map((mc) => (
-            <Card
-              key={mc.member.id}
-              padding="sm"
-              style={{
-                width: 140,
-                alignItems: 'center',
-                paddingVertical: spacing.md,
-              }}
-            >
-              <Avatar
-                name={mc.member.display_name}
-                avatarUrl={mc.member.avatar_url}
-                colorCode={mc.member.color_code}
-                size="lg"
-              />
-              <Text
-                style={{
-                  color: theme.colors.textPrimary,
-                  fontSize: typography.fontSizes.sm,
-                  fontWeight: typography.fontWeights.bold,
-                  marginTop: spacing.xs,
-                }}
-                numberOfLines={1}
-              >
-                {mc.member.display_name}
-              </Text>
-              <Text
-                style={{
-                  color: theme.colors.brand,
-                  fontSize: typography.fontSizes.md,
-                  fontWeight: typography.fontWeights.heavy,
-                  marginTop: 2,
-                }}
-              >
-                {family.currency}
-                {mc.total.toFixed(0)}
-              </Text>
-              <Text style={{ color: theme.colors.textMuted, fontSize: 10 }}>
-                {mc.percentage.toFixed(0)}%
-              </Text>
-            </Card>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Analytics Shortcut Banner */}
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={() => router.push('/(tabs)/analytics')}
-        style={{ marginBottom: spacing.lg }}
-      >
-        <Card
-          padding="md"
+        <View
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderLeftWidth: 4,
-            borderLeftColor: theme.colors.brand,
+            backgroundColor: theme.colors.brandLight,
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.xs,
+            borderRadius: radius.full,
+            marginTop: spacing.xs,
           }}
         >
-          <View style={{ flex: 1, marginRight: spacing.sm }}>
-            <Text
-              style={{
-                color: theme.colors.textPrimary,
-                fontSize: typography.fontSizes.sm,
-                fontWeight: typography.fontWeights.bold,
-              }}
-            >
-              {t.tabs.analytics}
-            </Text>
-            <Text
-              style={{
-                color: theme.colors.textSecondary,
-                fontSize: typography.fontSizes.xs,
-                marginTop: 2,
-              }}
-            >
-              {categoryBreakdown.length > 0
-                ? `${t.analytics.categoriesTab}: ${categoryBreakdown[0].category.name} (${family.currency}${categoryBreakdown[0].total.toFixed(0)})`
-                : t.analytics.categoriesTab}
-            </Text>
-          </View>
-          <View
+          <Text
             style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-              backgroundColor: theme.colors.surfaceSubtle,
-              paddingHorizontal: spacing.sm,
-              paddingVertical: spacing.xs,
-              borderRadius: radius.full,
+              color: theme.colors.brand,
+              fontSize: typography.fontSizes.sm,
+              fontWeight: typography.fontWeights.bold,
             }}
           >
-            <Text
-              style={{
-                color: theme.colors.brand,
-                fontSize: typography.fontSizes.xs,
-                fontWeight: typography.fontWeights.semibold,
-              }}
-            >
-              {t.dashboard.viewAll}
-            </Text>
-            <ArrowUpRight size={14} color={theme.colors.brand} />
-          </View>
-        </Card>
-      </TouchableOpacity>
+            {metrics.transactionCount} {t.dashboard.totalTransactions}
+          </Text>
+        </View>
+      </View>
 
-      {/* Recent Expenses List */}
-      <View>
+      {/* Primary Action Buttons: Giant Add Button & Bulk Import Button */}
+      <View style={{ gap: spacing.sm, marginBottom: spacing.xl }}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push('/expense/add')}
+          accessibilityLabel={t.dashboard.quickAddButton}
+          style={{
+            minHeight: 64,
+            borderRadius: radius.xl,
+            backgroundColor: theme.colors.brand,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: spacing.md,
+            shadowColor: theme.colors.brand,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.3,
+            shadowRadius: 14,
+            elevation: 6,
+          }}
+        >
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: radius.full,
+              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Plus size={24} color="#FFFFFF" strokeWidth={3} />
+          </View>
+          <Text
+            style={{
+              color: '#FFFFFF',
+              fontSize: typography.fontSizes.xl,
+              fontWeight: typography.fontWeights.heavy,
+            }}
+          >
+            {t.dashboard.quickAddButton}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => router.push('/(tabs)/import')}
+          accessibilityLabel={t.dashboard.bulkImportButton}
+          style={{
+            minHeight: 52,
+            borderRadius: radius.xl,
+            backgroundColor: theme.colors.surfaceSubtle,
+            borderWidth: 1.5,
+            borderColor: theme.colors.border,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: spacing.sm,
+          }}
+        >
+          <FileJson size={20} color={theme.colors.brand} />
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              fontSize: typography.fontSizes.md,
+              fontWeight: typography.fontWeights.semibold,
+            }}
+          >
+            {t.dashboard.bulkImportButton}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Family Member Contributions Bar */}
+      {memberContributions.length > 0 && (
+        <View style={{ marginBottom: spacing.xl }}>
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              fontSize: typography.fontSizes.lg,
+              fontWeight: typography.fontWeights.bold,
+              marginBottom: spacing.md,
+            }}
+          >
+            {t.dashboard.familyMembers}
+          </Text>
+
+          <View style={{ gap: spacing.sm }}>
+            {memberContributions.map((mc) => (
+              <Card
+                key={mc.member.id}
+                padding="md"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: theme.colors.card,
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+                  <Avatar
+                    name={mc.member.display_name}
+                    avatarUrl={mc.member.avatar_url}
+                    colorCode={mc.member.color_code}
+                    size="md"
+                  />
+                  <View>
+                    <Text
+                      style={{
+                        color: theme.colors.textPrimary,
+                        fontSize: typography.fontSizes.md,
+                        fontWeight: typography.fontWeights.bold,
+                      }}
+                    >
+                      {mc.member.display_name}
+                    </Text>
+                    <Text
+                      style={{
+                        color: theme.colors.textSecondary,
+                        fontSize: typography.fontSizes.xs,
+                      }}
+                    >
+                      {mc.percentage.toFixed(0)}% del totale
+                    </Text>
+                  </View>
+                </View>
+
+                <Text
+                  style={{
+                    color: theme.colors.textPrimary,
+                    fontSize: typography.fontSizes.lg,
+                    fontWeight: typography.fontWeights.heavy,
+                  }}
+                >
+                  {family.currency}
+                  {mc.total.toFixed(2)}
+                </Text>
+              </Card>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Recent Expenses Simplified List */}
+      <View style={{ marginBottom: spacing.xl }}>
         <View
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: spacing.sm,
+            marginBottom: spacing.md,
           }}
         >
           <Text
@@ -338,37 +286,44 @@ export default function DashboardScreen() {
           </Text>
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => router.push('/(tabs)/ledger')}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: radius.full,
-              backgroundColor: theme.colors.surfaceSubtle,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            accessibilityLabel={t.dashboard.viewAll}
+            onPress={() => router.push('/ledger')}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
           >
-            <ArrowRight size={16} color={theme.colors.brand} />
+            <Text
+              style={{
+                color: theme.colors.brand,
+                fontSize: typography.fontSizes.md,
+                fontWeight: typography.fontWeights.bold,
+              }}
+            >
+              {t.dashboard.viewAll}
+            </Text>
+            <ArrowRight size={18} color={theme.colors.brand} />
           </TouchableOpacity>
         </View>
 
-        {recentExpenses.length === 0 ? (
+        {periodExpenses.length === 0 ? (
           <Card padding="lg" style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.sm }}>
+            <Text
+              style={{
+                color: theme.colors.textSecondary,
+                fontSize: typography.fontSizes.md,
+                textAlign: 'center',
+              }}
+            >
               {t.dashboard.noExpensesMonth}
             </Text>
           </Card>
         ) : (
-          recentExpenses.map((expense) => {
-            const member = members.find((m) => m.id === expense.paid_by_member_id);
+          periodExpenses.map((expense) => {
             const category = categories.find((c) => c.id === expense.category_id);
+            const member = members.find((m) => m.id === expense.paid_by_member_id);
             return (
               <ExpenseItem
                 key={expense.id}
                 expense={expense}
-                member={member}
                 category={category}
+                member={member}
                 currency={family.currency}
                 onPress={() => setSelectedExpense(expense)}
               />
@@ -379,17 +334,14 @@ export default function DashboardScreen() {
 
       {/* Expense Detail Modal */}
       <ExpenseDetailModal
+        visible={!!selectedExpense}
         expense={selectedExpense}
         category={categories.find((c) => c.id === selectedExpense?.category_id)}
         member={members.find((m) => m.id === selectedExpense?.paid_by_member_id)}
         allMembers={members}
-        visible={!!selectedExpense}
-        onClose={() => setSelectedExpense(null)}
-        onDelete={(id) => {
-          deleteExpense(id);
-          setSelectedExpense(null);
-        }}
         currency={family.currency}
+        onClose={() => setSelectedExpense(null)}
+        onDelete={deleteExpense}
       />
     </ScrollView>
   );

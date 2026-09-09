@@ -7,6 +7,7 @@ import {
   Theme,
   Spacing,
   Radius,
+  TouchTargets,
   Typography,
   Palette,
   MemberColors,
@@ -21,6 +22,7 @@ interface ThemeContextType {
   setColorSchemePreference: (pref: ColorSchemePreference) => void;
   spacing: typeof Spacing;
   radius: typeof Radius;
+  touchTargets: typeof TouchTargets;
   typography: typeof Typography;
   palette: typeof Palette;
   memberColors: typeof MemberColors;
@@ -35,6 +37,7 @@ const ThemeContext = createContext<ThemeContextType>({
   setColorSchemePreference: () => {},
   spacing: Spacing,
   radius: Radius,
+  touchTargets: TouchTargets,
   typography: Typography,
   palette: Palette,
   memberColors: MemberColors,
@@ -72,6 +75,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setColorSchemePreference,
         spacing: Spacing,
         radius: Radius,
+        touchTargets: TouchTargets,
         typography: Typography,
         palette: Palette,
         memberColors: MemberColors,
