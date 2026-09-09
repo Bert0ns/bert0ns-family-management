@@ -301,6 +301,8 @@ export const it: TranslationSchema = {
     invalidEmailError: 'Inserisci un indirizzo email valido',
     invalidOtpError: 'Inserisci il codice completo a 6 cifre',
     changeEmailOrResend: 'Modifica Email / Reinvia',
+    authRequiredToJoin:
+      'Accedi prima con la tua email in Sincronizzazione Cloud prima di unirti a una famiglia.',
     joinedHouseholdTitle: 'Nucleo Familiare Associato',
   },
 };

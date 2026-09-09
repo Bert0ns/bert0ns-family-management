@@ -293,5 +293,6 @@ export interface TranslationSchema {
     invalidOtpError: string;
     changeEmailOrResend: string;
     joinedHouseholdTitle: string;
+    authRequiredToJoin: string;
   };
 }

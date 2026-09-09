@@ -216,6 +216,48 @@ npx expo export -p web
 
 ---
 
+## 📦 Local Android Builds in WSL
+
+You can compile standalone `.apk` packages locally inside WSL using the Linux Android SDK already installed at `~/android-sdk`:
+
+### Prerequisites (Configured in your WSL environment)
+
+- **Linux Android SDK**: `$HOME/android-sdk`
+- **NDK**: `$HOME/android-sdk/ndk/27.1.12297006`
+- **Helper function** in `~/.bashrc`:
+  ```bash
+  eas-build-android() {
+      local ndk_dir=$(ls -d $HOME/android-sdk/ndk/* 2>/dev/null | tail -n 1)
+      ANDROID_HOME=$HOME/android-sdk \
+      ANDROID_SDK_ROOT=$HOME/android-sdk \
+      ANDROID_NDK_HOME=${ANDROID_NDK_HOME:-$ndk_dir} \
+      eas build --platform android --local "$@"
+  }
+  ```
+
+### Build Commands
+
+- **Build Standalone Release APK (For relatives):**
+
+  ```bash
+  eas-build-android --profile preview
+  ```
+
+  _(Builds the installable `.apk` directly on your WSL machine without consuming Expo cloud build credits)_.
+
+- **Build Development Client:**
+
+  ```bash
+  eas-build-android --profile development
+  ```
+
+- **Build Production Bundle (Google Play AAB):**
+  ```bash
+  eas-build-android --profile production
+  ```
+
+---
+
 ## 📄 License
 
 This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](file:///home/berto/bert0ns-family-management/LICENSE).

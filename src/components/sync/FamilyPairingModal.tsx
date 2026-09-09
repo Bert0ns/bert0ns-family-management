@@ -71,32 +71,63 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
         return;
       }
 
-      // Query Supabase for the family by invite code
-      const { data: remoteFamily, error: findError } = await supabase
-        .from('families')
-        .select('*')
-        .eq('invite_code', code)
-        .single();
-
-      if (findError || !remoteFamily) {
-        setError(t.sync.invalidCodeError);
+      // 1. Check if user is authenticated
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session?.user) {
+        setError(t.sync.authRequiredToJoin);
         setIsJoining(false);
         return;
       }
 
-      // Update local family record
+      // 2. Call RPC to join family via invite code
+      const storeState = useAppStore.getState();
+      const currentMember = storeState.members.find((m) => m.id === storeState.currentMemberId);
+      const displayName =
+        currentMember?.display_name ||
+        sessionData.session.user.email?.split('@')[0] ||
+        'New Member';
+
+      const { data: rpcRes, error: rpcError } = await supabase.rpc('join_family_via_invite_code', {
+        p_invite_code: code,
+        p_display_name: displayName,
+      });
+
+      if (rpcError || !rpcRes || !rpcRes.family_id) {
+        setError(rpcError?.message || t.sync.invalidCodeError);
+        setIsJoining(false);
+        return;
+      }
+
+      const joinedFamilyId = rpcRes.family_id as string;
+      const joinedMemberId = rpcRes.member_id as string;
+
+      // 3. User is now authorized under RLS to fetch the family profile
+      const { data: remoteFamily, error: findError } = await supabase
+        .from('families')
+        .select('*')
+        .eq('id', joinedFamilyId)
+        .single();
+
+      if (findError || !remoteFamily) {
+        setError(findError?.message || t.sync.invalidCodeError);
+        setIsJoining(false);
+        return;
+      }
+
+      // 4. Update local state
       useAppStore.setState({
         family: {
           id: remoteFamily.id,
           name: remoteFamily.name,
-          currency: '€',
+          currency: remoteFamily.currency || '€',
           invite_code: remoteFamily.invite_code,
           created_at: remoteFamily.created_at,
           updated_at: remoteFamily.updated_at,
         },
+        currentMemberId: joinedMemberId || storeState.currentMemberId,
       });
 
-      // Start realtime sync and fetch remote delta
+      // 5. Start realtime sync and fetch remote delta
       realtimeSync.startRealtimeSync(remoteFamily.id);
       await syncEngine.fetchDelta(remoteFamily.id);
 

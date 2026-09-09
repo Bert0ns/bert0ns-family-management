@@ -303,6 +303,7 @@ export const en: TranslationSchema = {
     invalidEmailError: 'Please enter a valid email address',
     invalidOtpError: 'Please enter the full 6-digit code',
     changeEmailOrResend: 'Change Email / Resend',
+    authRequiredToJoin: 'Please sign in with your email in Cloud Sync before joining a household.',
     joinedHouseholdTitle: 'Joined Household',
   },
 };
