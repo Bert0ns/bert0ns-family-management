@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- Background Gradient: Brand Midnight Indigo -->
+    <linearGradient id="iconBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3730A3" />
+      <stop offset="40%" stop-color="#1E1B4B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+
+    <!-- Emerald Coin Gradient -->
+    <linearGradient id="coinEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <!-- White / Platinum Tone -->
+    <linearGradient id="whiteTone" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </linearGradient>
+
+    <filter id="emblemShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.45" />
+    </filter>
+    <filter id="coinGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="18" flood-color="#10B981" flood-opacity="0.65" />
+    </filter>
+    
+  </defs>
+
+  <!-- Full Bleed Base -->
+  <rect width="1024" height="1024" fill="url(#iconBg)" />
+
+  <!-- Ambient Lighting within Squircle -->
+  <g >
+    <circle cx="512" cy="300" r="360" fill="#6366F1" opacity="0.22" filter="blur(60px)" />
+    <circle cx="512" cy="620" r="260" fill="#10B981" opacity="0.18" filter="blur(50px)" />
+  </g>
+
+  <!-- Main Emblem: House Roof + Cute Chibi Piggy Bank & Emerald Coin -->
+  <g filter="url(#emblemShadow)">
+    <!-- Chimney -->
+    <path d="M 670 270 L 670 360" stroke="url(#whiteTone)" stroke-width="46" stroke-linecap="round" />
+
+    <!-- Bold House Roof (Family Sanctuary) -->
+    <path d="M 210 470 L 512 220 L 814 470" fill="none" stroke="url(#whiteTone)" stroke-width="54" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- House Foundation Frame -->
+    <path d="M 264 480 L 264 764 C 264 782 280 796 300 796 L 724 796 C 744 796 760 782 760 764 L 760 480" fill="none" stroke="rgba(255, 255, 255, 0.22)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Big Shiny Emerald Coin entering the slot -->
+    <g filter="url(#coinGlow)">
+      <circle cx="512" cy="460" r="82" fill="url(#coinEmerald)" stroke="#FFFFFF" stroke-width="12" />
+      <circle cx="512" cy="460" r="58" fill="none" stroke="rgba(255, 255, 255, 0.45)" stroke-width="6" />
+      <!-- Star Sparkle on Coin -->
+      <path d="M 488 436 L 496 436 M 492 432 L 492 440" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" />
+    </g>
+
+    <!-- Adorable Symmetrical Chibi Piggy Bank -->
+    <g>
+      <!-- Ears with cute pink inner folds -->
+      <!-- Left Ear -->
+      <path d="M 380 540 C 354 480 410 472 432 522 Z" fill="url(#whiteTone)" />
+      <path d="M 388 534 C 374 496 408 488 422 522 Z" fill="#FDA4AF" opacity="0.85" />
+      <!-- Right Ear -->
+      <path d="M 644 540 C 670 480 614 472 592 522 Z" fill="url(#whiteTone)" />
+      <path d="M 636 534 C 650 496 616 488 602 522 Z" fill="#FDA4AF" opacity="0.85" />
+
+      <!-- Stubby Rounded Paws / Feet -->
+      <rect x="396" y="734" width="64" height="66" rx="30" fill="url(#whiteTone)" />
+      <rect x="564" y="734" width="64" height="66" rx="30" fill="url(#whiteTone)" />
+
+      <!-- Chubby Plump Body -->
+      <ellipse cx="512" cy="640" rx="176" ry="138" fill="url(#whiteTone)" />
+
+      <!-- Coin Slot Cutout -->
+      <rect x="470" y="516" width="84" height="16" rx="8" fill="#1E1B4B" />
+
+      <!-- Big Kawaii Sparkly Eyes -->
+      <!-- Left Eye -->
+      <circle cx="442" cy="604" r="18" fill="#1E1B4B" />
+      <circle cx="436" cy="598" r="7" fill="#FFFFFF" />
+      <circle cx="446" cy="609" r="3.5" fill="#FFFFFF" />
+
+      <!-- Right Eye -->
+      <circle cx="582" cy="604" r="18" fill="#1E1B4B" />
+      <circle cx="576" cy="598" r="7" fill="#FFFFFF" />
+      <circle cx="586" cy="609" r="3.5" fill="#FFFFFF" />
+
+      <!-- Soft Pink Blush Cheeks -->
+      <ellipse cx="412" cy="634" rx="18" ry="12" fill="#FDA4AF" opacity="0.75" />
+      <ellipse cx="612" cy="634" rx="18" ry="12" fill="#FDA4AF" opacity="0.75" />
+
+      <!-- Cute Button Snout -->
+      <ellipse cx="512" cy="648" rx="50" ry="36" fill="#FFFFFF" filter="drop-shadow(0 3px 6px rgba(0,0,0,0.12))" />
+      <ellipse cx="512" cy="648" rx="50" ry="36" fill="none" stroke="#E2E8F0" stroke-width="4" />
+      <!-- Nostrils -->
+      <ellipse cx="496" cy="648" rx="7" ry="11" fill="#1E1B4B" />
+      <ellipse cx="528" cy="648" rx="7" ry="11" fill="#1E1B4B" />
+
+      <!-- Sweet Smile -->
+      <path d="M 498 700 C 506 708 518 708 526 700" fill="none" stroke="#1E1B4B" stroke-width="8" stroke-linecap="round" />
+    </g>
+  </g>
+</svg>

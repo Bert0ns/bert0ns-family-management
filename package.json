@@ -65,6 +65,7 @@
     "web": "expo start --web",
     "build:web": "expo export --platform web",
     "build:apk:local": "eas build --platform android --local --profile preview",
+    "generate:web-icons": "node scripts/generate-web-icons.js",
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0",
