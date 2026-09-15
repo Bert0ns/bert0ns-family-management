@@ -1,0 +1,387 @@
+<!doctype html>
+
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+      name="viewport"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'surface-container-lowest': '#060e20',
+              'error-container': '#93000a',
+              'secondary-container': '#3131c0',
+              'tertiary-fixed-dim': '#ffb2b7',
+              'on-tertiary': '#67001b',
+              'on-background': '#dae2fd',
+              'surface-container-highest': '#2d3449',
+              'surface-container-low': '#131b2e',
+              tertiary: '#ffb2b7',
+              'inverse-on-surface': '#283044',
+              'on-secondary-fixed-variant': '#2f2ebe',
+              'secondary-fixed-dim': '#c0c1ff',
+              'on-tertiary-fixed-variant': '#92002a',
+              'on-tertiary-fixed': '#40000d',
+              'inverse-primary': '#006c49',
+              'surface-tint': '#4edea3',
+              secondary: '#c0c1ff',
+              'primary-fixed': '#6ffbbe',
+              'inverse-surface': '#dae2fd',
+              'on-primary-fixed': '#002113',
+              'surface-container-high': '#222a3d',
+              'tertiary-container': '#ff7886',
+              outline: '#86948a',
+              error: '#ffb4ab',
+              'on-error': '#690005',
+              'outline-variant': '#3c4a42',
+              'on-secondary': '#1000a9',
+              'tertiary-fixed': '#ffdadb',
+              'surface-bright': '#31394d',
+              'on-primary-container': '#00422b',
+              primary: '#4edea3',
+              'on-tertiary-container': '#780021',
+              background: '#0b1326',
+              'on-primary': '#003824',
+              'on-surface-variant': '#bbcabf',
+              'on-secondary-container': '#b0b2ff',
+              'primary-fixed-dim': '#4edea3',
+              'on-secondary-fixed': '#07006c',
+              'on-surface': '#dae2fd',
+              'on-primary-fixed-variant': '#005236',
+              'on-error-container': '#ffdad6',
+              'surface-dim': '#0b1326',
+              'primary-container': '#10b981',
+              surface: '#0b1326',
+              'surface-variant': '#2d3449',
+              'surface-container': '#171f33',
+              'secondary-fixed': '#e1e0ff',
+            },
+            borderRadius: { DEFAULT: '0.25rem', lg: '0.5rem', xl: '0.75rem', full: '9999px' },
+            spacing: {
+              gutter: '1rem',
+              'space-lg': '1.5rem',
+              margin: '1.25rem',
+              'space-md': '1rem',
+              'space-sm': '0.75rem',
+              'space-xs': '0.5rem',
+              'space-xl': '2.25rem',
+            },
+            fontFamily: {
+              'body-md': ['Plus Jakarta Sans'],
+              'body-lg': ['Plus Jakarta Sans'],
+              'display-currency-mobile': ['Space Grotesk'],
+              'headline-md': ['Space Grotesk'],
+              'label-md': ['Space Grotesk'],
+              'label-lg': ['Space Grotesk'],
+              'headline-sm': ['Space Grotesk'],
+              'headline-lg': ['Space Grotesk'],
+              'display-currency': ['Space Grotesk'],
+            },
+            fontSize: {
+              'body-md': ['16px', { lineHeight: '24px', fontWeight: '500' }],
+              'body-lg': ['18px', { lineHeight: '26px', fontWeight: '600' }],
+              'display-currency-mobile': [
+                '34px',
+                { lineHeight: '40px', letterSpacing: '-0.02em', fontWeight: '700' },
+              ],
+              'headline-md': [
+                '22px',
+                { lineHeight: '28px', letterSpacing: '-0.01em', fontWeight: '600' },
+              ],
+              'label-md': [
+                '14px',
+                { lineHeight: '18px', letterSpacing: '0.03em', fontWeight: '700' },
+              ],
+              'label-lg': [
+                '16px',
+                { lineHeight: '20px', letterSpacing: '0.02em', fontWeight: '700' },
+              ],
+              'headline-sm': ['18px', { lineHeight: '24px', fontWeight: '600' }],
+              'headline-lg': [
+                '28px',
+                { lineHeight: '36px', letterSpacing: '-0.02em', fontWeight: '700' },
+              ],
+              'display-currency': [
+                '44px',
+                { lineHeight: '52px', letterSpacing: '-0.03em', fontWeight: '700' },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @layer base {
+        html,
+        body {
+          width: 100vw;
+          margin: 0;
+          padding: 0;
+          background-color: #0b1326;
+          color: #dae2fd;
+        }
+        body {
+          overscroll-behavior: none;
+        }
+        .pb-safe {
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        .pt-safe {
+          padding-top: env(safe-area-inset-top, 0px);
+        }
+        main > :first-child {
+          margin-top: 0 !important;
+        }
+        main > :last-child {
+          margin-bottom: 0 !important;
+        }
+      }
+      ::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="bg-surface text-on-surface font-body-md flex flex-col min-h-screen">
+    <header
+      class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+    >
+      <div class="h-16 px-margin flex items-center justify-between">
+        <h1 class="font-headline-lg text-headline-lg tracking-tight text-on-surface">
+          Registro Spese
+        </h1>
+        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+          <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+        </div>
+      </div>
+    </header>
+    <main class="flex flex-col relative w-full px-margin pt-16 pb-28 bg-surface flex-grow">
+      <div class="flex flex-col w-full pb-6 space-y-space-md">
+        <div class="w-full flex items-center justify-between py-space-xs">
+          <button
+            aria-label="Chiudi"
+            class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center active:scale-95 transition-transform"
+            type="button"
+          >
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+          <div class="w-12 h-1.5 rounded-full bg-surface-container-highest"></div>
+          <button
+            aria-label="Condividi"
+            class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center active:scale-95 transition-transform"
+            type="button"
+          >
+            <span class="material-symbols-outlined text-[20px]">share</span>
+          </button>
+        </div>
+        <div
+          class="w-full bg-surface-container rounded-xl p-space-md shadow-lg flex flex-col items-center text-center space-y-space-sm relative overflow-hidden"
+        >
+          <div
+            class="w-16 h-16 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center shadow-md"
+          >
+            <span class="material-symbols-outlined text-[32px]">shopping_cart</span>
+          </div>
+          <div class="font-headline-md text-headline-md text-on-surface">Esselunga Superstore</div>
+          <div
+            class="font-display-currency-mobile text-display-currency-mobile text-primary tracking-tight"
+          >
+            € 142,80
+          </div>
+          <div
+            class="px-space-sm py-1 rounded-full bg-surface-container-highest text-on-surface-variant font-label-md text-label-md"
+          >
+            ID #TR-88294
+          </div>
+        </div>
+        <div class="flex flex-col space-y-space-xs w-full">
+          <div
+            class="bg-surface-container-low rounded-xl p-space-md flex items-center justify-between min-h-[60px]"
+          >
+            <div class="font-label-lg text-label-lg text-on-surface-variant">Categoria</div>
+            <div
+              class="flex items-center space-x-space-xs bg-surface-container-highest px-space-sm py-1.5 rounded-lg text-primary"
+            >
+              <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+              <span class="font-label-md text-label-md text-on-surface">Spesa Alimentare</span>
+            </div>
+          </div>
+          <div
+            class="bg-surface-container-low rounded-xl p-space-md flex items-center justify-between min-h-[60px]"
+          >
+            <div class="font-label-lg text-label-lg text-on-surface-variant">Pagato Da</div>
+            <div class="flex items-center space-x-space-xs">
+              <div
+                class="w-7 h-7 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md flex items-center justify-center"
+              >
+                M
+              </div>
+              <span class="font-headline-sm text-headline-sm text-on-surface">Marco</span>
+              <span
+                class="bg-primary/20 text-primary font-label-md text-label-md px-2 py-0.5 rounded"
+                >Admin</span
+              >
+            </div>
+          </div>
+          <div
+            class="bg-surface-container-low rounded-xl p-space-md flex items-center justify-between min-h-[60px]"
+          >
+            <div class="font-label-lg text-label-lg text-on-surface-variant">Data</div>
+            <div class="font-headline-sm text-headline-sm text-on-surface">
+              18 Settembre 2026, 17:45
+            </div>
+          </div>
+          <div
+            class="bg-surface-container-low rounded-xl p-space-md flex items-center justify-between min-h-[60px]"
+          >
+            <div class="font-label-lg text-label-lg text-on-surface-variant">Metodo</div>
+            <div
+              class="flex items-center space-x-space-xs bg-surface-container-high px-space-sm py-1 rounded-lg"
+            >
+              <span class="material-symbols-outlined text-[18px] text-secondary">credit_card</span>
+              <span class="font-headline-sm text-headline-sm text-on-surface">Mastercard</span>
+            </div>
+          </div>
+        </div>
+        <div class="bg-surface-container-low rounded-xl p-space-md space-y-space-sm">
+          <div class="flex items-center justify-between">
+            <div class="font-label-lg text-label-lg text-on-surface">Ripartizione Quote</div>
+            <div class="font-label-md text-label-md text-primary">3 Quote</div>
+          </div>
+          <div class="space-y-space-xs">
+            <div
+              class="flex items-center justify-between p-space-sm bg-surface-container rounded-lg min-h-[56px]"
+            >
+              <div class="flex items-center space-x-space-sm">
+                <div
+                  class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface font-label-md text-label-md flex items-center justify-center"
+                >
+                  M
+                </div>
+                <span class="font-headline-sm text-headline-sm text-on-surface">Marco</span>
+              </div>
+              <div class="flex items-center space-x-space-sm">
+                <span class="font-label-md text-label-md text-on-surface-variant">33.3%</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface">€ 47,60</span>
+              </div>
+            </div>
+            <div
+              class="flex items-center justify-between p-space-sm bg-surface-container rounded-lg min-h-[56px]"
+            >
+              <div class="flex items-center space-x-space-sm">
+                <div
+                  class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface font-label-md text-label-md flex items-center justify-center"
+                >
+                  E
+                </div>
+                <span class="font-headline-sm text-headline-sm text-on-surface">Elena</span>
+              </div>
+              <div class="flex items-center space-x-space-sm">
+                <span class="font-label-md text-label-md text-on-surface-variant">33.3%</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface">€ 47,60</span>
+              </div>
+            </div>
+            <div
+              class="flex items-center justify-between p-space-sm bg-surface-container rounded-lg min-h-[56px]"
+            >
+              <div class="flex items-center space-x-space-sm">
+                <div
+                  class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface font-label-md text-label-md flex items-center justify-center"
+                >
+                  S
+                </div>
+                <span class="font-headline-sm text-headline-sm text-on-surface">Sofia</span>
+              </div>
+              <div class="flex items-center space-x-space-sm">
+                <span class="font-label-md text-label-md text-on-surface-variant">33.3%</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface">€ 47,60</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-surface-container-low rounded-xl p-space-md space-y-space-xs">
+          <div class="font-label-lg text-label-lg text-on-surface-variant">Note</div>
+          <div
+            class="font-body-md text-body-md text-on-surface bg-surface-container p-space-sm rounded-lg"
+          >
+            Spesa settimanale alimentari e prodotti casa
+          </div>
+        </div>
+        <div class="flex flex-col space-y-space-sm pt-space-xs">
+          <button
+            class="w-full h-14 rounded-xl bg-surface-container-highest text-on-surface flex items-center justify-center space-x-space-xs active:scale-[0.98] transition-transform shadow"
+            type="button"
+          >
+            <span class="material-symbols-outlined text-[20px]">edit</span>
+            <span class="font-label-lg text-label-lg">Modifica Spesa</span>
+          </button>
+          <button
+            class="w-full h-14 rounded-xl bg-error-container text-error flex items-center justify-center space-x-space-xs active:scale-[0.98] transition-transform shadow"
+            type="button"
+          >
+            <span class="material-symbols-outlined text-[20px]">delete</span>
+            <span class="font-label-lg text-label-lg">Elimina Transazione</span>
+          </button>
+        </div>
+      </div>
+    </main>
+    <div class="fixed bottom-0 inset-x-0 z-50 pb-safe pointer-events-none flex justify-center">
+      <div class="w-full max-w-md px-space-xs mb-4 pointer-events-auto">
+        <nav
+          class="h-16 rounded-[28px] bg-surface-container/85 backdrop-blur-xl px-space-xs flex items-center justify-around shadow-[0_12px_32px_0_rgba(0,0,0,0.55)] border border-white/10"
+          data-active-classes="bg-primary-container text-on-primary-container shadow-[0_0_16px_rgba(16,185,129,0.35)]"
+        >
+          <a
+            aria-label="Dashboard"
+            class="w-14 h-14 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all duration-200"
+            data-path="dashboard"
+            href="#"
+            ><span class="material-symbols-outlined text-[26px]">dashboard</span></a
+          ><a
+            aria-current="page"
+            aria-label="Registro Spese"
+            class="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 bg-primary-container text-on-primary-container shadow-[0_0_16px_rgba(16,185,129,0.35)]"
+            data-path="registro-spese"
+            href="#"
+            ><span class="material-symbols-outlined text-[26px]">receipt_long</span></a
+          ><a
+            aria-label="Analisi e Saldi"
+            class="w-14 h-14 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all duration-200"
+            data-path="analisi-saldi"
+            href="#"
+            ><span class="material-symbols-outlined text-[26px]">pie_chart</span></a
+          ><a
+            aria-label="Famiglia e Categorie"
+            class="w-14 h-14 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all duration-200"
+            data-path="famiglia-categorie"
+            href="#"
+            ><span class="material-symbols-outlined text-[26px]">group</span></a
+          ><a
+            aria-label="Impostazioni"
+            class="w-14 h-14 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all duration-200"
+            data-path="impostazioni"
+            href="#"
+            ><span class="material-symbols-outlined text-[26px]">settings</span></a
+          >
+        </nav>
+      </div>
+    </div>
+  </body>
+</html>
