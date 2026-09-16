@@ -229,6 +229,8 @@ export default function AddExpenseScreen() {
         <View
           style={{
             flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
             gap: spacing.sm,
             marginTop: spacing.md,
           }}
@@ -295,7 +297,7 @@ export default function AddExpenseScreen() {
           style={{
             flexDirection: 'row',
             flexWrap: 'wrap',
-            gap: spacing.sm,
+            gap: spacing.xs + 2,
           }}
         >
           {categories.map((c) => {
@@ -309,37 +311,38 @@ export default function AddExpenseScreen() {
                 style={{
                   width: '48%',
                   flexGrow: 1,
-                  minHeight: 72,
+                  minHeight: 64,
                   flexDirection: 'row',
                   alignItems: 'center',
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: spacing.md,
+                  paddingHorizontal: spacing.sm + 2,
+                  paddingVertical: spacing.sm,
                   borderRadius: radius.xl,
                   backgroundColor: isSelected ? `${c.color}20` : theme.colors.card,
                   borderWidth: isSelected ? 2.5 : 1.5,
                   borderColor: isSelected ? c.color : theme.colors.cardBorder,
-                  gap: spacing.md,
+                  gap: spacing.sm,
                 }}
               >
                 <View
                   style={{
-                    width: 44,
-                    height: 44,
+                    width: 38,
+                    height: 38,
                     borderRadius: radius.lg,
                     backgroundColor: `${c.color}25`,
                     justifyContent: 'center',
                     alignItems: 'center',
+                    flexShrink: 0,
                   }}
                 >
-                  <IconHelper name={c.icon} size={24} color={c.color} />
+                  <IconHelper name={c.icon} size={20} color={c.color} />
                 </View>
 
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <Text
                     numberOfLines={1}
                     style={{
                       color: isSelected ? c.color : theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.md,
+                      fontSize: typography.fontSizes.sm,
                       fontWeight: isSelected
                         ? typography.fontWeights.heavy
                         : typography.fontWeights.bold,
@@ -352,15 +355,16 @@ export default function AddExpenseScreen() {
                 {isSelected && (
                   <View
                     style={{
-                      width: 24,
-                      height: 24,
+                      width: 20,
+                      height: 20,
                       borderRadius: radius.full,
                       backgroundColor: c.color,
                       justifyContent: 'center',
                       alignItems: 'center',
+                      flexShrink: 0,
                     }}
                   >
-                    <Check size={16} color="#FFFFFF" strokeWidth={3} />
+                    <Check size={13} color="#FFFFFF" strokeWidth={3} />
                   </View>
                 )}
               </TouchableOpacity>
@@ -478,7 +482,7 @@ export default function AddExpenseScreen() {
       </View>
 
       {/* Paid By Family Member */}
-      <View style={{ marginBottom: spacing.xl }}>
+      <View style={{ marginBottom: spacing.xl, width: '100%', overflow: 'hidden' }}>
         <Text
           style={{
             color: theme.colors.textPrimary,
@@ -493,7 +497,8 @@ export default function AddExpenseScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing.md }}
+          style={{ width: '100%' }}
+          contentContainerStyle={{ gap: spacing.sm, paddingVertical: 2 }}
         >
           {members.map((m) => {
             const isSelected = paidByMemberId === m.id;
@@ -505,13 +510,13 @@ export default function AddExpenseScreen() {
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  minHeight: 56,
-                  paddingHorizontal: spacing.lg,
+                  minHeight: 52,
+                  paddingHorizontal: spacing.md,
                   borderRadius: radius.xl,
                   backgroundColor: isSelected ? theme.colors.brandLight : theme.colors.card,
                   borderWidth: isSelected ? 2.5 : 1.5,
                   borderColor: isSelected ? theme.colors.brand : theme.colors.cardBorder,
-                  gap: spacing.md,
+                  gap: spacing.sm,
                 }}
               >
                 <Avatar

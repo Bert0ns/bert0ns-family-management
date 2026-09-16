@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, Platform, Alert } from 'react-native';
-import { X, Trash2, Calendar, CreditCard, User, Tag, Split } from 'lucide-react-native';
+import { X, Trash2, Calendar, CreditCard, User, Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName, getLocalizedPaymentMethod } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -86,7 +86,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               backgroundColor: theme.colors.surface,
               borderTopLeftRadius: radius.xxl,
               borderTopRightRadius: radius.xxl,
-              paddingHorizontal: spacing.xl,
+              paddingHorizontal: spacing.lg,
               paddingBottom: spacing.xl,
               paddingTop: spacing.sm,
               maxHeight: '88%',
@@ -132,7 +132,11 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                 color: theme.colors.textPrimary,
                 fontSize: typography.fontSizes.xl,
                 fontWeight: typography.fontWeights.bold,
+                flex: 1,
+                minWidth: 0,
+                marginRight: spacing.sm,
               }}
+              numberOfLines={1}
             >
               {t.expenseDetail.title}
             </Text>
@@ -148,6 +152,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   : theme.colors.surfaceSubtle,
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
               <X size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />
@@ -186,69 +191,97 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               <Text
                 style={{
                   color: theme.colors.textPrimary,
-                  fontSize: typography.fontSizes.xxl,
+                  fontSize: typography.fontSizes.xxxl,
                   fontWeight: typography.fontWeights.heavy,
-                  textAlign: 'center',
-                }}
-              >
-                {expense.merchant_name}
-              </Text>
-
-              <Text
-                style={{
-                  color: theme.colors.brand,
-                  fontSize: typography.fontSizes.giant,
-                  fontWeight: typography.fontWeights.heavy,
-                  marginTop: spacing.xs,
                   letterSpacing: -0.5,
                 }}
               >
                 {currency}
                 {expense.amount.toFixed(2)}
               </Text>
+
+              <Text
+                style={{
+                  color: theme.colors.textPrimary,
+                  fontSize: typography.fontSizes.lg,
+                  fontWeight: typography.fontWeights.bold,
+                  marginTop: 4,
+                  textAlign: 'center',
+                  paddingHorizontal: spacing.md,
+                }}
+              >
+                {expense.merchant_name}
+              </Text>
+
+              <View style={{ marginTop: spacing.xs }}>
+                <Badge label={catName} color={catColor} size="md" variant="subtle" />
+              </View>
             </View>
 
-            {/* Info Grid */}
-            <View style={{ gap: spacing.md, marginBottom: spacing.xl }}>
-              {/* Category */}
+            {/* Metadata Table Rows */}
+            <View
+              style={{
+                backgroundColor: theme.isDark
+                  ? theme.colors.surfaceContainerHigh
+                  : theme.colors.surfaceSubtle,
+                borderRadius: radius.xl,
+                borderWidth: 1.5,
+                borderColor: theme.colors.borderTactile,
+                padding: spacing.md,
+                marginBottom: spacing.lg,
+                gap: spacing.md,
+              }}
+            >
+              {/* Date */}
               <View
                 style={{
                   flexDirection: 'row',
-                  alignItems: 'center',
                   justifyContent: 'space-between',
-                  paddingVertical: spacing.xs,
+                  alignItems: 'center',
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                  <Tag size={18} color={theme.colors.textSecondary} strokeWidth={2.5} />
+                  <Calendar size={18} color={theme.colors.textMuted} />
                   <Text
                     style={{
                       color: theme.colors.textSecondary,
-                      fontSize: typography.fontSizes.md,
+                      fontSize: typography.fontSizes.sm,
                       fontWeight: typography.fontWeights.medium,
                     }}
                   >
-                    {t.expenseDetail.category}
+                    {t.expenseDetail.date}
                   </Text>
                 </View>
-                <Badge label={catName} color={catColor} size="md" />
+                <Text
+                  style={{
+                    color: theme.colors.textPrimary,
+                    fontSize: typography.fontSizes.sm,
+                    fontWeight: typography.fontWeights.bold,
+                  }}
+                >
+                  {new Date(expense.transaction_date).toLocaleDateString(dateLocale, {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </Text>
               </View>
 
-              {/* Paid by */}
+              {/* Paid By */}
               <View
                 style={{
                   flexDirection: 'row',
-                  alignItems: 'center',
                   justifyContent: 'space-between',
-                  paddingVertical: spacing.xs,
+                  alignItems: 'center',
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                  <User size={18} color={theme.colors.textSecondary} strokeWidth={2.5} />
+                  <User size={18} color={theme.colors.textMuted} />
                   <Text
                     style={{
                       color: theme.colors.textSecondary,
-                      fontSize: typography.fontSizes.md,
+                      fontSize: typography.fontSizes.sm,
                       fontWeight: typography.fontWeights.medium,
                     }}
                   >
@@ -265,8 +298,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   <Text
                     style={{
                       color: theme.colors.textPrimary,
+                      fontSize: typography.fontSizes.sm,
                       fontWeight: typography.fontWeights.bold,
-                      fontSize: typography.fontSizes.md,
                     }}
                   >
                     {memberName}
@@ -274,199 +307,161 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                 </View>
               </View>
 
-              {/* Date */}
+              {/* Payment Method */}
               <View
                 style={{
                   flexDirection: 'row',
-                  alignItems: 'center',
                   justifyContent: 'space-between',
-                  paddingVertical: spacing.xs,
+                  alignItems: 'center',
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                  <Calendar size={18} color={theme.colors.textSecondary} strokeWidth={2.5} />
+                  <CreditCard size={18} color={theme.colors.textMuted} />
                   <Text
                     style={{
                       color: theme.colors.textSecondary,
-                      fontSize: typography.fontSizes.md,
+                      fontSize: typography.fontSizes.sm,
                       fontWeight: typography.fontWeights.medium,
                     }}
                   >
-                    {t.expenseDetail.date}
+                    {t.expenseDetail.paymentMethod}
                   </Text>
                 </View>
                 <Text
                   style={{
                     color: theme.colors.textPrimary,
+                    fontSize: typography.fontSizes.sm,
                     fontWeight: typography.fontWeights.bold,
-                    fontSize: typography.fontSizes.md,
                   }}
                 >
-                  {new Date(expense.transaction_date).toLocaleDateString(dateLocale, {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
+                  {localizedPaymentMethod}
                 </Text>
               </View>
 
-              {/* Payment Method */}
-              {expense.payment_method && (
+              {/* Notes (if present) */}
+              {Boolean(expense.notes) && (
                 <View
                   style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingVertical: spacing.xs,
+                    borderTopWidth: 1,
+                    borderTopColor: theme.colors.borderTactile,
+                    paddingTop: spacing.sm,
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                    <CreditCard size={18} color={theme.colors.textSecondary} strokeWidth={2.5} />
-                    <Text
-                      style={{
-                        color: theme.colors.textSecondary,
-                        fontSize: typography.fontSizes.md,
-                        fontWeight: typography.fontWeights.medium,
-                      }}
-                    >
-                      {t.expenseDetail.paymentMethod}
-                    </Text>
-                  </View>
-                  <Text
-                    style={{
-                      color: theme.colors.textPrimary,
-                      fontWeight: typography.fontWeights.bold,
-                      fontSize: typography.fontSizes.md,
-                    }}
-                  >
-                    {localizedPaymentMethod}
-                  </Text>
-                </View>
-              )}
-
-              {/* Split Breakdown */}
-              {expense.splits && expense.splits.length > 0 && (
-                <View
-                  style={{
-                    backgroundColor: theme.isDark
-                      ? theme.colors.surfaceContainerHigh
-                      : theme.colors.surfaceSubtle,
-                    padding: spacing.md,
-                    borderRadius: radius.xl,
-                    borderWidth: 1.5,
-                    borderColor: theme.colors.borderTactile,
-                  }}
-                >
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: spacing.xs,
-                      marginBottom: spacing.sm,
-                    }}
-                  >
-                    <Split size={16} color={theme.colors.brand} strokeWidth={2.5} />
-                    <Text
-                      style={{
-                        color: theme.colors.textPrimary,
-                        fontSize: typography.fontSizes.sm,
-                        fontWeight: typography.fontWeights.bold,
-                      }}
-                    >
-                      {t.expenseDetail.splitBreakdown} ({expense.splits.length}{' '}
-                      {t.dashboard.familyMembers})
-                    </Text>
-                  </View>
-                  <View style={{ gap: spacing.xs }}>
-                    {expense.splits.map((s) => {
-                      const splitMember = resolvedAllMembers.find((m) => m.id === s.member_id);
-                      return (
-                        <View
-                          key={s.member_id}
-                          style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: theme.colors.textSecondary,
-                              fontSize: typography.fontSizes.sm,
-                              fontWeight: typography.fontWeights.medium,
-                            }}
-                          >
-                            {splitMember?.display_name || t.family.roleMember}
-                          </Text>
-                          <Text
-                            style={{
-                              color: theme.colors.textPrimary,
-                              fontSize: typography.fontSizes.sm,
-                              fontWeight: typography.fontWeights.bold,
-                            }}
-                          >
-                            {currency}
-                            {s.share_amount.toFixed(2)}
-                          </Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-              )}
-
-              {/* Notes */}
-              {expense.notes && (
-                <View style={{ marginTop: spacing.xs }}>
                   <Text
                     style={{
                       color: theme.colors.textSecondary,
-                      fontSize: typography.fontSizes.sm,
-                      fontWeight: typography.fontWeights.bold,
-                      marginBottom: 4,
+                      fontSize: typography.fontSizes.xs,
+                      fontWeight: typography.fontWeights.medium,
+                      marginBottom: 2,
                     }}
                   >
                     {t.expenseDetail.notes}
                   </Text>
-                  <View
+                  <Text
                     style={{
-                      backgroundColor: theme.isDark
-                        ? theme.colors.surfaceContainerHigh
-                        : theme.colors.surfaceSubtle,
-                      padding: spacing.md,
-                      borderRadius: radius.lg,
-                      borderWidth: 1.5,
-                      borderColor: theme.colors.borderTactile,
+                      color: theme.colors.textPrimary,
+                      fontSize: typography.fontSizes.sm,
+                      fontWeight: typography.fontWeights.medium,
+                      lineHeight: 20,
                     }}
                   >
-                    <Text
-                      style={{
-                        color: theme.colors.textPrimary,
-                        fontSize: typography.fontSizes.md,
-                      }}
-                    >
-                      {expense.notes}
-                    </Text>
-                  </View>
+                    {expense.notes}
+                  </Text>
                 </View>
               )}
             </View>
 
+            {/* Splits (if present) */}
+            {expense.splits && expense.splits.length > 0 && (
+              <View
+                style={{
+                  backgroundColor: theme.isDark
+                    ? theme.colors.surfaceContainerHigh
+                    : theme.colors.surfaceSubtle,
+                  borderRadius: radius.xl,
+                  borderWidth: 1.5,
+                  borderColor: theme.colors.borderTactile,
+                  padding: spacing.md,
+                  marginBottom: spacing.lg,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.xs,
+                    marginBottom: spacing.sm,
+                  }}
+                >
+                  <Split size={16} color={theme.colors.brand} />
+                  <Text
+                    style={{
+                      color: theme.colors.textPrimary,
+                      fontSize: typography.fontSizes.sm,
+                      fontWeight: typography.fontWeights.bold,
+                    }}
+                  >
+                    {t.expenseDetail.splitBreakdown} ({expense.splits.length})
+                  </Text>
+                </View>
+
+                {expense.splits.map((s, idx) => {
+                  const m = resolvedAllMembers.find((mem) => mem.id === s.member_id);
+                  return (
+                    <View
+                      key={idx}
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        paddingVertical: 6,
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                        <Avatar
+                          name={m?.display_name || '?'}
+                          avatarUrl={m?.avatar_url}
+                          colorCode={m?.color_code}
+                          size="sm"
+                        />
+                        <Text
+                          style={{
+                            color: theme.colors.textPrimary,
+                            fontSize: typography.fontSizes.sm,
+                            fontWeight: typography.fontWeights.medium,
+                          }}
+                        >
+                          {m?.display_name || '?'}
+                        </Text>
+                      </View>
+                      <Text
+                        style={{
+                          color: theme.colors.brand,
+                          fontSize: typography.fontSizes.sm,
+                          fontWeight: typography.fontWeights.bold,
+                        }}
+                      >
+                        {currency}
+                        {s.share_amount.toFixed(2)}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
             {/* Actions */}
-            <View style={{ flexDirection: 'row', gap: spacing.md }}>
+            <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs }}>
               <Button
                 title={t.common.delete}
                 variant="danger"
-                size="md"
-                icon={<Trash2 size={18} color="#FFFFFF" strokeWidth={2.5} />}
+                icon={<Trash2 size={18} color="#EF4444" />}
                 onPress={handleDelete}
                 style={{ flex: 1 }}
               />
               <Button
                 title={t.common.close}
-                variant="secondary"
-                size="md"
+                variant="outline"
                 onPress={onClose}
                 style={{ flex: 1 }}
               />

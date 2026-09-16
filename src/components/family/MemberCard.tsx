@@ -67,7 +67,16 @@ export const MemberCard: React.FC<MemberCardProps> = ({
   const content = (
     <Card padding="md" style={{ marginBottom: spacing.sm }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.md,
+            flex: 1,
+            minWidth: 0,
+            marginRight: spacing.sm,
+          }}
+        >
           <Avatar
             name={member.display_name}
             avatarUrl={member.avatar_url}
@@ -75,14 +84,22 @@ export const MemberCard: React.FC<MemberCardProps> = ({
             size="lg"
           />
 
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.xs,
+                flexWrap: 'wrap',
+              }}
+            >
               <Text
                 style={{
                   color: theme.colors.textPrimary,
                   fontSize: typography.fontSizes.md,
                   fontWeight: typography.fontWeights.bold,
                 }}
+                numberOfLines={1}
               >
                 {member.display_name}
               </Text>
@@ -111,7 +128,9 @@ export const MemberCard: React.FC<MemberCardProps> = ({
           </View>
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+        <View
+          style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0 }}
+        >
           <View style={{ alignItems: 'flex-end' }}>
             <Text
               style={{
@@ -119,6 +138,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
                 fontSize: typography.fontSizes.lg,
                 fontWeight: typography.fontWeights.bold,
               }}
+              numberOfLines={1}
             >
               {currency}
               {totalSpent.toFixed(2)}

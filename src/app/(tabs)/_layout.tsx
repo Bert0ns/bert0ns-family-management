@@ -12,15 +12,15 @@ export default function TabsLayout() {
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
 
-  const floatingBottom = Math.max(insets.bottom, 16);
+  const floatingBottom = Math.max(insets.bottom, 14);
 
   const renderTabIcon = (IconComponent: any, focused: boolean, color: any, label: string) => (
     <View
       accessibilityLabel={label}
       style={{
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: focused ? theme.colors.brandLight : 'transparent',
@@ -29,7 +29,7 @@ export default function TabsLayout() {
       }}
     >
       <IconComponent
-        size={24}
+        size={22}
         color={focused ? theme.colors.brand : color}
         strokeWidth={focused ? 2.5 : 2}
       />
@@ -49,7 +49,7 @@ export default function TabsLayout() {
             style={[
               StyleSheet.absoluteFill,
               {
-                borderRadius: 32,
+                borderRadius: 31,
                 overflow: 'hidden',
                 backgroundColor: theme.colors.bottomBarBg,
               },
@@ -59,28 +59,29 @@ export default function TabsLayout() {
         tabBarStyle: {
           position: 'absolute',
           bottom: floatingBottom,
-          left: 20,
-          right: 20,
-          height: 64,
+          left: 14,
+          right: 14,
+          height: 62,
           backgroundColor: 'transparent',
-          borderRadius: 32,
+          borderRadius: 31,
           borderWidth: 1.5,
           borderColor: theme.colors.bottomBarBorder,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: theme.isDark ? 0.5 : 0.12,
-          shadowRadius: 24,
-          elevation: 12,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: theme.isDark ? 0.45 : 0.1,
+          shadowRadius: 20,
+          elevation: 10,
           paddingTop: 0,
           paddingBottom: 0,
-          paddingHorizontal: 8,
+          paddingHorizontal: 6,
           overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
         },
         tabBarItemStyle: {
           flex: 1,
+          minWidth: 0,
           justifyContent: 'center',
           alignItems: 'center',
-          height: 64,
+          height: 62,
           padding: 0,
           margin: 0,
         },
@@ -89,13 +90,13 @@ export default function TabsLayout() {
         },
         headerTitleStyle: {
           fontWeight: '700',
-          fontSize: 20,
+          fontSize: 19,
           color: theme.colors.textPrimary,
         },
         headerTintColor: theme.colors.textPrimary,
         headerShadowVisible: false,
-        headerRight: () => <SyncBadge />,
-        headerRightContainerStyle: { paddingRight: 20 },
+        headerRight: () => <SyncBadge showLabel={false} />,
+        headerRightContainerStyle: { paddingRight: 16 },
       }}
     >
       <Tabs.Screen

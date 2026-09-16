@@ -18,7 +18,7 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
-  const [chartWidth, setChartWidth] = useState<number>(320);
+  const [chartWidth, setChartWidth] = useState<number>(300);
 
   if (!data || data.length === 0) return null;
 
@@ -87,13 +87,14 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
           marginBottom: spacing.md,
         }}
       >
-        <View>
+        <View style={{ flex: 1, minWidth: 0, marginRight: spacing.sm }}>
           <Text
             style={{
               color: theme.colors.textPrimary,
               fontSize: typography.fontSizes.lg,
               fontWeight: typography.fontWeights.heavy,
             }}
+            numberOfLines={1}
           >
             {t.analytics.velocityTitle}
           </Text>
@@ -103,6 +104,7 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
               fontSize: typography.fontSizes.xs,
               marginTop: 2,
             }}
+            numberOfLines={1}
           >
             {t.analytics.velocitySubtitle}
           </Text>
@@ -115,6 +117,7 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
             paddingVertical: spacing.xs,
             borderRadius: radius.md,
             alignItems: 'flex-end',
+            flexShrink: 0,
           }}
         >
           <Text
@@ -136,7 +139,7 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
           const { width } = e.nativeEvent.layout;
           if (width > 0) setChartWidth(width);
         }}
-        style={{ height: chartHeight, width: '100%' }}
+        style={{ height: chartHeight, width: '100%', overflow: 'hidden' }}
       >
         <Svg width={chartWidth} height={chartHeight}>
           <Defs>
@@ -177,7 +180,7 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
           marginTop: spacing.md,
         }}
       >
-        <Info size={20} color={theme.colors.brand} />
+        <Info size={20} color={theme.colors.brand} style={{ flexShrink: 0 }} />
         <Text
           style={{
             color: theme.colors.textPrimary,

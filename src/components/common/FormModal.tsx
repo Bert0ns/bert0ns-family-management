@@ -51,7 +51,7 @@ export const FormModal: React.FC<FormModalProps> = ({
               backgroundColor: theme.colors.surface,
               borderTopLeftRadius: radius.xxl,
               borderTopRightRadius: radius.xxl,
-              paddingHorizontal: spacing.xl,
+              paddingHorizontal: spacing.lg,
               paddingBottom: spacing.xl,
               paddingTop: spacing.sm,
               maxHeight: '90%',
@@ -91,14 +91,25 @@ export const FormModal: React.FC<FormModalProps> = ({
               marginBottom: spacing.lg,
             }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.xs,
+                flex: 1,
+                minWidth: 0,
+                marginRight: spacing.sm,
+              }}
+            >
               {icon}
               <Text
                 style={{
                   color: theme.colors.textPrimary,
                   fontSize: typography.fontSizes.xl,
                   fontWeight: typography.fontWeights.bold,
+                  flex: 1,
                 }}
+                numberOfLines={1}
               >
                 {title}
               </Text>
@@ -107,6 +118,7 @@ export const FormModal: React.FC<FormModalProps> = ({
             <TouchableOpacity
               onPress={onClose}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={{ flexShrink: 0 }}
             >
               <X size={24} color={theme.colors.textSecondary} />
             </TouchableOpacity>
