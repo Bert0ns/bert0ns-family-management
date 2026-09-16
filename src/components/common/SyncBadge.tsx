@@ -49,7 +49,7 @@ export const SyncBadge: React.FC<SyncBadgeProps> = ({ onPress, showLabel = true 
       return {
         label: t.sync.statusSyncing,
         color: theme.colors.brand,
-        icon: <ActivityIndicator size={12} color={theme.colors.brand} />,
+        icon: <ActivityIndicator size={14} color={theme.colors.brand} />,
       };
     }
     switch (status) {
@@ -57,20 +57,20 @@ export const SyncBadge: React.FC<SyncBadgeProps> = ({ onPress, showLabel = true 
         return {
           label: t.sync.statusSynced,
           color: theme.colors.success,
-          icon: <Check size={12} color={theme.colors.success} />,
+          icon: <Check size={14} color={theme.colors.success} strokeWidth={2.5} />,
         };
       case 'error':
         return {
           label: t.sync.statusError,
           color: theme.colors.danger,
-          icon: <AlertCircle size={12} color={theme.colors.danger} />,
+          icon: <AlertCircle size={14} color={theme.colors.danger} strokeWidth={2.5} />,
         };
       case 'offline':
       default:
         return {
           label: t.sync.statusOffline,
           color: theme.colors.textMuted,
-          icon: <CloudOff size={12} color={theme.colors.textMuted} />,
+          icon: <CloudOff size={14} color={theme.colors.textMuted} strokeWidth={2.5} />,
         };
     }
   };
@@ -79,18 +79,20 @@ export const SyncBadge: React.FC<SyncBadgeProps> = ({ onPress, showLabel = true 
 
   return (
     <TouchableOpacity
-      activeOpacity={0.7}
+      activeOpacity={0.75}
       onPress={handlePress}
+      accessibilityLabel={`Sync: ${label}`}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 4,
+        paddingHorizontal: spacing.md,
+        paddingVertical: 6,
+        minHeight: 36,
         borderRadius: radius.full,
-        backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
-        borderWidth: 1,
-        borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+        backgroundColor: theme.isDark ? 'rgba(34, 42, 61, 0.8)' : 'rgba(241, 245, 249, 0.9)',
+        borderWidth: 1.5,
+        borderColor: theme.colors.borderTactile,
       }}
     >
       {icon}
@@ -98,8 +100,9 @@ export const SyncBadge: React.FC<SyncBadgeProps> = ({ onPress, showLabel = true 
         <Text
           style={{
             fontSize: typography.fontSizes.xs,
-            fontWeight: typography.fontWeights.medium,
+            fontWeight: typography.fontWeights.bold,
             color,
+            letterSpacing: 0.2,
           }}
         >
           {label}

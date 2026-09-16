@@ -38,14 +38,14 @@ export const KPIStat: React.FC<KPIStatProps> = ({
 
   return (
     <Card style={[{ flex: 1, minWidth: 150 }, style]} padding="md">
-      <View
-        style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}
-      >
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <Text
           style={{
             color: theme.colors.textSecondary,
             fontSize: typography.fontSizes.sm,
-            fontWeight: typography.fontWeights.medium,
+            fontWeight: typography.fontWeights.semibold,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
           }}
         >
           {title}
@@ -53,9 +53,11 @@ export const KPIStat: React.FC<KPIStatProps> = ({
         {icon && (
           <View
             style={{
-              padding: spacing.xs,
+              padding: spacing.xs + 2,
               borderRadius: radius.md,
               backgroundColor: bg,
+              borderWidth: 1,
+              borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
             }}
           >
             {icon}
@@ -67,8 +69,9 @@ export const KPIStat: React.FC<KPIStatProps> = ({
         style={{
           color: theme.colors.textPrimary,
           fontSize: typography.fontSizes.xxl,
-          fontWeight: typography.fontWeights.bold,
-          marginTop: spacing.xs,
+          fontWeight: typography.fontWeights.heavy,
+          marginTop: spacing.sm,
+          letterSpacing: -0.5,
         }}
       >
         {value}
@@ -78,9 +81,9 @@ export const KPIStat: React.FC<KPIStatProps> = ({
         <Text
           style={{
             color: accent,
-            fontSize: typography.fontSizes.xs,
-            fontWeight: typography.fontWeights.medium,
-            marginTop: spacing.xxs,
+            fontSize: typography.fontSizes.sm,
+            fontWeight: typography.fontWeights.semibold,
+            marginTop: spacing.xs,
           }}
         >
           {subtitle}
@@ -90,11 +93,13 @@ export const KPIStat: React.FC<KPIStatProps> = ({
       {progress !== undefined && (
         <View
           style={{
-            height: 6,
+            height: 8,
             backgroundColor: theme.colors.surfaceSubtle,
             borderRadius: radius.full,
-            marginTop: spacing.sm,
+            marginTop: spacing.md,
             overflow: 'hidden',
+            borderWidth: 1,
+            borderColor: theme.colors.borderTactile,
           }}
         >
           <View

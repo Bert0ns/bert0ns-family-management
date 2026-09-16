@@ -23,8 +23,8 @@ export const Card: React.FC<CardProps> = ({
   const paddingValues: Record<CardPadding, number> = {
     none: 0,
     sm: spacing.sm,
-    md: spacing.md,
-    lg: spacing.lg,
+    md: spacing.md + 2,
+    lg: spacing.lg + 4,
   };
 
   const isElevated = variant === 'elevated' || variant === 'glass';
@@ -33,22 +33,25 @@ export const Card: React.FC<CardProps> = ({
   const shadowStyles = isWeb
     ? isElevated
       ? ({
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
           boxShadow: theme.isDark
-            ? '0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
-            : '0 8px 28px rgba(148, 163, 184, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+            ? '0 10px 32px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
+            : '0 8px 28px -2px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
         } as any)
       : ({
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          boxShadow: theme.isDark
+            ? '0 4px 16px -2px rgba(0, 0, 0, 0.4)'
+            : '0 2px 8px rgba(15, 23, 42, 0.04)',
         } as any)
     : {
         shadowColor: theme.colors.shadow,
-        shadowOffset: { width: 0, height: isElevated ? 6 : 0 },
-        shadowOpacity: isElevated ? (theme.isDark ? 0.35 : 0.08) : 0,
-        shadowRadius: isElevated ? 16 : 0,
-        elevation: isElevated ? 4 : 0,
+        shadowOffset: { width: 0, height: isElevated ? 6 : 2 },
+        shadowOpacity: isElevated ? (theme.isDark ? 0.4 : 0.08) : 0.04,
+        shadowRadius: isElevated ? 18 : 6,
+        elevation: isElevated ? 5 : 2,
       };
 
   const getBackgroundColor = () => {
@@ -56,9 +59,10 @@ export const Card: React.FC<CardProps> = ({
       case 'subtle':
         return theme.colors.surfaceSubtle;
       case 'glass':
-        return (theme.colors as any).glass || theme.colors.card;
-      case 'elevated':
+        return theme.colors.glass;
       case 'outlined':
+        return theme.isDark ? 'rgba(19, 27, 46, 0.6)' : 'rgba(255, 255, 255, 0.7)';
+      case 'elevated':
       default:
         return theme.colors.card;
     }
@@ -68,8 +72,8 @@ export const Card: React.FC<CardProps> = ({
     backgroundColor: getBackgroundColor(),
     borderRadius: radius.xl,
     padding: paddingValues[padding] ?? spacing.md,
-    borderWidth: 1,
-    borderColor: variant === 'outlined' ? theme.colors.border : theme.colors.cardBorder,
+    borderWidth: 1.5,
+    borderColor: variant === 'outlined' ? theme.colors.borderTactile : theme.colors.cardBorder,
     ...shadowStyles,
   };
 
