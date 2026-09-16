@@ -38,6 +38,8 @@ const getYesterdayLocalIso = (): string => {
   return `${year}-${month}-${day}`;
 };
 
+const QUICK_AMOUNTS = [5, 10, 20, 50];
+
 export default function AddExpenseScreen() {
   const router = useRouter();
   const { theme, spacing, radius, typography } = useTheme();
@@ -73,13 +75,21 @@ export default function AddExpenseScreen() {
 
   const numericAmount = parseFloat(amount.replace(',', '.'));
 
+  const handleQuickAdd = (increment: number) => {
+    const current = isNaN(numericAmount) ? 0 : numericAmount;
+    const updated = (current + increment).toFixed(2);
+    setAmount(updated);
+    if (errors.amount) setErrors((prev) => ({ ...prev, amount: undefined }));
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {}
+  };
+
   const handleSelectCategory = (catId: string) => {
     setSelectedCategoryId(catId);
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {
-      // safe fallback on unsupported web
-    }
+    } catch {}
   };
 
   const handleDateModeChange = (mode: 'today' | 'yesterday' | 'custom') => {
@@ -91,9 +101,7 @@ export default function AddExpenseScreen() {
     }
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {
-      // safe fallback
-    }
+    } catch {}
   };
 
   const handleSave = () => {
@@ -132,9 +140,7 @@ export default function AddExpenseScreen() {
 
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch {
-      // safe fallback
-    }
+    } catch {}
 
     router.back();
   };
@@ -142,32 +148,32 @@ export default function AddExpenseScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 120 }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140 }}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      {/* Native Hero Amount Input */}
+      {/* Native Hero Amount Input with Tactile Glass Container */}
       <View
         style={{
           backgroundColor: theme.colors.card,
-          borderRadius: radius.xl,
+          borderRadius: radius.xxl,
           paddingVertical: spacing.xl,
           paddingHorizontal: spacing.lg,
-          borderWidth: 2,
-          borderColor: errors.amount ? theme.colors.danger : theme.colors.border,
-          marginBottom: spacing.xl,
+          borderWidth: 1.5,
+          borderColor: errors.amount ? theme.colors.danger : theme.colors.cardBorder,
+          marginBottom: spacing.lg,
           alignItems: 'center',
           shadowColor: theme.colors.shadow,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
-          elevation: 3,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.12,
+          shadowRadius: 16,
+          elevation: 4,
         }}
       >
         <Text
           style={{
             fontSize: typography.fontSizes.sm,
-            fontWeight: typography.fontWeights.semibold,
+            fontWeight: typography.fontWeights.bold,
             color: theme.colors.textSecondary,
             textTransform: 'uppercase',
             letterSpacing: 1,
@@ -208,7 +214,7 @@ export default function AddExpenseScreen() {
             returnKeyType="done"
             autoFocus={true}
             style={{
-              fontSize: 52,
+              fontSize: 48,
               fontWeight: '900',
               color: theme.colors.textPrimary,
               minWidth: 160,
@@ -219,13 +225,51 @@ export default function AddExpenseScreen() {
           />
         </View>
 
+        {/* Quick Amount Increment Chips */}
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: spacing.sm,
+            marginTop: spacing.md,
+          }}
+        >
+          {QUICK_AMOUNTS.map((amt) => (
+            <TouchableOpacity
+              key={amt}
+              activeOpacity={0.75}
+              onPress={() => handleQuickAdd(amt)}
+              style={{
+                paddingHorizontal: spacing.md,
+                paddingVertical: 6,
+                borderRadius: radius.full,
+                backgroundColor: theme.isDark
+                  ? theme.colors.surfaceContainerHigh
+                  : theme.colors.surfaceSubtle,
+                borderWidth: 1,
+                borderColor: theme.colors.borderTactile,
+              }}
+            >
+              <Text
+                style={{
+                  color: theme.colors.textPrimary,
+                  fontSize: typography.fontSizes.sm,
+                  fontWeight: typography.fontWeights.bold,
+                }}
+              >
+                +{family.currency}
+                {amt}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {errors.amount && (
           <Text
             style={{
               color: theme.colors.danger,
               fontSize: typography.fontSizes.sm,
-              fontWeight: typography.fontWeights.semibold,
-              marginTop: spacing.xs,
+              fontWeight: typography.fontWeights.bold,
+              marginTop: spacing.sm,
             }}
           >
             {errors.amount}
@@ -241,6 +285,7 @@ export default function AddExpenseScreen() {
             fontSize: typography.fontSizes.lg,
             fontWeight: typography.fontWeights.bold,
             marginBottom: spacing.md,
+            letterSpacing: 0.2,
           }}
         >
           {t.addExpense.categoryLabel}
@@ -259,7 +304,7 @@ export default function AddExpenseScreen() {
             return (
               <TouchableOpacity
                 key={c.id}
-                activeOpacity={0.7}
+                activeOpacity={0.75}
                 onPress={() => handleSelectCategory(c.id)}
                 style={{
                   width: '48%',
@@ -269,10 +314,10 @@ export default function AddExpenseScreen() {
                   alignItems: 'center',
                   paddingHorizontal: spacing.md,
                   paddingVertical: spacing.md,
-                  borderRadius: radius.lg,
-                  backgroundColor: isSelected ? `${c.color}22` : theme.colors.card,
-                  borderWidth: isSelected ? 3 : 1.5,
-                  borderColor: isSelected ? c.color : theme.colors.border,
+                  borderRadius: radius.xl,
+                  backgroundColor: isSelected ? `${c.color}20` : theme.colors.card,
+                  borderWidth: isSelected ? 2.5 : 1.5,
+                  borderColor: isSelected ? c.color : theme.colors.cardBorder,
                   gap: spacing.md,
                 }}
               >
@@ -280,7 +325,7 @@ export default function AddExpenseScreen() {
                   style={{
                     width: 44,
                     height: 44,
-                    borderRadius: radius.md,
+                    borderRadius: radius.lg,
                     backgroundColor: `${c.color}25`,
                     justifyContent: 'center',
                     alignItems: 'center',
@@ -297,7 +342,7 @@ export default function AddExpenseScreen() {
                       fontSize: typography.fontSizes.md,
                       fontWeight: isSelected
                         ? typography.fontWeights.heavy
-                        : typography.fontWeights.semibold,
+                        : typography.fontWeights.bold,
                     }}
                   >
                     {catDisplayName}
@@ -332,6 +377,7 @@ export default function AddExpenseScreen() {
             fontSize: typography.fontSizes.lg,
             fontWeight: typography.fontWeights.bold,
             marginBottom: spacing.md,
+            letterSpacing: 0.2,
           }}
         >
           {t.addExpense.dateLabel}
@@ -339,7 +385,7 @@ export default function AddExpenseScreen() {
 
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <TouchableOpacity
-            activeOpacity={0.7}
+            activeOpacity={0.75}
             onPress={() => handleDateModeChange('today')}
             style={{
               flex: 1,
@@ -349,7 +395,7 @@ export default function AddExpenseScreen() {
               borderRadius: radius.lg,
               backgroundColor: dateMode === 'today' ? theme.colors.brand : theme.colors.card,
               borderWidth: 1.5,
-              borderColor: dateMode === 'today' ? theme.colors.brand : theme.colors.border,
+              borderColor: dateMode === 'today' ? theme.colors.brand : theme.colors.cardBorder,
             }}
           >
             <Text
@@ -364,7 +410,7 @@ export default function AddExpenseScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            activeOpacity={0.7}
+            activeOpacity={0.75}
             onPress={() => handleDateModeChange('yesterday')}
             style={{
               flex: 1,
@@ -374,7 +420,7 @@ export default function AddExpenseScreen() {
               borderRadius: radius.lg,
               backgroundColor: dateMode === 'yesterday' ? theme.colors.brand : theme.colors.card,
               borderWidth: 1.5,
-              borderColor: dateMode === 'yesterday' ? theme.colors.brand : theme.colors.border,
+              borderColor: dateMode === 'yesterday' ? theme.colors.brand : theme.colors.cardBorder,
             }}
           >
             <Text
@@ -389,7 +435,7 @@ export default function AddExpenseScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            activeOpacity={0.7}
+            activeOpacity={0.75}
             onPress={() => handleDateModeChange('custom')}
             style={{
               flex: 1,
@@ -399,7 +445,7 @@ export default function AddExpenseScreen() {
               borderRadius: radius.lg,
               backgroundColor: dateMode === 'custom' ? theme.colors.brand : theme.colors.card,
               borderWidth: 1.5,
-              borderColor: dateMode === 'custom' ? theme.colors.brand : theme.colors.border,
+              borderColor: dateMode === 'custom' ? theme.colors.brand : theme.colors.cardBorder,
             }}
           >
             <Text
@@ -425,7 +471,7 @@ export default function AddExpenseScreen() {
                 if (errors.date) setErrors((prev) => ({ ...prev, date: undefined }));
               }}
               error={errors.date}
-              leftIcon={<Calendar size={20} color={theme.colors.textMuted} />}
+              leftIcon={<Calendar size={20} color={theme.colors.textMuted} strokeWidth={2.5} />}
             />
           </View>
         )}
@@ -439,6 +485,7 @@ export default function AddExpenseScreen() {
             fontSize: typography.fontSizes.lg,
             fontWeight: typography.fontWeights.bold,
             marginBottom: spacing.md,
+            letterSpacing: 0.2,
           }}
         >
           {t.addExpense.paidByLabel}
@@ -453,7 +500,7 @@ export default function AddExpenseScreen() {
             return (
               <TouchableOpacity
                 key={m.id}
-                activeOpacity={0.7}
+                activeOpacity={0.75}
                 onPress={() => setPaidByMemberId(m.id)}
                 style={{
                   flexDirection: 'row',
@@ -463,7 +510,7 @@ export default function AddExpenseScreen() {
                   borderRadius: radius.xl,
                   backgroundColor: isSelected ? theme.colors.brandLight : theme.colors.card,
                   borderWidth: isSelected ? 2.5 : 1.5,
-                  borderColor: isSelected ? theme.colors.brand : theme.colors.border,
+                  borderColor: isSelected ? theme.colors.brand : theme.colors.cardBorder,
                   gap: spacing.md,
                 }}
               >
@@ -479,7 +526,7 @@ export default function AddExpenseScreen() {
                     fontSize: typography.fontSizes.md,
                     fontWeight: isSelected
                       ? typography.fontWeights.heavy
-                      : typography.fontWeights.semibold,
+                      : typography.fontWeights.bold,
                   }}
                 >
                   {m.display_name}
@@ -493,7 +540,7 @@ export default function AddExpenseScreen() {
       {/* Progressive Disclosure: More Options Toggle */}
       <View style={{ marginBottom: spacing.xl }}>
         <TouchableOpacity
-          activeOpacity={0.7}
+          activeOpacity={0.75}
           onPress={() => setShowAdvanced((prev) => !prev)}
           style={{
             flexDirection: 'row',
@@ -501,25 +548,28 @@ export default function AddExpenseScreen() {
             justifyContent: 'space-between',
             paddingVertical: spacing.md,
             paddingHorizontal: spacing.lg,
-            borderRadius: radius.lg,
-            backgroundColor: theme.colors.surfaceSubtle,
-            borderWidth: 1,
-            borderColor: theme.colors.borderSubtle,
+            minHeight: 56,
+            borderRadius: radius.xl,
+            backgroundColor: theme.isDark
+              ? theme.colors.surfaceContainerHigh
+              : theme.colors.surfaceSubtle,
+            borderWidth: 1.5,
+            borderColor: theme.colors.borderTactile,
           }}
         >
           <Text
             style={{
-              color: theme.colors.textSecondary,
+              color: theme.colors.textPrimary,
               fontSize: typography.fontSizes.md,
-              fontWeight: typography.fontWeights.semibold,
+              fontWeight: typography.fontWeights.bold,
             }}
           >
             {showAdvanced ? t.addExpense.fewerOptions : t.addExpense.moreOptions}
           </Text>
           {showAdvanced ? (
-            <ChevronUp size={22} color={theme.colors.textSecondary} />
+            <ChevronUp size={22} color={theme.colors.textPrimary} strokeWidth={2.5} />
           ) : (
-            <ChevronDown size={22} color={theme.colors.textSecondary} />
+            <ChevronDown size={22} color={theme.colors.textPrimary} strokeWidth={2.5} />
           )}
         </TouchableOpacity>
 
@@ -527,11 +577,11 @@ export default function AddExpenseScreen() {
           <View
             style={{
               marginTop: spacing.md,
-              padding: spacing.md,
-              borderRadius: radius.lg,
+              padding: spacing.lg,
+              borderRadius: radius.xl,
               backgroundColor: theme.colors.card,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
+              borderWidth: 1.5,
+              borderColor: theme.colors.cardBorder,
               gap: spacing.md,
             }}
           >
@@ -545,7 +595,7 @@ export default function AddExpenseScreen() {
                 if (errors.merchant) setErrors((prev) => ({ ...prev, merchant: undefined }));
               }}
               error={errors.merchant}
-              leftIcon={<Building size={18} color={theme.colors.textMuted} />}
+              leftIcon={<Building size={18} color={theme.colors.textMuted} strokeWidth={2.5} />}
             />
 
             {/* Split Expense Calculator */}
@@ -563,7 +613,7 @@ export default function AddExpenseScreen() {
               placeholder={t.addExpense.notesPlaceholder}
               value={notes}
               onChangeText={setNotes}
-              leftIcon={<FileText size={18} color={theme.colors.textMuted} />}
+              leftIcon={<FileText size={18} color={theme.colors.textMuted} strokeWidth={2.5} />}
             />
           </View>
         )}
@@ -573,6 +623,7 @@ export default function AddExpenseScreen() {
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={handleSave}
+        accessibilityLabel={t.addExpense.saveExpense}
         style={{
           minHeight: 64,
           borderRadius: radius.xl,
@@ -583,9 +634,11 @@ export default function AddExpenseScreen() {
           gap: spacing.md,
           shadowColor: theme.colors.brand,
           shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.28,
-          shadowRadius: 14,
+          shadowOpacity: 0.35,
+          shadowRadius: 16,
           elevation: 6,
+          borderWidth: 1,
+          borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)',
         }}
       >
         <Check size={28} color="#FFFFFF" strokeWidth={3} />
@@ -600,29 +653,32 @@ export default function AddExpenseScreen() {
         </Text>
       </TouchableOpacity>
 
-      {/* Bulk Import with JSON Schema Button */}
+      {/* Bulk Import Button */}
       <TouchableOpacity
-        activeOpacity={0.7}
+        activeOpacity={0.75}
         onPress={() => router.push('/(tabs)/import')}
+        accessibilityLabel={t.addExpense.bulkImportButton}
         style={{
           marginTop: spacing.md,
           minHeight: 56,
           borderRadius: radius.xl,
-          backgroundColor: theme.colors.surfaceSubtle,
+          backgroundColor: theme.isDark
+            ? theme.colors.surfaceContainerHigh
+            : theme.colors.surfaceSubtle,
           borderWidth: 1.5,
-          borderColor: theme.colors.border,
+          borderColor: theme.colors.borderTactile,
           flexDirection: 'row',
           justifyContent: 'center',
           alignItems: 'center',
           gap: spacing.sm,
         }}
       >
-        <FileJson size={20} color={theme.colors.brand} />
+        <FileJson size={20} color={theme.colors.brand} strokeWidth={2.5} />
         <Text
           style={{
             color: theme.colors.textPrimary,
             fontSize: typography.fontSizes.md,
-            fontWeight: typography.fontWeights.semibold,
+            fontWeight: typography.fontWeights.bold,
           }}
         >
           {t.addExpense.bulkImportButton}
