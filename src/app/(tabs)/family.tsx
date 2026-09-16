@@ -39,16 +39,18 @@ export default function FamilyScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 100 }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 130 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Family Info Card */}
       <Card
-        padding="md"
+        padding="lg"
         style={{
           marginBottom: spacing.lg,
-          backgroundColor: theme.colors.brandLight,
-          borderColor: theme.colors.brand,
+          backgroundColor: theme.isDark
+            ? theme.colors.surfaceContainerHigh
+            : theme.colors.surfaceSubtle,
+          borderColor: theme.colors.borderTactile,
         }}
       >
         <View
@@ -58,8 +60,8 @@ export default function FamilyScreen() {
             <Text
               style={{
                 color: theme.colors.textPrimary,
-                fontSize: typography.fontSizes.xl,
-                fontWeight: typography.fontWeights.bold,
+                fontSize: typography.fontSizes.xxl,
+                fontWeight: typography.fontWeights.heavy,
               }}
             >
               {family.name}
@@ -67,8 +69,9 @@ export default function FamilyScreen() {
             <Text
               style={{
                 color: theme.colors.textSecondary,
-                fontSize: typography.fontSizes.xs,
-                marginTop: 2,
+                fontSize: typography.fontSizes.sm,
+                fontWeight: typography.fontWeights.medium,
+                marginTop: 4,
               }}
             >
               {family.currency} • {members.length} {t.family.membersCount}
@@ -79,23 +82,23 @@ export default function FamilyScreen() {
             label={t.family.activeWorkspace}
             color={theme.colors.brand}
             variant="solid"
-            size="sm"
+            size="md"
           />
         </View>
       </Card>
 
       {/* Family Members Section */}
-      <View style={{ marginBottom: spacing.lg }}>
+      <View style={{ marginBottom: spacing.xl }}>
         <View
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: spacing.sm,
+            marginBottom: spacing.md,
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            <Users size={18} color={theme.colors.brand} />
+            <Users size={20} color={theme.colors.brand} strokeWidth={2.5} />
             <Text
               style={{
                 color: theme.colors.textPrimary,
@@ -110,7 +113,7 @@ export default function FamilyScreen() {
           <Button
             variant="secondary"
             size="sm"
-            icon={<UserPlus size={16} color={theme.colors.brand} />}
+            icon={<UserPlus size={16} color={theme.colors.brand} strokeWidth={2.5} />}
             onPress={() => setIsAddMemberVisible(true)}
             accessibilityLabel={t.family.addMember}
           />
@@ -135,17 +138,17 @@ export default function FamilyScreen() {
       </View>
 
       {/* Categories Section */}
-      <View style={{ marginBottom: spacing.lg }}>
+      <View style={{ marginBottom: spacing.xl }}>
         <View
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: spacing.sm,
+            marginBottom: spacing.md,
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            <Tag size={18} color={theme.colors.brand} />
+            <Tag size={20} color={theme.colors.brand} strokeWidth={2.5} />
             <Text
               style={{
                 color: theme.colors.textPrimary,
@@ -160,7 +163,7 @@ export default function FamilyScreen() {
           <Button
             variant="secondary"
             size="sm"
-            icon={<Plus size={16} color={theme.colors.brand} />}
+            icon={<Plus size={16} color={theme.colors.brand} strokeWidth={2.5} />}
             onPress={() => setIsAddCategoryVisible(true)}
             accessibilityLabel={t.family.addCategory}
           />
@@ -179,34 +182,38 @@ export default function FamilyScreen() {
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  borderWidth: 1.5,
+                  borderColor: theme.colors.cardBorder,
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                   <View
                     style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: radius.md,
-                      backgroundColor: `${category.color}20`,
+                      width: 44,
+                      height: 44,
+                      borderRadius: radius.lg,
+                      backgroundColor: `${category.color}22`,
+                      borderWidth: 1.5,
+                      borderColor: `${category.color}35`,
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
                   >
-                    <IconHelper name={category.icon} size={20} color={category.color} />
+                    <IconHelper name={category.icon} size={22} color={category.color} />
                   </View>
                   <View>
                     <Text
                       style={{
                         color: theme.colors.textPrimary,
                         fontSize: typography.fontSizes.md,
-                        fontWeight: typography.fontWeights.semibold,
+                        fontWeight: typography.fontWeights.bold,
                       }}
                     >
                       {getLocalizedCategoryName(category, t)}
                     </Text>
                     <Text
                       style={{
-                        color: theme.colors.textMuted,
+                        color: theme.colors.textSecondary,
                         fontSize: typography.fontSizes.xs,
                         marginTop: 2,
                       }}
@@ -221,7 +228,7 @@ export default function FamilyScreen() {
                     style={{
                       color: theme.colors.textPrimary,
                       fontSize: typography.fontSizes.md,
-                      fontWeight: typography.fontWeights.bold,
+                      fontWeight: typography.fontWeights.heavy,
                     }}
                   >
                     {family.currency}

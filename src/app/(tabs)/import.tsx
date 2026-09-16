@@ -94,7 +94,7 @@ export default function ImportScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 100 }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 130 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Success Notification Alert */}
@@ -110,7 +110,7 @@ export default function ImportScreen() {
             gap: spacing.sm,
           }}
         >
-          <CheckCircle2 size={20} color={theme.colors.success} />
+          <CheckCircle2 size={22} color={theme.colors.success} strokeWidth={2.5} />
           <Text
             style={{
               color: theme.colors.success,
@@ -129,14 +129,8 @@ export default function ImportScreen() {
         padding="lg"
         style={{
           marginBottom: spacing.lg,
-          backgroundColor: theme.colors.card,
-          borderWidth: 2,
-          borderColor: theme.colors.brand,
-          shadowColor: theme.colors.brand,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.12,
-          shadowRadius: 10,
-          elevation: 3,
+          borderWidth: 1.5,
+          borderColor: theme.colors.cardBorder,
         }}
       >
         <View
@@ -153,17 +147,19 @@ export default function ImportScreen() {
               height: 52,
               borderRadius: radius.lg,
               backgroundColor: theme.colors.brandLight,
+              borderWidth: 1.5,
+              borderColor: `${theme.colors.brand}40`,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <UploadCloud size={28} color={theme.colors.brand} />
+            <UploadCloud size={28} color={theme.colors.brand} strokeWidth={2.5} />
           </View>
           <View style={{ flex: 1 }}>
             <Text
               style={{
                 color: theme.colors.textPrimary,
-                fontSize: typography.fontSizes.lg,
+                fontSize: typography.fontSizes.xl,
                 fontWeight: typography.fontWeights.heavy,
               }}
             >
@@ -172,7 +168,7 @@ export default function ImportScreen() {
             <Text
               style={{
                 color: theme.colors.textSecondary,
-                fontSize: typography.fontSizes.xs,
+                fontSize: typography.fontSizes.sm,
                 marginTop: 2,
               }}
             >
@@ -184,8 +180,8 @@ export default function ImportScreen() {
         <Button
           title={t.import.loadSample}
           variant="secondary"
-          size="lg"
-          icon={<FileJson size={20} color={theme.colors.brand} />}
+          size="md"
+          icon={<FileJson size={20} color={theme.colors.brand} strokeWidth={2.5} />}
           onPress={handleLoadSample}
           style={{ width: '100%' }}
         />
@@ -215,11 +211,11 @@ export default function ImportScreen() {
       </View>
 
       {/* Export Section */}
-      <Card padding="md" style={{ marginBottom: spacing.lg }}>
+      <Card padding="lg" style={{ marginBottom: spacing.lg }}>
         <Text
           style={{
             color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.md,
+            fontSize: typography.fontSizes.lg,
             fontWeight: typography.fontWeights.bold,
             marginBottom: 2,
           }}
@@ -229,7 +225,7 @@ export default function ImportScreen() {
         <Text
           style={{
             color: theme.colors.textSecondary,
-            fontSize: typography.fontSizes.xs,
+            fontSize: typography.fontSizes.sm,
             marginBottom: spacing.md,
           }}
         >
@@ -237,28 +233,34 @@ export default function ImportScreen() {
         </Text>
 
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-          <Button
-            title={t.import.exportCsv}
-            variant="outline"
-            size="sm"
-            icon={<FileSpreadsheet size={14} color={theme.colors.textPrimary} />}
-            onPress={handleExportCsv}
-            style={{ flex: 1 }}
-          />
-          <Button
-            title={t.import.exportJson}
-            variant="outline"
-            size="sm"
-            icon={<FileJson size={14} color={theme.colors.textPrimary} />}
-            onPress={handleExportJson}
-            style={{ flex: 1 }}
-          />
+          <View style={{ flex: 1 }}>
+            <Button
+              title={t.import.exportCsv}
+              variant="outline"
+              size="md"
+              icon={
+                <FileSpreadsheet size={16} color={theme.colors.textPrimary} strokeWidth={2.5} />
+              }
+              onPress={handleExportCsv}
+              fullWidth
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button
+              title={t.import.exportJson}
+              variant="outline"
+              size="md"
+              icon={<FileJson size={16} color={theme.colors.textPrimary} strokeWidth={2.5} />}
+              onPress={handleExportJson}
+              fullWidth
+            />
+          </View>
         </View>
       </Card>
 
       {/* Import History */}
       {importBatches.length > 0 && (
-        <View>
+        <View style={{ marginBottom: spacing.lg }}>
           <View
             style={{
               flexDirection: 'row',
@@ -267,7 +269,7 @@ export default function ImportScreen() {
               marginBottom: spacing.sm,
             }}
           >
-            <History size={18} color={theme.colors.textSecondary} />
+            <History size={18} color={theme.colors.textSecondary} strokeWidth={2.5} />
             <Text
               style={{
                 color: theme.colors.textPrimary,
@@ -283,25 +285,31 @@ export default function ImportScreen() {
             {importBatches.map((batch) => (
               <Card
                 key={batch.id}
-                padding="sm"
+                padding="md"
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  borderWidth: 1.5,
+                  borderColor: theme.colors.borderTactile,
                 }}
               >
                 <View>
                   <Text
                     style={{
                       color: theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.sm,
-                      fontWeight: typography.fontWeights.medium,
+                      fontSize: typography.fontSizes.md,
+                      fontWeight: typography.fontWeights.semibold,
                     }}
                   >
                     {batch.file_name}
                   </Text>
                   <Text
-                    style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}
+                    style={{
+                      color: theme.colors.textSecondary,
+                      fontSize: typography.fontSizes.xs,
+                      marginTop: 2,
+                    }}
                   >
                     {new Date(batch.created_at).toLocaleDateString()}
                   </Text>
@@ -309,7 +317,7 @@ export default function ImportScreen() {
                 <Badge
                   label={`${batch.total_records} ${t.dashboard.txs} • ${family.currency}${batch.total_amount.toFixed(2)}`}
                   color={theme.colors.brand}
-                  size="sm"
+                  size="md"
                 />
               </Card>
             ))}
