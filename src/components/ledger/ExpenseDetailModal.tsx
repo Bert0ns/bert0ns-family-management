@@ -76,7 +76,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
       <View
         style={{
           flex: 1,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: theme.isDark ? 'rgba(0, 0, 0, 0.65)' : 'rgba(15, 23, 42, 0.35)',
           justifyContent: 'flex-end',
         }}
       >
@@ -89,8 +89,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               paddingHorizontal: spacing.xl,
               paddingBottom: spacing.xl,
               paddingTop: spacing.sm,
-              maxHeight: '85%',
-              borderWidth: 1,
+              maxHeight: '88%',
+              borderWidth: 1.5,
               borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.8)',
               borderBottomWidth: 0,
             },
@@ -110,13 +110,14 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
           >
             <View
               style={{
-                width: 36,
+                width: 40,
                 height: 4,
                 borderRadius: 2,
-                backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)',
+                backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.15)',
               }}
             />
           </View>
+
           {/* Header */}
           <View
             style={{
@@ -138,8 +139,18 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
             <TouchableOpacity
               onPress={onClose}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: radius.md,
+                backgroundColor: theme.isDark
+                  ? theme.colors.surfaceContainerHigh
+                  : theme.colors.surfaceSubtle,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <X size={24} color={theme.colors.textSecondary} />
+              <X size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />
             </TouchableOpacity>
           </View>
 
@@ -148,9 +159,11 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
             <View
               style={{
                 alignItems: 'center',
-                paddingVertical: spacing.lg,
-                backgroundColor: theme.colors.surfaceSubtle,
-                borderRadius: radius.lg,
+                paddingVertical: spacing.xl,
+                backgroundColor: theme.colors.card,
+                borderRadius: radius.xl,
+                borderWidth: 1.5,
+                borderColor: theme.colors.cardBorder,
                 marginBottom: spacing.lg,
               }}
             >
@@ -158,8 +171,10 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                 style={{
                   width: 56,
                   height: 56,
-                  borderRadius: radius.full,
-                  backgroundColor: `${catColor}25`,
+                  borderRadius: radius.xl,
+                  backgroundColor: `${catColor}22`,
+                  borderWidth: 1.5,
+                  borderColor: `${catColor}35`,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: spacing.sm,
@@ -171,8 +186,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               <Text
                 style={{
                   color: theme.colors.textPrimary,
-                  fontSize: typography.fontSizes.xl,
-                  fontWeight: typography.fontWeights.bold,
+                  fontSize: typography.fontSizes.xxl,
+                  fontWeight: typography.fontWeights.heavy,
                   textAlign: 'center',
                 }}
               >
@@ -182,9 +197,10 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               <Text
                 style={{
                   color: theme.colors.brand,
-                  fontSize: typography.fontSizes.display,
+                  fontSize: typography.fontSizes.giant,
                   fontWeight: typography.fontWeights.heavy,
                   marginTop: spacing.xs,
+                  letterSpacing: -0.5,
                 }}
               >
                 {currency}
@@ -200,12 +216,17 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  paddingVertical: spacing.xs,
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                  <Tag size={18} color={theme.colors.textSecondary} />
+                  <Tag size={18} color={theme.colors.textSecondary} strokeWidth={2.5} />
                   <Text
-                    style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.sm }}
+                    style={{
+                      color: theme.colors.textSecondary,
+                      fontSize: typography.fontSizes.md,
+                      fontWeight: typography.fontWeights.medium,
+                    }}
                   >
                     {t.expenseDetail.category}
                   </Text>
@@ -219,12 +240,17 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  paddingVertical: spacing.xs,
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                  <User size={18} color={theme.colors.textSecondary} />
+                  <User size={18} color={theme.colors.textSecondary} strokeWidth={2.5} />
                   <Text
-                    style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.sm }}
+                    style={{
+                      color: theme.colors.textSecondary,
+                      fontSize: typography.fontSizes.md,
+                      fontWeight: typography.fontWeights.medium,
+                    }}
                   >
                     {t.expenseDetail.paidBy}
                   </Text>
@@ -239,7 +265,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   <Text
                     style={{
                       color: theme.colors.textPrimary,
-                      fontWeight: typography.fontWeights.semibold,
+                      fontWeight: typography.fontWeights.bold,
+                      fontSize: typography.fontSizes.md,
                     }}
                   >
                     {memberName}
@@ -253,12 +280,17 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  paddingVertical: spacing.xs,
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                  <Calendar size={18} color={theme.colors.textSecondary} />
+                  <Calendar size={18} color={theme.colors.textSecondary} strokeWidth={2.5} />
                   <Text
-                    style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.sm }}
+                    style={{
+                      color: theme.colors.textSecondary,
+                      fontSize: typography.fontSizes.md,
+                      fontWeight: typography.fontWeights.medium,
+                    }}
                   >
                     {t.expenseDetail.date}
                   </Text>
@@ -266,7 +298,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                 <Text
                   style={{
                     color: theme.colors.textPrimary,
-                    fontWeight: typography.fontWeights.semibold,
+                    fontWeight: typography.fontWeights.bold,
+                    fontSize: typography.fontSizes.md,
                   }}
                 >
                   {new Date(expense.transaction_date).toLocaleDateString(dateLocale, {
@@ -285,14 +318,16 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    paddingVertical: spacing.xs,
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                    <CreditCard size={18} color={theme.colors.textSecondary} />
+                    <CreditCard size={18} color={theme.colors.textSecondary} strokeWidth={2.5} />
                     <Text
                       style={{
                         color: theme.colors.textSecondary,
-                        fontSize: typography.fontSizes.sm,
+                        fontSize: typography.fontSizes.md,
+                        fontWeight: typography.fontWeights.medium,
                       }}
                     >
                       {t.expenseDetail.paymentMethod}
@@ -301,7 +336,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   <Text
                     style={{
                       color: theme.colors.textPrimary,
-                      fontWeight: typography.fontWeights.semibold,
+                      fontWeight: typography.fontWeights.bold,
+                      fontSize: typography.fontSizes.md,
                     }}
                   >
                     {localizedPaymentMethod}
@@ -313,9 +349,13 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               {expense.splits && expense.splits.length > 0 && (
                 <View
                   style={{
-                    backgroundColor: theme.colors.surfaceSubtle,
+                    backgroundColor: theme.isDark
+                      ? theme.colors.surfaceContainerHigh
+                      : theme.colors.surfaceSubtle,
                     padding: spacing.md,
-                    borderRadius: radius.md,
+                    borderRadius: radius.xl,
+                    borderWidth: 1.5,
+                    borderColor: theme.colors.borderTactile,
                   }}
                 >
                   <View
@@ -326,7 +366,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                       marginBottom: spacing.sm,
                     }}
                   >
-                    <Split size={16} color={theme.colors.brand} />
+                    <Split size={16} color={theme.colors.brand} strokeWidth={2.5} />
                     <Text
                       style={{
                         color: theme.colors.textPrimary,
@@ -353,7 +393,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                           <Text
                             style={{
                               color: theme.colors.textSecondary,
-                              fontSize: typography.fontSizes.xs,
+                              fontSize: typography.fontSizes.sm,
+                              fontWeight: typography.fontWeights.medium,
                             }}
                           >
                             {splitMember?.display_name || t.family.roleMember}
@@ -361,8 +402,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                           <Text
                             style={{
                               color: theme.colors.textPrimary,
-                              fontSize: typography.fontSizes.xs,
-                              fontWeight: typography.fontWeights.semibold,
+                              fontSize: typography.fontSizes.sm,
+                              fontWeight: typography.fontWeights.bold,
                             }}
                           >
                             {currency}
@@ -381,7 +422,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   <Text
                     style={{
                       color: theme.colors.textSecondary,
-                      fontSize: typography.fontSizes.xs,
+                      fontSize: typography.fontSizes.sm,
+                      fontWeight: typography.fontWeights.bold,
                       marginBottom: 4,
                     }}
                   >
@@ -389,13 +431,20 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   </Text>
                   <View
                     style={{
-                      backgroundColor: theme.colors.surfaceSubtle,
+                      backgroundColor: theme.isDark
+                        ? theme.colors.surfaceContainerHigh
+                        : theme.colors.surfaceSubtle,
                       padding: spacing.md,
-                      borderRadius: radius.md,
+                      borderRadius: radius.lg,
+                      borderWidth: 1.5,
+                      borderColor: theme.colors.borderTactile,
                     }}
                   >
                     <Text
-                      style={{ color: theme.colors.textPrimary, fontSize: typography.fontSizes.sm }}
+                      style={{
+                        color: theme.colors.textPrimary,
+                        fontSize: typography.fontSizes.md,
+                      }}
                     >
                       {expense.notes}
                     </Text>
@@ -409,13 +458,15 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               <Button
                 title={t.common.delete}
                 variant="danger"
-                icon={<Trash2 size={18} color="#FFFFFF" />}
+                size="md"
+                icon={<Trash2 size={18} color="#FFFFFF" strokeWidth={2.5} />}
                 onPress={handleDelete}
                 style={{ flex: 1 }}
               />
               <Button
                 title={t.common.close}
-                variant="outline"
+                variant="secondary"
+                size="md"
                 onPress={onClose}
                 style={{ flex: 1 }}
               />
