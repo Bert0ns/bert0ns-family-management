@@ -6,7 +6,6 @@ import {
   ShieldCheck,
   Download,
   Trash2,
-  Lock,
   Cloud,
   Check,
   Edit2,
@@ -47,9 +46,6 @@ export default function SettingsScreen() {
 
   const {
     family,
-    members,
-    categories,
-    expenses,
     notificationPreferences,
     updateNotificationPreferences,
     updateFamilySettings,
@@ -128,14 +124,15 @@ export default function SettingsScreen() {
   };
 
   const handleExportFullArchive = async () => {
+    const store = useAppStore.getState();
     const archivePayload = {
       app: "Bert0n's Family Expense Manager",
       version: '1.0.0',
       exported_at: new Date().toISOString(),
-      family,
-      members,
-      categories,
-      expenses,
+      family: store.family,
+      members: store.members,
+      categories: store.categories,
+      expenses: store.expenses,
     };
 
     const jsonString = JSON.stringify(archivePayload, null, 2);
@@ -385,7 +382,7 @@ export default function SettingsScreen() {
             flexDirection: 'row',
             alignItems: 'center',
             gap: spacing.xs,
-            marginBottom: spacing.xs,
+            marginBottom: spacing.md,
           }}
         >
           <Cloud size={20} color={theme.colors.brand} strokeWidth={2.5} />
@@ -399,16 +396,6 @@ export default function SettingsScreen() {
             {t.settings.cloudSyncTitle}
           </Text>
         </View>
-        <Text
-          style={{
-            color: theme.colors.textSecondary,
-            fontSize: typography.fontSizes.sm,
-            marginBottom: spacing.md,
-            lineHeight: 20,
-          }}
-        >
-          {t.settings.cloudSyncSubtitle}
-        </Text>
 
         {userEmail ? (
           <View style={{ gap: spacing.sm }}>
@@ -512,16 +499,6 @@ export default function SettingsScreen() {
                   variant="solid"
                 />
               </View>
-              <Text
-                style={{
-                  color: theme.colors.textSecondary,
-                  fontSize: typography.fontSizes.sm,
-                  marginTop: 6,
-                  lineHeight: 20,
-                }}
-              >
-                {t.sync.signInSubtitle}
-              </Text>
             </View>
 
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
@@ -548,13 +525,6 @@ export default function SettingsScreen() {
             </View>
           </View>
         )}
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm }}>
-          <Lock size={14} color={theme.colors.textMuted} strokeWidth={2.5} />
-          <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
-            {t.settings.privacyGuaranteeTitle}: {t.settings.privacyGuaranteeFooter}
-          </Text>
-        </View>
       </Card>
 
       {/* 4. Notification Preferences Card */}
@@ -564,7 +534,7 @@ export default function SettingsScreen() {
             flexDirection: 'row',
             alignItems: 'center',
             gap: spacing.xs,
-            marginBottom: spacing.xs,
+            marginBottom: spacing.md,
           }}
         >
           <Bell size={20} color={theme.colors.brand} strokeWidth={2.5} />
@@ -578,16 +548,6 @@ export default function SettingsScreen() {
             {t.notifications.title}
           </Text>
         </View>
-        <Text
-          style={{
-            color: theme.colors.textSecondary,
-            fontSize: typography.fontSizes.sm,
-            marginBottom: spacing.md,
-            lineHeight: 20,
-          }}
-        >
-          {t.notifications.subtitle}
-        </Text>
 
         {/* Master Switch */}
         <View
@@ -605,26 +565,17 @@ export default function SettingsScreen() {
             marginBottom: spacing.md,
           }}
         >
-          <View style={{ flex: 1, marginRight: spacing.sm }}>
-            <Text
-              style={{
-                color: theme.colors.textPrimary,
-                fontSize: typography.fontSizes.md,
-                fontWeight: typography.fontWeights.bold,
-              }}
-            >
-              {t.notifications.pushEnabledLabel}
-            </Text>
-            <Text
-              style={{
-                color: theme.colors.textSecondary,
-                fontSize: typography.fontSizes.xs,
-                marginTop: 2,
-              }}
-            >
-              {t.notifications.pushEnabledDesc}
-            </Text>
-          </View>
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              fontSize: typography.fontSizes.md,
+              fontWeight: typography.fontWeights.bold,
+              flex: 1,
+              marginRight: spacing.sm,
+            }}
+          >
+            {t.notifications.pushEnabledLabel}
+          </Text>
           <Switch
             value={notificationPreferences.push_enabled}
             onValueChange={handleTogglePushMaster}
@@ -680,22 +631,16 @@ export default function SettingsScreen() {
               }}
             >
               <FileSpreadsheet size={18} color={theme.colors.brand} strokeWidth={2.5} />
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.sm,
-                    fontWeight: typography.fontWeights.semibold,
-                  }}
-                >
-                  {t.notifications.batchImportLabel}
-                </Text>
-                <Text
-                  style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}
-                >
-                  {t.notifications.batchImportDesc}
-                </Text>
-              </View>
+              <Text
+                style={{
+                  color: theme.colors.textPrimary,
+                  fontSize: typography.fontSizes.sm,
+                  fontWeight: typography.fontWeights.semibold,
+                  flex: 1,
+                }}
+              >
+                {t.notifications.batchImportLabel}
+              </Text>
             </View>
             <Switch
               value={notificationPreferences.notify_batch_import}
@@ -731,22 +676,16 @@ export default function SettingsScreen() {
               }}
             >
               <Edit3 size={18} color={theme.colors.brand} strokeWidth={2.5} />
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.sm,
-                    fontWeight: typography.fontWeights.semibold,
-                  }}
-                >
-                  {t.notifications.expenseUpdatesLabel}
-                </Text>
-                <Text
-                  style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}
-                >
-                  {t.notifications.expenseUpdatesDesc}
-                </Text>
-              </View>
+              <Text
+                style={{
+                  color: theme.colors.textPrimary,
+                  fontSize: typography.fontSizes.sm,
+                  fontWeight: typography.fontWeights.semibold,
+                  flex: 1,
+                }}
+              >
+                {t.notifications.expenseUpdatesLabel}
+              </Text>
             </View>
             <Switch
               value={notificationPreferences.notify_expense_updates}
@@ -798,22 +737,16 @@ export default function SettingsScreen() {
               }}
             >
               <ArrowLeftRight size={18} color={theme.colors.brand} strokeWidth={2.5} />
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.sm,
-                    fontWeight: typography.fontWeights.semibold,
-                  }}
-                >
-                  {t.notifications.settlementLabel}
-                </Text>
-                <Text
-                  style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}
-                >
-                  {t.notifications.settlementDesc}
-                </Text>
-              </View>
+              <Text
+                style={{
+                  color: theme.colors.textPrimary,
+                  fontSize: typography.fontSizes.sm,
+                  fontWeight: typography.fontWeights.semibold,
+                  flex: 1,
+                }}
+              >
+                {t.notifications.settlementLabel}
+              </Text>
             </View>
             <Switch
               value={notificationPreferences.notify_settlements}
@@ -863,22 +796,16 @@ export default function SettingsScreen() {
               }}
             >
               <UserCheck size={18} color={theme.colors.brand} strokeWidth={2.5} />
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.sm,
-                    fontWeight: typography.fontWeights.semibold,
-                  }}
-                >
-                  {t.notifications.memberJoinedLabel}
-                </Text>
-                <Text
-                  style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}
-                >
-                  {t.notifications.memberJoinedDesc}
-                </Text>
-              </View>
+              <Text
+                style={{
+                  color: theme.colors.textPrimary,
+                  fontSize: typography.fontSizes.sm,
+                  fontWeight: typography.fontWeights.semibold,
+                  flex: 1,
+                }}
+              >
+                {t.notifications.memberJoinedLabel}
+              </Text>
             </View>
             <Switch
               value={notificationPreferences.notify_member_joined}
@@ -914,22 +841,16 @@ export default function SettingsScreen() {
               }}
             >
               <Shield size={18} color={theme.colors.brand} strokeWidth={2.5} />
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.sm,
-                    fontWeight: typography.fontWeights.semibold,
-                  }}
-                >
-                  {t.notifications.roleChangedLabel}
-                </Text>
-                <Text
-                  style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}
-                >
-                  {t.notifications.roleChangedDesc}
-                </Text>
-              </View>
+              <Text
+                style={{
+                  color: theme.colors.textPrimary,
+                  fontSize: typography.fontSizes.sm,
+                  fontWeight: typography.fontWeights.semibold,
+                  flex: 1,
+                }}
+              >
+                {t.notifications.roleChangedLabel}
+              </Text>
             </View>
             <Switch
               value={notificationPreferences.notify_role_changed}
@@ -965,15 +886,6 @@ export default function SettingsScreen() {
             onPress={handleExportFullArchive}
             fullWidth
           />
-          <Text
-            style={{
-              color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              marginTop: 4,
-            }}
-          >
-            {t.settings.exportArchiveSubtitle}
-          </Text>
         </View>
 
         {/* Reset Demo Data */}
@@ -986,15 +898,6 @@ export default function SettingsScreen() {
             onPress={resetToSampleData}
             fullWidth
           />
-          <Text
-            style={{
-              color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              marginTop: 4,
-            }}
-          >
-            {t.settings.resetDemoSubtitle}
-          </Text>
         </View>
 
         {/* Clear Ledger (Danger Zone) */}
@@ -1007,11 +910,6 @@ export default function SettingsScreen() {
             onPress={handleClearLedger}
             fullWidth
           />
-          <Text
-            style={{ color: theme.colors.danger, fontSize: typography.fontSizes.xs, marginTop: 4 }}
-          >
-            {t.settings.clearLedgerSubtitle}
-          </Text>
         </View>
       </Card>
 
@@ -1028,7 +926,6 @@ export default function SettingsScreen() {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: spacing.xs,
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
@@ -1050,24 +947,6 @@ export default function SettingsScreen() {
             variant="solid"
           />
         </View>
-        <Text
-          style={{
-            color: theme.colors.textSecondary,
-            fontSize: typography.fontSizes.xs,
-            lineHeight: 18,
-            marginBottom: spacing.sm,
-          }}
-        >
-          {t.settings.privacyGuaranteeDescription}
-        </Text>
-        <Text
-          style={{
-            color: theme.colors.textMuted,
-            fontSize: typography.fontSizes.xs,
-          }}
-        >
-          {t.settings.appVersion}
-        </Text>
       </Card>
 
       {/* Auth Modal */}
