@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, ArrowRight, FileJson } from 'lucide-react-native';
+import { Plus, ArrowRight, FileJson, Wallet, Receipt } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -58,43 +58,44 @@ export default function DashboardScreen() {
       </View>
 
       {/* Hero Total Spending Card */}
-      <View
+      <Card
+        padding="lg"
         style={{
-          backgroundColor: theme.colors.card,
-          borderRadius: radius.xxl,
-          paddingVertical: spacing.xl,
-          paddingHorizontal: spacing.xl,
-          borderWidth: 2,
-          borderColor: theme.colors.brand,
           alignItems: 'center',
+          justifyContent: 'center',
           marginBottom: spacing.lg,
-          shadowColor: theme.colors.shadow,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 16,
-          elevation: 4,
         }}
       >
-        <Text
+        <View
           style={{
-            color: theme.colors.textSecondary,
-            fontSize: typography.fontSizes.md,
-            fontWeight: typography.fontWeights.semibold,
-            textTransform: 'uppercase',
-            letterSpacing: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.xs,
             marginBottom: spacing.xs,
           }}
         >
-          {t.dashboard.thisMonthSpending}
-        </Text>
+          <Wallet size={20} color={theme.colors.brand} strokeWidth={2.5} />
+          <Text
+            style={{
+              color: theme.colors.textSecondary,
+              fontSize: typography.fontSizes.sm,
+              fontWeight: typography.fontWeights.bold,
+              textTransform: 'uppercase',
+              letterSpacing: 1,
+            }}
+          >
+            {t.dashboard.thisMonthSpending}
+          </Text>
+        </View>
 
         <Text
           style={{
             color: theme.colors.textPrimary,
-            fontSize: 42,
-            fontWeight: '800',
+            fontSize: typography.fontSizes.giant,
+            fontWeight: typography.fontWeights.heavy,
             textAlign: 'center',
-            marginVertical: 4,
+            marginVertical: spacing.xs,
+            letterSpacing: -1,
           }}
         >
           {family.currency}
@@ -103,16 +104,24 @@ export default function DashboardScreen() {
 
         <View
           style={{
-            backgroundColor: theme.colors.brandLight,
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: theme.isDark
+              ? theme.colors.surfaceContainerHigh
+              : theme.colors.surfaceSubtle,
+            borderWidth: 1,
+            borderColor: theme.colors.borderTactile,
             paddingHorizontal: spacing.md,
-            paddingVertical: spacing.xs,
+            paddingVertical: spacing.xs + 2,
             borderRadius: radius.full,
             marginTop: spacing.xs,
+            gap: 6,
           }}
         >
+          <Receipt size={16} color={theme.colors.brand} strokeWidth={2.5} />
           <Text
             style={{
-              color: theme.colors.brand,
+              color: theme.colors.textPrimary,
               fontSize: typography.fontSizes.sm,
               fontWeight: typography.fontWeights.bold,
             }}
@@ -120,7 +129,7 @@ export default function DashboardScreen() {
             {metrics.transactionCount} {t.dashboard.totalTransactions}
           </Text>
         </View>
-      </View>
+      </Card>
 
       {/* Primary Action Buttons: Giant Add Button & Bulk Import Button */}
       <View style={{ gap: spacing.sm, marginBottom: spacing.xl }}>
@@ -136,10 +145,12 @@ export default function DashboardScreen() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: spacing.md,
+            borderWidth: 1,
+            borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)',
             shadowColor: theme.colors.brand,
             shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.3,
-            shadowRadius: 14,
+            shadowOpacity: 0.35,
+            shadowRadius: 16,
             elevation: 6,
           }}
         >
@@ -153,13 +164,14 @@ export default function DashboardScreen() {
               justifyContent: 'center',
             }}
           >
-            <Plus size={24} color="#FFFFFF" strokeWidth={3} />
+            <Plus size={22} color="#FFFFFF" strokeWidth={3} />
           </View>
           <Text
             style={{
               color: '#FFFFFF',
-              fontSize: typography.fontSizes.xl,
+              fontSize: typography.fontSizes.lg,
               fontWeight: typography.fontWeights.heavy,
+              letterSpacing: 0.3,
             }}
           >
             {t.dashboard.quickAddButton}
@@ -167,27 +179,29 @@ export default function DashboardScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          activeOpacity={0.7}
+          activeOpacity={0.75}
           onPress={() => router.push('/(tabs)/import')}
           accessibilityLabel={t.dashboard.bulkImportButton}
           style={{
-            minHeight: 52,
+            minHeight: 56,
             borderRadius: radius.xl,
-            backgroundColor: theme.colors.surfaceSubtle,
+            backgroundColor: theme.isDark
+              ? theme.colors.surfaceContainerHigh
+              : theme.colors.surfaceSubtle,
             borderWidth: 1.5,
-            borderColor: theme.colors.border,
+            borderColor: theme.colors.borderTactile,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
             gap: spacing.sm,
           }}
         >
-          <FileJson size={20} color={theme.colors.brand} />
+          <FileJson size={20} color={theme.colors.brand} strokeWidth={2.5} />
           <Text
             style={{
               color: theme.colors.textPrimary,
               fontSize: typography.fontSizes.md,
-              fontWeight: typography.fontWeights.semibold,
+              fontWeight: typography.fontWeights.bold,
             }}
           >
             {t.dashboard.bulkImportButton}
@@ -195,7 +209,7 @@ export default function DashboardScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Family Member Contributions Bar */}
+      {/* Family Member Contributions Section */}
       {memberContributions.length > 0 && (
         <View style={{ marginBottom: spacing.xl }}>
           <Text
@@ -204,6 +218,7 @@ export default function DashboardScreen() {
               fontSize: typography.fontSizes.lg,
               fontWeight: typography.fontWeights.bold,
               marginBottom: spacing.md,
+              letterSpacing: 0.2,
             }}
           >
             {t.dashboard.familyMembers}
@@ -218,7 +233,6 @@ export default function DashboardScreen() {
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  backgroundColor: theme.colors.card,
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
@@ -241,7 +255,8 @@ export default function DashboardScreen() {
                     <Text
                       style={{
                         color: theme.colors.textSecondary,
-                        fontSize: typography.fontSizes.xs,
+                        fontSize: typography.fontSizes.sm,
+                        fontWeight: typography.fontWeights.medium,
                       }}
                     >
                       {mc.percentage.toFixed(0)}% {t.dashboard.ofTotal}
@@ -265,8 +280,8 @@ export default function DashboardScreen() {
         </View>
       )}
 
-      {/* Recent Expenses Simplified List */}
-      <View style={{ marginBottom: spacing.xl }}>
+      {/* Recent Transactions Feed */}
+      <View>
         <View
           style={{
             flexDirection: 'row',
@@ -280,35 +295,38 @@ export default function DashboardScreen() {
               color: theme.colors.textPrimary,
               fontSize: typography.fontSizes.lg,
               fontWeight: typography.fontWeights.bold,
+              letterSpacing: 0.2,
             }}
           >
             {t.dashboard.recentExpenses}
           </Text>
           <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => router.push('/ledger')}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+            onPress={() => router.push('/(tabs)/ledger')}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 }}
+            accessibilityLabel={t.dashboard.viewAll}
           >
             <Text
               style={{
                 color: theme.colors.brand,
-                fontSize: typography.fontSizes.md,
+                fontSize: typography.fontSizes.sm,
                 fontWeight: typography.fontWeights.bold,
               }}
             >
               {t.dashboard.viewAll}
             </Text>
-            <ArrowRight size={18} color={theme.colors.brand} />
+            <ArrowRight size={16} color={theme.colors.brand} strokeWidth={2.5} />
           </TouchableOpacity>
         </View>
 
         {periodExpenses.length === 0 ? (
-          <Card padding="lg" style={{ alignItems: 'center', justifyContent: 'center' }}>
+          <Card padding="lg" style={{ alignItems: 'center', paddingVertical: spacing.xxl }}>
+            <Receipt size={36} color={theme.colors.textMuted} strokeWidth={1.5} />
             <Text
               style={{
                 color: theme.colors.textSecondary,
                 fontSize: typography.fontSizes.md,
-                textAlign: 'center',
+                fontWeight: typography.fontWeights.bold,
+                marginTop: spacing.md,
               }}
             >
               {t.dashboard.noExpensesMonth}
@@ -316,14 +334,14 @@ export default function DashboardScreen() {
           </Card>
         ) : (
           periodExpenses.map((expense) => {
-            const category = categories.find((c) => c.id === expense.category_id);
-            const member = members.find((m) => m.id === expense.paid_by_member_id);
+            const cat = categories.find((c) => c.id === expense.category_id);
+            const mem = members.find((m) => m.id === expense.paid_by_member_id);
             return (
               <ExpenseItem
                 key={expense.id}
                 expense={expense}
-                category={category}
-                member={member}
+                category={cat}
+                member={mem}
                 currency={family.currency}
                 onPress={() => setSelectedExpense(expense)}
               />
@@ -333,16 +351,21 @@ export default function DashboardScreen() {
       </View>
 
       {/* Expense Detail Modal */}
-      <ExpenseDetailModal
-        visible={!!selectedExpense}
-        expense={selectedExpense}
-        category={categories.find((c) => c.id === selectedExpense?.category_id)}
-        member={members.find((m) => m.id === selectedExpense?.paid_by_member_id)}
-        allMembers={members}
-        currency={family.currency}
-        onClose={() => setSelectedExpense(null)}
-        onDelete={deleteExpense}
-      />
+      {selectedExpense && (
+        <ExpenseDetailModal
+          visible={Boolean(selectedExpense)}
+          expense={selectedExpense}
+          category={categories.find((c) => c.id === selectedExpense.category_id)}
+          member={members.find((m) => m.id === selectedExpense.paid_by_member_id)}
+          allMembers={members}
+          currency={family.currency}
+          onClose={() => setSelectedExpense(null)}
+          onDelete={(id) => {
+            deleteExpense(id);
+            setSelectedExpense(null);
+          }}
+        />
+      )}
     </ScrollView>
   );
 }
