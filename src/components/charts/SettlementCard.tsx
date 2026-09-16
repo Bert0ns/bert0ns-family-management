@@ -56,9 +56,10 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
       <Text
         style={{
           color: theme.colors.textPrimary,
-          fontSize: typography.fontSizes.lg,
+          fontSize: typography.fontSizes.xl,
           fontWeight: typography.fontWeights.heavy,
           marginBottom: spacing.xs,
+          letterSpacing: 0.2,
         }}
       >
         {t.analytics.whoOwesWho}
@@ -68,6 +69,7 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
           color: theme.colors.textSecondary,
           fontSize: typography.fontSizes.sm,
           marginBottom: spacing.lg,
+          fontWeight: typography.fontWeights.medium,
         }}
       >
         {t.analytics.toSettleInstruction}
@@ -87,7 +89,7 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
             borderColor: '#10B981',
           }}
         >
-          <CheckCircle2 size={32} color="#10B981" />
+          <CheckCircle2 size={32} color="#10B981" strokeWidth={2.5} />
           <View style={{ flex: 1 }}>
             <Text
               style={{
@@ -106,10 +108,12 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
             <View
               key={`${transfer.fromMember.id}_${transfer.toMember.id}_${idx}`}
               style={{
-                backgroundColor: theme.colors.surfaceSubtle,
+                backgroundColor: theme.isDark
+                  ? theme.colors.surfaceContainerHigh
+                  : theme.colors.surfaceSubtle,
                 borderRadius: radius.xl,
                 borderWidth: 1.5,
-                borderColor: theme.colors.border,
+                borderColor: theme.colors.borderTactile,
                 padding: spacing.md,
               }}
             >
@@ -145,11 +149,15 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                 <View style={{ alignItems: 'center', flex: 1, paddingHorizontal: spacing.sm }}>
                   <View
                     style={{
-                      backgroundColor: theme.colors.brandLight,
+                      backgroundColor: theme.isDark
+                        ? 'rgba(16, 185, 129, 0.15)'
+                        : theme.colors.brandLight,
                       paddingHorizontal: spacing.md,
                       paddingVertical: spacing.xs,
                       borderRadius: radius.full,
                       marginBottom: 4,
+                      borderWidth: 1,
+                      borderColor: theme.colors.brand,
                     }}
                   >
                     <Text
@@ -192,7 +200,7 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
               <View
                 style={{
                   borderTopWidth: 1,
-                  borderTopColor: theme.colors.border,
+                  borderTopColor: theme.colors.borderTactile,
                   marginTop: spacing.md,
                   paddingTop: spacing.xs + 2,
                   alignItems: 'center',
@@ -225,8 +233,8 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                 <Button
                   title={`${t.notifications.settleUpButton} (${currency}${transfer.amount.toFixed(2)})`}
                   variant="primary"
-                  size="sm"
-                  icon={<Check size={14} color="#FFFFFF" />}
+                  size="md"
+                  icon={<Check size={16} color="#FFFFFF" strokeWidth={3} />}
                   onPress={() => handleSettle(transfer)}
                   fullWidth
                 />
@@ -265,10 +273,14 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  paddingVertical: spacing.sm,
+                  paddingVertical: spacing.sm + 2,
                   paddingHorizontal: spacing.md,
-                  backgroundColor: theme.colors.surfaceSubtle,
-                  borderRadius: radius.md,
+                  backgroundColor: theme.isDark
+                    ? theme.colors.surfaceContainerHigh
+                    : theme.colors.surfaceSubtle,
+                  borderRadius: radius.lg,
+                  borderWidth: 1,
+                  borderColor: theme.colors.borderTactile,
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
@@ -305,6 +317,7 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                     style={{
                       color: theme.colors.textSecondary,
                       fontSize: typography.fontSizes.xs,
+                      fontWeight: typography.fontWeights.medium,
                     }}
                   >
                     {currency}

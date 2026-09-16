@@ -25,7 +25,7 @@ export default function AnalyticsScreen() {
     useAppStore();
 
   const [activeTab, setActiveTab] = useState<
-    'categories' | 'members' | 'settlement' | 'trends' | 'heatmap'
+    'categories' | 'settlement' | 'members' | 'trends' | 'heatmap'
   >('categories');
 
   const periodExpenses = useMemo(
@@ -68,7 +68,7 @@ export default function AnalyticsScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 120 }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 130 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Interactive Month Stepper */}
@@ -81,7 +81,7 @@ export default function AnalyticsScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
-          gap: spacing.xs,
+          gap: spacing.sm,
           paddingVertical: 4,
           marginBottom: spacing.lg,
         }}
@@ -98,23 +98,31 @@ export default function AnalyticsScreen() {
           return (
             <TouchableOpacity
               key={id}
-              activeOpacity={0.7}
+              activeOpacity={0.75}
               onPress={() => setActiveTab(id)}
               style={{
                 flexDirection: 'row',
-                gap: 6,
-                minHeight: 46,
+                gap: 8,
+                minHeight: 48,
                 paddingHorizontal: spacing.md,
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: radius.lg,
-                backgroundColor: isActive ? theme.colors.brand : theme.colors.surfaceSubtle,
+                borderRadius: radius.full,
+                backgroundColor: isActive
+                  ? theme.colors.brand
+                  : theme.isDark
+                    ? theme.colors.surfaceContainerHigh
+                    : theme.colors.surfaceSubtle,
                 borderWidth: 1.5,
-                borderColor: isActive ? theme.colors.brand : theme.colors.border,
+                borderColor: isActive ? theme.colors.brand : theme.colors.borderTactile,
               }}
               accessibilityLabel={label}
             >
-              <TabIcon size={18} color={isActive ? '#FFFFFF' : theme.colors.textSecondary} />
+              <TabIcon
+                size={18}
+                color={isActive ? '#FFFFFF' : theme.colors.textSecondary}
+                strokeWidth={2.5}
+              />
               <Text
                 style={{
                   color: isActive ? '#FFFFFF' : theme.colors.textPrimary,
@@ -177,9 +185,9 @@ export default function AnalyticsScreen() {
                       <Text
                         style={{
                           color: theme.colors.textMuted,
-                          fontSize: typography.fontSizes.xs,
+                          fontSize: typography.fontSizes.sm,
                           fontWeight: typography.fontWeights.bold,
-                          width: 20,
+                          width: 24,
                         }}
                       >
                         #{idx + 1}
