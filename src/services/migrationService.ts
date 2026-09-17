@@ -2,7 +2,7 @@ import { supabase, isSupabaseConfigured } from './supabase';
 import { supabaseLogger } from './logger';
 import { useAppStore } from './store';
 import { syncEngine } from './syncEngine';
-import { generateUUID, isValidUUID } from '@/utils/uuid';
+import { generateUUID, isValidUUID, generateInviteCode } from '@/utils/uuid';
 import { Expense, Category, FamilyMember, ExpenseSplit } from '@/types';
 
 export const migrationService = {
@@ -50,10 +50,12 @@ export const migrationService = {
 
       // 2. Prepare and upsert Family record
       const targetFamilyId = isValidUUID(familyId) ? familyId : toUUID(familyId);
+      const targetInviteCode = localFamily.invite_code || generateInviteCode(6);
       const { error: famError } = await supabase.from('families').upsert({
         id: targetFamilyId,
         name: localFamily.name,
         currency: '€',
+        invite_code: targetInviteCode,
         updated_at: now,
       });
       if (famError) throw famError;
@@ -196,7 +198,12 @@ export const migrationService = {
       // 6. Update local store state with the mapped UUID entities
       const newCurrentMemberId = toUUID(store.currentMemberId);
       useAppStore.setState({
-        family: { ...localFamily, id: targetFamilyId, updated_at: now },
+        family: {
+          ...localFamily,
+          id: targetFamilyId,
+          invite_code: targetInviteCode,
+          updated_at: now,
+        },
         members: mappedMembers,
         categories: mappedCategories,
         expenses: mappedExpenses,

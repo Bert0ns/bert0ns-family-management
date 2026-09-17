@@ -239,6 +239,7 @@ export const syncEngine = {
             .from('families')
             .update({
               name: payload.name,
+              ...(payload.invite_code ? { invite_code: payload.invite_code } : {}),
               updated_at: new Date().toISOString(),
             })
             .eq('id', entity_id);
@@ -293,6 +294,30 @@ export const syncEngine = {
     try {
       notifyStatus('syncing');
       const lastSync = sinceTimestamp || (await this.getLastSyncTimestamp());
+
+      // 0. Fetch family metadata (name, currency, invite_code)
+      try {
+        const { data: remoteFamily, error: famErr } = await supabase
+          .from('families')
+          .select('id, name, currency, invite_code, updated_at')
+          .eq('id', familyId)
+          .maybeSingle();
+
+        if (!famErr && remoteFamily) {
+          const currentFamily = useAppStore.getState().family;
+          useAppStore.setState({
+            family: {
+              ...currentFamily,
+              name: remoteFamily.name,
+              currency: remoteFamily.currency || currentFamily.currency,
+              invite_code: remoteFamily.invite_code || currentFamily.invite_code,
+              updated_at: remoteFamily.updated_at,
+            },
+          });
+        }
+      } catch (famErr) {
+        supabaseLogger.warn('Optional family delta fetch skipped', { error: famErr });
+      }
 
       // 1. Fetch updated expenses
       let expQuery = supabase

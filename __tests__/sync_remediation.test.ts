@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { syncEngine } from '@/services/syncEngine';
-import { isSupabaseConfigured } from '@/services/supabase';
+import { supabase, isSupabaseConfigured } from '@/services/supabase';
 import { authService } from '@/services/authService';
 import { realtimeSync } from '@/services/realtimeSync';
 
@@ -83,5 +83,35 @@ describe('Sync & Auth Remediation Tests (Partition 3)', () => {
     await authService.signOut();
 
     expect(realtimeSync.stopRealtimeSync).toHaveBeenCalledTimes(1);
+  });
+
+  it('updates invite_code on supabase when family mutation is executed', async () => {
+    (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+
+    const eqMock = jest.fn().mockResolvedValue({ error: null });
+    const updateMock = jest.fn().mockReturnValue({ eq: eqMock });
+    (supabase.from as jest.Mock).mockReturnValue({
+      update: updateMock,
+    });
+
+    const success = await syncEngine.executeMutation({
+      id: 'mut-1',
+      entity: 'family',
+      operation: 'UPDATE',
+      entity_id: 'fam-123',
+      payload: { name: 'My Family', invite_code: 'NEW123' },
+      retry_count: 0,
+      created_at: new Date().toISOString(),
+    });
+
+    expect(success).toBe(true);
+    expect(supabase.from).toHaveBeenCalledWith('families');
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'My Family',
+        invite_code: 'NEW123',
+      }),
+    );
+    expect(eqMock).toHaveBeenCalledWith('id', 'fam-123');
   });
 });

@@ -299,6 +299,9 @@ export interface TranslationSchema {
     inviteCodeLabel: string;
     copyCodeButton: string;
     copiedNotice: string;
+    regenerateCodeButton: string;
+    regeneratingCode: string;
+    regeneratedNotice: string;
     joinFamilyTitle: string;
     joinFamilySubtitle: string;
     joinCodePlaceholder: string;

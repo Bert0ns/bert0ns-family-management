@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Alert, Platform } from 'react-native';
-import { Users, Copy, Check, LogIn, AlertCircle } from 'lucide-react-native';
+import { Users, Copy, Check, LogIn, AlertCircle, RefreshCw } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { FormModal } from '@/components/common/FormModal';
 import { Input } from '@/components/common/Input';
@@ -12,6 +12,7 @@ import { useAppStore } from '@/services/store';
 import { supabase, isSupabaseConfigured } from '@/services/supabase';
 import { syncEngine } from '@/services/syncEngine';
 import { realtimeSync } from '@/services/realtimeSync';
+import { generateInviteCode, isValidUUID } from '@/utils/uuid';
 
 interface FamilyPairingModalProps {
   visible: boolean;
@@ -24,12 +25,52 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
   const { family, updateFamilySettings } = useAppStore();
 
   const [copied, setCopied] = useState(false);
+  const [regenerated, setRegenerated] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Ensure family has an invite code
   const currentInviteCode = family.invite_code || 'FAM-8492';
+
+  // Synchronize remote invite code when modal opens or family changes
+  useEffect(() => {
+    let isMounted = true;
+    async function loadRemoteInviteCode() {
+      if (!visible) return;
+
+      // If local family doesn't have an invite code, initialize one
+      if (!family.invite_code) {
+        const generated = generateInviteCode(6);
+        updateFamilySettings({ invite_code: generated });
+      }
+
+      if (isSupabaseConfigured() && isValidUUID(family.id)) {
+        try {
+          const { data, error: famErr } = await supabase
+            .from('families')
+            .select('invite_code')
+            .eq('id', family.id)
+            .maybeSingle();
+
+          if (
+            isMounted &&
+            !famErr &&
+            data?.invite_code &&
+            data.invite_code !== family.invite_code
+          ) {
+            updateFamilySettings({ invite_code: data.invite_code });
+          }
+        } catch {}
+      }
+    }
+
+    loadRemoteInviteCode();
+    return () => {
+      isMounted = false;
+    };
+  }, [visible, family.id, family.invite_code, updateFamilySettings]);
 
   const handleCopyCode = async () => {
     try {
@@ -44,6 +85,44 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
     } catch {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  const handleRegenerateCode = async () => {
+    setIsRegenerating(true);
+    setError(null);
+
+    const newCode = generateInviteCode(6);
+
+    try {
+      if (isSupabaseConfigured() && isValidUUID(family.id)) {
+        const { error: updateErr } = await supabase
+          .from('families')
+          .update({
+            invite_code: newCode,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', family.id);
+
+        if (updateErr) {
+          setError(updateErr.message);
+          setIsRegenerating(false);
+          return;
+        }
+      }
+
+      updateFamilySettings({ invite_code: newCode });
+
+      try {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch {}
+
+      setRegenerated(true);
+      setTimeout(() => setRegenerated(false), 2500);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to regenerate code');
+    } finally {
+      setIsRegenerating(false);
     }
   };
 
@@ -176,11 +255,13 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
+              gap: spacing.sm,
               marginTop: spacing.xs,
             }}
           >
             <View
               style={{
+                flex: 1,
                 backgroundColor: theme.isDark
                   ? 'rgba(99, 102, 241, 0.2)'
                   : 'rgba(99, 102, 241, 0.1)',
@@ -189,6 +270,8 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
                 borderRadius: radius.md,
                 borderWidth: 1,
                 borderColor: theme.colors.brand,
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
               <Text
@@ -204,16 +287,39 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
               </Text>
             </View>
 
-            <Button
-              title={copied ? t.sync.copiedNotice.split('!')[0] : t.sync.copyCodeButton}
-              variant={copied ? 'secondary' : 'primary'}
-              size="sm"
-              icon={
-                copied ? <Check size={14} color="#FFFFFF" /> : <Copy size={14} color="#FFFFFF" />
-              }
-              onPress={handleCopyCode}
-            />
+            <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+              <Button
+                title={copied ? t.sync.copiedNotice.split('!')[0] : t.sync.copyCodeButton}
+                variant={copied ? 'secondary' : 'primary'}
+                size="sm"
+                icon={
+                  copied ? <Check size={14} color="#FFFFFF" /> : <Copy size={14} color="#FFFFFF" />
+                }
+                onPress={handleCopyCode}
+              />
+              <Button
+                title={isRegenerating ? t.sync.regeneratingCode : t.sync.regenerateCodeButton}
+                variant="outline"
+                size="sm"
+                icon={<RefreshCw size={14} color={theme.colors.textPrimary} />}
+                onPress={handleRegenerateCode}
+                disabled={isRegenerating}
+              />
+            </View>
           </View>
+
+          {regenerated && (
+            <Text
+              style={{
+                color: theme.colors.success,
+                fontSize: typography.fontSizes.xs,
+                fontWeight: typography.fontWeights.medium,
+                marginTop: spacing.xs,
+              }}
+            >
+              ✓ {t.sync.regeneratedNotice}
+            </Text>
+          )}
         </Card>
 
         {/* 2. Join Another Household */}
