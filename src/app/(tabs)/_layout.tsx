@@ -1,5 +1,5 @@
 import { useEffect, type ComponentType } from 'react';
-import { View, StyleSheet, Platform, type ColorValue } from 'react-native';
+import { View, StyleSheet, Platform, Pressable, type ColorValue } from 'react-native';
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -125,6 +125,22 @@ export default function TabsLayout() {
           paddingHorizontal: 6,
           overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
         },
+        tabBarButton: ({ ref: _ref, style, ...rest }: any) => (
+          <Pressable
+            {...rest}
+            style={[
+              style,
+              {
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: 0,
+                paddingTop: 0,
+                paddingBottom: 0,
+                height: '100%',
+              },
+            ]}
+          />
+        ),
         tabBarIconStyle: {
           width: 44,
           height: 44,
