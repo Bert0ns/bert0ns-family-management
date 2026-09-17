@@ -56,9 +56,10 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
       <Text
         style={{
           color: theme.colors.textPrimary,
-          fontSize: typography.fontSizes.lg,
+          fontSize: typography.fontSizes.xl,
           fontWeight: typography.fontWeights.heavy,
           marginBottom: spacing.xs,
+          letterSpacing: 0.2,
         }}
       >
         {t.analytics.whoOwesWho}
@@ -68,6 +69,7 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
           color: theme.colors.textSecondary,
           fontSize: typography.fontSizes.sm,
           marginBottom: spacing.lg,
+          fontWeight: typography.fontWeights.medium,
         }}
       >
         {t.analytics.toSettleInstruction}
@@ -87,7 +89,7 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
             borderColor: '#10B981',
           }}
         >
-          <CheckCircle2 size={32} color="#10B981" />
+          <CheckCircle2 size={32} color="#10B981" strokeWidth={2.5} />
           <View style={{ flex: 1 }}>
             <Text
               style={{
@@ -106,10 +108,12 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
             <View
               key={`${transfer.fromMember.id}_${transfer.toMember.id}_${idx}`}
               style={{
-                backgroundColor: theme.colors.surfaceSubtle,
+                backgroundColor: theme.isDark
+                  ? theme.colors.surfaceContainerHigh
+                  : theme.colors.surfaceSubtle,
                 borderRadius: radius.xl,
                 borderWidth: 1.5,
-                borderColor: theme.colors.border,
+                borderColor: theme.colors.borderTactile,
                 padding: spacing.md,
               }}
             >
@@ -121,7 +125,7 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                 }}
               >
                 {/* From Member */}
-                <View style={{ alignItems: 'center', minWidth: 70 }}>
+                <View style={{ alignItems: 'center', width: 68, flexShrink: 0 }}>
                   <Avatar
                     name={transfer.fromMember.display_name}
                     avatarUrl={transfer.fromMember.avatar_url}
@@ -131,9 +135,10 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                   <Text
                     style={{
                       color: theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.sm,
+                      fontSize: typography.fontSizes.xs,
                       fontWeight: typography.fontWeights.bold,
                       marginTop: 4,
+                      textAlign: 'center',
                     }}
                     numberOfLines={1}
                   >
@@ -142,32 +147,46 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                 </View>
 
                 {/* Transfer Arrow & Amount */}
-                <View style={{ alignItems: 'center', flex: 1, paddingHorizontal: spacing.sm }}>
+                <View
+                  style={{
+                    alignItems: 'center',
+                    flex: 1,
+                    minWidth: 0,
+                    paddingHorizontal: spacing.xs,
+                  }}
+                >
                   <View
                     style={{
-                      backgroundColor: theme.colors.brandLight,
-                      paddingHorizontal: spacing.md,
+                      backgroundColor: theme.isDark
+                        ? 'rgba(16, 185, 129, 0.15)'
+                        : theme.colors.brandLight,
+                      paddingHorizontal: spacing.sm,
                       paddingVertical: spacing.xs,
                       borderRadius: radius.full,
                       marginBottom: 4,
+                      borderWidth: 1,
+                      borderColor: theme.colors.brand,
+                      maxWidth: '100%',
                     }}
                   >
                     <Text
                       style={{
                         color: theme.colors.brand,
-                        fontSize: typography.fontSizes.lg,
+                        fontSize: typography.fontSizes.md,
                         fontWeight: typography.fontWeights.heavy,
+                        textAlign: 'center',
                       }}
+                      numberOfLines={1}
                     >
                       {currency}
                       {transfer.amount.toFixed(2)}
                     </Text>
                   </View>
-                  <ArrowRight size={22} color={theme.colors.brand} strokeWidth={2.5} />
+                  <ArrowRight size={20} color={theme.colors.brand} strokeWidth={2.5} />
                 </View>
 
                 {/* To Member */}
-                <View style={{ alignItems: 'center', minWidth: 70 }}>
+                <View style={{ alignItems: 'center', width: 68, flexShrink: 0 }}>
                   <Avatar
                     name={transfer.toMember.display_name}
                     avatarUrl={transfer.toMember.avatar_url}
@@ -177,9 +196,10 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                   <Text
                     style={{
                       color: theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.sm,
+                      fontSize: typography.fontSizes.xs,
                       fontWeight: typography.fontWeights.bold,
                       marginTop: 4,
+                      textAlign: 'center',
                     }}
                     numberOfLines={1}
                   >
@@ -192,7 +212,7 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
               <View
                 style={{
                   borderTopWidth: 1,
-                  borderTopColor: theme.colors.border,
+                  borderTopColor: theme.colors.borderTactile,
                   marginTop: spacing.md,
                   paddingTop: spacing.xs + 2,
                   alignItems: 'center',
@@ -203,6 +223,7 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                     color: theme.colors.textSecondary,
                     fontSize: typography.fontSizes.sm,
                     fontWeight: typography.fontWeights.medium,
+                    textAlign: 'center',
                   }}
                 >
                   <Text style={{ fontWeight: 'bold', color: theme.colors.textPrimary }}>
@@ -225,8 +246,8 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                 <Button
                   title={`${t.notifications.settleUpButton} (${currency}${transfer.amount.toFixed(2)})`}
                   variant="primary"
-                  size="sm"
-                  icon={<Check size={14} color="#FFFFFF" />}
+                  size="md"
+                  icon={<Check size={16} color="#FFFFFF" strokeWidth={3} />}
                   onPress={() => handleSettle(transfer)}
                   fullWidth
                 />
@@ -265,13 +286,26 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  paddingVertical: spacing.sm,
+                  paddingVertical: spacing.sm + 2,
                   paddingHorizontal: spacing.md,
-                  backgroundColor: theme.colors.surfaceSubtle,
-                  borderRadius: radius.md,
+                  backgroundColor: theme.isDark
+                    ? theme.colors.surfaceContainerHigh
+                    : theme.colors.surfaceSubtle,
+                  borderRadius: radius.lg,
+                  borderWidth: 1,
+                  borderColor: theme.colors.borderTactile,
                 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.sm,
+                    flex: 1,
+                    minWidth: 0,
+                    marginRight: spacing.sm,
+                  }}
+                >
                   <Avatar
                     name={b.member.display_name}
                     avatarUrl={b.member.avatar_url}
@@ -283,13 +317,15 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                       color: theme.colors.textPrimary,
                       fontSize: typography.fontSizes.sm,
                       fontWeight: typography.fontWeights.bold,
+                      flexShrink: 1,
                     }}
+                    numberOfLines={1}
                   >
                     {b.member.display_name}
                   </Text>
                 </View>
 
-                <View style={{ alignItems: 'flex-end' }}>
+                <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
                   <Text
                     style={{
                       color: netColor,
@@ -305,6 +341,7 @@ export const SettlementCard: React.FC<SettlementCardProps> = ({ summary, currenc
                     style={{
                       color: theme.colors.textSecondary,
                       fontSize: typography.fontSizes.xs,
+                      fontWeight: typography.fontWeights.medium,
                     }}
                   >
                     {currency}

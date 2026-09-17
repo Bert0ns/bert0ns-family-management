@@ -77,8 +77,8 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
       {/* Category Icon */}
       <View
         style={{
-          width: 48,
-          height: 48,
+          width: 44,
+          height: 44,
           borderRadius: radius.lg,
           backgroundColor: `${catColor}18`,
           borderWidth: 1.5,
@@ -86,13 +86,14 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
           alignItems: 'center',
           justifyContent: 'center',
           marginRight: spacing.md,
+          flexShrink: 0,
         }}
       >
-        <IconHelper name={catIcon} size={24} color={catColor} />
+        <IconHelper name={catIcon} size={22} color={catColor} />
       </View>
 
       {/* Details */}
-      <View style={{ flex: 1, marginRight: spacing.sm }}>
+      <View style={{ flex: 1, minWidth: 0, marginRight: spacing.sm }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
           <Text
             style={{
@@ -105,42 +106,54 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
           >
             {expense.merchant_name}
           </Text>
-          {isSplit && <Split size={14} color={theme.colors.brand} />}
+          {isSplit && <Split size={14} color={theme.colors.brand} style={{ flexShrink: 0 }} />}
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 }}>
           <Text
             style={{
               color: theme.colors.textSecondary,
               fontSize: typography.fontSizes.sm,
               fontWeight: typography.fontWeights.medium,
+              flexShrink: 1,
             }}
+            numberOfLines={1}
           >
             {catName}
           </Text>
           <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.sm }}>
             •
           </Text>
-          <Text style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.sm }}>
-            {formattedDate}
-          </Text>
-          <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.sm }}>
-            •
-          </Text>
-          <View
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: member?.color_code || theme.colors.brand,
-            }}
-          />
           <Text
             style={{
               color: theme.colors.textSecondary,
               fontSize: typography.fontSizes.sm,
               fontWeight: typography.fontWeights.medium,
+              flexShrink: 0,
             }}
+          >
+            {formattedDate}
+          </Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 }}>
+          <View
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: 3.5,
+              backgroundColor: member?.color_code || theme.colors.brand,
+              flexShrink: 0,
+            }}
+          />
+          <Text
+            style={{
+              color: theme.colors.textMuted,
+              fontSize: typography.fontSizes.xs,
+              fontWeight: typography.fontWeights.medium,
+              flexShrink: 1,
+            }}
+            numberOfLines={1}
           >
             {memberName}
           </Text>
@@ -148,13 +161,21 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
       </View>
 
       {/* Amount */}
-      <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
+      <View
+        style={{
+          alignItems: 'flex-end',
+          justifyContent: 'center',
+          minWidth: 72,
+          flexShrink: 0,
+        }}
+      >
         <Text
           style={{
             color: theme.colors.textPrimary,
             fontSize: typography.fontSizes.xl,
             fontWeight: typography.fontWeights.heavy,
           }}
+          numberOfLines={1}
         >
           {currency}
           {expense.amount.toFixed(2)}

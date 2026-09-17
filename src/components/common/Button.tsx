@@ -55,7 +55,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   const bgMap: Record<ButtonVariant, string> = {
     primary: theme.colors.brand,
-    secondary: theme.colors.brandLight,
+    secondary: theme.isDark ? theme.colors.surfaceContainerHigh : theme.colors.surfaceSubtle,
     danger: theme.colors.danger,
     outline: 'transparent',
     ghost: 'transparent',
@@ -63,7 +63,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   const textColorMap: Record<ButtonVariant, string> = {
     primary: '#FFFFFF',
-    secondary: theme.colors.brand,
+    secondary: theme.colors.textPrimary,
     danger: '#FFFFFF',
     outline: theme.colors.textPrimary,
     ghost: theme.colors.textSecondary,
@@ -72,17 +72,22 @@ export const Button: React.FC<ButtonProps> = ({
   const isIconOnly = !title && Boolean(icon);
 
   const iconOnlyDimensionMap: Record<ButtonSize, number> = {
-    sm: 36,
-    md: 42,
-    lg: 48,
+    sm: 48,
+    md: 56,
+    lg: 64,
   };
 
-  const sizePaddingMap: Record<ButtonSize, { paddingVertical: number; paddingHorizontal: number }> =
-    {
-      sm: { paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
-      md: { paddingVertical: spacing.sm + 2, paddingHorizontal: spacing.lg },
-      lg: { paddingVertical: spacing.md, paddingHorizontal: spacing.xl },
-    };
+  const sizeHeightMap: Record<ButtonSize, number> = {
+    sm: 48,
+    md: 56,
+    lg: 64,
+  };
+
+  const sizePaddingMap: Record<ButtonSize, { paddingHorizontal: number }> = {
+    sm: { paddingHorizontal: spacing.md },
+    md: { paddingHorizontal: spacing.xl },
+    lg: { paddingHorizontal: spacing.xxl },
+  };
 
   const sizeFontMap: Record<ButtonSize, number> = {
     sm: typography.fontSizes.sm,
@@ -92,38 +97,66 @@ export const Button: React.FC<ButtonProps> = ({
 
   const bgColor = disabled ? theme.colors.surfaceSubtle : bgMap[variant] || theme.colors.brand;
   const textColor = disabled ? theme.colors.textMuted : textColorMap[variant] || '#FFFFFF';
-  const padding = isIconOnly ? { padding: 0 } : sizePaddingMap[size] || sizePaddingMap.md;
+  const padding = isIconOnly ? { paddingHorizontal: 0 } : sizePaddingMap[size] || sizePaddingMap.md;
 
   const isOutline = variant === 'outline';
+  const isSecondary = variant === 'secondary';
+
+  const isWeb = Platform.OS === 'web';
+  const webTactileStyle = isWeb
+    ? ({
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow:
+          variant === 'primary' && !disabled
+            ? theme.isDark
+              ? '0 4px 16px rgba(16, 185, 129, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+              : '0 4px 16px rgba(5, 150, 105, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+            : variant === 'danger' && !disabled
+              ? '0 4px 16px rgba(244, 63, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+              : undefined,
+      } as any)
+    : {};
 
   const buttonStyle: ViewStyle = {
     backgroundColor: bgColor,
-    borderRadius: isIconOnly ? radius.md : radius.md,
+    borderRadius: radius.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: sizeHeightMap[size],
     ...(isIconOnly
       ? {
           width: iconOnlyDimensionMap[size],
           height: iconOnlyDimensionMap[size],
         }
       : padding),
-    borderWidth: isOutline ? 1 : 0,
-    borderColor: isOutline ? theme.colors.border : 'transparent',
+    borderWidth:
+      isOutline || isSecondary ? 1.5 : variant === 'primary' || variant === 'danger' ? 1 : 0,
+    borderColor:
+      isOutline || isSecondary
+        ? theme.colors.borderTactile
+        : variant === 'primary' || variant === 'danger'
+          ? theme.isDark
+            ? 'rgba(255, 255, 255, 0.16)'
+            : 'rgba(0, 0, 0, 0.08)'
+          : 'transparent',
     alignSelf: fullWidth ? 'stretch' : 'auto',
-    opacity: disabled ? 0.6 : 1,
+    opacity: disabled ? 0.55 : 1,
     gap: title && icon ? spacing.sm : 0,
+    ...webTactileStyle,
   };
 
   const labelStyle: TextStyle = {
     color: textColor,
     fontSize: sizeFontMap[size] || typography.fontSizes.md,
-    fontWeight: typography.fontWeights.semibold,
+    fontWeight: typography.fontWeights.bold,
+    letterSpacing: 0.2,
   };
 
   return (
     <TouchableOpacity
-      activeOpacity={0.75}
+      activeOpacity={0.8}
       onPress={handlePress}
       style={[buttonStyle, style]}
       disabled={disabled || loading}

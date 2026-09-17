@@ -31,9 +31,11 @@ export function OptionSelector<T extends string | number>({
       {label && (
         <Text
           style={{
-            color: theme.colors.textSecondary,
-            fontSize: typography.fontSizes.xs,
-            marginBottom: 4,
+            color: theme.colors.textPrimary,
+            fontSize: typography.fontSizes.sm,
+            fontWeight: typography.fontWeights.bold,
+            marginBottom: spacing.xs,
+            letterSpacing: 0.2,
           }}
         >
           {label}
@@ -42,7 +44,7 @@ export function OptionSelector<T extends string | number>({
       {sublabel && (
         <Text
           style={{
-            color: theme.colors.textMuted,
+            color: theme.colors.textSecondary,
             fontSize: typography.fontSizes.xs,
             marginBottom: spacing.xs,
           }}
@@ -50,32 +52,36 @@ export function OptionSelector<T extends string | number>({
           {sublabel}
         </Text>
       )}
-      <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         {options.map((opt) => {
           const isSelected = selectedValue === opt.value;
           return (
             <TouchableOpacity
               key={String(opt.value)}
-              activeOpacity={0.7}
+              activeOpacity={0.75}
               onPress={() => onSelect(opt.value)}
               style={{
                 flex: 1,
+                minHeight: 52,
                 paddingVertical: spacing.sm,
+                paddingHorizontal: spacing.sm,
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: radius.md,
-                backgroundColor: isSelected ? theme.colors.brand : theme.colors.surfaceSubtle,
-                borderWidth: 1,
-                borderColor: isSelected ? theme.colors.brand : theme.colors.border,
+                borderRadius: radius.lg,
+                backgroundColor: isSelected
+                  ? theme.colors.brand
+                  : theme.isDark
+                    ? theme.colors.surfaceContainerHigh
+                    : theme.colors.surfaceSubtle,
+                borderWidth: 1.5,
+                borderColor: isSelected ? theme.colors.brand : theme.colors.borderTactile,
               }}
             >
               <Text
                 style={{
                   color: isSelected ? '#FFFFFF' : theme.colors.textPrimary,
-                  fontSize: typography.fontSizes.sm,
-                  fontWeight: isSelected
-                    ? typography.fontWeights.bold
-                    : typography.fontWeights.medium,
+                  fontSize: typography.fontSizes.md,
+                  fontWeight: typography.fontWeights.bold,
                 }}
               >
                 {opt.label}
@@ -83,9 +89,10 @@ export function OptionSelector<T extends string | number>({
               {opt.sublabel && (
                 <Text
                   style={{
-                    color: isSelected ? 'rgba(255,255,255,0.8)' : theme.colors.textMuted,
-                    fontSize: 10,
+                    color: isSelected ? 'rgba(255, 255, 255, 0.9)' : theme.colors.textSecondary,
+                    fontSize: typography.fontSizes.xs,
                     marginTop: 2,
+                    fontWeight: typography.fontWeights.medium,
                   }}
                 >
                   {opt.sublabel}

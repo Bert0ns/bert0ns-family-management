@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   TextInput,
@@ -25,29 +25,43 @@ export const Input: React.FC<InputProps> = ({
   rightIcon,
   containerStyle,
   style,
+  onFocus,
+  onBlur,
   ...props
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const [isFocused, setIsFocused] = useState(false);
   const isWeb = Platform.OS === 'web';
+
   const webGlass = isWeb
     ? ({
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        boxShadow: theme.isDark
-          ? 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-          : 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 8px rgba(148, 163, 184, 0.06)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        boxShadow: isFocused
+          ? theme.isDark
+            ? '0 0 0 3px rgba(99, 102, 241, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+            : '0 0 0 3px rgba(79, 70, 229, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)'
+          : theme.isDark
+            ? 'inset 0 1px 0 rgba(255, 255, 255, 0.04)'
+            : 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 6px rgba(15, 23, 42, 0.03)',
       } as any)
     : {};
+
+  const getBorderColor = () => {
+    if (error) return theme.colors.danger;
+    if (isFocused) return theme.colors.brandSecondary;
+    return theme.colors.borderTactile;
+  };
 
   const wrapperStyle: ViewStyle = {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.inputBg,
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: error ? theme.colors.danger : theme.colors.inputBorder,
-    paddingHorizontal: spacing.md,
-    height: 48,
+    borderWidth: 1.5,
+    borderColor: getBorderColor(),
+    paddingHorizontal: spacing.lg,
+    minHeight: 56,
     gap: spacing.sm,
     ...webGlass,
   };
@@ -56,19 +70,23 @@ export const Input: React.FC<InputProps> = ({
     flex: 1,
     color: theme.colors.textPrimary,
     fontSize: typography.fontSizes.md,
+    fontWeight: typography.fontWeights.medium,
     height: '100%',
+    ...(isWeb ? ({ outlineStyle: 'none' } as any) : {}),
   };
 
   const labelStyle: TextStyle = {
-    color: theme.colors.textSecondary,
+    color: theme.colors.textPrimary,
     fontSize: typography.fontSizes.sm,
-    fontWeight: typography.fontWeights.medium,
+    fontWeight: typography.fontWeights.bold,
     marginBottom: spacing.xs,
+    letterSpacing: 0.2,
   };
 
   const errorStyle: TextStyle = {
     color: theme.colors.danger,
-    fontSize: typography.fontSizes.xs,
+    fontSize: typography.fontSizes.sm,
+    fontWeight: typography.fontWeights.medium,
     marginTop: spacing.xs,
   };
 
@@ -80,6 +98,14 @@ export const Input: React.FC<InputProps> = ({
         <TextInput
           placeholderTextColor={theme.colors.textMuted}
           style={[inputStyle, style]}
+          onFocus={(e) => {
+            setIsFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setIsFocused(false);
+            onBlur?.(e);
+          }}
           {...props}
         />
         {rightIcon}

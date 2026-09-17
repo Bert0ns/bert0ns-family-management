@@ -1,4 +1,5 @@
-import { StyleSheet, Platform } from 'react-native';
+import type { ComponentType } from 'react';
+import { View, StyleSheet, Platform, type ColorValue } from 'react-native';
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,7 +13,34 @@ export default function TabsLayout() {
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
 
-  const floatingBottom = Math.max(insets.bottom, 12);
+  const floatingBottom = Math.max(insets.bottom, 14);
+
+  const renderTabIcon = (
+    IconComponent: ComponentType<{ size: number; color: string; strokeWidth?: number }>,
+    focused: boolean,
+    color: ColorValue | string,
+    label: string,
+  ) => (
+    <View
+      accessibilityLabel={label}
+      style={{
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: focused ? theme.colors.brandLight : 'transparent',
+        borderWidth: focused ? 1.5 : 0,
+        borderColor: focused ? `${theme.colors.brand}4D` : 'transparent',
+      }}
+    >
+      <IconComponent
+        size={22}
+        color={focused ? theme.colors.brand : (color as string)}
+        strokeWidth={focused ? 2.5 : 2}
+      />
+    </View>
+  );
 
   return (
     <Tabs
@@ -22,16 +50,14 @@ export default function TabsLayout() {
         tabBarShowLabel: false,
         tabBarBackground: () => (
           <BlurView
-            intensity={85}
+            intensity={90}
             tint={theme.isDark ? 'dark' : 'light'}
             style={[
               StyleSheet.absoluteFill,
               {
-                borderRadius: 28,
+                borderRadius: 31,
                 overflow: 'hidden',
-                backgroundColor: theme.isDark
-                  ? 'rgba(22, 23, 31, 0.75)'
-                  : 'rgba(255, 255, 255, 0.82)',
+                backgroundColor: theme.colors.bottomBarBg,
               },
             ]}
           />
@@ -39,38 +65,43 @@ export default function TabsLayout() {
         tabBarStyle: {
           position: 'absolute',
           bottom: floatingBottom,
-          left: 18,
-          right: 18,
-          height: 64,
+          left: 14,
+          right: 14,
+          height: 62,
           backgroundColor: 'transparent',
-          borderRadius: 28,
+          borderRadius: 31,
           borderWidth: 1.5,
-          borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.85)',
+          borderColor: theme.colors.bottomBarBorder,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: theme.isDark ? 0.4 : 0.12,
+          shadowOpacity: theme.isDark ? 0.45 : 0.1,
           shadowRadius: 20,
           elevation: 10,
           paddingTop: 0,
           paddingBottom: 0,
-          paddingHorizontal: 0,
+          paddingHorizontal: 6,
           overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
         },
         tabBarItemStyle: {
           flex: 1,
+          minWidth: 0,
           justifyContent: 'center',
           alignItems: 'center',
-          height: 64,
+          height: 62,
           padding: 0,
           margin: 0,
         },
-        tabBarLabelPosition: 'beside-icon',
         headerStyle: {
-          backgroundColor: theme.colors.surface,
+          backgroundColor: theme.colors.background,
+        },
+        headerTitleStyle: {
+          fontWeight: '700',
+          fontSize: 19,
+          color: theme.colors.textPrimary,
         },
         headerTintColor: theme.colors.textPrimary,
         headerShadowVisible: false,
-        headerRight: () => <SyncBadge />,
+        headerRight: () => <SyncBadge showLabel={false} />,
         headerRightContainerStyle: { paddingRight: 16 },
       }}
     >
@@ -79,7 +110,8 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.dashboard,
           headerTitle: t.tabs.dashboard,
-          tabBarIcon: ({ color }) => <LayoutDashboard size={25} color={color} />,
+          tabBarIcon: ({ focused, color }) =>
+            renderTabIcon(LayoutDashboard, focused, color, t.tabs.dashboard),
           tabBarAccessibilityLabel: t.tabs.dashboard,
         }}
       />
@@ -88,7 +120,8 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.ledger,
           headerTitle: t.tabs.ledger,
-          tabBarIcon: ({ color }) => <ReceiptText size={25} color={color} />,
+          tabBarIcon: ({ focused, color }) =>
+            renderTabIcon(ReceiptText, focused, color, t.tabs.ledger),
           tabBarAccessibilityLabel: t.tabs.ledger,
         }}
       />
@@ -97,7 +130,8 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.analytics,
           headerTitle: t.tabs.analytics,
-          tabBarIcon: ({ color }) => <PieChart size={25} color={color} />,
+          tabBarIcon: ({ focused, color }) =>
+            renderTabIcon(PieChart, focused, color, t.tabs.analytics),
           tabBarAccessibilityLabel: t.tabs.analytics,
         }}
       />
@@ -106,7 +140,7 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.family,
           headerTitle: t.tabs.family,
-          tabBarIcon: ({ color }) => <Users size={25} color={color} />,
+          tabBarIcon: ({ focused, color }) => renderTabIcon(Users, focused, color, t.tabs.family),
           tabBarAccessibilityLabel: t.tabs.family,
         }}
       />
@@ -115,7 +149,8 @@ export default function TabsLayout() {
         options={{
           title: t.tabs.settings,
           headerTitle: t.tabs.settings,
-          tabBarIcon: ({ color }) => <Settings size={25} color={color} />,
+          tabBarIcon: ({ focused, color }) =>
+            renderTabIcon(Settings, focused, color, t.tabs.settings),
           tabBarAccessibilityLabel: t.tabs.settings,
         }}
       />
