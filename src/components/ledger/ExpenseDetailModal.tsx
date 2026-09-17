@@ -1,3 +1,4 @@
+import { uiLogger } from '@/services/logger';
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, Platform, Alert } from 'react-native';
 import { X, Trash2, Calendar, CreditCard, User, Split } from 'lucide-react-native';
@@ -52,6 +53,11 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
   const handleDelete = () => {
     if (Platform.OS === 'web' && typeof window !== 'undefined' && window.confirm) {
       if (window.confirm(t.common.delete + '?')) {
+        uiLogger.info('User confirmed deletion of expense from modal', {
+          id: expense.id,
+          merchant: expense.merchant_name,
+          amount: expense.amount,
+        });
         onDelete(expense.id);
         onClose();
       }
@@ -64,6 +70,11 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
         text: t.common.delete,
         style: 'destructive',
         onPress: () => {
+          uiLogger.info('User confirmed deletion of expense from modal', {
+            id: expense.id,
+            merchant: expense.merchant_name,
+            amount: expense.amount,
+          });
           onDelete(expense.id);
           onClose();
         },

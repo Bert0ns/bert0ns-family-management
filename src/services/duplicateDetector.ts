@@ -1,3 +1,4 @@
+import { transactionLogger } from './logger';
 import { Expense, RawExpenseItem } from '@/types';
 
 export interface DuplicateCheckResult {
@@ -50,6 +51,12 @@ export class DuplicateDetector {
     });
 
     if (match) {
+      transactionLogger.warn('Potential duplicate transaction detected', {
+        candidateMerchant: candidate.merchant,
+        candidateAmount: candidate.amount,
+        candidateDate: candidate.date,
+        matchedExpenseId: match.id,
+      });
       return {
         isDuplicate: true,
         matchedExpenseId: match.id,
@@ -75,7 +82,7 @@ export class DuplicateDetector {
       index.set(key, list);
     });
 
-    return candidates.map((cand) => {
+    const results = candidates.map((cand) => {
       const key = `${cand.date.trim()}_${Math.round(cand.amount * 100)}`;
       const matches = index.get(key) || [];
       const found = matches.find((exp) => this.isMerchantMatch(exp.merchant_name, cand.merchant));
@@ -88,6 +95,14 @@ export class DuplicateDetector {
       }
       return { isDuplicate: false };
     });
+    const dupCount = results.filter((r) => r.isDuplicate).length;
+    if (dupCount > 0) {
+      transactionLogger.warn('Batch duplicate transactions detected', {
+        candidatesCount: candidates.length,
+        duplicatesFound: dupCount,
+      });
+    }
+    return results;
   }
 }
 

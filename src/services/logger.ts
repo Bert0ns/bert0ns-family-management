@@ -22,11 +22,14 @@ const config = {
     },
     extensionColors: {
       Store: 'magentaBright' as const,
-      Validator: 'yellowBright' as const,
+      Transaction: 'greenBright' as const,
+      Sync: 'cyanBright' as const,
+      Auth: 'yellowBright' as const,
+      Validator: 'yellow' as const,
       FileExporter: 'blueBright' as const,
-      Import: 'cyanBright' as const,
-      Analytics: 'greenBright' as const,
-      Supabase: 'cyan' as const,
+      Import: 'cyan' as const,
+      Analytics: 'green' as const,
+      Supabase: 'blueBright' as const,
       UI: 'grey' as const,
     },
   },
@@ -40,6 +43,9 @@ const config = {
 export const logger = rnLogs.createLogger(config);
 
 export const storeLogger = logger.extend('Store');
+export const transactionLogger = logger.extend('Transaction');
+export const syncLogger = logger.extend('Sync');
+export const authLogger = logger.extend('Auth');
 export const validatorLogger = logger.extend('Validator');
 export const exportLogger = logger.extend('FileExporter');
 export const importLogger = logger.extend('Import');

@@ -1,3 +1,4 @@
+import { uiLogger, syncLogger } from '@/services/logger';
 import React, { useState, useEffect } from 'react';
 import { View, Text, Alert, Platform } from 'react-native';
 import { Users, Copy, Check, LogIn, AlertCircle, RefreshCw } from 'lucide-react-native';
@@ -89,6 +90,7 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
   };
 
   const handleRegenerateCode = async () => {
+    uiLogger.info('User triggered regenerate household invite code');
     setIsRegenerating(true);
     setError(null);
 
@@ -133,6 +135,7 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
       return;
     }
 
+    uiLogger.info('User attempting to join household via invite code', { codeLength: code.length });
     setIsJoining(true);
     setError(null);
 
@@ -178,6 +181,9 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
       }
 
       const joinedFamilyId = rpcRes.family_id as string;
+      syncLogger.info('User joined household successfully via invite code', {
+        familyId: joinedFamilyId,
+      });
       const joinedMemberId = rpcRes.member_id as string;
 
       // 3. User is now authorized under RLS to fetch the family profile

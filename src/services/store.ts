@@ -24,7 +24,7 @@ import {
 import { calculateEqualSplits } from '@/services/splitCalculator';
 import { generateUUID } from '@/utils/uuid';
 import { CATEGORY_I18N_KEY_MAP } from '@/i18n/categories';
-import { storeLogger } from '@/services/logger';
+import { storeLogger, transactionLogger } from '@/services/logger';
 
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   push_enabled: true,
@@ -125,6 +125,11 @@ export const registerStoreMutationListener = (
 };
 
 const notifyStoreMutation = (event: StoreMutationEvent) => {
+  storeLogger.debug('Store mutation dispatched', {
+    entity: event.entity,
+    operation: event.operation,
+    entity_id: event.entity_id,
+  });
   mutationListeners.forEach((listener) => {
     try {
       listener(event);
@@ -163,8 +168,14 @@ export const useAppStore = create<AppState>()(
         set({ selectedPeriod: period });
       },
 
-      setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
-      resetFilters: () => set({ filters: DEFAULT_FILTERS }),
+      setFilters: (filters) => {
+        storeLogger.debug('Filters updated', filters);
+        set((state) => ({ filters: { ...state.filters, ...filters } }));
+      },
+      resetFilters: () => {
+        storeLogger.debug('Filters reset to defaults');
+        set({ filters: DEFAULT_FILTERS });
+      },
 
       updateFamilySettings: (updates) => {
         storeLogger.info('Updating family settings', updates);
@@ -190,10 +201,19 @@ export const useAppStore = create<AppState>()(
           created_at: now,
           updated_at: now,
         };
-        storeLogger.info('Expense added', {
+        transactionLogger.info('Expense created', {
           id: newExpense.id,
           merchant: newExpense.merchant_name,
           amount: newExpense.amount,
+          currency: state.family.currency,
+          paidBy: newExpense.paid_by_member_id,
+          category: newExpense.category_id,
+          date: newExpense.transaction_date,
+          splitsCount: newExpense.splits?.length || 0,
+        });
+        storeLogger.debug('Expense added to state', {
+          expenseId: newExpense.id,
+          totalExpenses: state.expenses.length + 1,
         });
         set((state) => ({ expenses: [newExpense, ...state.expenses] }));
         notifyStoreMutation({
@@ -206,9 +226,16 @@ export const useAppStore = create<AppState>()(
       },
 
       updateExpense: (id, updates) => {
+        const state = get();
+        const existing = state.expenses.find((e) => e.id === id);
         const now = new Date().toISOString();
         let updatedExpense: Expense | undefined;
-        storeLogger.info('Expense updated', { id, updates });
+        transactionLogger.info('Expense updated', {
+          id,
+          merchant: updates.merchant_name || existing?.merchant_name,
+          amount: updates.amount !== undefined ? updates.amount : existing?.amount,
+          changedFields: Object.keys(updates),
+        });
         set((state) => ({
           expenses: state.expenses.map((e) => {
             if (e.id === id) {
@@ -231,6 +258,7 @@ export const useAppStore = create<AppState>()(
           }),
         }));
         if (updatedExpense) {
+          storeLogger.debug('Expense state saved', { id, updated_at: now });
           notifyStoreMutation({
             entity: 'expense',
             operation: 'UPDATE',
@@ -241,10 +269,21 @@ export const useAppStore = create<AppState>()(
       },
 
       deleteExpense: (id) => {
-        storeLogger.info('Expense deleted', { id });
+        const state = get();
+        const exp = state.expenses.find((e) => e.id === id);
+        transactionLogger.warn('Expense deleted', {
+          id,
+          merchant: exp?.merchant_name,
+          amount: exp?.amount,
+          date: exp?.transaction_date,
+        });
         set((state) => ({
           expenses: state.expenses.filter((e) => e.id !== id),
         }));
+        storeLogger.debug('Expense removed from state', {
+          id,
+          remaining: state.expenses.length - 1,
+        });
         notifyStoreMutation({
           entity: 'expense',
           operation: 'DELETE',
@@ -254,7 +293,11 @@ export const useAppStore = create<AppState>()(
       },
 
       clearAllExpenses: () => {
-        storeLogger.warn('All expenses cleared from store');
+        const state = get();
+        transactionLogger.warn('All expenses cleared from store', {
+          count: state.expenses.length,
+          batchCount: state.importBatches.length,
+        });
         set({ expenses: [], importBatches: [] });
       },
 
@@ -470,12 +513,13 @@ export const useAppStore = create<AppState>()(
           family_id: state.family.id,
           created_at: now,
         };
-        storeLogger.info('Settlement recorded', {
+        transactionLogger.info('Settlement recorded', {
           id: newSettlement.id,
           from: newSettlement.from_member_id,
           to: newSettlement.to_member_id,
           amount: newSettlement.amount,
         });
+        storeLogger.debug('Settlement added to state', { settlementId: newSettlement.id });
         set((s) => ({ settlements: [newSettlement, ...s.settlements] }));
         notifyStoreMutation({
           entity: 'settlement',
@@ -487,6 +531,7 @@ export const useAppStore = create<AppState>()(
       },
 
       reconcileRemoteSettlements: (remoteList) => {
+        storeLogger.info('Reconciling remote settlements', { count: remoteList.length });
         set((state) => {
           const map = new Map(state.settlements.map((s) => [s.id, s]));
           remoteList.forEach((remote) => {
@@ -513,6 +558,11 @@ export const useAppStore = create<AppState>()(
       },
 
       addNotification: (notification) => {
+        storeLogger.debug('Notification received', {
+          id: notification.id,
+          type: notification.type,
+          title: notification.title,
+        });
         set((state) => {
           if (state.notifications.some((n) => n.id === notification.id)) {
             return state;
@@ -524,6 +574,7 @@ export const useAppStore = create<AppState>()(
       },
 
       markNotificationAsRead: (id) => {
+        storeLogger.debug('Notification marked as read', { id });
         set((state) => ({
           notifications: state.notifications.map((n) =>
             n.id === id ? { ...n, is_read: true } : n,
@@ -532,12 +583,14 @@ export const useAppStore = create<AppState>()(
       },
 
       markAllNotificationsAsRead: () => {
+        storeLogger.debug('All notifications marked as read');
         set((state) => ({
           notifications: state.notifications.map((n) => ({ ...n, is_read: true })),
         }));
       },
 
       clearNotifications: () => {
+        storeLogger.debug('All notifications cleared');
         set({ notifications: [] });
       },
 
@@ -662,10 +715,16 @@ export const useAppStore = create<AppState>()(
       },
 
       setFamily: (family) => {
+        storeLogger.info('Family state set', {
+          familyId: family.id,
+          name: family.name,
+          currency: family.currency,
+        });
         set({ family });
       },
 
       reconcileRemoteExpenses: (remoteList) => {
+        storeLogger.info('Reconciling remote expenses', { count: remoteList.length });
         set((state) => {
           const map = new Map(state.expenses.map((e) => [e.id, e]));
 
@@ -694,6 +753,7 @@ export const useAppStore = create<AppState>()(
       },
 
       reconcileRemoteCategories: (remoteList) => {
+        storeLogger.info('Reconciling remote categories', { count: remoteList.length });
         set((state) => {
           const map = new Map(state.categories.map((c) => [c.id, c]));
           remoteList.forEach((remote) => {
@@ -704,6 +764,7 @@ export const useAppStore = create<AppState>()(
       },
 
       reconcileRemoteMembers: (remoteList) => {
+        storeLogger.info('Reconciling remote members', { count: remoteList.length });
         set((state) => {
           const map = new Map(state.members.map((m) => [m.id, m]));
           remoteList.forEach((remote) => {
@@ -725,24 +786,28 @@ export const useAppStore = create<AppState>()(
       },
 
       removeRemoteExpense: (id) => {
+        storeLogger.info('Removing remote expense from local store', { id });
         set((state) => ({
           expenses: state.expenses.filter((e) => e.id !== id),
         }));
       },
 
       removeRemoteCategory: (id) => {
+        storeLogger.info('Removing remote category from local store', { id });
         set((state) => ({
           categories: state.categories.filter((c) => c.id !== id),
         }));
       },
 
       removeRemoteMember: (id) => {
+        storeLogger.info('Removing remote member from local store', { id });
         set((state) => ({
           members: state.members.filter((m) => m.id !== id),
         }));
       },
 
       removeRemoteSettlement: (id) => {
+        storeLogger.info('Removing remote settlement from local store', { id });
         set((state) => ({
           settlements: state.settlements.filter((s) => s.id !== id),
         }));
@@ -751,7 +816,19 @@ export const useAppStore = create<AppState>()(
     {
       name: '@bert0ns_family_management_store',
       storage: createJSONStorage(() => AsyncStorage),
-      onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          storeLogger.error('Store rehydration failed from storage', { error });
+          return;
+        }
+        storeLogger.info('Store rehydrated from storage', {
+          expensesCount: state?.expenses?.length ?? 0,
+          membersCount: state?.members?.length ?? 0,
+          categoriesCount: state?.categories?.length ?? 0,
+          settlementsCount: state?.settlements?.length ?? 0,
+          currentMemberId: state?.currentMemberId,
+          selectedPeriod: state?.selectedPeriod,
+        });
         if (state && Array.isArray(state.categories)) {
           const hasBankRelated = state.categories.some(
             (c) => c.id === 'cat_bank_related' || c.name.toLowerCase() === 'bank related',
@@ -759,6 +836,7 @@ export const useAppStore = create<AppState>()(
           if (!hasBankRelated) {
             const bankCat = INITIAL_CATEGORIES.find((c) => c.id === 'cat_bank_related');
             if (bankCat) {
+              storeLogger.info('Migrating store: adding missing bank related category');
               useAppStore.setState((s) => ({
                 categories: [...s.categories, bankCat],
               }));

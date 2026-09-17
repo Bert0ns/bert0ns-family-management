@@ -1,6 +1,6 @@
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from './supabase';
-import { supabaseLogger } from './logger';
+import { supabaseLogger, syncLogger, transactionLogger, storeLogger } from './logger';
 import { useAppStore } from './store';
 import { syncEngine } from './syncEngine';
 import { Expense, Category, FamilyMember, Settlement, AppNotification } from '@/types';
@@ -30,7 +30,7 @@ export const realtimeSync = {
     this.stopRealtimeSync();
 
     currentSubscribedFamilyId = familyId;
-    supabaseLogger.info('Starting Supabase Realtime sync for family', { familyId });
+    syncLogger.info('Starting Supabase Realtime sync for family', { familyId });
 
     const channelName = `family_realtime_${familyId}`;
     const channel = supabase.channel(channelName);
@@ -45,8 +45,12 @@ export const realtimeSync = {
         filter: `family_id=eq.${familyId}`,
       },
       (payload) => {
-        supabaseLogger.info('Realtime expense event received', {
+        const rawItem = (payload.new || payload.old) as any;
+        transactionLogger.info('Realtime expense event received', {
           eventType: payload.eventType,
+          id: rawItem?.id,
+          merchant: rawItem?.merchant_name,
+          amount: rawItem?.amount,
         });
 
         const store = useAppStore.getState();
@@ -109,8 +113,11 @@ export const realtimeSync = {
         filter: `family_id=eq.${familyId}`,
       },
       (payload) => {
-        supabaseLogger.info('Realtime category event received', {
+        const rawItem = (payload.new || payload.old) as any;
+        storeLogger.info('Realtime category event received', {
           eventType: payload.eventType,
+          id: rawItem?.id,
+          name: rawItem?.name,
         });
 
         const store = useAppStore.getState();
@@ -147,8 +154,11 @@ export const realtimeSync = {
         filter: `family_id=eq.${familyId}`,
       },
       (payload) => {
-        supabaseLogger.info('Realtime member event received', {
+        const rawItem = (payload.new || payload.old) as any;
+        storeLogger.info('Realtime member event received', {
           eventType: payload.eventType,
+          id: rawItem?.id,
+          name: rawItem?.display_name,
         });
 
         const store = useAppStore.getState();
@@ -186,8 +196,11 @@ export const realtimeSync = {
         filter: `family_id=eq.${familyId}`,
       },
       (payload) => {
-        supabaseLogger.info('Realtime settlement event received', {
+        const rawItem = (payload.new || payload.old) as any;
+        transactionLogger.info('Realtime settlement event received', {
           eventType: payload.eventType,
+          id: rawItem?.id,
+          amount: rawItem?.amount,
         });
         const store = useAppStore.getState();
 
@@ -222,7 +235,10 @@ export const realtimeSync = {
         filter: `id=eq.${familyId}`,
       },
       (payload) => {
-        supabaseLogger.info('Realtime family event received');
+        storeLogger.info('Realtime family event received', {
+          eventType: payload.eventType,
+          name: (payload.new as any)?.name,
+        });
         const raw = payload.new as any;
         if (raw) {
           const store = useAppStore.getState();

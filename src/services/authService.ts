@@ -1,7 +1,7 @@
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { realtimeSync } from './realtimeSync';
-import { supabaseLogger } from './logger';
+import { supabaseLogger, authLogger } from './logger';
 
 export interface AuthState {
   user: User | null;
@@ -18,7 +18,7 @@ export const authService = {
       return { error: 'Supabase is not configured. Please set environment variables.' };
     }
     try {
-      supabaseLogger.info('Sending Supabase OTP to email', { email });
+      authLogger.info('Sending Supabase OTP to email', { email });
       const options: { shouldCreateUser: boolean; emailRedirectTo?: string } = {
         shouldCreateUser: true,
       };
@@ -48,16 +48,17 @@ export const authService = {
       return { session: null, error: 'Supabase is not configured' };
     }
     try {
-      supabaseLogger.info('Verifying Supabase OTP', { email });
+      authLogger.info('Verifying Supabase OTP', { email });
       const { data, error } = await supabase.auth.verifyOtp({
         email: email.trim().toLowerCase(),
         token: token.trim(),
         type: 'email',
       });
       if (error) {
-        supabaseLogger.error('Failed to verify Supabase OTP', { error: error.message });
+        authLogger.error('Failed to verify Supabase OTP', { error: error.message });
         return { session: null, error: error.message };
       }
+      authLogger.info('OTP verified successfully', { userId: data.session?.user?.id });
       return { session: data.session, error: null };
     } catch (err: any) {
       supabaseLogger.error('Exception during verifyOtp', { error: err?.message });
@@ -70,7 +71,7 @@ export const authService = {
       return { error: null };
     }
     try {
-      supabaseLogger.info('Signing out from Supabase');
+      authLogger.info('User signing out from Supabase');
       realtimeSync.stopRealtimeSync();
       const { error } = await supabase.auth.signOut();
       if (error) {
@@ -108,6 +109,7 @@ export const authService = {
       return { unsubscribe: () => {} };
     }
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      authLogger.info('Auth state transition', { event: _event, userId: session?.user?.id });
       callback(session, session?.user ?? null);
     });
     return { unsubscribe: () => data.subscription.unsubscribe() };

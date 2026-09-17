@@ -1,3 +1,4 @@
+import { uiLogger } from '@/services/logger';
 import { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -121,9 +122,19 @@ export default function AddExpenseScreen() {
     }
 
     if (Object.keys(errs).length > 0) {
+      uiLogger.warn('Expense form validation failed', errs);
       setErrors(errs);
       return;
     }
+
+    uiLogger.info('Submitting new expense from UI form', {
+      merchant: finalMerchant,
+      amount: numericAmount,
+      categoryId: selectedCategoryId,
+      paidBy: paidByMemberId,
+      date: activeDate.trim(),
+      splitsCount: splits?.length || 0,
+    });
 
     addExpense({
       paid_by_member_id: paidByMemberId,

@@ -1,4 +1,11 @@
-import { logger, storeLogger, validatorLogger } from '@/services/logger';
+import {
+  logger,
+  storeLogger,
+  validatorLogger,
+  transactionLogger,
+  syncLogger,
+  authLogger,
+} from '@/services/logger';
 
 describe('Logger Service (react-native-logs integration)', () => {
   const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
@@ -51,6 +58,9 @@ describe('Logger Service (react-native-logs integration)', () => {
     logger.enable();
     storeLogger.info('Store initialized');
     validatorLogger.warn('Validation issue detected');
+    transactionLogger.info('Expense transaction recorded', { amount: 50 });
+    syncLogger.info('Sync engine delta fetched');
+    authLogger.info('User session refreshed');
 
     const anyConsoleCalled =
       logSpy.mock.calls.length > 0 ||

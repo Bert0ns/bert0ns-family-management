@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from './supabase';
-import { supabaseLogger } from './logger';
+import { supabaseLogger, syncLogger, transactionLogger } from './logger';
 import { useAppStore, registerStoreMutationListener } from './store';
 import { OutboxMutation, SyncStatus, Expense, Category, FamilyMember } from '@/types';
 import { generateUUID } from '@/utils/uuid';
@@ -13,6 +13,9 @@ let activeFlushPromise: Promise<{ processed: number; errors: number }> | null = 
 const statusListeners = new Set<(status: SyncStatus) => void>();
 
 function notifyStatus(status: SyncStatus) {
+  if (currentSyncStatus !== status) {
+    syncLogger.info('Sync status transition', { from: currentSyncStatus, to: status });
+  }
   currentSyncStatus = status;
   statusListeners.forEach((listener) => {
     try {
@@ -84,11 +87,19 @@ export const syncEngine = {
 
       const updated = [...current, newMutation];
       await AsyncStorage.setItem(OUTBOX_STORAGE_KEY, JSON.stringify(updated));
-      supabaseLogger.info('Mutation enqueued to outbox', {
-        entity: mutation.entity,
-        operation: mutation.operation,
-        entity_id: mutation.entity_id,
-      });
+      if (mutation.entity === 'expense' || mutation.entity === 'settlement') {
+        transactionLogger.info('Transaction mutation enqueued for sync', {
+          entity: mutation.entity,
+          operation: mutation.operation,
+          entity_id: mutation.entity_id,
+        });
+      } else {
+        syncLogger.info('State mutation enqueued for sync', {
+          entity: mutation.entity,
+          operation: mutation.operation,
+          entity_id: mutation.entity_id,
+        });
+      }
 
       // Attempt background flush if online
       if (isSupabaseConfigured()) {
@@ -119,6 +130,7 @@ export const syncEngine = {
           return { processed: 0, errors: 0 };
         }
 
+        syncLogger.info('Starting outbox flush', { outboxCount: outbox.length });
         notifyStatus('syncing');
         let processed = 0;
         let errors = 0;
@@ -157,6 +169,11 @@ export const syncEngine = {
           .filter((m) => (m.retry_count || 0) < 5);
 
         await AsyncStorage.setItem(OUTBOX_STORAGE_KEY, JSON.stringify(updatedOutbox));
+        syncLogger.info('Outbox flush completed', {
+          processed,
+          errors,
+          remaining: updatedOutbox.length,
+        });
         notifyStatus(errors > 0 ? 'error' : 'synced');
         return { processed, errors };
       } finally {
@@ -297,6 +314,7 @@ export const syncEngine = {
     try {
       notifyStatus('syncing');
       const lastSync = sinceTimestamp || (await this.getLastSyncTimestamp());
+      syncLogger.info('Fetching cloud delta', { familyId, sinceTimestamp: lastSync });
 
       // 0. Fetch family metadata (name, currency, invite_code)
       try {
@@ -462,6 +480,7 @@ export const syncEngine = {
 
       const syncTimestamp = new Date().toISOString();
       await this.setLastSyncTimestamp(syncTimestamp);
+      syncLogger.info('Cloud delta sync completed', { familyId, updatedEntitiesCount: count });
       notifyStatus('synced');
       return { updatedCount: count };
     } catch (err) {
