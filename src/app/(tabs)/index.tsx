@@ -83,6 +83,8 @@ export default function DashboardScreen() {
               textTransform: 'uppercase',
               letterSpacing: 1,
             }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {t.dashboard.thisMonthSpending}
           </Text>
@@ -97,6 +99,9 @@ export default function DashboardScreen() {
             marginVertical: spacing.xs,
             letterSpacing: -1,
           }}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
         >
           {family.currency}
           {metrics.totalSpend.toFixed(2)}
@@ -125,6 +130,7 @@ export default function DashboardScreen() {
               fontSize: typography.fontSizes.sm,
               fontWeight: typography.fontWeights.bold,
             }}
+            numberOfLines={1}
           >
             {metrics.transactionCount} {t.dashboard.totalTransactions}
           </Text>
@@ -138,12 +144,13 @@ export default function DashboardScreen() {
           onPress={() => router.push('/expense/add')}
           accessibilityLabel={t.dashboard.quickAddButton}
           style={{
-            minHeight: 64,
+            minHeight: 60,
             borderRadius: radius.xl,
             backgroundColor: theme.colors.brand,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
+            paddingHorizontal: spacing.md,
             gap: spacing.md,
             borderWidth: 1,
             borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)',
@@ -162,6 +169,7 @@ export default function DashboardScreen() {
               backgroundColor: 'rgba(255, 255, 255, 0.25)',
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
             <Plus size={22} color="#FFFFFF" strokeWidth={3} />
@@ -172,7 +180,10 @@ export default function DashboardScreen() {
               fontSize: typography.fontSizes.lg,
               fontWeight: typography.fontWeights.heavy,
               letterSpacing: 0.3,
+              flexShrink: 1,
             }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {t.dashboard.quickAddButton}
           </Text>
@@ -183,7 +194,7 @@ export default function DashboardScreen() {
           onPress={() => router.push('/(tabs)/import')}
           accessibilityLabel={t.dashboard.bulkImportButton}
           style={{
-            minHeight: 56,
+            minHeight: 52,
             borderRadius: radius.xl,
             backgroundColor: theme.isDark
               ? theme.colors.surfaceContainerHigh
@@ -193,16 +204,25 @@ export default function DashboardScreen() {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
+            paddingHorizontal: spacing.md,
             gap: spacing.sm,
           }}
         >
-          <FileJson size={20} color={theme.colors.brand} strokeWidth={2.5} />
+          <FileJson
+            size={20}
+            color={theme.colors.brand}
+            strokeWidth={2.5}
+            style={{ flexShrink: 0 }}
+          />
           <Text
             style={{
               color: theme.colors.textPrimary,
               fontSize: typography.fontSizes.md,
               fontWeight: typography.fontWeights.bold,
+              flexShrink: 1,
             }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {t.dashboard.bulkImportButton}
           </Text>
@@ -235,20 +255,31 @@ export default function DashboardScreen() {
                   justifyContent: 'space-between',
                 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.md,
+                    flex: 1,
+                    minWidth: 0,
+                    marginRight: spacing.sm,
+                  }}
+                >
                   <Avatar
                     name={mc.member.display_name}
                     avatarUrl={mc.member.avatar_url}
                     colorCode={mc.member.color_code}
                     size="md"
                   />
-                  <View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
                     <Text
                       style={{
                         color: theme.colors.textPrimary,
                         fontSize: typography.fontSizes.md,
                         fontWeight: typography.fontWeights.bold,
                       }}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
                     >
                       {mc.member.display_name}
                     </Text>
@@ -258,6 +289,8 @@ export default function DashboardScreen() {
                         fontSize: typography.fontSizes.sm,
                         fontWeight: typography.fontWeights.medium,
                       }}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
                     >
                       {mc.percentage.toFixed(0)}% {t.dashboard.ofTotal}
                     </Text>
@@ -269,7 +302,9 @@ export default function DashboardScreen() {
                     color: theme.colors.textPrimary,
                     fontSize: typography.fontSizes.lg,
                     fontWeight: typography.fontWeights.heavy,
+                    flexShrink: 0,
                   }}
+                  numberOfLines={1}
                 >
                   {family.currency}
                   {mc.total.toFixed(2)}

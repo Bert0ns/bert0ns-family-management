@@ -246,8 +246,8 @@ export default function LedgerScreen() {
             onPress={() => setIsFilterModalVisible(true)}
             accessibilityLabel={t.ledger.filtersTitle}
             style={{
-              width: 48,
-              height: 48,
+              width: 42,
+              height: 42,
               borderRadius: radius.lg,
               backgroundColor: hasActiveFilters
                 ? theme.colors.brand
@@ -295,8 +295,8 @@ export default function LedgerScreen() {
             onPress={() => router.push('/(tabs)/import')}
             accessibilityLabel={t.ledger.bulkImportButton}
             style={{
-              width: 48,
-              height: 48,
+              width: 42,
+              height: 42,
               borderRadius: radius.lg,
               backgroundColor: theme.isDark
                 ? theme.colors.surfaceContainerHigh
@@ -317,8 +317,8 @@ export default function LedgerScreen() {
             onPress={() => router.push('/expense/add')}
             accessibilityLabel={t.common.add}
             style={{
-              width: 48,
-              height: 48,
+              width: 42,
+              height: 42,
               borderRadius: radius.lg,
               backgroundColor: theme.colors.brand,
               alignItems: 'center',
@@ -510,26 +510,33 @@ export default function LedgerScreen() {
       <View
         style={{
           flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: spacing.xs,
-          justifyContent: 'space-between',
           alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacing.sm,
           paddingHorizontal: spacing.lg,
-          paddingVertical: spacing.md,
+          paddingVertical: spacing.sm + 2,
         }}
       >
         <TouchableOpacity
           onPress={toggleSort}
           activeOpacity={0.75}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1, minWidth: 0 }}
         >
-          <ArrowDownUp size={16} color={theme.colors.brand} strokeWidth={2.5} />
+          <ArrowDownUp
+            size={16}
+            color={theme.colors.brand}
+            strokeWidth={2.5}
+            style={{ flexShrink: 0 }}
+          />
           <Text
             style={{
               color: theme.colors.brand,
               fontSize: typography.fontSizes.sm,
               fontWeight: typography.fontWeights.bold,
+              flexShrink: 1,
             }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {getSortLabel()}
           </Text>
@@ -538,9 +545,11 @@ export default function LedgerScreen() {
         <Text
           style={{
             color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.md,
+            fontSize: typography.fontSizes.sm,
             fontWeight: typography.fontWeights.heavy,
+            flexShrink: 0,
           }}
+          numberOfLines={1}
         >
           {filteredExpenses.length} {t.ledger.transactionsCount} • {family.currency}
           {totalFilteredAmount.toFixed(2)}

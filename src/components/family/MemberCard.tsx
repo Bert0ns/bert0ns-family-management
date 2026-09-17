@@ -90,7 +90,6 @@ export const MemberCard: React.FC<MemberCardProps> = ({
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: spacing.xs,
-                flexWrap: 'wrap',
               }}
             >
               <Text
@@ -98,13 +97,18 @@ export const MemberCard: React.FC<MemberCardProps> = ({
                   color: theme.colors.textPrimary,
                   fontSize: typography.fontSizes.md,
                   fontWeight: typography.fontWeights.bold,
+                  flexShrink: 1,
+                  minWidth: 0,
                 }}
                 numberOfLines={1}
+                ellipsizeMode="tail"
               >
                 {member.display_name}
               </Text>
               {isCurrentUser && (
-                <Badge label={t.family.currentUser} color={theme.colors.brand} size="sm" />
+                <View style={{ flexShrink: 0 }}>
+                  <Badge label={t.family.currentUser} color={theme.colors.brand} size="sm" />
+                </View>
               )}
             </View>
 
@@ -118,7 +122,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
                 variant="subtle"
                 icon={getRoleIcon()}
               />
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, flexShrink: 0 }}>
                 <ReceiptText size={11} color={theme.colors.textMuted} />
                 <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}>
                   {transactionCount}
@@ -131,7 +135,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
         <View
           style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0 }}
         >
-          <View style={{ alignItems: 'flex-end' }}>
+          <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
             <Text
               style={{
                 color: theme.colors.textPrimary,
@@ -144,7 +148,9 @@ export const MemberCard: React.FC<MemberCardProps> = ({
               {totalSpent.toFixed(2)}
             </Text>
           </View>
-          {onSelect && <ChevronRight size={16} color={theme.colors.textMuted} />}
+          {onSelect && (
+            <ChevronRight size={16} color={theme.colors.textMuted} style={{ flexShrink: 0 }} />
+          )}
         </View>
       </View>
     </Card>

@@ -86,7 +86,7 @@ export const SyncBadge: React.FC<SyncBadgeProps> = ({ onPress, showLabel = true 
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        paddingHorizontal: spacing.md,
+        paddingHorizontal: spacing.sm + 2,
         paddingVertical: 6,
         minHeight: 36,
         borderRadius: radius.full,
@@ -103,7 +103,9 @@ export const SyncBadge: React.FC<SyncBadgeProps> = ({ onPress, showLabel = true 
             fontWeight: typography.fontWeights.bold,
             color,
             letterSpacing: 0.2,
+            flexShrink: 1,
           }}
+          numberOfLines={1}
         >
           {label}
         </Text>

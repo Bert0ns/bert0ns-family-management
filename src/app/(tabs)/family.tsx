@@ -55,15 +55,22 @@ export default function FamilyScreen() {
         }}
       >
         <View
-          style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: spacing.sm,
+          }}
         >
-          <View>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <Text
               style={{
                 color: theme.colors.textPrimary,
-                fontSize: typography.fontSizes.xxl,
+                fontSize: typography.fontSizes.xl,
                 fontWeight: typography.fontWeights.heavy,
               }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
             >
               {family.name}
             </Text>
@@ -74,17 +81,20 @@ export default function FamilyScreen() {
                 fontWeight: typography.fontWeights.medium,
                 marginTop: 4,
               }}
+              numberOfLines={1}
             >
               {family.currency} • {members.length} {t.family.membersCount}
             </Text>
           </View>
 
-          <Badge
-            label={t.family.activeWorkspace}
-            color={theme.colors.brand}
-            variant="solid"
-            size="md"
-          />
+          <View style={{ flexShrink: 0 }}>
+            <Badge
+              label={t.family.activeWorkspace}
+              color={theme.colors.brand}
+              variant="solid"
+              size="md"
+            />
+          </View>
         </View>
       </Card>
 
@@ -98,14 +108,29 @@ export default function FamilyScreen() {
             marginBottom: spacing.md,
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            <Users size={20} color={theme.colors.brand} strokeWidth={2.5} />
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.xs,
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            <Users
+              size={20}
+              color={theme.colors.brand}
+              strokeWidth={2.5}
+              style={{ flexShrink: 0 }}
+            />
             <Text
               style={{
                 color: theme.colors.textPrimary,
                 fontSize: typography.fontSizes.lg,
                 fontWeight: typography.fontWeights.bold,
+                flexShrink: 1,
               }}
+              numberOfLines={1}
             >
               {t.family.membersTitle} ({members.length})
             </Text>
@@ -148,14 +173,24 @@ export default function FamilyScreen() {
             marginBottom: spacing.md,
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            <Tag size={20} color={theme.colors.brand} strokeWidth={2.5} />
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.xs,
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            <Tag size={20} color={theme.colors.brand} strokeWidth={2.5} style={{ flexShrink: 0 }} />
             <Text
               style={{
                 color: theme.colors.textPrimary,
                 fontSize: typography.fontSizes.lg,
                 fontWeight: typography.fontWeights.bold,
+                flexShrink: 1,
               }}
+              numberOfLines={1}
             >
               {t.family.categoriesTitle} ({categories.length})
             </Text>
@@ -187,28 +222,40 @@ export default function FamilyScreen() {
                   borderColor: theme.colors.cardBorder,
                 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.sm,
+                    flex: 1,
+                    minWidth: 0,
+                    marginRight: spacing.sm,
+                  }}
+                >
                   <View
                     style={{
-                      width: 44,
-                      height: 44,
+                      width: 40,
+                      height: 40,
                       borderRadius: radius.lg,
                       backgroundColor: `${category.color}22`,
                       borderWidth: 1.5,
                       borderColor: `${category.color}35`,
                       alignItems: 'center',
                       justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
-                    <IconHelper name={category.icon} size={22} color={category.color} />
+                    <IconHelper name={category.icon} size={20} color={category.color} />
                   </View>
-                  <View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
                     <Text
                       style={{
                         color: theme.colors.textPrimary,
                         fontSize: typography.fontSizes.md,
                         fontWeight: typography.fontWeights.bold,
                       }}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
                     >
                       {getLocalizedCategoryName(category, t)}
                     </Text>
@@ -218,19 +265,21 @@ export default function FamilyScreen() {
                         fontSize: typography.fontSizes.xs,
                         marginTop: 2,
                       }}
+                      numberOfLines={1}
                     >
                       {catTxs.length} {t.dashboard.txs}
                     </Text>
                   </View>
                 </View>
 
-                <View style={{ alignItems: 'flex-end' }}>
+                <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
                   <Text
                     style={{
                       color: theme.colors.textPrimary,
                       fontSize: typography.fontSizes.md,
                       fontWeight: typography.fontWeights.heavy,
                     }}
+                    numberOfLines={1}
                   >
                     {family.currency}
                     {actualSpend.toFixed(2)}

@@ -72,21 +72,21 @@ export const Button: React.FC<ButtonProps> = ({
   const isIconOnly = !title && Boolean(icon);
 
   const iconOnlyDimensionMap: Record<ButtonSize, number> = {
-    sm: 48,
-    md: 56,
-    lg: 64,
+    sm: 44,
+    md: 52,
+    lg: 60,
   };
 
   const sizeHeightMap: Record<ButtonSize, number> = {
-    sm: 48,
-    md: 56,
-    lg: 64,
+    sm: 44,
+    md: 52,
+    lg: 60,
   };
 
   const sizePaddingMap: Record<ButtonSize, { paddingHorizontal: number }> = {
-    sm: { paddingHorizontal: spacing.md },
-    md: { paddingHorizontal: spacing.xl },
-    lg: { paddingHorizontal: spacing.xxl },
+    sm: { paddingHorizontal: spacing.sm + 4 },
+    md: { paddingHorizontal: spacing.md },
+    lg: { paddingHorizontal: spacing.lg },
   };
 
   const sizeFontMap: Record<ButtonSize, number> = {
@@ -143,7 +143,7 @@ export const Button: React.FC<ButtonProps> = ({
           : 'transparent',
     alignSelf: fullWidth ? 'stretch' : 'auto',
     opacity: disabled ? 0.55 : 1,
-    gap: title && icon ? spacing.sm : 0,
+    gap: title && icon ? spacing.xs + 2 : 0,
     ...webTactileStyle,
   };
 
@@ -152,6 +152,7 @@ export const Button: React.FC<ButtonProps> = ({
     fontSize: sizeFontMap[size] || typography.fontSizes.md,
     fontWeight: typography.fontWeights.bold,
     letterSpacing: 0.2,
+    flexShrink: 1,
   };
 
   return (
@@ -167,7 +168,11 @@ export const Button: React.FC<ButtonProps> = ({
       ) : (
         <>
           {icon}
-          {title ? <Text style={[labelStyle, textStyle]}>{title}</Text> : null}
+          {title ? (
+            <Text style={[labelStyle, textStyle]} numberOfLines={1} ellipsizeMode="tail">
+              {title}
+            </Text>
+          ) : null}
         </>
       )}
     </TouchableOpacity>

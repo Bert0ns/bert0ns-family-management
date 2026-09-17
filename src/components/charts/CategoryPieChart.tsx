@@ -58,74 +58,66 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
         style={{
           color: theme.colors.textPrimary,
           fontSize: typography.fontSizes.lg,
-          fontWeight: typography.fontWeights.heavy,
+          fontWeight: typography.fontWeights.bold,
           marginBottom: spacing.md,
         }}
+        numberOfLines={1}
       >
-        {t.analytics.categoryRank}
+        {t.analytics.categoriesTab}
       </Text>
 
-      {/* Donut Chart Visual */}
-      <View style={{ alignItems: 'center', justifyContent: 'center', marginVertical: spacing.sm }}>
+      {/* Donut Chart with Center Summary Label */}
+      <View style={{ alignItems: 'center', marginVertical: spacing.sm }}>
         <PieChart
-          data={pieData}
           donut
-          showText={false}
-          radius={85}
-          innerRadius={55}
+          data={pieData}
+          radius={110}
+          innerRadius={72}
           innerCircleColor={theme.colors.card}
-          centerLabelComponent={() => {
-            if (activeCategory) {
-              return (
-                <View style={{ alignItems: 'center', justifyContent: 'center', padding: 4 }}>
-                  <Text
-                    style={{
-                      color: theme.colors.textSecondary,
-                      fontSize: typography.fontSizes.xs,
-                      fontWeight: typography.fontWeights.medium,
-                      textAlign: 'center',
-                    }}
-                    numberOfLines={1}
-                  >
-                    {getLocalizedCategoryName(activeCategory.category, t)}
-                  </Text>
-                  <Text
-                    style={{
-                      color: activeCategory.category.color,
-                      fontSize: typography.fontSizes.md,
-                      fontWeight: typography.fontWeights.bold,
-                    }}
-                  >
-                    {currency}
-                    {activeCategory.total.toFixed(0)}
-                  </Text>
-                </View>
-              );
-            }
-            return (
-              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+          centerLabelComponent={() => (
+            <View style={{ alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 }}>
+              <Text
+                style={{
+                  color: theme.colors.textSecondary,
+                  fontSize: typography.fontSizes.xs,
+                  fontWeight: typography.fontWeights.semibold,
+                  textAlign: 'center',
+                }}
+                numberOfLines={1}
+              >
+                {activeCategory
+                  ? getLocalizedCategoryName(activeCategory.category, t)
+                  : t.analytics.totalSpend}
+              </Text>
+              <Text
+                style={{
+                  color: theme.colors.textPrimary,
+                  fontSize: typography.fontSizes.xl,
+                  fontWeight: typography.fontWeights.heavy,
+                  marginTop: 2,
+                }}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+              >
+                {currency}
+                {(activeCategory ? activeCategory.total : totalSpend).toFixed(0)}
+              </Text>
+              {activeCategory && (
                 <Text
                   style={{
-                    color: theme.colors.textSecondary,
+                    color: activeCategory.category.color,
                     fontSize: typography.fontSizes.xs,
-                    fontWeight: typography.fontWeights.medium,
-                  }}
-                >
-                  {t.analytics.totalSpend}
-                </Text>
-                <Text
-                  style={{
-                    color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.lg,
                     fontWeight: typography.fontWeights.bold,
+                    marginTop: 2,
                   }}
+                  numberOfLines={1}
                 >
-                  {currency}
-                  {totalSpend.toFixed(0)}
+                  {activeCategory.percentage.toFixed(1)}%
                 </Text>
-              </View>
-            );
-          }}
+              )}
+            </View>
+          )}
         />
       </View>
 
@@ -160,10 +152,17 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   marginBottom: 6,
+                  gap: spacing.sm,
                 }}
               >
                 <View
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.sm,
+                    flex: 1,
+                    minWidth: 0,
+                  }}
                 >
                   <View
                     style={{
@@ -173,6 +172,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                       backgroundColor: `${item.category.color}20`,
                       alignItems: 'center',
                       justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
                     <IconHelper name={item.category.icon} size={20} color={item.category.color} />
@@ -182,21 +182,23 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                       color: theme.colors.textPrimary,
                       fontSize: typography.fontSizes.md,
                       fontWeight: typography.fontWeights.bold,
-                      flex: 1,
+                      flexShrink: 1,
                     }}
                     numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
                     {localizedCategoryName}
                   </Text>
                 </View>
 
-                <View style={{ alignItems: 'flex-end' }}>
+                <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
                   <Text
                     style={{
                       color: theme.colors.textPrimary,
                       fontSize: typography.fontSizes.md,
                       fontWeight: typography.fontWeights.heavy,
                     }}
+                    numberOfLines={1}
                   >
                     {currency}
                     {item.total.toFixed(2)}
@@ -207,6 +209,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                       fontSize: typography.fontSizes.xs,
                       fontWeight: typography.fontWeights.semibold,
                     }}
+                    numberOfLines={1}
                   >
                     {item.percentage.toFixed(0)}% • {item.transactionCount}{' '}
                     {t.ledger.transactionsCount}

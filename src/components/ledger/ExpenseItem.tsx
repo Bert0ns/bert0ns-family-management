@@ -24,47 +24,39 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
   const { theme, spacing, radius, typography } = useTheme();
   const { t, locale } = useI18n();
 
+  const isSplit = expense.splits && expense.splits.length > 0;
   const catColor = category?.color || theme.colors.brand;
-  const catIcon = category?.icon || 'Tag';
-  const catName = getLocalizedCategoryName(category, t);
-  const memberName = member?.display_name || t.tabs.family;
+  const catIcon = category?.icon || 'HelpCircle';
+  const catName = category ? getLocalizedCategoryName(category, t) : t.categories.other;
+  const memberName = member?.display_name || '?';
 
   const dateLocale = locale === 'it' ? 'it-IT' : 'en-US';
   const formattedDate = new Date(expense.transaction_date).toLocaleDateString(dateLocale, {
-    month: 'short',
     day: 'numeric',
+    month: 'short',
   });
 
-  const isSplit = expense.splits && expense.splits.length > 0;
-  const isWeb = Platform.OS === 'web';
-
-  const webGlassStyles = isWeb
-    ? ({
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        boxShadow: theme.isDark
-          ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-          : '0 4px 16px rgba(148, 163, 184, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-      } as any)
-    : {
-        shadowColor: theme.colors.shadow,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: theme.isDark ? 0.3 : 0.06,
-        shadowRadius: 10,
-        elevation: 2,
-      };
+  const webGlassStyles =
+    Platform.OS === 'web'
+      ? ({
+          cursor: 'pointer',
+          transition: 'all 0.15s ease',
+        } as any)
+      : {};
 
   return (
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${expense.merchant_name}, ${currency}${expense.amount.toFixed(2)}`}
       style={[
         {
           flexDirection: 'row',
           alignItems: 'center',
-          minHeight: 68,
-          paddingVertical: spacing.md,
-          paddingHorizontal: spacing.md,
+          minHeight: 64,
+          paddingVertical: spacing.sm + 2,
+          paddingHorizontal: spacing.sm + 4,
           backgroundColor: theme.colors.card,
           borderRadius: radius.xl,
           borderWidth: 1.5,
@@ -77,57 +69,67 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
       {/* Category Icon */}
       <View
         style={{
-          width: 44,
-          height: 44,
+          width: 40,
+          height: 40,
           borderRadius: radius.lg,
           backgroundColor: `${catColor}18`,
           borderWidth: 1.5,
           borderColor: `${catColor}30`,
           alignItems: 'center',
           justifyContent: 'center',
-          marginRight: spacing.md,
+          marginRight: spacing.sm + 2,
           flexShrink: 0,
         }}
       >
-        <IconHelper name={catIcon} size={22} color={catColor} />
+        <IconHelper name={catIcon} size={20} color={catColor} />
       </View>
 
       {/* Details */}
-      <View style={{ flex: 1, minWidth: 0, marginRight: spacing.sm }}>
+      <View style={{ flex: 1, minWidth: 0, marginRight: spacing.xs }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
           <Text
             style={{
               color: theme.colors.textPrimary,
-              fontSize: typography.fontSizes.lg,
+              fontSize: typography.fontSizes.md,
               fontWeight: typography.fontWeights.bold,
               flex: 1,
+              minWidth: 0,
             }}
             numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {expense.merchant_name}
           </Text>
           {isSplit && <Split size={14} color={theme.colors.brand} style={{ flexShrink: 0 }} />}
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
           <Text
             style={{
               color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.sm,
+              fontSize: typography.fontSizes.xs,
               fontWeight: typography.fontWeights.medium,
               flexShrink: 1,
+              minWidth: 0,
             }}
             numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {catName}
           </Text>
-          <Text style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.sm }}>
+          <Text
+            style={{
+              color: theme.colors.textMuted,
+              fontSize: typography.fontSizes.xs,
+              flexShrink: 0,
+            }}
+          >
             •
           </Text>
           <Text
             style={{
               color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.sm,
+              fontSize: typography.fontSizes.xs,
               fontWeight: typography.fontWeights.medium,
               flexShrink: 0,
             }}
@@ -136,12 +138,12 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
           </Text>
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
           <View
             style={{
-              width: 7,
-              height: 7,
-              borderRadius: 3.5,
+              width: 6,
+              height: 6,
+              borderRadius: 3,
               backgroundColor: member?.color_code || theme.colors.brand,
               flexShrink: 0,
             }}
@@ -149,11 +151,13 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
           <Text
             style={{
               color: theme.colors.textMuted,
-              fontSize: typography.fontSizes.xs,
+              fontSize: 11,
               fontWeight: typography.fontWeights.medium,
               flexShrink: 1,
+              minWidth: 0,
             }}
             numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {memberName}
           </Text>
@@ -165,20 +169,34 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
         style={{
           alignItems: 'flex-end',
           justifyContent: 'center',
-          minWidth: 72,
           flexShrink: 0,
+          marginLeft: spacing.xs,
         }}
       >
         <Text
           style={{
             color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.xl,
+            fontSize: typography.fontSizes.lg,
             fontWeight: typography.fontWeights.heavy,
           }}
           numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
         >
           {currency}
           {expense.amount.toFixed(2)}
+        </Text>
+
+        <Text
+          style={{
+            color: theme.colors.textMuted,
+            fontSize: typography.fontSizes.xs,
+            fontWeight: typography.fontWeights.semibold,
+            marginTop: 2,
+          }}
+          numberOfLines={1}
+        >
+          {expense.payment_method || 'Standard'}
         </Text>
       </View>
     </TouchableOpacity>

@@ -125,6 +125,14 @@ export default function TabsLayout() {
           paddingHorizontal: 6,
           overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
         },
+        tabBarIconStyle: {
+          width: 44,
+          height: 44,
+          justifyContent: 'center',
+          alignItems: 'center',
+          margin: 0,
+          padding: 0,
+        },
         tabBarItemStyle: {
           flex: 1,
           minWidth: 0,

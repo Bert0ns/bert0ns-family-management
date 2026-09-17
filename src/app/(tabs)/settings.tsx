@@ -188,6 +188,7 @@ export default function SettingsScreen() {
           justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: spacing.lg,
+          gap: spacing.sm,
         }}
       >
         <Text
@@ -195,11 +196,15 @@ export default function SettingsScreen() {
             color: theme.colors.textPrimary,
             fontSize: typography.fontSizes.xxl,
             fontWeight: typography.fontWeights.heavy,
+            flexShrink: 1,
           }}
+          numberOfLines={1}
         >
           {t.settings.title}
         </Text>
-        <SyncBadge />
+        <View style={{ flexShrink: 0 }}>
+          <SyncBadge />
+        </View>
       </View>
 
       {/* 1. Household Profile Card */}

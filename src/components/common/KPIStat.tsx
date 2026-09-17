@@ -37,27 +37,39 @@ export const KPIStat: React.FC<KPIStatProps> = ({
   const { accent, bg } = variantColors[variant] || variantColors.default;
 
   return (
-    <Card style={[{ flex: 1, minWidth: 150 }, style]} padding="md">
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Card style={[{ flex: 1, minWidth: 0 }, style]} padding="md">
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: spacing.xs,
+        }}
+      >
         <Text
           style={{
             color: theme.colors.textSecondary,
-            fontSize: typography.fontSizes.sm,
-            fontWeight: typography.fontWeights.semibold,
+            fontSize: typography.fontSizes.xs,
+            fontWeight: typography.fontWeights.bold,
             textTransform: 'uppercase',
             letterSpacing: 0.5,
+            flex: 1,
+            minWidth: 0,
           }}
+          numberOfLines={1}
+          ellipsizeMode="tail"
         >
           {title}
         </Text>
         {icon && (
           <View
             style={{
-              padding: spacing.xs + 2,
+              padding: spacing.xs,
               borderRadius: radius.md,
               backgroundColor: bg,
               borderWidth: 1,
               borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+              flexShrink: 0,
             }}
           >
             {icon}
@@ -68,11 +80,14 @@ export const KPIStat: React.FC<KPIStatProps> = ({
       <Text
         style={{
           color: theme.colors.textPrimary,
-          fontSize: typography.fontSizes.xxl,
+          fontSize: typography.fontSizes.xl,
           fontWeight: typography.fontWeights.heavy,
-          marginTop: spacing.sm,
+          marginTop: spacing.xs,
           letterSpacing: -0.5,
         }}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
       >
         {value}
       </Text>
@@ -81,10 +96,12 @@ export const KPIStat: React.FC<KPIStatProps> = ({
         <Text
           style={{
             color: accent,
-            fontSize: typography.fontSizes.sm,
+            fontSize: typography.fontSizes.xs,
             fontWeight: typography.fontWeights.semibold,
-            marginTop: spacing.xs,
+            marginTop: 2,
           }}
+          numberOfLines={1}
+          ellipsizeMode="tail"
         >
           {subtitle}
         </Text>
@@ -93,20 +110,18 @@ export const KPIStat: React.FC<KPIStatProps> = ({
       {progress !== undefined && (
         <View
           style={{
-            height: 8,
+            height: 6,
             backgroundColor: theme.colors.surfaceSubtle,
             borderRadius: radius.full,
-            marginTop: spacing.md,
+            marginTop: spacing.sm,
             overflow: 'hidden',
-            borderWidth: 1,
-            borderColor: theme.colors.borderTactile,
           }}
         >
           <View
             style={{
               height: '100%',
-              width: `${Math.min(progress, 100)}%`,
-              backgroundColor: progress > 100 ? theme.colors.danger : accent,
+              width: `${Math.min(Math.max(progress, 0), 100)}%`,
+              backgroundColor: accent,
               borderRadius: radius.full,
             }}
           />

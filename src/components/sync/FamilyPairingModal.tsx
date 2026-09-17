@@ -259,23 +259,15 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
             {t.sync.inviteCodeLabel}
           </Text>
 
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: spacing.sm,
-              marginTop: spacing.xs,
-            }}
-          >
+          <View style={{ gap: spacing.sm, marginTop: spacing.xs }}>
             <View
               style={{
-                flex: 1,
+                width: '100%',
                 backgroundColor: theme.isDark
                   ? 'rgba(99, 102, 241, 0.2)'
                   : 'rgba(99, 102, 241, 0.1)',
                 paddingHorizontal: spacing.md,
-                paddingVertical: spacing.sm,
+                paddingVertical: spacing.sm + 2,
                 borderRadius: radius.md,
                 borderWidth: 1,
                 borderColor: theme.colors.brand,
@@ -287,8 +279,8 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
                 style={{
                   color: theme.colors.brand,
                   fontSize: typography.fontSizes.xl,
-                  fontWeight: typography.fontWeights.bold,
-                  letterSpacing: 2,
+                  fontWeight: typography.fontWeights.heavy,
+                  letterSpacing: 3,
                   fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
                 }}
               >
@@ -296,7 +288,7 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
               </Text>
             </View>
 
-            <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <Button
                 title={copied ? t.sync.copiedNotice.split('!')[0] : t.sync.copyCodeButton}
                 variant={copied ? 'secondary' : 'primary'}
@@ -305,6 +297,7 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
                   copied ? <Check size={14} color="#FFFFFF" /> : <Copy size={14} color="#FFFFFF" />
                 }
                 onPress={handleCopyCode}
+                style={{ flex: 1 }}
               />
               <Button
                 title={isRegenerating ? t.sync.regeneratingCode : t.sync.regenerateCodeButton}
@@ -313,6 +306,7 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
                 icon={<RefreshCw size={14} color={theme.colors.textPrimary} />}
                 onPress={handleRegenerateCode}
                 disabled={isRegenerating}
+                style={{ flex: 1 }}
               />
             </View>
           </View>

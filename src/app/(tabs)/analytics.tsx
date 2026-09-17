@@ -181,13 +181,23 @@ export default function AnalyticsScreen() {
                       paddingVertical: spacing.xs,
                     }}
                   >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: spacing.sm,
+                        flex: 1,
+                        minWidth: 0,
+                        marginRight: spacing.sm,
+                      }}
+                    >
                       <Text
                         style={{
                           color: theme.colors.textMuted,
                           fontSize: typography.fontSizes.sm,
                           fontWeight: typography.fontWeights.bold,
                           width: 24,
+                          flexShrink: 0,
                         }}
                       >
                         #{idx + 1}
@@ -197,7 +207,10 @@ export default function AnalyticsScreen() {
                           color: theme.colors.textPrimary,
                           fontSize: typography.fontSizes.sm,
                           fontWeight: typography.fontWeights.semibold,
+                          flex: 1,
                         }}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
                       >
                         {m.name}
                       </Text>
@@ -207,7 +220,9 @@ export default function AnalyticsScreen() {
                         color: theme.colors.textPrimary,
                         fontSize: typography.fontSizes.sm,
                         fontWeight: typography.fontWeights.bold,
+                        flexShrink: 0,
                       }}
+                      numberOfLines={1}
                     >
                       {family.currency}
                       {m.total.toFixed(2)}

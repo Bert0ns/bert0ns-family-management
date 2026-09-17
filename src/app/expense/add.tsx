@@ -339,10 +339,11 @@ export default function AddExpenseScreen() {
 
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text
-                    numberOfLines={1}
+                    numberOfLines={2}
                     style={{
                       color: isSelected ? c.color : theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.sm,
+                      fontSize: 13,
+                      lineHeight: 16,
                       fontWeight: isSelected
                         ? typography.fontWeights.heavy
                         : typography.fontWeights.bold,
@@ -408,6 +409,9 @@ export default function AddExpenseScreen() {
                 fontSize: typography.fontSizes.md,
                 fontWeight: typography.fontWeights.bold,
               }}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
             >
               {t.addExpense.today}
             </Text>
@@ -433,6 +437,9 @@ export default function AddExpenseScreen() {
                 fontSize: typography.fontSizes.md,
                 fontWeight: typography.fontWeights.bold,
               }}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
             >
               {t.addExpense.yesterday}
             </Text>
@@ -458,6 +465,9 @@ export default function AddExpenseScreen() {
                 fontSize: typography.fontSizes.md,
                 fontWeight: typography.fontWeights.bold,
               }}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
             >
               {t.addExpense.customDate}
             </Text>
