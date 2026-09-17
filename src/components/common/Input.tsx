@@ -72,6 +72,7 @@ export const Input: React.FC<InputProps> = ({
     fontSize: typography.fontSizes.md,
     fontWeight: typography.fontWeights.medium,
     height: '100%',
+    ...(isWeb ? ({ outlineStyle: 'none' } as any) : {}),
   };
 
   const labelStyle: TextStyle = {

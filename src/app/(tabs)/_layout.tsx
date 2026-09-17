@@ -1,4 +1,5 @@
-import { View, StyleSheet, Platform } from 'react-native';
+import type { ComponentType } from 'react';
+import { View, StyleSheet, Platform, type ColorValue } from 'react-native';
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,7 +15,12 @@ export default function TabsLayout() {
 
   const floatingBottom = Math.max(insets.bottom, 14);
 
-  const renderTabIcon = (IconComponent: any, focused: boolean, color: any, label: string) => (
+  const renderTabIcon = (
+    IconComponent: ComponentType<{ size: number; color: string; strokeWidth?: number }>,
+    focused: boolean,
+    color: ColorValue | string,
+    label: string,
+  ) => (
     <View
       accessibilityLabel={label}
       style={{
@@ -30,7 +36,7 @@ export default function TabsLayout() {
     >
       <IconComponent
         size={22}
-        color={focused ? theme.colors.brand : color}
+        color={focused ? theme.colors.brand : (color as string)}
         strokeWidth={focused ? 2.5 : 2}
       />
     </View>

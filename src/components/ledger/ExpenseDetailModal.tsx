@@ -455,7 +455,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               <Button
                 title={t.common.delete}
                 variant="danger"
-                icon={<Trash2 size={18} color="#EF4444" />}
+                icon={<Trash2 size={18} color="#FFFFFF" strokeWidth={2.5} />}
                 onPress={handleDelete}
                 style={{ flex: 1 }}
               />
