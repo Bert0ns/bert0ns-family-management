@@ -53,23 +53,43 @@ export const realtimeSync = {
 
         if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
           const raw = payload.new as any;
-          const mapped: Expense = {
-            id: raw.id,
-            family_id: raw.family_id,
-            paid_by_member_id: raw.paid_by_member_id,
-            category_id: raw.category_id,
-            import_batch_id: raw.import_batch_id,
-            transaction_date: raw.transaction_date,
-            merchant_name: raw.merchant_name,
-            amount: Number(raw.amount),
-            notes: raw.notes,
-            payment_method: raw.payment_method,
-            is_recurring: raw.is_recurring,
-            is_verified: raw.is_verified,
-            created_at: raw.created_at,
-            updated_at: raw.updated_at,
-          };
-          store.reconcileRemoteExpenses([mapped]);
+          (async () => {
+            let remoteSplits: any[] | null = null;
+            try {
+              const res = await supabase
+                .from('expense_splits')
+                .select('*')
+                .eq('expense_id', raw.id);
+              remoteSplits = res.data;
+            } catch (splitErr) {
+              supabaseLogger.debug('Failed to fetch splits for realtime expense', {
+                error: splitErr,
+              });
+            }
+
+            const mapped: Expense = {
+              id: raw.id,
+              family_id: raw.family_id,
+              paid_by_member_id: raw.paid_by_member_id,
+              category_id: raw.category_id,
+              import_batch_id: raw.import_batch_id,
+              transaction_date: raw.transaction_date,
+              merchant_name: raw.merchant_name,
+              amount: Number(raw.amount),
+              notes: raw.notes,
+              payment_method: raw.payment_method,
+              is_recurring: raw.is_recurring,
+              is_verified: raw.is_verified,
+              created_at: raw.created_at,
+              updated_at: raw.updated_at,
+              splits: remoteSplits?.map((s: any) => ({
+                member_id: s.member_id,
+                share_amount: Number(s.share_amount),
+                percentage: s.percentage ? Number(s.percentage) : undefined,
+              })),
+            };
+            store.reconcileRemoteExpenses([mapped]);
+          })();
         } else if (payload.eventType === 'DELETE') {
           const oldRecord = payload.old as any;
           if (oldRecord?.id) {
@@ -160,24 +180,62 @@ export const realtimeSync = {
     channel.on(
       'postgres_changes',
       {
-        event: 'INSERT',
+        event: '*',
         schema: 'public',
         table: 'settlements',
         filter: `family_id=eq.${familyId}`,
       },
       (payload) => {
-        supabaseLogger.info('Realtime settlement event received');
+        supabaseLogger.info('Realtime settlement event received', {
+          eventType: payload.eventType,
+        });
+        const store = useAppStore.getState();
+
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          const raw = payload.new as any;
+          const mapped: Settlement = {
+            id: raw.id,
+            family_id: raw.family_id,
+            from_member_id: raw.from_member_id,
+            to_member_id: raw.to_member_id,
+            amount: Number(raw.amount),
+            notes: raw.notes,
+            created_at: raw.created_at,
+          };
+          store.reconcileRemoteSettlements([mapped]);
+        } else if (payload.eventType === 'DELETE') {
+          const oldRecord = payload.old as any;
+          if (oldRecord?.id) {
+            store.removeRemoteSettlement(oldRecord.id);
+          }
+        }
+      },
+    );
+
+    // 4b. Family metadata channel listener
+    channel.on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'families',
+        filter: `id=eq.${familyId}`,
+      },
+      (payload) => {
+        supabaseLogger.info('Realtime family event received');
         const raw = payload.new as any;
-        const mapped: Settlement = {
-          id: raw.id,
-          family_id: raw.family_id,
-          from_member_id: raw.from_member_id,
-          to_member_id: raw.to_member_id,
-          amount: Number(raw.amount),
-          notes: raw.notes,
-          created_at: raw.created_at,
-        };
-        useAppStore.getState().reconcileRemoteSettlements([mapped]);
+        if (raw) {
+          const store = useAppStore.getState();
+          useAppStore.setState({
+            family: {
+              ...store.family,
+              name: raw.name || store.family.name,
+              currency: raw.currency || store.family.currency,
+              invite_code: raw.invite_code || store.family.invite_code,
+              updated_at: raw.updated_at,
+            },
+          });
+        }
       },
     );
 

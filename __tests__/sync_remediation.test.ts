@@ -114,4 +114,30 @@ describe('Sync & Auth Remediation Tests (Partition 3)', () => {
     );
     expect(eqMock).toHaveBeenCalledWith('id', 'fam-123');
   });
+
+  it('deletes settlement on Supabase when executing settlement DELETE mutation', async () => {
+    (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+
+    const eqMock = jest.fn().mockResolvedValue({ error: null });
+    const deleteMock = jest.fn().mockReturnValue({ eq: eqMock });
+
+    (supabase.from as jest.Mock).mockReturnValue({
+      delete: deleteMock,
+    });
+
+    const success = await syncEngine.executeMutation({
+      id: 'mut-stl-del',
+      entity: 'settlement',
+      operation: 'DELETE',
+      entity_id: 'stl-456',
+      payload: { id: 'stl-456' },
+      created_at: new Date().toISOString(),
+      retry_count: 0,
+    });
+
+    expect(success).toBe(true);
+    expect(supabase.from).toHaveBeenCalledWith('settlements');
+    expect(deleteMock).toHaveBeenCalled();
+    expect(eqMock).toHaveBeenCalledWith('id', 'stl-456');
+  });
 });

@@ -24,6 +24,7 @@ export default function FamilyScreen() {
     categories,
     expenses,
     selectedPeriod,
+    currentMemberId,
     addMember,
     updateMember,
     deleteMember,
@@ -130,7 +131,7 @@ export default function FamilyScreen() {
               totalSpent={totalSpent}
               transactionCount={memberTxs.length}
               currency={family.currency}
-              isCurrentUser={member.is_current_user}
+              isCurrentUser={member.is_current_user || member.id === currentMemberId}
               onSelect={() => setSelectedMemberForEdit(member)}
             />
           );

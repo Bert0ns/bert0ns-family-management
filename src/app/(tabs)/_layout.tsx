@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import { useEffect, type ComponentType } from 'react';
 import { View, StyleSheet, Platform, type ColorValue } from 'react-native';
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
@@ -7,11 +7,54 @@ import { LayoutDashboard, PieChart, ReceiptText, Users, Settings } from 'lucide-
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { SyncBadge } from '@/components/common/SyncBadge';
+import { useAppStore } from '@/services/store';
+import { authService } from '@/services/authService';
+import { syncEngine } from '@/services/syncEngine';
+import { realtimeSync } from '@/services/realtimeSync';
+import { isValidUUID } from '@/utils/uuid';
 
 export default function TabsLayout() {
   const { theme } = useTheme();
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
+  const family = useAppStore((s) => s.family);
+
+  // Global Sync & Auth Lifecycle Bootstrap
+  useEffect(() => {
+    let isMounted = true;
+
+    async function initSync() {
+      if (!authService.isConfigured()) return;
+
+      const session = await authService.getSession();
+      if (!isMounted) return;
+
+      if (session?.user && family?.id && isValidUUID(family.id)) {
+        realtimeSync.startRealtimeSync(family.id);
+        syncEngine.fetchDelta(family.id).catch(() => {});
+        syncEngine.flushOutbox().catch(() => {});
+      }
+    }
+
+    initSync();
+
+    const authSub = authService.onAuthStateChange(async (session, _user) => {
+      if (!isMounted) return;
+      const currentFam = useAppStore.getState().family;
+      if (session?.user && currentFam?.id && isValidUUID(currentFam.id)) {
+        realtimeSync.startRealtimeSync(currentFam.id);
+        syncEngine.fetchDelta(currentFam.id).catch(() => {});
+        syncEngine.flushOutbox().catch(() => {});
+      } else if (!session?.user) {
+        realtimeSync.stopRealtimeSync();
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      authSub?.unsubscribe?.();
+    };
+  }, [family?.id]);
 
   const floatingBottom = Math.max(insets.bottom, 14);
 

@@ -186,4 +186,93 @@ describe('Store Remediation Tests (Partition 1)', () => {
 
     unreg2();
   });
+
+  it('enqueues expense UPDATE mutations BEFORE category DELETE mutation to satisfy foreign key constraints', () => {
+    const mutations: StoreMutationEvent[] = [];
+    const unsubscribe = registerStoreMutationListener((event) => mutations.push(event));
+
+    const state = useAppStore.getState();
+    const targetCat = state.categories[0];
+
+    // Ensure there is an expense pointing to targetCat
+    useAppStore.getState().addExpense({
+      paid_by_member_id: 'mem_1',
+      category_id: targetCat.id,
+      amount: 42,
+      transaction_date: '2026-09-01',
+      merchant_name: 'Cat Target Merchant',
+    });
+
+    mutations.length = 0; // Clear previous mutations
+
+    useAppStore.getState().deleteCategory(targetCat.id);
+
+    const expenseUpdates = mutations.filter(
+      (m) => m.entity === 'expense' && m.operation === 'UPDATE',
+    );
+    const categoryDeleteIdx = mutations.findIndex(
+      (m) => m.entity === 'category' && m.operation === 'DELETE',
+    );
+
+    expect(expenseUpdates.length).toBeGreaterThan(0);
+    expect(categoryDeleteIdx).toBeGreaterThan(0);
+    // Every expense update must occur BEFORE the category delete
+    const allUpdatesBeforeDelete = mutations
+      .map((m, idx) => ({ m, idx }))
+      .filter(({ m }) => m.entity === 'expense' && m.operation === 'UPDATE')
+      .every(({ idx }) => idx < categoryDeleteIdx);
+
+    expect(allUpdatesBeforeDelete).toBe(true);
+
+    unsubscribe();
+  });
+
+  it('cascades and removes settlements when a member is deleted', () => {
+    const mutations: StoreMutationEvent[] = [];
+    const unsubscribe = registerStoreMutationListener((event) => mutations.push(event));
+
+    // Record a settlement for mem_2
+    useAppStore.getState().recordSettlement({
+      from_member_id: 'mem_1',
+      to_member_id: 'mem_2',
+      amount: 75,
+      notes: 'Payback',
+    });
+
+    const recorded = useAppStore.getState().settlements.find((s) => s.to_member_id === 'mem_2');
+    expect(recorded).toBeDefined();
+
+    mutations.length = 0;
+
+    useAppStore.getState().deleteMember('mem_2');
+
+    // Member mem_2 must be gone
+    expect(useAppStore.getState().members.find((m) => m.id === 'mem_2')).toBeUndefined();
+    // Settlement must be removed from store
+    expect(useAppStore.getState().settlements.find((s) => s.id === recorded!.id)).toBeUndefined();
+
+    // Settlement DELETE mutation must have been emitted
+    const settlementDelete = mutations.find(
+      (m) => m.entity === 'settlement' && m.operation === 'DELETE',
+    );
+    expect(settlementDelete).toBeDefined();
+    expect(settlementDelete?.entity_id).toBe(recorded!.id);
+
+    unsubscribe();
+  });
+
+  it('removes remote settlement via removeRemoteSettlement', () => {
+    useAppStore.getState().recordSettlement({
+      from_member_id: 'mem_1',
+      to_member_id: 'mem_2',
+      amount: 30,
+    });
+
+    const settlement = useAppStore.getState().settlements[0];
+    expect(settlement).toBeDefined();
+
+    useAppStore.getState().removeRemoteSettlement(settlement.id);
+
+    expect(useAppStore.getState().settlements.find((s) => s.id === settlement.id)).toBeUndefined();
+  });
 });

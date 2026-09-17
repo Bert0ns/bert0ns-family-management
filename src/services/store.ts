@@ -101,6 +101,7 @@ export interface AppState {
   removeRemoteExpense: (id: string) => void;
   removeRemoteCategory: (id: string) => void;
   removeRemoteMember: (id: string) => void;
+  removeRemoteSettlement: (id: string) => void;
 }
 
 export type StoreMutationEvent = {
@@ -315,6 +316,12 @@ export const useAppStore = create<AppState>()(
         const remainingMembers = state.members.filter((m) => m.id !== id);
 
         const cascadedDeletedExpenses = state.expenses.filter((e) => e.paid_by_member_id === id);
+        const cascadedDeletedSettlements = state.settlements.filter(
+          (s) => s.from_member_id === id || s.to_member_id === id,
+        );
+        const remainingSettlements = state.settlements.filter(
+          (s) => s.from_member_id !== id && s.to_member_id !== id,
+        );
         const modifiedJointExpenses: Expense[] = [];
 
         const updatedExpenses = state.expenses
@@ -355,6 +362,7 @@ export const useAppStore = create<AppState>()(
         set({
           members: remainingMembers,
           expenses: updatedExpenses,
+          settlements: remainingSettlements,
           currentMemberId: newCurrentMemberId,
           importBatches: updatedBatches,
         });
@@ -365,6 +373,15 @@ export const useAppStore = create<AppState>()(
             operation: 'DELETE',
             entity_id: exp.id,
             payload: { id: exp.id },
+          });
+        });
+
+        cascadedDeletedSettlements.forEach((stl) => {
+          notifyStoreMutation({
+            entity: 'settlement',
+            operation: 'DELETE',
+            entity_id: stl.id,
+            payload: { id: stl.id },
           });
         });
 
@@ -424,13 +441,7 @@ export const useAppStore = create<AppState>()(
           expenses: updatedExpenses,
         }));
 
-        notifyStoreMutation({
-          entity: 'category',
-          operation: 'DELETE',
-          entity_id: id,
-          payload: { id },
-        });
-
+        // Enqueue expense updates BEFORE category DELETE to prevent 23503 foreign key violation
         updatedExpenses
           .filter((e) => e.category_id === fallbackCat?.id && e.updated_at === now)
           .forEach((exp) => {
@@ -441,6 +452,13 @@ export const useAppStore = create<AppState>()(
               payload: exp,
             });
           });
+
+        notifyStoreMutation({
+          entity: 'category',
+          operation: 'DELETE',
+          entity_id: id,
+          payload: { id },
+        });
       },
 
       recordSettlement: (settlementData) => {
@@ -690,13 +708,15 @@ export const useAppStore = create<AppState>()(
           const map = new Map(state.members.map((m) => [m.id, m]));
           remoteList.forEach((remote) => {
             const local = map.get(remote.id);
+            const isCurrent =
+              remote.id === state.currentMemberId || (local ? local.is_current_user : false);
             if (!local) {
-              map.set(remote.id, remote);
+              map.set(remote.id, { ...remote, is_current_user: isCurrent });
             } else {
               const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
               const localTime = local.updated_at ? new Date(local.updated_at).getTime() : 0;
               if (remoteTime >= localTime) {
-                map.set(remote.id, { ...remote, is_current_user: local.is_current_user });
+                map.set(remote.id, { ...remote, is_current_user: isCurrent });
               }
             }
           });
@@ -719,6 +739,12 @@ export const useAppStore = create<AppState>()(
       removeRemoteMember: (id) => {
         set((state) => ({
           members: state.members.filter((m) => m.id !== id),
+        }));
+      },
+
+      removeRemoteSettlement: (id) => {
+        set((state) => ({
+          settlements: state.settlements.filter((s) => s.id !== id),
         }));
       },
     }),

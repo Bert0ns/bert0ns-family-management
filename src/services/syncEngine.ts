@@ -260,6 +260,9 @@ export const syncEngine = {
             created_at: payload.created_at,
           });
           if (error) throw error;
+        } else if (operation === 'DELETE') {
+          const { error } = await supabase.from('settlements').delete().eq('id', entity_id);
+          if (error) throw error;
         }
         return true;
       }
@@ -516,14 +519,17 @@ export const syncEngine = {
 
     remoteList.forEach((remote) => {
       const idx = current.findIndex((m) => m.id === remote.id);
+      const isCurrent =
+        remote.id === store.currentMemberId ||
+        (current[idx] ? current[idx].is_current_user : false);
       if (idx === -1) {
-        current.push(remote);
+        current.push({ ...remote, is_current_user: isCurrent });
       } else {
         const local = current[idx];
         const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
         const localTime = local.updated_at ? new Date(local.updated_at).getTime() : 0;
         if (remoteTime >= localTime) {
-          current[idx] = { ...remote, is_current_user: local.is_current_user };
+          current[idx] = { ...remote, is_current_user: isCurrent };
         }
       }
     });

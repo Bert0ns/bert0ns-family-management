@@ -193,7 +193,11 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
         return;
       }
 
-      // 4. Update local state
+      // 4. Clear previous family outbox and sync timestamp so we do a clean delta fetch
+      await syncEngine.clearOutbox();
+      await syncEngine.setLastSyncTimestamp('');
+
+      // Reset store data to avoid mixing previous local mock data with the new family
       useAppStore.setState({
         family: {
           id: remoteFamily.id,
@@ -203,6 +207,11 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
           created_at: remoteFamily.created_at,
           updated_at: remoteFamily.updated_at,
         },
+        members: [],
+        categories: [],
+        expenses: [],
+        settlements: [],
+        importBatches: [],
         currentMemberId: joinedMemberId || storeState.currentMemberId,
       });
 
