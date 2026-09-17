@@ -382,44 +382,54 @@ export const syncEngine = {
       }
 
       // 4. Fetch updated settlements
-      let stlQuery = supabase.from('settlements').select('*').eq('family_id', familyId);
-      if (lastSync) {
-        stlQuery = stlQuery.gt('created_at', lastSync);
-      }
-      const { data: remoteSettlements, error: stlErr } = await stlQuery;
-      if (!stlErr && remoteSettlements && remoteSettlements.length > 0) {
-        const mappedSettlements = remoteSettlements.map((s: any) => ({
-          id: s.id,
-          family_id: s.family_id,
-          from_member_id: s.from_member_id,
-          to_member_id: s.to_member_id,
-          amount: Number(s.amount),
-          notes: s.notes,
-          created_at: s.created_at,
-        }));
-        useAppStore.getState().reconcileRemoteSettlements(mappedSettlements);
-        count += mappedSettlements.length;
+      try {
+        let stlQuery = supabase.from('settlements').select('*').eq('family_id', familyId);
+        if (lastSync) {
+          stlQuery = stlQuery.gt('created_at', lastSync);
+        }
+        const { data: remoteSettlements, error: stlErr } = await stlQuery;
+        if (!stlErr && remoteSettlements && remoteSettlements.length > 0) {
+          const mappedSettlements = remoteSettlements.map((s: any) => ({
+            id: s.id,
+            family_id: s.family_id,
+            from_member_id: s.from_member_id,
+            to_member_id: s.to_member_id,
+            amount: Number(s.amount),
+            notes: s.notes,
+            created_at: s.created_at,
+          }));
+          useAppStore.getState().reconcileRemoteSettlements(mappedSettlements);
+          count += mappedSettlements.length;
+        }
+      } catch (stlErr) {
+        supabaseLogger.warn('Optional settlements delta fetch skipped', { error: stlErr });
       }
 
       // 5. Fetch notification preferences for current member
-      const currentMemberId = useAppStore.getState().currentMemberId;
-      if (currentMemberId) {
-        const { data: prefData } = await supabase
-          .from('notification_preferences')
-          .select('*')
-          .eq('member_id', currentMemberId)
-          .maybeSingle();
+      try {
+        const currentMemberId = useAppStore.getState().currentMemberId;
+        if (currentMemberId) {
+          const { data: prefData } = await supabase
+            .from('notification_preferences')
+            .select('*')
+            .eq('member_id', currentMemberId)
+            .maybeSingle();
 
-        if (prefData) {
-          useAppStore.getState().updateNotificationPreferences({
-            push_enabled: prefData.push_enabled,
-            notify_batch_import: prefData.notify_batch_import,
-            notify_expense_updates: prefData.notify_expense_updates,
-            notify_settlements: prefData.notify_settlements,
-            notify_member_joined: prefData.notify_member_joined,
-            notify_role_changed: prefData.notify_role_changed,
-          });
+          if (prefData) {
+            useAppStore.getState().updateNotificationPreferences({
+              push_enabled: prefData.push_enabled,
+              notify_batch_import: prefData.notify_batch_import,
+              notify_expense_updates: prefData.notify_expense_updates,
+              notify_settlements: prefData.notify_settlements,
+              notify_member_joined: prefData.notify_member_joined,
+              notify_role_changed: prefData.notify_role_changed,
+            });
+          }
         }
+      } catch (prefErr) {
+        supabaseLogger.warn('Optional notification preferences delta fetch skipped', {
+          error: prefErr,
+        });
       }
 
       const syncTimestamp = new Date().toISOString();

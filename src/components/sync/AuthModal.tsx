@@ -8,6 +8,7 @@ import { useI18n } from '@/i18n';
 import { authService } from '@/services/authService';
 import { migrationService } from '@/services/migrationService';
 import { realtimeSync } from '@/services/realtimeSync';
+import { syncEngine } from '@/services/syncEngine';
 import { useAppStore } from '@/services/store';
 
 interface AuthModalProps {
@@ -82,10 +83,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
     }
 
     // Successfully authenticated: run data migration & start realtime sync
-    setSuccess(t.sync.migrateSuccess);
     const userId = res.session?.user?.id;
-    await migrationService.migrateLocalDataToSupabase(family.id, userId);
-    realtimeSync.startRealtimeSync(family.id);
+    const migrationRes = await migrationService.migrateLocalDataToSupabase(family.id, userId);
+
+    if (!migrationRes.success && migrationRes.error) {
+      setIsLoading(false);
+      setError(migrationRes.error);
+      return;
+    }
+
+    setSuccess(t.sync.migrateSuccess);
+    const activeFamilyId = migrationRes.targetFamilyId || useAppStore.getState().family.id;
+    realtimeSync.startRealtimeSync(activeFamilyId);
+    await syncEngine.fetchDelta(activeFamilyId);
 
     setIsLoading(false);
     setTimeout(() => {

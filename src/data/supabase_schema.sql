@@ -221,7 +221,7 @@ USING (public.is_member_of_family(id));
 -- Family Members Policies
 CREATE POLICY "Family members can view members"
 ON public.family_members FOR SELECT
-USING (public.is_member_of_family(family_id));
+USING (public.is_member_of_family(family_id) OR user_id = auth.uid());
 
 CREATE POLICY "Authenticated users can join or add family members"
 ON public.family_members FOR INSERT
@@ -229,7 +229,8 @@ WITH CHECK (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Family members can update members"
 ON public.family_members FOR UPDATE
-USING (public.is_member_of_family(family_id));
+USING (public.is_member_of_family(family_id) OR user_id = auth.uid())
+WITH CHECK (public.is_member_of_family(family_id) OR user_id = auth.uid());
 
 CREATE POLICY "Family members can delete members"
 ON public.family_members FOR DELETE

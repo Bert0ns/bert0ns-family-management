@@ -11,6 +11,7 @@ export const migrationService = {
     userId?: string,
   ): Promise<{
     success: boolean;
+    targetFamilyId?: string;
     expensesCount: number;
     categoriesCount: number;
     membersCount: number;
@@ -57,7 +58,53 @@ export const migrationService = {
       });
       if (famError) throw famError;
 
-      // 3. Prepare and upsert Categories
+      // 3. Prepare and upsert Members FIRST so that is_member_of_family(targetFamilyId) passes for categories & expenses
+      const mappedMembers: FamilyMember[] = localMembers.map((m) => {
+        const isCurrent = m.id === store.currentMemberId;
+        return {
+          ...m,
+          id: toUUID(m.id),
+          family_id: targetFamilyId,
+          user_id: isCurrent && userId ? userId : m.user_id,
+          updated_at: now,
+        };
+      });
+
+      // Upsert current user member first so that RLS is_member_of_family is satisfied
+      const currentUserMember = mappedMembers.find((m) => m.user_id === userId);
+      if (currentUserMember) {
+        const { error: currMemErr } = await supabase.from('family_members').upsert({
+          id: currentUserMember.id,
+          family_id: currentUserMember.family_id,
+          user_id: currentUserMember.user_id,
+          display_name: currentUserMember.display_name,
+          role: currentUserMember.role,
+          avatar_url: currentUserMember.avatar_url || null,
+          color_code: currentUserMember.color_code,
+          updated_at: now,
+        });
+        if (currMemErr) throw currMemErr;
+      }
+
+      // Upsert remaining members
+      const remainingMembers = mappedMembers.filter((m) => m.id !== currentUserMember?.id);
+      if (remainingMembers.length > 0) {
+        const { error: remMemErr } = await supabase.from('family_members').upsert(
+          remainingMembers.map((m) => ({
+            id: m.id,
+            family_id: m.family_id,
+            user_id: m.user_id || null,
+            display_name: m.display_name,
+            role: m.role,
+            avatar_url: m.avatar_url || null,
+            color_code: m.color_code,
+            updated_at: now,
+          })),
+        );
+        if (remMemErr) throw remMemErr;
+      }
+
+      // 4. Prepare and upsert Categories
       const mappedCategories: Category[] = localCategories.map((c) => ({
         ...c,
         id: toUUID(c.id),
@@ -77,32 +124,6 @@ export const migrationService = {
         })),
       );
       if (catError) throw catError;
-
-      // 4. Prepare and upsert Members
-      const mappedMembers: FamilyMember[] = localMembers.map((m) => {
-        const isCurrent = m.id === store.currentMemberId;
-        return {
-          ...m,
-          id: toUUID(m.id),
-          family_id: targetFamilyId,
-          user_id: isCurrent && userId ? userId : m.user_id,
-          updated_at: now,
-        };
-      });
-
-      const { error: memError } = await supabase.from('family_members').upsert(
-        mappedMembers.map((m) => ({
-          id: m.id,
-          family_id: m.family_id,
-          user_id: m.user_id || null,
-          display_name: m.display_name,
-          role: m.role,
-          avatar_url: m.avatar_url || null,
-          color_code: m.color_code,
-          updated_at: now,
-        })),
-      );
-      if (memError) throw memError;
 
       // 5. Prepare and upsert Expenses and Splits
       const mappedExpenses: Expense[] = [];
@@ -186,6 +207,7 @@ export const migrationService = {
       await syncEngine.clearOutbox();
 
       supabaseLogger.info('Migration to Supabase succeeded', {
+        targetFamilyId,
         expensesCount: mappedExpenses.length,
         categoriesCount: mappedCategories.length,
         membersCount: mappedMembers.length,
@@ -193,12 +215,15 @@ export const migrationService = {
 
       return {
         success: true,
+        targetFamilyId,
         expensesCount: mappedExpenses.length,
         categoriesCount: mappedCategories.length,
         membersCount: mappedMembers.length,
       };
     } catch (err: any) {
-      supabaseLogger.error('Data migration to Supabase failed', { error: err });
+      supabaseLogger.error('Failed to migrate local data to Supabase', {
+        error: err?.message || err,
+      });
       return {
         success: false,
         expensesCount: 0,
