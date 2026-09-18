@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, SafeAreaView } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+  SafeAreaView,
+  useWindowDimensions,
+} from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Sparkles, Copy, Check, Eye, X, ArrowRight, ClipboardPaste } from 'lucide-react-native';
 import { useTheme } from '@/theme';
@@ -28,6 +36,9 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
+  const { width: windowWidth } = useWindowDimensions();
+
+  const isDesktop = windowWidth >= 768;
 
   const [copied, setCopied] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -85,17 +96,19 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
             backgroundColor: theme.colors.brandLight,
             alignItems: 'center',
             justifyContent: 'center',
+            flexShrink: 0,
           }}
         >
           <Sparkles size={26} color={theme.colors.brand} />
         </View>
 
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
+              gap: spacing.xs,
             }}
           >
             <Text
@@ -103,15 +116,21 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
                 color: theme.colors.textPrimary,
                 fontSize: typography.fontSizes.md,
                 fontWeight: typography.fontWeights.heavy,
+                flex: 1,
+                minWidth: 0,
               }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
             >
               {t.import.aiPromptTitle}
             </Text>
-            <Badge
-              label={`$0 ${t.settings.localFirstBadge}`}
-              color={theme.colors.success}
-              size="sm"
-            />
+            <View style={{ flexShrink: 0 }}>
+              <Badge
+                label={`$0 ${t.settings.localFirstBadge}`}
+                color={theme.colors.success}
+                size="sm"
+              />
+            </View>
           </View>
           <Text
             style={{
@@ -120,6 +139,7 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
               marginTop: 2,
               lineHeight: 18,
             }}
+            numberOfLines={2}
           >
             {t.import.aiPromptSubtitle}
           </Text>
@@ -145,6 +165,7 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
               backgroundColor: theme.colors.brand,
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
             <Text
@@ -163,7 +184,10 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
               fontSize: typography.fontSizes.xs,
               fontWeight: typography.fontWeights.semibold,
               flex: 1,
+              minWidth: 0,
             }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {t.import.step1Label} (
             {t.import.categoriesIncluded.replace('{count}', activeCategories.length.toString())})
@@ -179,6 +203,7 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
               backgroundColor: theme.colors.brand,
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
             <Text
@@ -197,7 +222,10 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
               fontSize: typography.fontSizes.xs,
               fontWeight: typography.fontWeights.semibold,
               flex: 1,
+              minWidth: 0,
             }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {t.import.step2Label}
           </Text>
@@ -212,6 +240,7 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
               backgroundColor: theme.colors.brand,
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
             <Text
@@ -230,7 +259,10 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
               fontSize: typography.fontSizes.xs,
               fontWeight: typography.fontWeights.semibold,
               flex: 1,
+              minWidth: 0,
             }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {t.import.step3Label}
           </Text>
@@ -284,6 +316,7 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
               fontSize: typography.fontSizes.xs,
               fontWeight: typography.fontWeights.bold,
             }}
+            numberOfLines={1}
           >
             {t.import.pasteActionPrompt}
           </Text>
@@ -298,115 +331,134 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
         presentationStyle="pageSheet"
         onRequestClose={() => setModalVisible(false)}
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <SafeAreaView
+          style={{
+            flex: 1,
+            backgroundColor: theme.colors.background,
+            alignItems: isDesktop ? 'center' : 'stretch',
+            justifyContent: 'center',
+          }}
+        >
           <View
             style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: spacing.lg,
-              borderBottomWidth: 1,
-              borderBottomColor: theme.colors.border,
+              flex: 1,
+              width: '100%',
+              maxWidth: isDesktop ? 680 : undefined,
+              backgroundColor: theme.colors.background,
             }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text
-                style={{
-                  color: theme.colors.textPrimary,
-                  fontSize: typography.fontSizes.lg,
-                  fontWeight: typography.fontWeights.bold,
-                }}
-              >
-                {t.import.promptModalTitle}
-              </Text>
-              <Text
-                style={{
-                  color: theme.colors.textSecondary,
-                  fontSize: typography.fontSizes.xs,
-                  marginTop: 2,
-                }}
-              >
-                {t.import.promptModalSubtitle.replace(
-                  '{count}',
-                  activeCategories.length.toString(),
-                )}
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              accessibilityRole="button"
-              accessibilityLabel={t.common.close}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: radius.full,
-                backgroundColor: theme.colors.surfaceSubtle,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <X size={20} color={theme.colors.textPrimary} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            style={{ flex: 1, padding: spacing.lg }}
-            contentContainerStyle={{ paddingBottom: spacing.xl }}
           >
             <View
               style={{
-                backgroundColor: theme.colors.surfaceSubtle,
-                borderRadius: radius.lg,
-                padding: spacing.md,
-                borderWidth: 1,
-                borderColor: theme.colors.border,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: spacing.lg,
+                borderBottomWidth: 1,
+                borderBottomColor: theme.colors.border,
               }}
             >
-              <Text
-                selectable
+              <View style={{ flex: 1, minWidth: 0, marginRight: spacing.sm }}>
+                <Text
+                  style={{
+                    color: theme.colors.textPrimary,
+                    fontSize: typography.fontSizes.lg,
+                    fontWeight: typography.fontWeights.bold,
+                  }}
+                  numberOfLines={1}
+                >
+                  {t.import.promptModalTitle}
+                </Text>
+                <Text
+                  style={{
+                    color: theme.colors.textSecondary,
+                    fontSize: typography.fontSizes.xs,
+                    marginTop: 2,
+                  }}
+                  numberOfLines={1}
+                >
+                  {t.import.promptModalSubtitle.replace(
+                    '{count}',
+                    activeCategories.length.toString(),
+                  )}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel={t.common.close}
                 style={{
-                  color: theme.colors.textPrimary,
-                  fontSize: typography.fontSizes.xs,
-                  fontFamily: 'monospace',
-                  lineHeight: 20,
+                  width: 36,
+                  height: 36,
+                  borderRadius: radius.full,
+                  backgroundColor: theme.colors.surfaceSubtle,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               >
-                {dynamicPrompt}
-              </Text>
+                <X size={20} color={theme.colors.textPrimary} />
+              </TouchableOpacity>
             </View>
-          </ScrollView>
 
-          <View
-            style={{
-              padding: spacing.lg,
-              borderTopWidth: 1,
-              borderTopColor: theme.colors.border,
-              backgroundColor: theme.colors.surface,
-              flexDirection: 'row',
-              gap: spacing.sm,
-            }}
-          >
-            <Button
-              title={copied ? t.import.promptCopied : t.import.copyPrompt}
-              variant={copied ? 'secondary' : 'primary'}
-              size="lg"
-              icon={
-                copied ? (
-                  <Check size={20} color={theme.colors.success} />
-                ) : (
-                  <Copy size={20} color="#FFFFFF" />
-                )
-              }
-              onPress={handleCopyPrompt}
-              style={{ flex: 1 }}
-            />
-            <Button
-              title={t.common.close}
-              variant="outline"
-              size="lg"
-              onPress={() => setModalVisible(false)}
-            />
+            <ScrollView
+              style={{ flex: 1, padding: spacing.lg }}
+              contentContainerStyle={{ paddingBottom: spacing.xl }}
+            >
+              <View
+                style={{
+                  backgroundColor: theme.colors.surfaceSubtle,
+                  borderRadius: radius.lg,
+                  padding: spacing.md,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
+                }}
+              >
+                <Text
+                  selectable
+                  style={{
+                    color: theme.colors.textPrimary,
+                    fontSize: typography.fontSizes.xs,
+                    fontFamily: 'monospace',
+                    lineHeight: 20,
+                  }}
+                >
+                  {dynamicPrompt}
+                </Text>
+              </View>
+            </ScrollView>
+
+            <View
+              style={{
+                padding: spacing.lg,
+                borderTopWidth: 1,
+                borderTopColor: theme.colors.border,
+                backgroundColor: theme.colors.surface,
+                flexDirection: 'row',
+                gap: spacing.sm,
+              }}
+            >
+              <Button
+                title={copied ? t.import.promptCopied : t.import.copyPrompt}
+                variant={copied ? 'secondary' : 'primary'}
+                size="lg"
+                icon={
+                  copied ? (
+                    <Check size={20} color={theme.colors.success} />
+                  ) : (
+                    <Copy size={20} color="#FFFFFF" />
+                  )
+                }
+                onPress={handleCopyPrompt}
+                style={{ flex: 1 }}
+              />
+              <Button
+                title={t.common.close}
+                variant="outline"
+                size="lg"
+                onPress={() => setModalVisible(false)}
+              />
+            </View>
           </View>
         </SafeAreaView>
       </Modal>

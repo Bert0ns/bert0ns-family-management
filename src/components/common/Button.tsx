@@ -169,7 +169,13 @@ export const Button: React.FC<ButtonProps> = ({
         <>
           {icon}
           {title ? (
-            <Text style={[labelStyle, textStyle]} numberOfLines={1} ellipsizeMode="tail">
+            <Text
+              style={[labelStyle, textStyle]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              adjustsFontSizeToFit
+              minimumFontScale={0.85}
+            >
               {title}
             </Text>
           ) : null}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Modal, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, Modal, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { X, CheckCircle2, AlertTriangle } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName } from '@/i18n';
@@ -27,6 +27,9 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
+  const { width: windowWidth } = useWindowDimensions();
+
+  const isDesktop = windowWidth >= 768;
 
   if (!report) return null;
 
@@ -50,17 +53,26 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
       <View
         style={{
           flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          justifyContent: 'flex-end',
+          backgroundColor: theme.isDark ? 'rgba(0,0,0,0.65)' : 'rgba(15,23,42,0.35)',
+          justifyContent: isDesktop ? 'center' : 'flex-end',
+          alignItems: isDesktop ? 'center' : 'stretch',
+          padding: isDesktop ? spacing.lg : 0,
         }}
       >
         <View
           style={{
             backgroundColor: theme.colors.surface,
+            borderRadius: isDesktop ? radius.xl : undefined,
             borderTopLeftRadius: radius.xl,
             borderTopRightRadius: radius.xl,
+            borderBottomLeftRadius: isDesktop ? radius.xl : 0,
+            borderBottomRightRadius: isDesktop ? radius.xl : 0,
             padding: spacing.xl,
-            maxHeight: '85%',
+            maxHeight: isDesktop ? '85%' : '85%',
+            width: isDesktop ? '100%' : undefined,
+            maxWidth: isDesktop ? 540 : undefined,
+            borderWidth: 1.5,
+            borderColor: theme.colors.cardBorder,
           }}
         >
           {/* Header */}
@@ -72,13 +84,14 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
               marginBottom: spacing.md,
             }}
           >
-            <View>
+            <View style={{ flex: 1, minWidth: 0, marginRight: spacing.sm }}>
               <Text
                 style={{
                   color: theme.colors.textPrimary,
                   fontSize: typography.fontSizes.xl,
                   fontWeight: typography.fontWeights.bold,
                 }}
+                numberOfLines={1}
               >
                 {t.import.reviewConfirm}
               </Text>
@@ -88,6 +101,8 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                   fontSize: typography.fontSizes.sm,
                   marginTop: 2,
                 }}
+                numberOfLines={1}
+                ellipsizeMode="middle"
               >
                 {t.import.fileLabel}: {fileName}
               </Text>
@@ -95,6 +110,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
             <TouchableOpacity
               onPress={onClose}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={{ flexShrink: 0 }}
             >
               <X size={24} color={theme.colors.textSecondary} />
             </TouchableOpacity>
@@ -113,7 +129,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                 gap: spacing.xs,
               }}
             >
-              <AlertTriangle size={16} color={theme.colors.warning} />
+              <AlertTriangle size={16} color={theme.colors.warning} style={{ flexShrink: 0 }} />
               <Text
                 style={{
                   color: theme.colors.warning,
@@ -121,6 +137,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                   fontWeight: typography.fontWeights.semibold,
                   flex: 1,
                 }}
+                numberOfLines={2}
               >
                 {duplicateCount} {t.import.duplicateWarning}
               </Text>
@@ -138,9 +155,10 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
               justifyContent: 'space-between',
             }}
           >
-            <View>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <Text
                 style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}
+                numberOfLines={1}
               >
                 {t.import.totalTransactions}
               </Text>
@@ -150,13 +168,15 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                   fontSize: typography.fontSizes.lg,
                   fontWeight: typography.fontWeights.bold,
                 }}
+                numberOfLines={1}
               >
                 {report.expenses.length} {t.common.items}
               </Text>
             </View>
-            <View style={{ alignItems: 'flex-end' }}>
+            <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
               <Text
                 style={{ color: theme.colors.textSecondary, fontSize: typography.fontSizes.xs }}
+                numberOfLines={1}
               >
                 {t.import.totalAmount}
               </Text>
@@ -166,6 +186,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                   fontSize: typography.fontSizes.lg,
                   fontWeight: typography.fontWeights.bold,
                 }}
+                numberOfLines={1}
               >
                 {currency}
                 {totalAmount.toFixed(2)}
@@ -188,27 +209,33 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                   paddingVertical: spacing.sm,
                   borderBottomWidth: 1,
                   borderBottomColor: theme.colors.borderSubtle,
+                  gap: spacing.sm,
                 }}
               >
-                <View style={{ flex: 1, marginRight: spacing.sm }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                     <Text
                       style={{
                         color: theme.colors.textPrimary,
                         fontSize: typography.fontSizes.sm,
                         fontWeight: typography.fontWeights.semibold,
+                        flexShrink: 1,
+                        minWidth: 0,
                       }}
                       numberOfLines={1}
+                      ellipsizeMode="tail"
                     >
                       {exp.merchant}
                     </Text>
                     {exp.isDuplicate && (
-                      <Badge
-                        label={t.common.duplicate}
-                        color={theme.colors.warning}
-                        size="sm"
-                        variant="solid"
-                      />
+                      <View style={{ flexShrink: 0 }}>
+                        <Badge
+                          label={t.common.duplicate}
+                          color={theme.colors.warning}
+                          size="sm"
+                          variant="solid"
+                        />
+                      </View>
                     )}
                   </View>
                   <Text
@@ -217,6 +244,8 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                       fontSize: typography.fontSizes.xs,
                       marginTop: 2,
                     }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
                     {exp.date} • {getLocalizedCategoryName(exp.category, t)}
                   </Text>
@@ -227,7 +256,9 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                     color: theme.colors.textPrimary,
                     fontSize: typography.fontSizes.sm,
                     fontWeight: typography.fontWeights.bold,
+                    flexShrink: 0,
                   }}
+                  numberOfLines={1}
                 >
                   {currency}
                   {exp.amount.toFixed(2)}

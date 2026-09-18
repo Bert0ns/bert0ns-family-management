@@ -94,7 +94,13 @@ export default function ImportScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 130 }}
+      contentContainerStyle={{
+        padding: spacing.lg,
+        paddingBottom: 130,
+        maxWidth: 760,
+        width: '100%',
+        alignSelf: 'center',
+      }}
       showsVerticalScrollIndicator={false}
     >
       {/* Success Notification Alert */}
@@ -151,17 +157,19 @@ export default function ImportScreen() {
               borderColor: `${theme.colors.brand}40`,
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
             <UploadCloud size={28} color={theme.colors.brand} strokeWidth={2.5} />
           </View>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <Text
               style={{
                 color: theme.colors.textPrimary,
                 fontSize: typography.fontSizes.xl,
                 fontWeight: typography.fontWeights.heavy,
               }}
+              numberOfLines={1}
             >
               {t.import.bulkImportTitle}
             </Text>
@@ -171,6 +179,7 @@ export default function ImportScreen() {
                 fontSize: typography.fontSizes.sm,
                 marginTop: 2,
               }}
+              numberOfLines={2}
             >
               {t.import.bulkImportSubtitle}
             </Text>
@@ -187,7 +196,7 @@ export default function ImportScreen() {
         />
       </Card>
 
-      {/* AI Bank Statement Prompt Generator Card */}
+      {/* Free AI Prompt Generator Card */}
       <View style={{ marginBottom: spacing.lg }}>
         <AiPromptCard
           categories={categoryNames}
@@ -219,6 +228,7 @@ export default function ImportScreen() {
             fontWeight: typography.fontWeights.bold,
             marginBottom: 2,
           }}
+          numberOfLines={1}
         >
           {t.import.exportLedger}
         </Text>
@@ -228,6 +238,7 @@ export default function ImportScreen() {
             fontSize: typography.fontSizes.sm,
             marginBottom: spacing.md,
           }}
+          numberOfLines={1}
         >
           {t.import.exportLedgerSub} ({expenses.length} {t.common.items})
         </Text>
@@ -276,6 +287,7 @@ export default function ImportScreen() {
                 fontSize: typography.fontSizes.lg,
                 fontWeight: typography.fontWeights.bold,
               }}
+              numberOfLines={1}
             >
               {t.import.importHistory}
             </Text>
@@ -292,15 +304,18 @@ export default function ImportScreen() {
                   justifyContent: 'space-between',
                   borderWidth: 1.5,
                   borderColor: theme.colors.borderTactile,
+                  gap: spacing.sm,
                 }}
               >
-                <View>
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <Text
                     style={{
                       color: theme.colors.textPrimary,
                       fontSize: typography.fontSizes.md,
                       fontWeight: typography.fontWeights.semibold,
                     }}
+                    numberOfLines={1}
+                    ellipsizeMode="middle"
                   >
                     {batch.file_name}
                   </Text>
@@ -310,15 +325,18 @@ export default function ImportScreen() {
                       fontSize: typography.fontSizes.xs,
                       marginTop: 2,
                     }}
+                    numberOfLines={1}
                   >
                     {new Date(batch.created_at).toLocaleDateString()}
                   </Text>
                 </View>
-                <Badge
-                  label={`${batch.total_records} ${t.dashboard.txs} • ${family.currency}${batch.total_amount.toFixed(2)}`}
-                  color={theme.colors.brand}
-                  size="md"
-                />
+                <View style={{ flexShrink: 0 }}>
+                  <Badge
+                    label={`${batch.total_records} ${t.dashboard.txs} • ${family.currency}${batch.total_amount.toFixed(2)}`}
+                    color={theme.colors.brand}
+                    size="md"
+                  />
+                </View>
               </Card>
             ))}
           </View>

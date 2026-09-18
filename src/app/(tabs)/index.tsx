@@ -48,7 +48,13 @@ export default function DashboardScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 120 }}
+      contentContainerStyle={{
+        padding: spacing.lg,
+        paddingBottom: 120,
+        maxWidth: 760,
+        width: '100%',
+        alignSelf: 'center',
+      }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       showsVerticalScrollIndicator={false}
     >

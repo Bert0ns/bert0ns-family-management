@@ -43,18 +43,22 @@ export const Badge: React.FC<BadgeProps> = ({
     borderColor: variant === 'outline' ? primaryColor : `${primaryColor}33`,
     gap: spacing.xs,
     alignSelf: 'flex-start',
+    maxWidth: '100%',
   };
 
   const textStyle: TextStyle = {
     color: textColor,
     fontSize: size === 'sm' ? typography.fontSizes.xs : typography.fontSizes.sm,
     fontWeight: typography.fontWeights.bold,
+    flexShrink: 1,
   };
 
   return (
     <View style={containerStyle}>
       {icon}
-      <Text style={textStyle}>{label}</Text>
+      <Text style={textStyle} numberOfLines={1} ellipsizeMode="tail">
+        {label}
+      </Text>
     </View>
   );
 };

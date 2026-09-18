@@ -1,7 +1,16 @@
 import { uiLogger } from '@/services/logger';
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, ScrollView, Platform, Alert } from 'react-native';
-import { X, Trash2, Calendar, CreditCard, User, Split } from 'lucide-react-native';
+import {
+  View,
+  Text,
+  Modal,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
+  Alert,
+  useWindowDimensions,
+} from 'react-native';
+import { Calendar, User, CreditCard, Trash2, X, Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName, getLocalizedPaymentMethod } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -35,6 +44,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
   const { theme, spacing, radius, typography } = useTheme();
   const { t, locale } = useI18n();
   const { categories, members } = useAppStore();
+  const { width: windowWidth } = useWindowDimensions();
+  const isDesktop = windowWidth >= 768;
 
   if (!expense) return null;
 
@@ -44,7 +55,9 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
 
   const catColor = resolvedCategory?.color || theme.colors.brand;
   const catIcon = resolvedCategory?.icon || 'Tag';
-  const catName = getLocalizedCategoryName(resolvedCategory, t);
+  const catName = resolvedCategory
+    ? getLocalizedCategoryName(resolvedCategory, t)
+    : t.categories.other;
   const memberName = resolvedMember?.display_name || t.tabs.family;
 
   const dateLocale = locale === 'it' ? 'it-IT' : 'en-US';
@@ -88,46 +101,65 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
         style={{
           flex: 1,
           backgroundColor: theme.isDark ? 'rgba(0, 0, 0, 0.65)' : 'rgba(15, 23, 42, 0.35)',
-          justifyContent: 'flex-end',
+          justifyContent: isDesktop ? 'center' : 'flex-end',
+          alignItems: isDesktop ? 'center' : 'stretch',
+          padding: isDesktop ? spacing.lg : 0,
         }}
       >
         <View
           style={[
             {
               backgroundColor: theme.colors.surface,
+              borderRadius: isDesktop ? radius.xxl : undefined,
               borderTopLeftRadius: radius.xxl,
               borderTopRightRadius: radius.xxl,
+              borderBottomLeftRadius: isDesktop ? radius.xxl : 0,
+              borderBottomRightRadius: isDesktop ? radius.xxl : 0,
               paddingHorizontal: spacing.lg,
               paddingBottom: spacing.xl,
-              paddingTop: spacing.sm,
-              maxHeight: '88%',
+              paddingTop: isDesktop ? spacing.lg : spacing.sm,
+              maxHeight: isDesktop ? '85%' : '88%',
+              width: isDesktop ? '100%' : undefined,
+              maxWidth: isDesktop ? 540 : undefined,
               borderWidth: 1.5,
               borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.8)',
-              borderBottomWidth: 0,
+              borderBottomWidth: isDesktop ? 1.5 : 0,
             },
             Platform.OS === 'web' &&
               ({
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
-                boxShadow: theme.isDark
-                  ? '0 -8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
-                  : '0 -8px 32px rgba(148, 163, 184, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
+                boxShadow: isDesktop
+                  ? theme.isDark
+                    ? '0 24px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)'
+                    : '0 24px 48px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05)'
+                  : theme.isDark
+                    ? '0 -8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+                    : '0 -8px 32px rgba(148, 163, 184, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
               } as any),
           ]}
         >
-          {/* Apple Sheet Grabber Handle */}
-          <View
-            style={{ alignItems: 'center', paddingVertical: spacing.xs, marginBottom: spacing.md }}
-          >
+          {/* Apple Sheet Grabber Handle (Mobile only) */}
+          {!isDesktop && (
             <View
               style={{
-                width: 40,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.15)',
+                alignItems: 'center',
+                paddingVertical: spacing.xs,
+                marginBottom: spacing.md,
               }}
-            />
-          </View>
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: theme.isDark
+                    ? 'rgba(255, 255, 255, 0.25)'
+                    : 'rgba(0, 0, 0, 0.15)',
+                }}
+              />
+            </View>
+          )}
 
           {/* Header */}
           <View
@@ -205,7 +237,12 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   fontSize: typography.fontSizes.xxxl,
                   fontWeight: typography.fontWeights.heavy,
                   letterSpacing: -0.5,
+                  maxWidth: '90%',
+                  textAlign: 'center',
                 }}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
               >
                 {currency}
                 {expense.amount.toFixed(2)}
@@ -219,12 +256,15 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   marginTop: 4,
                   textAlign: 'center',
                   paddingHorizontal: spacing.md,
+                  maxWidth: '100%',
                 }}
+                numberOfLines={2}
+                ellipsizeMode="tail"
               >
                 {expense.merchant_name}
               </Text>
 
-              <View style={{ marginTop: spacing.xs }}>
+              <View style={{ marginTop: spacing.xs, maxWidth: '90%' }}>
                 <Badge label={catName} color={catColor} size="md" variant="subtle" />
               </View>
             </View>
@@ -249,9 +289,17 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  gap: spacing.sm,
                 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.sm,
+                    flexShrink: 0,
+                  }}
+                >
                   <Calendar size={18} color={theme.colors.textMuted} />
                   <Text
                     style={{
@@ -268,7 +316,10 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                     color: theme.colors.textPrimary,
                     fontSize: typography.fontSizes.sm,
                     fontWeight: typography.fontWeights.bold,
+                    flexShrink: 1,
+                    textAlign: 'right',
                   }}
+                  numberOfLines={1}
                 >
                   {new Date(expense.transaction_date).toLocaleDateString(dateLocale, {
                     weekday: 'short',
@@ -285,9 +336,17 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  gap: spacing.sm,
                 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.sm,
+                    flexShrink: 0,
+                  }}
+                >
                   <User size={18} color={theme.colors.textMuted} />
                   <Text
                     style={{
@@ -299,7 +358,16 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                     {t.expenseDetail.paidBy}
                   </Text>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.xs,
+                    flexShrink: 1,
+                    minWidth: 0,
+                    justifyContent: 'flex-end',
+                  }}
+                >
                   <Avatar
                     name={memberName}
                     avatarUrl={resolvedMember?.avatar_url}
@@ -311,7 +379,10 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                       color: theme.colors.textPrimary,
                       fontSize: typography.fontSizes.sm,
                       fontWeight: typography.fontWeights.bold,
+                      flexShrink: 1,
                     }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
                     {memberName}
                   </Text>
@@ -324,9 +395,17 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  gap: spacing.sm,
                 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.sm,
+                    flexShrink: 0,
+                  }}
+                >
                   <CreditCard size={18} color={theme.colors.textMuted} />
                   <Text
                     style={{
@@ -343,7 +422,10 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                     color: theme.colors.textPrimary,
                     fontSize: typography.fontSizes.sm,
                     fontWeight: typography.fontWeights.bold,
+                    flexShrink: 1,
+                    textAlign: 'right',
                   }}
+                  numberOfLines={1}
                 >
                   {localizedPaymentMethod}
                 </Text>
@@ -426,9 +508,18 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         paddingVertical: 6,
+                        gap: spacing.sm,
                       }}
                     >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: spacing.xs,
+                          flex: 1,
+                          minWidth: 0,
+                        }}
+                      >
                         <Avatar
                           name={m?.display_name || '?'}
                           avatarUrl={m?.avatar_url}
@@ -440,7 +531,10 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                             color: theme.colors.textPrimary,
                             fontSize: typography.fontSizes.sm,
                             fontWeight: typography.fontWeights.medium,
+                            flexShrink: 1,
                           }}
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
                         >
                           {m?.display_name || '?'}
                         </Text>
@@ -450,6 +544,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                           color: theme.colors.brand,
                           fontSize: typography.fontSizes.sm,
                           fontWeight: typography.fontWeights.bold,
+                          flexShrink: 0,
                         }}
                       >
                         {currency}

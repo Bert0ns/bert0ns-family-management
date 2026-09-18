@@ -63,11 +63,13 @@ export const Input: React.FC<InputProps> = ({
     paddingHorizontal: spacing.lg,
     minHeight: 56,
     gap: spacing.sm,
+    minWidth: 0,
     ...webGlass,
   };
 
   const inputStyle: TextStyle = {
     flex: 1,
+    minWidth: 0,
     color: theme.colors.textPrimary,
     fontSize: typography.fontSizes.md,
     fontWeight: typography.fontWeights.medium,
@@ -91,7 +93,7 @@ export const Input: React.FC<InputProps> = ({
   };
 
   return (
-    <View style={[{ marginBottom: spacing.md }, containerStyle]}>
+    <View style={[{ marginBottom: spacing.md, minWidth: 0 }, containerStyle]}>
       {label && <Text style={labelStyle}>{label}</Text>}
       <View style={wrapperStyle}>
         {leftIcon}
