@@ -203,15 +203,16 @@ function sanitizeMermaidBlock(blockCode) {
         continue;
       }
 
-      // Quote node labels containing parentheses or slashes if not already quoted
-      // NodeA[Label (with parens)] -> NodeA["Label (with parens)"]
-      line = line.replace(/([a-zA-Z0-9_-]+)\[([^"\]\n]*[\(\)\/][^"\]\n]*)\]/g, '$1["$2"]');
-
-      // NodeB(Label with [brackets]) -> NodeB("Label with [brackets]")
-      line = line.replace(/([a-zA-Z0-9_-]+)\(([^"\)\n]*[\[\]\/][^"\)\n]*)\)/g, '$1("$2")');
-
-      // NodeC{Label with (parens)} -> NodeC{"Label with (parens)"}
-      line = line.replace(/([a-zA-Z0-9_-]+)\{([^"\}\n]*[\(\)\/][^"\}\n]*)\}/g, '$1{"$2"}');
+      // Quote node labels containing parentheses or slashes ONLY if not already quoted
+      if (!/\[".*?"\]/.test(line)) {
+        line = line.replace(/([a-zA-Z0-9_-]+)\[([^"\]\n]*[\(\)\/][^"\]\n]*)\]/g, '$1["$2"]');
+      }
+      if (!/\(".*?"\)/.test(line)) {
+        line = line.replace(/([a-zA-Z0-9_-]+)\(([^"\)\n]*[\[\]\/][^"\)\n]*)\)/g, '$1("$2")');
+      }
+      if (!/\{".*?"\}/.test(line)) {
+        line = line.replace(/([a-zA-Z0-9_-]+)\{([^"\}\n]*[\(\)\/][^"\}\n]*)\}/g, '$1{"$2"}');
+      }
 
       lines[i] = line;
     }
@@ -234,7 +235,7 @@ function sanitizeMermaidBlock(blockCode) {
   // 3. Class diagram sanitization (<T> -> ~T~)
   if (header.startsWith('classDiagram')) {
     for (let i = 1; i < lines.length; i++) {
-      lines[i] = lines[i].replace(/<([A-Za-z0-9_,\s]+)>/g, '~$1~');
+      lines[i] = lines[i].replace(/(?<!<)<([A-Za-z0-9_,\s]+)>(?!>)/g, '~$1~');
     }
   }
 

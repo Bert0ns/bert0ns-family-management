@@ -37,7 +37,7 @@ const DOMAIN_METADATA = {
     index: 4,
     id: 'sensors_native',
     role: 'Sensors & Native Specialist',
-    headingRegex: /## Subagent 4:\s*Hardware Sensors/i,
+    headingRegex: /## Subagent 4:\s*(?:Hardware Sensors|Hardware)/i,
     outputFiles: ['04-sensors-kinematics-and-native.md'],
   },
   system_c4_requirements: {
@@ -94,7 +94,7 @@ function extractPersonaPrompts(referencesDir) {
  * Extracts high-level project context from package.json and workspace structure
  */
 function extractProjectContext(rootDir) {
-  let pkgName = 'Trenord Infotainment';
+  let pkgName = 'bert0ns-family-management';
   let techDetails = [];
 
   const pkgPath = path.join(rootDir, 'package.json');
@@ -110,15 +110,17 @@ function extractProjectContext(rootDir) {
       if (deps['react-native']) techDetails.push(`React Native ${deps['react-native']}`);
       if (deps['expo']) techDetails.push(`Expo ${deps['expo']}`);
       if (deps['expo-router']) techDetails.push(`Expo Router ${deps['expo-router']}`);
+      if (deps['@supabase/supabase-js'])
+        techDetails.push(`Supabase ${deps['@supabase/supabase-js']}`);
       if (deps['zustand']) techDetails.push(`Zustand ${deps['zustand']}`);
       if (deps['typescript']) techDetails.push(`TypeScript ${deps['typescript']}`);
-      if (deps['react-i18next']) techDetails.push('react-i18next (Localization)');
+      if (deps['zod']) techDetails.push(`Zod ${deps['zod']}`);
     } catch (_) {
       // Ignore JSON parse errors
     }
   }
 
-  return `${pkgName} — Mobile Infotainment Application (${techDetails.join(', ') || 'React Native / Expo'})`;
+  return `${pkgName} — Privacy-First Cross-Platform Household Expense & Family Financial Analytics (${techDetails.join(', ') || 'React Native / Expo / Supabase'})`;
 }
 
 /**
@@ -213,13 +215,13 @@ function main() {
   const rootDir = args.find((a) => !a.startsWith('--')) || process.cwd();
 
   const domainArg = args.find((a) => a.startsWith('--domain='))?.split('=')[1];
-  const modeArg = args.find((a) => a.startsWith('--mode='))?.split('=')[1] || 'research';
+  const modeArg =
+    args.find((a) => a.startsWith('--mode=') || a.startsWith('--type='))?.split('=')[1] ||
+    'research';
   const modelArg = args.find((a) => a.startsWith('--model='))?.split('=')[1] || 'inherit';
   const isMarkdown = args.includes('--markdown') || args.includes('--raw');
   const saveToSpecified = args.find((a) => a.startsWith('--save-to='))?.split('=')[1];
   const shouldSave = args.includes('--save') || Boolean(saveToSpecified);
-  const savePath =
-    saveToSpecified || (shouldSave ? 'docs/architecture/.staging/dispatch_payload.json' : null);
 
   const payload = buildDispatchPayload({
     rootDir,
@@ -229,34 +231,37 @@ function main() {
   });
 
   if (isMarkdown) {
+    console.log('# Interpolated Subagent Dispatch Prompts\n');
     for (const sub of payload.Subagents) {
-      console.log(`\n# [${sub.DomainId}] ${sub.Role}\n`);
-      console.log(`**TypeName:** \`${sub.TypeName}\` | **Model:** \`${sub.Model}\`\n`);
+      console.log(`## Domain: ${sub.Role} (${sub.DomainId})`);
+      console.log(`- **Subagent TypeName:** \`${sub.TypeName}\``);
+      console.log(`- **Assigned Modules:** ${sub.AssignedFiles.join(', ')}\n`);
+      console.log('```markdown');
       console.log(sub.Prompt);
-      console.log('\n' + '='.repeat(60) + '\n');
+      console.log('```\n');
     }
     return;
   }
 
-  // Format clean payload for invoke_subagent tool
-  const invokePayload = {
-    Subagents: payload.Subagents.map((s) => ({
-      Role: s.Role,
-      TypeName: s.TypeName,
-      Model: s.Model,
-      Prompt: s.Prompt,
-    })),
-  };
+  const jsonStr = JSON.stringify(payload, null, 2);
 
-  const jsonOutput = JSON.stringify(invokePayload, null, 2);
-
-  if (savePath) {
-    const fullSavePath = path.resolve(rootDir, savePath);
-    fs.mkdirSync(path.dirname(fullSavePath), { recursive: true });
-    fs.writeFileSync(fullSavePath, jsonOutput, 'utf8');
-    console.log(`✅ Subagent dispatch payload saved to: ${fullSavePath}`);
+  if (shouldSave) {
+    const defaultOut = path.join(
+      rootDir,
+      '.agents',
+      'skills',
+      'system-design-architect',
+      'scratch',
+      'dispatch_payload.json',
+    );
+    const targetFile = saveToSpecified || defaultOut;
+    fs.mkdirSync(path.dirname(targetFile), { recursive: true });
+    fs.writeFileSync(targetFile, jsonStr, 'utf8');
+    console.log(
+      `✅ Saved ready-to-dispatch payload (${payload.Subagents.length} subagents) to: ${targetFile}`,
+    );
   } else {
-    console.log(jsonOutput);
+    console.log(jsonStr);
   }
 }
 

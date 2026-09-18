@@ -103,36 +103,60 @@ function classifyFiles(files, rootDir) {
       norm.startsWith('__tests__/') ||
       norm.startsWith('.github/') ||
       norm === 'jest.setup.js' ||
+      norm === 'jest.config.js' ||
       norm === 'eslint.config.js' ||
-      norm === 'tsconfig.json'
+      norm === 'tsconfig.json' ||
+      norm === 'eas.json' ||
+      norm === 'metro.config.js'
     ) {
       domains.solid_testing_governance.files.push(f);
       continue;
     }
 
     // 2. Navigation & UI Screens / Presentation
-    if (norm.startsWith('app/') && !norm.includes('api/')) {
+    if ((norm.startsWith('app/') || norm.startsWith('src/app/')) && !norm.includes('api/')) {
       domains.navigation_ux.files.push(f);
     }
-    if (norm.startsWith('components/')) {
+    if (norm.startsWith('components/') || norm.startsWith('src/components/')) {
+      domains.navigation_ux.files.push(f);
+    }
+    if (norm.startsWith('public/')) {
       domains.navigation_ux.files.push(f);
     }
 
-    // 3. State & Stores
-    if (norm.startsWith('store/')) {
+    // 3. State & Stores & Domain Models
+    if (
+      norm.startsWith('store/') ||
+      norm.startsWith('src/store/') ||
+      norm === 'src/services/store.ts' ||
+      norm === 'src/services/interfaces.ts' ||
+      norm === 'src/services/splitCalculator.ts' ||
+      norm === 'src/services/analytics.ts' ||
+      norm.startsWith('src/types/') ||
+      norm.startsWith('src/data/')
+    ) {
       domains.state_domain.files.push(f);
     }
 
-    // 4. APIs & Networking & Proxy
+    // 4. APIs & Networking & Cloud / Database
     if (
       norm.startsWith('lib/api/') ||
       norm.startsWith('app/api/') ||
-      norm.startsWith('docs/api/')
+      norm.startsWith('docs/api/') ||
+      norm === 'src/services/supabase.ts' ||
+      norm === 'src/services/authService.ts' ||
+      norm === 'src/services/syncEngine.ts' ||
+      norm === 'src/services/realtimeSync.ts' ||
+      norm === 'src/services/migrationService.ts' ||
+      norm === 'src/services/aiPromptGenerator.ts' ||
+      norm === 'src/services/jsonExtractor.ts' ||
+      norm === 'src/services/csvExporter.ts' ||
+      norm === 'src/data/supabase_schema.sql'
     ) {
       domains.apis_networking.files.push(f);
     }
 
-    // 5. Sensors, Kinematics & Native
+    // 5. Sensors, Native Platform, Notifications, File System & Kinematics
     if (
       norm.includes('motion-cues') ||
       norm.includes('speed-calculator') ||
@@ -142,7 +166,13 @@ function classifyFiles(files, rootDir) {
       norm.includes('use-qr-scanner') ||
       norm.includes('use-podcast-') ||
       norm.includes('audioStore') ||
-      norm.includes('notifications')
+      norm.includes('notifications') ||
+      norm === 'src/services/pushNotificationService.ts' ||
+      norm === 'src/services/fileExporter.ts' ||
+      norm === 'public/sw.js' ||
+      norm === 'public/manifest.json' ||
+      norm.includes('haptics') ||
+      norm.includes('clipboard')
     ) {
       domains.sensors_native.files.push(f);
     }
@@ -154,13 +184,19 @@ function classifyFiles(files, rootDir) {
       norm === 'app.config.ts' ||
       norm.startsWith('lib/logger') ||
       norm.startsWith('lib/theme') ||
-      norm.startsWith('lib/i18n/')
+      norm.startsWith('lib/i18n/') ||
+      norm.startsWith('src/theme/') ||
+      norm.startsWith('src/i18n/') ||
+      norm === 'src/services/logger.ts' ||
+      norm === 'src/services/validator.ts' ||
+      norm === 'src/services/duplicateDetector.ts' ||
+      norm === 'src/utils/uuid.ts'
     ) {
       domains.system_c4_requirements.files.push(f);
     }
 
     // Domain hooks classification
-    if (norm.startsWith('hooks/')) {
+    if (norm.startsWith('hooks/') || norm.startsWith('src/hooks/')) {
       if (
         norm.includes('sync') ||
         norm.includes('polling') ||

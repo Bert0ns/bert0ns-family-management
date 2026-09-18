@@ -112,7 +112,7 @@ function lintMermaidBlock(block) {
     for (let idx = 0; idx < block.lines.length; idx++) {
       const line = block.lines[idx];
       // Check for unescaped generic syntax like Promise<void> instead of Promise~void~
-      if (/<[A-Za-z0-9_, ]+>/.test(line)) {
+      if (/(?<!<)<[A-Za-z0-9_, ]+>(?!>)/.test(line)) {
         errors.push({
           line: block.startLine + idx + 1,
           rule: 'CLASS_GENERICS_UNESCAPED',
