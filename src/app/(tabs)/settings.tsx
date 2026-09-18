@@ -64,7 +64,7 @@ export default function SettingsScreen() {
       setUserEmail(user?.email || null);
       if (user && family?.id) {
         realtimeSync.startRealtimeSync(family.id);
-        if (notificationPreferences.push_enabled) {
+        if (Platform.OS !== 'web' && notificationPreferences.push_enabled) {
           pushNotificationService.registerForPushNotificationsAsync(user.id);
         }
       }
@@ -78,7 +78,7 @@ export default function SettingsScreen() {
           await migrationService.migrateLocalDataToSupabase(family.id, user.id);
         }
         realtimeSync.startRealtimeSync(family.id);
-        if (notificationPreferences.push_enabled) {
+        if (Platform.OS !== 'web' && notificationPreferences.push_enabled) {
           pushNotificationService.registerForPushNotificationsAsync(user.id);
         }
       } else {
@@ -98,7 +98,7 @@ export default function SettingsScreen() {
 
   const handleSignOut = async () => {
     const user = await authService.getUser();
-    if (user) {
+    if (user && Platform.OS !== 'web') {
       await pushNotificationService.unregisterPushTokenAsync(user.id);
     }
     await authService.signOut();
@@ -108,7 +108,7 @@ export default function SettingsScreen() {
 
   const handleTogglePushMaster = async (enabled: boolean) => {
     updateNotificationPreferences({ push_enabled: enabled });
-    if (enabled) {
+    if (enabled && Platform.OS !== 'web') {
       const user = await authService.getUser();
       if (user) {
         await pushNotificationService.registerForPushNotificationsAsync(user.id);
@@ -564,8 +564,8 @@ export default function SettingsScreen() {
         <View
           style={{
             flexDirection: 'row',
-            justifyContent: 'space-between',
             alignItems: 'center',
+            justifyContent: 'space-between',
             backgroundColor: theme.isDark
               ? theme.colors.surfaceContainerHigh
               : theme.colors.surfaceSubtle,
@@ -576,19 +576,33 @@ export default function SettingsScreen() {
             marginBottom: spacing.md,
           }}
         >
-          <Text
-            style={{
-              color: theme.colors.textPrimary,
-              fontSize: typography.fontSizes.md,
-              fontWeight: typography.fontWeights.bold,
-              flex: 1,
-              marginRight: spacing.sm,
-            }}
-          >
-            {t.notifications.pushEnabledLabel}
-          </Text>
+          <View style={{ flex: 1, marginRight: spacing.sm }}>
+            <Text
+              style={{
+                color: theme.colors.textPrimary,
+                fontSize: typography.fontSizes.md,
+                fontWeight: typography.fontWeights.bold,
+              }}
+            >
+              {t.notifications.pushEnabledLabel}
+            </Text>
+            {Platform.OS === 'web' && (
+              <Text
+                style={{
+                  color: theme.colors.textSecondary,
+                  fontSize: typography.fontSizes.xs,
+                  marginTop: 2,
+                }}
+              >
+                {locale === 'it'
+                  ? 'Disattivato su browser Web (supportato su iOS e Android)'
+                  : 'Deactivated in Web browser (supported on iOS & Android)'}
+              </Text>
+            )}
+          </View>
           <Switch
-            value={notificationPreferences.push_enabled}
+            value={Platform.OS === 'web' ? false : notificationPreferences.push_enabled}
+            disabled={Platform.OS === 'web'}
             onValueChange={handleTogglePushMaster}
             trackColor={{ false: theme.colors.border, true: theme.colors.brand }}
             thumbColor="#FFFFFF"
@@ -598,10 +612,12 @@ export default function SettingsScreen() {
         {/* Granular Notification Switches */}
         <View
           style={{
-            opacity: notificationPreferences.push_enabled ? 1 : 0.45,
+            opacity: Platform.OS === 'web' || !notificationPreferences.push_enabled ? 0.45 : 1,
             gap: spacing.sm,
           }}
-          pointerEvents={notificationPreferences.push_enabled ? 'auto' : 'none'}
+          pointerEvents={
+            Platform.OS === 'web' || !notificationPreferences.push_enabled ? 'none' : 'auto'
+          }
         >
           {/* Group 1: Activity */}
           <Text

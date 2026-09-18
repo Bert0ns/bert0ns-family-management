@@ -1,24 +1,60 @@
 import { Platform } from 'react-native';
-import * as Notifications from 'expo-notifications';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { supabaseLogger } from './logger';
 
-// Configure foreground notification presentation
+// Type-only import ensures zero runtime bundle overhead or native side-effects on Web
+import type * as NotificationsType from 'expo-notifications';
+
+/**
+ * Safely resolves the expo-notifications module on native platforms (iOS/Android).
+ * In a web environment, native notification modules are deactivated and return null.
+ */
+function getNotificationsModule(): typeof NotificationsType | null {
+  if (Platform.OS === 'web') {
+    return null;
+  }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('expo-notifications');
+  } catch (err: unknown) {
+    supabaseLogger.warn('expo-notifications module could not be loaded', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
+}
+
+// Configure foreground notification presentation only on native platforms
 if (Platform.OS !== 'web') {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
-  });
+  try {
+    const Notifications = getNotificationsModule();
+    Notifications?.setNotificationHandler?.({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  } catch (err: unknown) {
+    supabaseLogger.warn('Failed to configure foreground notification handler', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 export const pushNotificationService = {
   /**
+   * Check whether push notifications are supported and active on the current platform.
+   */
+  isSupported(): boolean {
+    return Platform.OS !== 'web';
+  },
+
+  /**
    * Request push notification permissions and sync the Expo push token with Supabase.
+   * Completely guarded and deactivated on web platform.
    */
   async registerForPushNotificationsAsync(userId: string): Promise<string | null> {
     if (!userId) {
@@ -28,6 +64,14 @@ export const pushNotificationService = {
 
     if (Platform.OS === 'web') {
       supabaseLogger.debug('Push notifications via Expo token not registered on Web platform');
+      return null;
+    }
+
+    const Notifications = getNotificationsModule();
+    if (!Notifications) {
+      supabaseLogger.warn(
+        'Push notification service unavailable: native notifications module not loaded',
+      );
       return null;
     }
 

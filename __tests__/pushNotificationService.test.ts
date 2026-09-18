@@ -25,6 +25,30 @@ describe('pushNotificationService', () => {
     jest.clearAllMocks();
   });
 
+  describe('isSupported', () => {
+    it('returns false on web platform', () => {
+      const originalOS = Platform.OS;
+      try {
+        Platform.OS = 'web';
+        expect(pushNotificationService.isSupported()).toBe(false);
+      } finally {
+        Platform.OS = originalOS;
+      }
+    });
+
+    it('returns true on native platforms', () => {
+      const originalOS = Platform.OS;
+      try {
+        Platform.OS = 'ios';
+        expect(pushNotificationService.isSupported()).toBe(true);
+        Platform.OS = 'android';
+        expect(pushNotificationService.isSupported()).toBe(true);
+      } finally {
+        Platform.OS = originalOS;
+      }
+    });
+  });
+
   describe('registerForPushNotificationsAsync', () => {
     it('returns null if no userId is provided', async () => {
       const token = await pushNotificationService.registerForPushNotificationsAsync('');

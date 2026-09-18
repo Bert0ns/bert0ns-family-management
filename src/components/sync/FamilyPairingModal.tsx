@@ -78,9 +78,11 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
       if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(currentInviteCode);
       }
-      try {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      } catch {}
+      if (Platform.OS !== 'web') {
+        try {
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } catch {}
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
@@ -115,9 +117,11 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
 
       updateFamilySettings({ invite_code: newCode });
 
-      try {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      } catch {}
+      if (Platform.OS !== 'web') {
+        try {
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } catch {}
+      }
 
       setRegenerated(true);
       setTimeout(() => setRegenerated(false), 2500);
