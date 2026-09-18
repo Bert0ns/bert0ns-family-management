@@ -64,7 +64,7 @@ export function OptionSelector<T extends string | number>({
                 flex: 1,
                 minHeight: 52,
                 paddingVertical: spacing.sm,
-                paddingHorizontal: spacing.sm,
+                paddingHorizontal: spacing.xs,
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: radius.lg,
@@ -82,7 +82,11 @@ export function OptionSelector<T extends string | number>({
                   color: isSelected ? '#FFFFFF' : theme.colors.textPrimary,
                   fontSize: typography.fontSizes.md,
                   fontWeight: typography.fontWeights.bold,
+                  textAlign: 'center',
                 }}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
               >
                 {opt.label}
               </Text>
@@ -93,7 +97,11 @@ export function OptionSelector<T extends string | number>({
                     fontSize: typography.fontSizes.xs,
                     marginTop: 2,
                     fontWeight: typography.fontWeights.medium,
+                    textAlign: 'center',
                   }}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.8}
                 >
                   {opt.sublabel}
                 </Text>

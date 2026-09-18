@@ -25,28 +25,42 @@ export const SchemaViewer: React.FC<SchemaViewerProps> = ({ onLoadSample }) => {
           justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: spacing.sm,
+          gap: spacing.xs,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          <Code size={18} color={theme.colors.brand} />
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.xs,
+            flex: 1,
+            minWidth: 0,
+          }}
+        >
+          <Code size={18} color={theme.colors.brand} style={{ flexShrink: 0 }} />
           <Text
             style={{
               color: theme.colors.textPrimary,
               fontSize: typography.fontSizes.md,
               fontWeight: typography.fontWeights.bold,
+              flexShrink: 1,
             }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {t.import.schemaTitle}
           </Text>
         </View>
 
-        <Button
-          title={t.import.loadSample}
-          variant="secondary"
-          size="sm"
-          icon={<Sparkles size={14} color={theme.colors.brand} />}
-          onPress={onLoadSample}
-        />
+        <View style={{ flexShrink: 0 }}>
+          <Button
+            title={t.import.loadSample}
+            variant="secondary"
+            size="sm"
+            icon={<Sparkles size={14} color={theme.colors.brand} />}
+            onPress={onLoadSample}
+          />
+        </View>
       </View>
 
       <Text

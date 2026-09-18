@@ -159,7 +159,13 @@ export default function AddExpenseScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140 }}
+      contentContainerStyle={{
+        padding: spacing.lg,
+        paddingBottom: 140,
+        maxWidth: 760,
+        width: '100%',
+        alignSelf: 'center',
+      }}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >

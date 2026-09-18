@@ -1,5 +1,12 @@
 import { useEffect, type ComponentType } from 'react';
-import { View, StyleSheet, Platform, Pressable, type ColorValue } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Platform,
+  Pressable,
+  useWindowDimensions,
+  type ColorValue,
+} from 'react-native';
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,7 +24,13 @@ export default function TabsLayout() {
   const { theme } = useTheme();
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
   const family = useAppStore((s) => s.family);
+
+  // Responsive floating pill dimensions
+  const isWideScreen = windowWidth >= 768;
+  const barWidth = isWideScreen ? Math.min(windowWidth - 48, 520) : windowWidth - 28;
+  const barLeft = Math.max(14, (windowWidth - barWidth) / 2);
 
   // Global Sync & Auth Lifecycle Bootstrap
   useEffect(() => {
@@ -108,8 +121,8 @@ export default function TabsLayout() {
         tabBarStyle: {
           position: 'absolute',
           bottom: floatingBottom,
-          left: 14,
-          right: 14,
+          left: barLeft,
+          width: barWidth,
           height: 62,
           backgroundColor: 'transparent',
           borderRadius: 31,

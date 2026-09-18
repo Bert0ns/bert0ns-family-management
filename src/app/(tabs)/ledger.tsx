@@ -211,438 +211,448 @@ export default function LedgerScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      {/* Top Search & Actions Header */}
-      <View
-        style={{
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.lg,
-          paddingBottom: spacing.sm,
-          backgroundColor: theme.colors.surface,
-          borderBottomWidth: 1.5,
-          borderBottomColor: theme.colors.borderTactile,
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Input
-              placeholder={t.ledger.searchPlaceholder}
-              value={filters.searchQuery}
-              onChangeText={(text) => setFilters({ searchQuery: text })}
-              leftIcon={<Search size={18} color={theme.colors.textMuted} strokeWidth={2.5} />}
-              rightIcon={
-                filters.searchQuery ? (
-                  <TouchableOpacity onPress={() => setFilters({ searchQuery: '' })}>
-                    <X size={18} color={theme.colors.textSecondary} strokeWidth={2.5} />
-                  </TouchableOpacity>
-                ) : undefined
-              }
-              containerStyle={{ marginBottom: 0 }}
-            />
-          </View>
+      <View style={{ flex: 1, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
+        {/* Top Search & Actions Header */}
+        <View
+          style={{
+            paddingHorizontal: spacing.lg,
+            paddingTop: spacing.lg,
+            paddingBottom: spacing.sm,
+            backgroundColor: theme.colors.surface,
+            borderBottomWidth: 1.5,
+            borderBottomColor: theme.colors.borderTactile,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Input
+                placeholder={t.ledger.searchPlaceholder}
+                value={filters.searchQuery}
+                onChangeText={(text) => setFilters({ searchQuery: text })}
+                leftIcon={<Search size={18} color={theme.colors.textMuted} strokeWidth={2.5} />}
+                rightIcon={
+                  filters.searchQuery ? (
+                    <TouchableOpacity onPress={() => setFilters({ searchQuery: '' })}>
+                      <X size={18} color={theme.colors.textSecondary} strokeWidth={2.5} />
+                    </TouchableOpacity>
+                  ) : undefined
+                }
+                containerStyle={{ marginBottom: 0 }}
+              />
+            </View>
 
-          {/* Filter Modal Button */}
-          <TouchableOpacity
-            activeOpacity={0.75}
-            onPress={() => setIsFilterModalVisible(true)}
-            accessibilityLabel={t.ledger.filtersTitle}
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: radius.lg,
-              backgroundColor: hasActiveFilters
-                ? theme.colors.brand
-                : theme.isDark
+            {/* Filter Modal Button */}
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={() => setIsFilterModalVisible(true)}
+              accessibilityLabel={t.ledger.filtersTitle}
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: radius.lg,
+                backgroundColor: hasActiveFilters
+                  ? theme.colors.brand
+                  : theme.isDark
+                    ? theme.colors.surfaceContainerHigh
+                    : theme.colors.surfaceSubtle,
+                borderWidth: 1.5,
+                borderColor: hasActiveFilters ? theme.colors.brand : theme.colors.borderTactile,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Filter
+                size={20}
+                color={hasActiveFilters ? '#FFFFFF' : theme.colors.textPrimary}
+                strokeWidth={2.5}
+              />
+              {activeFiltersCount > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: -4,
+                    right: -4,
+                    backgroundColor: theme.colors.danger,
+                    borderRadius: radius.full,
+                    width: 20,
+                    height: 20,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: 2,
+                    borderColor: theme.colors.surface,
+                  }}
+                >
+                  <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: 'bold' }}>
+                    {activeFiltersCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {/* Bulk Import JSON Button */}
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={() => router.push('/(tabs)/import')}
+              accessibilityLabel={t.ledger.bulkImportButton}
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: radius.lg,
+                backgroundColor: theme.isDark
                   ? theme.colors.surfaceContainerHigh
                   : theme.colors.surfaceSubtle,
-              borderWidth: 1.5,
-              borderColor: hasActiveFilters ? theme.colors.brand : theme.colors.borderTactile,
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Filter
-              size={20}
-              color={hasActiveFilters ? '#FFFFFF' : theme.colors.textPrimary}
-              strokeWidth={2.5}
-            />
-            {activeFiltersCount > 0 && (
-              <View
-                style={{
-                  position: 'absolute',
-                  top: -4,
-                  right: -4,
-                  backgroundColor: theme.colors.danger,
-                  borderRadius: radius.full,
-                  width: 20,
-                  height: 20,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderWidth: 2,
-                  borderColor: theme.colors.surface,
-                }}
-              >
-                <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: 'bold' }}>
-                  {activeFiltersCount}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* Bulk Import JSON Button */}
-          <TouchableOpacity
-            activeOpacity={0.75}
-            onPress={() => router.push('/(tabs)/import')}
-            accessibilityLabel={t.ledger.bulkImportButton}
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: radius.lg,
-              backgroundColor: theme.isDark
-                ? theme.colors.surfaceContainerHigh
-                : theme.colors.surfaceSubtle,
-              borderWidth: 1.5,
-              borderColor: theme.colors.borderTactile,
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <FileJson size={20} color={theme.colors.brand} strokeWidth={2.5} />
-          </TouchableOpacity>
-
-          {/* Quick Add Expense Button */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => router.push('/expense/add')}
-            accessibilityLabel={t.common.add}
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: radius.lg,
-              backgroundColor: theme.colors.brand,
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 1,
-              borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)',
-              flexShrink: 0,
-            }}
-          >
-            <Plus size={22} color="#FFFFFF" strokeWidth={3} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Quick Horizontal Period Strip */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing.sm, paddingVertical: spacing.sm }}
-        >
-          {periodOptions.map((opt) => {
-            const isSelected = activePeriodPreset === opt.key;
-            return (
-              <TouchableOpacity
-                key={opt.key}
-                activeOpacity={0.75}
-                onPress={() => setFilters({ periodPreset: opt.key })}
-                style={{
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: spacing.xs + 3,
-                  borderRadius: radius.full,
-                  backgroundColor: isSelected
-                    ? theme.colors.brand
-                    : theme.isDark
-                      ? theme.colors.surfaceContainerHigh
-                      : theme.colors.surfaceSubtle,
-                  borderWidth: 1.5,
-                  borderColor: isSelected ? theme.colors.brand : theme.colors.borderTactile,
-                }}
-              >
-                <Text
-                  style={{
-                    color: isSelected ? '#FFFFFF' : theme.colors.textSecondary,
-                    fontSize: typography.fontSizes.sm,
-                    fontWeight: isSelected
-                      ? typography.fontWeights.bold
-                      : typography.fontWeights.medium,
-                  }}
-                >
-                  {opt.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
-        {/* Active Filter Chips Strip */}
-        {hasActiveFilters && (
-          <View
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              gap: spacing.xs,
-              alignItems: 'center',
-              paddingTop: spacing.xs,
-            }}
-          >
-            {selectedMember && (
-              <TouchableOpacity
-                onPress={() => setFilters({ selectedMemberId: undefined })}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 6,
-                  paddingVertical: 6,
-                  paddingHorizontal: spacing.sm,
-                  borderRadius: radius.full,
-                  backgroundColor: theme.colors.surfaceSubtle,
-                  borderWidth: 1.5,
-                  borderColor: selectedMember.color_code,
-                }}
-              >
-                <Avatar
-                  name={selectedMember.display_name}
-                  colorCode={selectedMember.color_code}
-                  size="sm"
-                />
-                <Text
-                  style={{
-                    color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.xs,
-                    fontWeight: typography.fontWeights.bold,
-                  }}
-                >
-                  {selectedMember.display_name}
-                </Text>
-                <X size={14} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            )}
-
-            {selectedCategory && (
-              <TouchableOpacity
-                onPress={() => setFilters({ selectedCategoryId: undefined })}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 6,
-                  paddingVertical: 6,
-                  paddingHorizontal: spacing.sm,
-                  borderRadius: radius.full,
-                  backgroundColor: theme.colors.surfaceSubtle,
-                  borderWidth: 1.5,
-                  borderColor: selectedCategory.color,
-                }}
-              >
-                <IconHelper name={selectedCategory.icon} size={14} color={selectedCategory.color} />
-                <Text
-                  style={{
-                    color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.xs,
-                    fontWeight: typography.fontWeights.bold,
-                  }}
-                >
-                  {getLocalizedCategoryName(selectedCategory, t)}
-                </Text>
-                <X size={14} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            )}
-
-            {activeAmountBracket !== 'all' && (
-              <TouchableOpacity
-                onPress={() => setFilters({ amountBracket: 'all' })}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 6,
-                  paddingVertical: 6,
-                  paddingHorizontal: spacing.sm,
-                  borderRadius: radius.full,
-                  backgroundColor: theme.colors.surfaceSubtle,
-                  borderWidth: 1.5,
-                  borderColor: theme.colors.brand,
-                }}
-              >
-                <Coins size={14} color={theme.colors.brand} />
-                <Text
-                  style={{
-                    color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.xs,
-                    fontWeight: typography.fontWeights.bold,
-                  }}
-                >
-                  {amountOptions.find((a) => a.key === activeAmountBracket)?.label}
-                </Text>
-                <X size={14} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            )}
-
-            {/* Clear All Chip */}
-            <TouchableOpacity
-              onPress={handleResetFilters}
-              style={{
-                flexDirection: 'row',
+                borderWidth: 1.5,
+                borderColor: theme.colors.borderTactile,
                 alignItems: 'center',
-                gap: 4,
-                paddingVertical: 6,
-                paddingHorizontal: spacing.sm,
-                borderRadius: radius.full,
-                backgroundColor: theme.colors.dangerBg,
-                borderWidth: 1,
-                borderColor: theme.colors.danger,
+                justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
-              <RotateCcw size={12} color={theme.colors.danger} />
-              <Text
-                style={{
-                  color: theme.colors.danger,
-                  fontSize: typography.fontSizes.xs,
-                  fontWeight: typography.fontWeights.bold,
-                }}
-              >
-                {t.ledger.clearFilters}
-              </Text>
+              <FileJson size={20} color={theme.colors.brand} strokeWidth={2.5} />
+            </TouchableOpacity>
+
+            {/* Quick Add Expense Button */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push('/expense/add')}
+              accessibilityLabel={t.common.add}
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: radius.lg,
+                backgroundColor: theme.colors.brand,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 1,
+                borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)',
+                flexShrink: 0,
+              }}
+            >
+              <Plus size={22} color="#FFFFFF" strokeWidth={3} />
             </TouchableOpacity>
           </View>
-        )}
-      </View>
 
-      {/* Filter Summary & Sorting Header */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: spacing.sm,
-          paddingHorizontal: spacing.lg,
-          paddingVertical: spacing.sm + 2,
-        }}
-      >
-        <TouchableOpacity
-          onPress={toggleSort}
-          activeOpacity={0.75}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1, minWidth: 0 }}
-        >
-          <ArrowDownUp
-            size={16}
-            color={theme.colors.brand}
-            strokeWidth={2.5}
-            style={{ flexShrink: 0 }}
-          />
-          <Text
-            style={{
-              color: theme.colors.brand,
-              fontSize: typography.fontSizes.sm,
-              fontWeight: typography.fontWeights.bold,
-              flexShrink: 1,
-            }}
-            numberOfLines={1}
-            ellipsizeMode="tail"
+          {/* Quick Horizontal Period Strip */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: spacing.sm, paddingVertical: spacing.sm }}
           >
-            {getSortLabel()}
-          </Text>
-        </TouchableOpacity>
+            {periodOptions.map((opt) => {
+              const isSelected = activePeriodPreset === opt.key;
+              return (
+                <TouchableOpacity
+                  key={opt.key}
+                  activeOpacity={0.75}
+                  onPress={() => setFilters({ periodPreset: opt.key })}
+                  style={{
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: spacing.xs + 3,
+                    borderRadius: radius.full,
+                    backgroundColor: isSelected
+                      ? theme.colors.brand
+                      : theme.isDark
+                        ? theme.colors.surfaceContainerHigh
+                        : theme.colors.surfaceSubtle,
+                    borderWidth: 1.5,
+                    borderColor: isSelected ? theme.colors.brand : theme.colors.borderTactile,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: isSelected ? '#FFFFFF' : theme.colors.textSecondary,
+                      fontSize: typography.fontSizes.sm,
+                      fontWeight: isSelected
+                        ? typography.fontWeights.bold
+                        : typography.fontWeights.medium,
+                    }}
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
 
-        <Text
-          style={{
-            color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.sm,
-            fontWeight: typography.fontWeights.heavy,
-            flexShrink: 0,
-          }}
-          numberOfLines={1}
-        >
-          {filteredExpenses.length} {t.ledger.transactionsCount} • {family.currency}
-          {totalFilteredAmount.toFixed(2)}
-        </Text>
-      </View>
-
-      {/* Expense List */}
-      <FlatList
-        data={filteredExpenses}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: spacing.lg, paddingBottom: 130 }}
-        renderItem={({ item }) => {
-          const cat = categories.find((c) => c.id === item.category_id);
-          const mem = members.find((m) => m.id === item.paid_by_member_id);
-          return (
-            <ExpenseItem
-              expense={item}
-              category={cat}
-              member={mem}
-              currency={family.currency}
-              onPress={() => setSelectedExpense(item)}
-            />
-          );
-        }}
-        ListEmptyComponent={
-          <Card
-            padding="lg"
-            style={{
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginTop: spacing.xl,
-              gap: spacing.md,
-            }}
-          >
-            <Text
-              style={{
-                color: theme.colors.textSecondary,
-                fontSize: typography.fontSizes.lg,
-                fontWeight: typography.fontWeights.semibold,
-                textAlign: 'center',
-              }}
-            >
-              {t.ledger.noExpensesMatch}
-            </Text>
+          {/* Active Filter Chips Strip */}
+          {hasActiveFilters && (
             <View
               style={{
                 flexDirection: 'row',
-                gap: spacing.sm,
                 flexWrap: 'wrap',
-                justifyContent: 'center',
+                gap: spacing.xs,
+                alignItems: 'center',
+                paddingTop: spacing.xs,
               }}
             >
-              <Button
-                title={t.ledger.resetFilters}
-                variant="outline"
-                size="md"
+              {selectedMember && (
+                <TouchableOpacity
+                  onPress={() => setFilters({ selectedMemberId: undefined })}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: spacing.sm,
+                    borderRadius: radius.full,
+                    backgroundColor: theme.colors.surfaceSubtle,
+                    borderWidth: 1.5,
+                    borderColor: selectedMember.color_code,
+                  }}
+                >
+                  <Avatar
+                    name={selectedMember.display_name}
+                    colorCode={selectedMember.color_code}
+                    size="sm"
+                  />
+                  <Text
+                    style={{
+                      color: theme.colors.textPrimary,
+                      fontSize: typography.fontSizes.xs,
+                      fontWeight: typography.fontWeights.bold,
+                    }}
+                  >
+                    {selectedMember.display_name}
+                  </Text>
+                  <X size={14} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+
+              {selectedCategory && (
+                <TouchableOpacity
+                  onPress={() => setFilters({ selectedCategoryId: undefined })}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: spacing.sm,
+                    borderRadius: radius.full,
+                    backgroundColor: theme.colors.surfaceSubtle,
+                    borderWidth: 1.5,
+                    borderColor: selectedCategory.color,
+                  }}
+                >
+                  <IconHelper
+                    name={selectedCategory.icon}
+                    size={14}
+                    color={selectedCategory.color}
+                  />
+                  <Text
+                    style={{
+                      color: theme.colors.textPrimary,
+                      fontSize: typography.fontSizes.xs,
+                      fontWeight: typography.fontWeights.bold,
+                    }}
+                  >
+                    {getLocalizedCategoryName(selectedCategory, t)}
+                  </Text>
+                  <X size={14} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+
+              {activeAmountBracket !== 'all' && (
+                <TouchableOpacity
+                  onPress={() => setFilters({ amountBracket: 'all' })}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: spacing.sm,
+                    borderRadius: radius.full,
+                    backgroundColor: theme.colors.surfaceSubtle,
+                    borderWidth: 1.5,
+                    borderColor: theme.colors.brand,
+                  }}
+                >
+                  <Coins size={14} color={theme.colors.brand} />
+                  <Text
+                    style={{
+                      color: theme.colors.textPrimary,
+                      fontSize: typography.fontSizes.xs,
+                      fontWeight: typography.fontWeights.bold,
+                    }}
+                  >
+                    {amountOptions.find((a) => a.key === activeAmountBracket)?.label}
+                  </Text>
+                  <X size={14} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+
+              {/* Clear All Chip */}
+              <TouchableOpacity
                 onPress={handleResetFilters}
-              />
-              <Button
-                title={t.ledger.bulkImportButton}
-                variant="secondary"
-                size="md"
-                icon={<FileJson size={18} color={theme.colors.brand} strokeWidth={2.5} />}
-                onPress={() => router.push('/(tabs)/import')}
-              />
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingVertical: 6,
+                  paddingHorizontal: spacing.sm,
+                  borderRadius: radius.full,
+                  backgroundColor: theme.colors.dangerBg,
+                  borderWidth: 1,
+                  borderColor: theme.colors.danger,
+                }}
+              >
+                <RotateCcw size={12} color={theme.colors.danger} />
+                <Text
+                  style={{
+                    color: theme.colors.danger,
+                    fontSize: typography.fontSizes.xs,
+                    fontWeight: typography.fontWeights.bold,
+                  }}
+                >
+                  {t.ledger.clearFilters}
+                </Text>
+              </TouchableOpacity>
             </View>
-          </Card>
-        }
-      />
+          )}
+        </View>
 
-      {/* Expense Detail Modal */}
-      <ExpenseDetailModal
-        visible={!!selectedExpense}
-        expense={selectedExpense}
-        category={categories.find((c) => c.id === selectedExpense?.category_id)}
-        member={members.find((m) => m.id === selectedExpense?.paid_by_member_id)}
-        allMembers={members}
-        currency={family.currency}
-        onClose={() => setSelectedExpense(null)}
-        onDelete={deleteExpense}
-      />
+        {/* Filter Summary & Sorting Header */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: spacing.sm,
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.sm + 2,
+          }}
+        >
+          <TouchableOpacity
+            onPress={toggleSort}
+            activeOpacity={0.75}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}
+          >
+            <ArrowDownUp
+              size={16}
+              color={theme.colors.brand}
+              strokeWidth={2.5}
+              style={{ flexShrink: 0 }}
+            />
+            <Text
+              style={{
+                color: theme.colors.brand,
+                fontSize: typography.fontSizes.sm,
+                fontWeight: typography.fontWeights.bold,
+                flexShrink: 1,
+              }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+            >
+              {getSortLabel()}
+            </Text>
+          </TouchableOpacity>
 
-      {/* Detailed Senior-Accessible Filter Modal */}
-      <FormModal
-        visible={isFilterModalVisible}
-        title={t.ledger.filtersTitle}
-        icon={<Filter size={24} color={theme.colors.brand} strokeWidth={2.5} />}
-        onClose={() => setIsFilterModalVisible(false)}
-        onSubmit={() => setIsFilterModalVisible(false)}
-        submitTitle={t.ledger.applyFilters}
-        cancelTitle={t.common.close}
-      >
-        <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false}>
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              fontSize: typography.fontSizes.sm,
+              fontWeight: typography.fontWeights.heavy,
+              flexShrink: 0,
+              maxWidth: '50%',
+              textAlign: 'right',
+            }}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.85}
+          >
+            {filteredExpenses.length} {t.ledger.transactionsCount} • {family.currency}
+            {totalFilteredAmount.toFixed(2)}
+          </Text>
+        </View>
+
+        {/* Expense List */}
+        <FlatList
+          data={filteredExpenses}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ padding: spacing.lg, paddingBottom: 130 }}
+          renderItem={({ item }) => {
+            const cat = categories.find((c) => c.id === item.category_id);
+            const mem = members.find((m) => m.id === item.paid_by_member_id);
+            return (
+              <ExpenseItem
+                expense={item}
+                category={cat}
+                member={mem}
+                currency={family.currency}
+                onPress={() => setSelectedExpense(item)}
+              />
+            );
+          }}
+          ListEmptyComponent={
+            <Card
+              padding="lg"
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: spacing.xl,
+                gap: spacing.md,
+              }}
+            >
+              <Text
+                style={{
+                  color: theme.colors.textSecondary,
+                  fontSize: typography.fontSizes.lg,
+                  fontWeight: typography.fontWeights.semibold,
+                  textAlign: 'center',
+                }}
+              >
+                {t.ledger.noExpensesMatch}
+              </Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  gap: spacing.sm,
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                }}
+              >
+                <Button
+                  title={t.ledger.resetFilters}
+                  variant="outline"
+                  size="md"
+                  onPress={handleResetFilters}
+                />
+                <Button
+                  title={t.ledger.bulkImportButton}
+                  variant="secondary"
+                  size="md"
+                  icon={<FileJson size={18} color={theme.colors.brand} strokeWidth={2.5} />}
+                  onPress={() => router.push('/(tabs)/import')}
+                />
+              </View>
+            </Card>
+          }
+        />
+
+        {/* Expense Detail Modal */}
+        <ExpenseDetailModal
+          visible={!!selectedExpense}
+          expense={selectedExpense}
+          category={categories.find((c) => c.id === selectedExpense?.category_id)}
+          member={members.find((m) => m.id === selectedExpense?.paid_by_member_id)}
+          allMembers={members}
+          currency={family.currency}
+          onClose={() => setSelectedExpense(null)}
+          onDelete={deleteExpense}
+        />
+
+        {/* Detailed Senior-Accessible Filter Modal */}
+        <FormModal
+          visible={isFilterModalVisible}
+          title={t.ledger.filtersTitle}
+          icon={<Filter size={24} color={theme.colors.brand} strokeWidth={2.5} />}
+          onClose={() => setIsFilterModalVisible(false)}
+          onSubmit={() => setIsFilterModalVisible(false)}
+          submitTitle={t.ledger.applyFilters}
+          cancelTitle={t.common.close}
+        >
           <View style={{ gap: spacing.xl, paddingVertical: spacing.xs }}>
             {/* Period Section */}
             <View>
@@ -803,12 +813,12 @@ export default function LedgerScreen() {
                         paddingHorizontal: spacing.md,
                         borderRadius: radius.lg,
                         backgroundColor: isSelected
-                          ? theme.colors.brand
+                          ? `${m.color_code}25`
                           : theme.isDark
                             ? theme.colors.surfaceContainerHigh
                             : theme.colors.surfaceSubtle,
                         borderWidth: 1.5,
-                        borderColor: isSelected ? theme.colors.brand : theme.colors.borderTactile,
+                        borderColor: isSelected ? m.color_code : theme.colors.borderTactile,
                       }}
                     >
                       <Avatar
@@ -819,9 +829,11 @@ export default function LedgerScreen() {
                       />
                       <Text
                         style={{
-                          color: isSelected ? '#FFFFFF' : theme.colors.textPrimary,
+                          color: isSelected ? m.color_code : theme.colors.textPrimary,
                           fontSize: typography.fontSizes.sm,
-                          fontWeight: typography.fontWeights.bold,
+                          fontWeight: isSelected
+                            ? typography.fontWeights.heavy
+                            : typography.fontWeights.semibold,
                         }}
                       >
                         {m.display_name}
@@ -951,8 +963,8 @@ export default function LedgerScreen() {
               </TouchableOpacity>
             )}
           </View>
-        </ScrollView>
-      </FormModal>
+        </FormModal>
+      </View>
     </View>
   );
 }

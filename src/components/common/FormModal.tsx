@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { X, Check } from 'lucide-react-native';
 import { useTheme } from '@/theme';
@@ -34,6 +35,8 @@ export const FormModal: React.FC<FormModalProps> = ({
   children,
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const isDesktop = windowWidth >= 768;
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -42,46 +45,66 @@ export const FormModal: React.FC<FormModalProps> = ({
         style={{
           flex: 1,
           backgroundColor: theme.isDark ? 'rgba(0,0,0,0.65)' : 'rgba(15,23,42,0.35)',
-          justifyContent: 'flex-end',
+          justifyContent: isDesktop ? 'center' : 'flex-end',
+          alignItems: isDesktop ? 'center' : 'stretch',
+          padding: isDesktop ? spacing.lg : 0,
         }}
       >
         <View
           style={[
             {
               backgroundColor: theme.colors.surface,
+              borderRadius: isDesktop ? radius.xxl : undefined,
               borderTopLeftRadius: radius.xxl,
               borderTopRightRadius: radius.xxl,
+              borderBottomLeftRadius: isDesktop ? radius.xxl : 0,
+              borderBottomRightRadius: isDesktop ? radius.xxl : 0,
               paddingHorizontal: spacing.lg,
               paddingBottom: spacing.xl,
-              paddingTop: spacing.sm,
-              maxHeight: '90%',
+              paddingTop: isDesktop ? spacing.lg : spacing.sm,
+              maxHeight: isDesktop ? '85%' : '90%',
+              width: isDesktop ? '100%' : undefined,
+              maxWidth: isDesktop ? 540 : undefined,
               borderWidth: 1,
               borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.8)',
-              borderBottomWidth: 0,
+              borderBottomWidth: isDesktop ? 1 : 0,
             },
             Platform.OS === 'web' &&
               ({
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
-                boxShadow: theme.isDark
-                  ? '0 -8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
-                  : '0 -8px 32px rgba(148, 163, 184, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
+                boxShadow: isDesktop
+                  ? theme.isDark
+                    ? '0 24px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)'
+                    : '0 24px 48px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05)'
+                  : theme.isDark
+                    ? '0 -8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+                    : '0 -8px 32px rgba(148, 163, 184, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
               } as any),
           ]}
         >
-          {/* Apple Sheet Grabber Handle */}
-          <View
-            style={{ alignItems: 'center', paddingVertical: spacing.xs, marginBottom: spacing.md }}
-          >
+          {/* Apple Sheet Grabber Handle (Mobile only) */}
+          {!isDesktop && (
             <View
               style={{
-                width: 36,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)',
+                alignItems: 'center',
+                paddingVertical: spacing.xs,
+                marginBottom: spacing.md,
               }}
-            />
-          </View>
+            >
+              <View
+                style={{
+                  width: 36,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: theme.isDark
+                    ? 'rgba(255, 255, 255, 0.2)'
+                    : 'rgba(0, 0, 0, 0.15)',
+                }}
+              />
+            </View>
+          )}
+
           {/* Header */}
           <View
             style={{
@@ -108,6 +131,7 @@ export const FormModal: React.FC<FormModalProps> = ({
                   fontSize: typography.fontSizes.xl,
                   fontWeight: typography.fontWeights.bold,
                   flex: 1,
+                  minWidth: 0,
                 }}
                 numberOfLines={1}
               >

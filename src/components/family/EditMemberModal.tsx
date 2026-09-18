@@ -75,17 +75,10 @@ const EditMemberContent: React.FC<EditMemberContentProps> = ({
       return;
     }
 
-    const confirmMessage = `${t.family.deleteMemberConfirmMessage}
-
-â¢ ${memberExpenses.length} ${t.dashboard.totalTransactions.toLowerCase()} (${currency}${totalSpent.toFixed(2)})
-â¢ ${splitInvolvements} ${t.family.splitShares}`;
+    const confirmMessage = `${t.family.deleteMemberConfirmMessage}\n\n• ${memberExpenses.length} ${t.dashboard.totalTransactions.toLowerCase()} (${currency}${totalSpent.toFixed(2)})\n• ${splitInvolvements} ${t.family.splitShares}`;
 
     if (Platform.OS === 'web') {
-      if (
-        window.confirm(`${t.family.deleteMemberConfirmTitle}
-
-${confirmMessage}`)
-      ) {
+      if (window.confirm(`${t.family.deleteMemberConfirmTitle}\n\n${confirmMessage}`)) {
         onDelete(member.id);
         onClose();
       }
@@ -190,6 +183,7 @@ ${confirmMessage}`)
                     backgroundColor: isSelected ? `${theme.colors.brand}20` : theme.colors.surface,
                     alignItems: 'center',
                     justifyContent: 'center',
+                    flexShrink: 0,
                   }}
                 >
                   <Icon
@@ -198,7 +192,7 @@ ${confirmMessage}`)
                   />
                 </View>
 
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <Text
                     style={{
                       color: isSelected ? theme.colors.brand : theme.colors.textPrimary,
@@ -207,6 +201,7 @@ ${confirmMessage}`)
                         ? typography.fontWeights.bold
                         : typography.fontWeights.semibold,
                     }}
+                    numberOfLines={1}
                   >
                     {opt.title}
                   </Text>
@@ -216,12 +211,15 @@ ${confirmMessage}`)
                       fontSize: typography.fontSizes.xs,
                       marginTop: 2,
                     }}
+                    numberOfLines={2}
                   >
                     {opt.desc}
                   </Text>
                 </View>
 
-                {isSelected && <Check size={18} color={theme.colors.brand} />}
+                {isSelected && (
+                  <Check size={18} color={theme.colors.brand} style={{ flexShrink: 0 }} />
+                )}
               </TouchableOpacity>
             );
           })}
@@ -240,7 +238,7 @@ ${confirmMessage}`)
         >
           {t.family.memberColorLabel}
         </Text>
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
           {memberColors.map((mc) => {
             const isSelected = colorCode === mc.bg;
             return (
@@ -313,7 +311,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
   member,
   expenses,
   isOnlyMember,
-  currency = 'â¬',
+  currency = '€',
   onClose,
   onSave,
   onDelete,
