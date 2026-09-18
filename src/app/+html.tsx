@@ -49,6 +49,39 @@ export default function Root({ children }: { children: React.ReactNode }) {
                   background-color: #F8FAFC;
                 }
               }
+
+              /* Sleek, theme-aware scrollbars */
+              ::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+              }
+              ::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              ::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 9999px;
+              }
+              ::-webkit-scrollbar-thumb:hover {
+                background: rgba(255, 255, 255, 0.35);
+              }
+              @media (prefers-color-scheme: light) {
+                ::-webkit-scrollbar-thumb {
+                  background: rgba(0, 0, 0, 0.2);
+                }
+                ::-webkit-scrollbar-thumb:hover {
+                  background: rgba(0, 0, 0, 0.35);
+                }
+              }
+              * {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+              }
+              @media (prefers-color-scheme: light) {
+                * {
+                  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+                }
+              }
             `,
           }}
         />

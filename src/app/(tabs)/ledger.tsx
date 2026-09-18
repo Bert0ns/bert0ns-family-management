@@ -572,6 +572,7 @@ export default function LedgerScreen() {
           data={filteredExpenses}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: spacing.lg, paddingBottom: 130 }}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => {
             const cat = categories.find((c) => c.id === item.category_id);
             const mem = members.find((m) => m.id === item.paid_by_member_id);
