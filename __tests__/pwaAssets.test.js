@@ -80,4 +80,38 @@ describe('PWA and Web Assets Configuration', () => {
     expect(rootHtml).toContain('apple-touch-icon');
     expect(rootHtml).toContain('favicon-32x32.png');
   });
+
+  test('public/sw.js exists and implements offline caching lifecycle events', () => {
+    const swPath = path.join(publicDir, 'sw.js');
+    expect(fs.existsSync(swPath)).toBe(true);
+
+    const swContent = fs.readFileSync(swPath, 'utf8');
+
+    // Verify cache versioning
+    expect(swContent).toContain('const CACHE_NAME =');
+
+    // Verify precache list includes essential assets
+    expect(swContent).toContain("'/manifest.json'");
+    expect(swContent).toContain("'/icon-192.png'");
+    expect(swContent).toContain("'/icon-512.png'");
+
+    // Verify service worker lifecycle listeners
+    expect(swContent).toContain("addEventListener('install'");
+    expect(swContent).toContain("addEventListener('activate'");
+    expect(swContent).toContain("addEventListener('fetch'");
+
+    // Verify origin isolation (does not cache external cloud APIs like Supabase)
+    expect(swContent).toContain('url.origin !== self.location.origin');
+
+    // Verify SPA navigate fallback
+    expect(swContent).toContain("request.mode === 'navigate'");
+  });
+
+  test('public/index.html and src/app/+html.tsx register /sw.js', () => {
+    const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+    const rootHtml = fs.readFileSync(rootHtmlPath, 'utf8');
+
+    expect(indexHtml).toContain("navigator.serviceWorker.register('/sw.js')");
+    expect(rootHtml).toContain("navigator.serviceWorker.register('/sw.js')");
+  });
 });

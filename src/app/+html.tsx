@@ -53,6 +53,21 @@ export default function Root({ children }: { children: React.ReactNode }) {
           }}
         />
 
+        {/* Register Service Worker for offline PWA capabilities */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined' && 'serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                    console.warn('[SW] Registration failed: ', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
+
         {headNodes}
       </head>
       <body {...bodyAttributes} style={{ backgroundColor: '#0B1326', margin: 0, padding: 0 }}>

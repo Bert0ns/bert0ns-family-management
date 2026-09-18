@@ -48,6 +48,17 @@
         }
       }
     </style>
+
+    <!-- Register Service Worker for offline PWA capabilities -->
+    <script>
+      if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function (err) {
+            console.warn('[SW] Registration failed: ', err);
+          });
+        });
+      }
+    </script>
   </head>
 
   <body>
