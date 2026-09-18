@@ -75,6 +75,14 @@ describe('calculateSettlements (Household Debt Simplification)', () => {
 
   const members = [memberA, memberB, memberC];
 
+  it('returns empty summary when members array is empty or undefined', () => {
+    const resultEmpty = calculateSettlements([], []);
+    expect(resultEmpty).toEqual({ balances: [], transfers: [], isBalanced: true });
+
+    const resultNull = calculateSettlements([], null as any);
+    expect(resultNull).toEqual({ balances: [], transfers: [], isBalanced: true });
+  });
+
   it('returns isBalanced: true when no expenses exist', () => {
     const result = calculateSettlements([], members);
     expect(result.isBalanced).toBe(true);
@@ -144,5 +152,39 @@ describe('calculateSettlements (Household Debt Simplification)', () => {
     expect(result.transfers[0].fromMember.id).toBe('m_c');
     expect(result.transfers[0].toMember.id).toBe('m_a');
     expect(result.transfers[0].amount).toBe(30);
+  });
+
+  it('calculates settlements using custom split items when provided on expense', () => {
+    const expenses: Expense[] = [
+      {
+        id: 'exp_custom',
+        family_id: 'fam_1',
+        paid_by_member_id: 'm_a',
+        category_id: 'cat_1',
+        transaction_date: '2026-08-12',
+        merchant_name: 'Custom dinner',
+        amount: 50,
+        splits: [
+          {
+            member_id: 'm_a',
+            share_amount: 10,
+            percentage: 20,
+          },
+          {
+            member_id: 'm_b',
+            share_amount: 40,
+            percentage: 80,
+          },
+        ],
+        created_at: '2026-08-12T10:00:00Z',
+      },
+    ];
+
+    const result = calculateSettlements(expenses, members);
+    expect(result.isBalanced).toBe(false);
+    expect(result.transfers).toHaveLength(1);
+    expect(result.transfers[0].fromMember.id).toBe('m_b');
+    expect(result.transfers[0].toMember.id).toBe('m_a');
+    expect(result.transfers[0].amount).toBe(40);
   });
 });

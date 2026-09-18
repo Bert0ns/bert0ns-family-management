@@ -140,4 +140,17 @@ describe('ReportValidator (Zod Schema Validation Tests & Edge Cases)', () => {
     expect(result.success).toBe(false);
     expect(result.error).toContain('Only EUR (€) currency is supported');
   });
+
+  it('catches unexpected exceptions during validation', () => {
+    // Object that throws when property is inspected
+    const throwingPayload = {
+      get expenses() {
+        throw new Error('Explosion during property access');
+      },
+    };
+
+    const result = validator.validate(throwingPayload);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Explosion during property access');
+  });
 });

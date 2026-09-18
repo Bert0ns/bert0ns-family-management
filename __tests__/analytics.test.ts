@@ -101,6 +101,33 @@ describe('AnalyticsCalculator (Unit Tests & Edge Cases)', () => {
       expect(metrics.projectedMonthEnd).toBe(0);
     });
 
+    it('handles future month gracefully without forecasting', () => {
+      const futureExpense: Expense[] = [
+        {
+          id: 'future_1',
+          family_id: 'fam_1',
+          paid_by_member_id: 'mem_1',
+          category_id: 'cat_1',
+          transaction_date: '2026-11-01',
+          merchant_name: 'Future Booking',
+          amount: 200.0,
+          created_at: '2026-08-15T00:00:00Z',
+        },
+      ];
+
+      const metrics = calculateMonthlyMetrics(
+        futureExpense,
+        mockCategories,
+        mockMembers,
+        '2026-11',
+        new Date('2026-08-15T12:00:00Z'),
+      );
+
+      expect(metrics.totalSpend).toBe(200.0);
+      expect(metrics.projectedMonthEnd).toBe(200.0);
+      expect(metrics.dailyAverageBurn).toBe(200.0);
+    });
+
     it('handles empty month with 0 expenses gracefully', () => {
       const metrics = calculateMonthlyMetrics([], mockCategories, mockMembers, '2026-08');
 
@@ -127,6 +154,26 @@ describe('AnalyticsCalculator (Unit Tests & Edge Cases)', () => {
       expect(breakdown[1].transactionCount).toBe(1);
     });
 
+    it('categorizes expenses with unknown category ID as Uncategorized', () => {
+      const unknownExpense: Expense[] = [
+        {
+          id: 'unk_1',
+          family_id: 'fam_1',
+          paid_by_member_id: 'mem_1',
+          category_id: 'non_existent_cat',
+          transaction_date: '2026-08-10',
+          merchant_name: 'Mystery Store',
+          amount: 75.0,
+          created_at: '2026-08-10T00:00:00Z',
+        },
+      ];
+
+      const breakdown = calculateCategoryBreakdown(unknownExpense, mockCategories);
+      expect(breakdown).toHaveLength(1);
+      expect(breakdown[0].category.name).toBe('Uncategorized');
+      expect(breakdown[0].total).toBe(75.0);
+    });
+
     it('handles empty expense array with 0 categories returned', () => {
       const breakdown = calculateCategoryBreakdown([], mockCategories);
       expect(breakdown).toEqual([]);
@@ -149,6 +196,28 @@ describe('AnalyticsCalculator (Unit Tests & Edge Cases)', () => {
       expect(contributions[2].member.display_name).toBe('Kid Tommy');
       expect(contributions[2].total).toBe(0);
       expect(contributions[2].percentage).toBe(0);
+    });
+
+    it('attributes spend of deleted or former member IDs as Former / Unknown Member', () => {
+      const formerMemberExpense: Expense[] = [
+        {
+          id: 'former_1',
+          family_id: 'fam_1',
+          paid_by_member_id: 'deleted_member_id',
+          category_id: 'cat_1',
+          transaction_date: '2026-08-01',
+          merchant_name: 'Store',
+          amount: 60.0,
+          created_at: '2026-08-01T00:00:00Z',
+        },
+      ];
+
+      const contributions = calculateMemberContributions(formerMemberExpense, mockMembers);
+      const former = contributions.find((c) => c.member.id === 'deleted_member_id');
+      expect(former).toBeDefined();
+      expect(former?.member.display_name).toBe('Former / Unknown Member');
+      expect(former?.total).toBe(60.0);
+      expect(former?.percentage).toBe(100);
     });
   });
 

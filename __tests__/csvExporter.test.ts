@@ -41,6 +41,19 @@ describe('CsvExporter (Unit Tests & Edge Cases)', () => {
       transaction_date: '2026-08-06',
       merchant_name: 'Corner Bakery',
       amount: 5.0,
+      notes: undefined,
+      is_recurring: false,
+      created_at: '2026-08-06T00:00:00Z',
+    },
+    {
+      id: 'e3_null',
+      family_id: 'fam_1',
+      paid_by_member_id: 'mem_1',
+      category_id: 'cat_1',
+      transaction_date: '2026-08-06',
+      merchant_name: 'Corner Shop',
+      amount: 12.0,
+      notes: null as any,
       is_recurring: false,
       created_at: '2026-08-06T00:00:00Z',
     },
@@ -65,7 +78,46 @@ describe('CsvExporter (Unit Tests & Edge Cases)', () => {
     expect(csv).toContain('"Family"');
     expect(csv).toContain('"Standard"');
     expect(csv).toContain('"No"');
-    expect(csv).toContain('""'); // empty notes
+    expect(csv).toContain('""'); // undefined notes
+  });
+
+  it('neutralizes CSV formula injection characters (CWE-1236)', () => {
+    const injectionExpenses: Expense[] = [
+      {
+        id: 'e3',
+        family_id: 'fam_1',
+        paid_by_member_id: 'mem_1',
+        category_id: 'cat_1',
+        transaction_date: '2026-08-07',
+        merchant_name: '=cmd|calc!A0',
+        amount: 10.0,
+        notes: '+123456',
+        payment_method: '-test',
+        is_recurring: false,
+        created_at: '2026-08-07T00:00:00Z',
+      },
+      {
+        id: 'e4',
+        family_id: 'fam_1',
+        paid_by_member_id: 'mem_1',
+        category_id: 'cat_1',
+        transaction_date: '2026-08-08',
+        merchant_name: '@admin',
+        amount: 20.0,
+        notes: '\ttabbed',
+        payment_method: '\rcarriage',
+        is_recurring: false,
+        created_at: '2026-08-08T00:00:00Z',
+      },
+    ];
+
+    const csv = exporter.generateCsv(injectionExpenses, mockCategories, mockMembers, '€');
+    expect(csv).toContain('"\'=cmd|calc!A0"');
+    expect(csv).toContain('"\'+123456"');
+    expect(csv).toContain('"\'-test"');
+    expect(csv).toContain('"\'@admin"');
+    expect(csv).toContain('"\'\ttabbed"');
+    expect(csv).toContain('"\'\rcarriage"');
   });
 
   it('handles empty expense list returning only header row', () => {
@@ -77,33 +129,67 @@ describe('CsvExporter (Unit Tests & Edge Cases)', () => {
     );
   });
 
-  it('executes downloadCsv without throwing in simulated DOM environment', () => {
+  it('handles downloadCsv safely when document is undefined', () => {
     const originalDocument = (globalThis as any).document;
+    try {
+      (globalThis as any).document = undefined;
+      expect(() => {
+        csvExporter.downloadCsv('sample', 'test.csv');
+      }).not.toThrow();
+    } finally {
+      (globalThis as any).document = originalDocument;
+    }
+  });
+
+  it('executes downloadCsv and runs cleanup timeout in simulated DOM environment', async () => {
+    const originalDocument = (globalThis as any).document;
+    const originalUrl = (globalThis as any).URL;
+    const originalBlob = (globalThis as any).Blob;
+
     const clickMock = jest.fn();
     const appendMock = jest.fn();
     const removeMock = jest.fn();
+    const containsMock = jest.fn().mockReturnValue(true);
+    const revokeMock = jest.fn();
+
+    const mockLink = {
+      href: '',
+      setAttribute: jest.fn(),
+      click: clickMock,
+    };
 
     (globalThis as any).document = {
-      createElement: jest.fn(() => ({
-        href: '',
-        setAttribute: jest.fn(),
-        click: clickMock,
-      })),
+      createElement: jest.fn(() => mockLink),
       body: {
         appendChild: appendMock,
         removeChild: removeMock,
+        contains: containsMock,
       },
     };
 
     (globalThis as any).URL = {
-      createObjectURL: jest.fn(() => 'blob://test'),
+      createObjectURL: jest.fn(() => 'blob://test-url'),
+      revokeObjectURL: revokeMock,
     };
 
-    expect(() => {
-      csvExporter.downloadCsv('sample,csv,data', 'export.csv');
-    }).not.toThrow();
+    (globalThis as any).Blob = jest.fn((content, options) => ({ content, options }));
 
-    expect(clickMock).toHaveBeenCalled();
-    (globalThis as any).document = originalDocument;
+    try {
+      csvExporter.downloadCsv('sample,csv,data', 'export.csv');
+
+      expect(appendMock).toHaveBeenCalledWith(mockLink);
+      expect(mockLink.setAttribute).toHaveBeenCalledWith('download', 'export.csv');
+      expect(clickMock).toHaveBeenCalled();
+
+      // Wait for cleanup timeout to trigger
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      expect(removeMock).toHaveBeenCalledWith(mockLink);
+      expect(revokeMock).toHaveBeenCalledWith('blob://test-url');
+    } finally {
+      (globalThis as any).document = originalDocument;
+      (globalThis as any).URL = originalUrl;
+      (globalThis as any).Blob = originalBlob;
+    }
   });
 });

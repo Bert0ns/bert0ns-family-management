@@ -1,6 +1,23 @@
-import { useAppStore } from '@/services/store';
+import {
+  useAppStore,
+  registerStoreMutationListener,
+  selectNotificationPreferences,
+  selectNotifications,
+  selectSettlements,
+  selectExpenses,
+  selectMembers,
+  selectCategories,
+  selectFamily,
+} from '@/services/store';
 import { SAMPLE_IMPORT_REPORT } from '@/data/mockData';
-import { RawExpenseReport } from '@/types';
+import {
+  RawExpenseReport,
+  Expense,
+  Category,
+  FamilyMember,
+  Settlement,
+  AppNotification,
+} from '@/types';
 
 describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
   beforeEach(() => {
@@ -13,6 +30,17 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     expect(state.members).toHaveLength(4);
     expect(state.categories.length).toBeGreaterThan(0);
     expect(state.expenses.length).toBeGreaterThan(0);
+  });
+
+  it('tests store selectors', () => {
+    const state = useAppStore.getState();
+    expect(selectFamily(state).name).toBe("Bert0n's Family");
+    expect(selectMembers(state)).toHaveLength(4);
+    expect(selectCategories(state).length).toBeGreaterThan(0);
+    expect(selectExpenses(state).length).toBeGreaterThan(0);
+    expect(selectSettlements(state)).toBeDefined();
+    expect(selectNotifications(state)).toBeDefined();
+    expect(selectNotificationPreferences(state)).toBeDefined();
   });
 
   it('updates current active member ID and selected period', () => {
@@ -125,7 +153,6 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     const updated = useAppStore.getState();
     const importedHealth = updated.expenses.find((e) => e.merchant_name === 'Pharmacy Center');
     expect(importedHealth).toBeDefined();
-    // Elena's ID is mem_2
     expect(importedHealth?.paid_by_member_id).toBe('mem_2');
     expect(importedHealth?.category_id).toBe('cat_healthcare');
 
@@ -143,6 +170,18 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     const updatedState = useAppStore.getState();
     expect(updatedState.family.name).toBe('The Rossi Family');
     expect(updatedState.family.currency).toBe('€');
+  });
+
+  it('sets entire family object via setFamily', () => {
+    const state = useAppStore.getState();
+    state.setFamily({
+      id: 'fam_custom',
+      name: 'Custom Family',
+      currency: '€',
+      invite_code: 'CODE999',
+      created_at: new Date().toISOString(),
+    });
+    expect(useAppStore.getState().family.id).toBe('fam_custom');
   });
 
   it('clears all expenses and batches when clearAllExpenses is called', () => {
@@ -181,7 +220,6 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     expect(pizzaExpense).toBeDefined();
     expect(pizzaExpense?.splits).toBeDefined();
     expect(pizzaExpense?.splits).toHaveLength(2);
-    // 64.0 split equally between Berto and Elena is 32.0 each
     expect(pizzaExpense?.splits?.[0].share_amount).toBe(32);
     expect(pizzaExpense?.splits?.[1].share_amount).toBe(32);
   });
@@ -206,7 +244,6 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
   it('deletes member and all related data (cascade delete of expenses and split cleanup)', () => {
     const state = useAppStore.getState();
 
-    // Add an expense paid by mem_2
     const exp1 = state.addExpense({
       merchant_name: "Elena's Special Purchase",
       amount: 50.0,
@@ -216,7 +253,6 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
       is_recurring: false,
     });
 
-    // Add an expense paid by mem_1 that has a split with mem_2
     const exp2 = state.addExpense({
       merchant_name: 'Joint Dinner',
       amount: 100.0,
@@ -230,30 +266,20 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
       ],
     });
 
-    // Verify initial presence
     expect(useAppStore.getState().expenses.some((e) => e.id === exp1.id)).toBe(true);
 
-    // Set active member to mem_2
     state.setCurrentMemberId('mem_2');
     expect(useAppStore.getState().currentMemberId).toBe('mem_2');
 
-    // Delete mem_2
     state.deleteMember('mem_2');
 
     const updated = useAppStore.getState();
-
-    // 1. Member is removed
     expect(updated.members.find((m) => m.id === 'mem_2')).toBeUndefined();
-
-    // 2. Expenses paid by mem_2 are cascade deleted
     expect(updated.expenses.find((e) => e.id === exp1.id)).toBeUndefined();
 
-    // 3. Splits involving mem_2 are cleaned up (only 1 member remaining -> splits cleared)
     const updatedJointExp = updated.expenses.find((e) => e.id === exp2.id);
     expect(updatedJointExp).toBeDefined();
     expect(updatedJointExp?.splits).toBeUndefined();
-
-    // 4. Current member ID safely fell back to remaining member
     expect(updated.currentMemberId).not.toBe('mem_2');
     expect(updated.members.some((m) => m.id === updated.currentMemberId)).toBe(true);
   });
@@ -262,7 +288,6 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     const state = useAppStore.getState();
     const remainingIds = state.members.map((m) => m.id);
 
-    // Delete down to 1 member
     for (let i = 0; i < remainingIds.length - 1; i++) {
       state.deleteMember(remainingIds[i]);
     }
@@ -271,7 +296,6 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     expect(stateWithOne.members).toHaveLength(1);
     const lastMemberId = stateWithOne.members[0].id;
 
-    // Attempt deleting the only remaining member
     stateWithOne.deleteMember(lastMemberId);
 
     const finalState = useAppStore.getState();
@@ -287,5 +311,209 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     const updated = useAppStore.getState();
     expect(updated.categories).toHaveLength(initialCategoryCount - 1);
     expect(updated.categories.find((c) => c.id === 'cat_other')).toBeUndefined();
+  });
+
+  describe('Settlements State', () => {
+    it('records, reconciles, and removes remote settlements', () => {
+      const state = useAppStore.getState();
+      const initialCount = state.settlements.length;
+
+      const newSettlement = state.recordSettlement({
+        from_member_id: 'mem_1',
+        to_member_id: 'mem_2',
+        amount: 45,
+        notes: 'Groceries reimbursement',
+      });
+
+      expect(useAppStore.getState().settlements).toHaveLength(initialCount + 1);
+      expect(newSettlement.amount).toBe(45);
+
+      // Reconcile remote settlements
+      const remoteSettlement: Settlement = {
+        id: 'remote_stl_1',
+        family_id: 'fam_1',
+        from_member_id: 'mem_2',
+        to_member_id: 'mem_1',
+        amount: 25,
+        created_at: new Date().toISOString(),
+      };
+      state.reconcileRemoteSettlements([remoteSettlement]);
+      expect(useAppStore.getState().settlements.some((s) => s.id === 'remote_stl_1')).toBe(true);
+
+      // Remove remote settlement
+      state.removeRemoteSettlement('remote_stl_1');
+      expect(useAppStore.getState().settlements.some((s) => s.id === 'remote_stl_1')).toBe(false);
+    });
+  });
+
+  describe('In-app Notifications State', () => {
+    it('adds, caps at 50, marks read, and clears notifications', () => {
+      const state = useAppStore.getState();
+
+      const notif1: AppNotification = {
+        id: 'notif_1',
+        family_id: 'fam_1',
+        recipient_member_id: 'mem_1',
+        type: 'SETTLEMENT',
+        title: 'Settlement Recorded',
+        body: 'Debt cleared',
+        is_read: false,
+        created_at: new Date().toISOString(),
+      };
+
+      state.addNotification(notif1);
+      state.addNotification(notif1);
+      expect(useAppStore.getState().notifications).toHaveLength(1);
+
+      state.markNotificationAsRead('notif_1');
+      expect(useAppStore.getState().notifications[0].is_read).toBe(true);
+
+      state.addNotification({
+        ...notif1,
+        id: 'notif_2',
+        is_read: false,
+      });
+      expect(useAppStore.getState().notifications.some((n) => !n.is_read)).toBe(true);
+
+      state.markAllNotificationsAsRead();
+      expect(useAppStore.getState().notifications.every((n) => n.is_read)).toBe(true);
+
+      state.clearNotifications();
+      expect(useAppStore.getState().notifications).toHaveLength(0);
+    });
+  });
+
+  describe('Notification Preferences State', () => {
+    it('updates notification preferences', () => {
+      const state = useAppStore.getState();
+      state.updateNotificationPreferences({
+        push_enabled: false,
+        notify_expense_updates: false,
+      });
+
+      const updated = useAppStore.getState().notificationPreferences;
+      expect(updated.push_enabled).toBe(false);
+      expect(updated.notify_expense_updates).toBe(false);
+      expect(updated.notify_settlements).toBe(true);
+    });
+  });
+
+  describe('Remote Reconciliation and Removal', () => {
+    it('reconciles remote expenses, preserves splits when missing, and sorts by date', () => {
+      const state = useAppStore.getState();
+      const existingExp = state.expenses[0];
+
+      const remoteExpenseNewer: Expense = {
+        ...existingExp,
+        merchant_name: 'Updated Merchant',
+        updated_at: '2026-12-31T00:00:00Z',
+        splits: undefined,
+      };
+
+      const remoteExpenseBrandNew: Expense = {
+        id: 'exp_remote_new',
+        family_id: existingExp.family_id,
+        paid_by_member_id: 'mem_1',
+        category_id: 'cat_groceries',
+        transaction_date: '2026-09-01',
+        merchant_name: 'Brand New Remote',
+        amount: 99,
+        created_at: new Date().toISOString(),
+      };
+
+      state.reconcileRemoteExpenses([remoteExpenseNewer, remoteExpenseBrandNew]);
+
+      const updated = useAppStore.getState();
+      expect(updated.expenses.find((e) => e.id === 'exp_remote_new')).toBeDefined();
+      expect(updated.expenses.find((e) => e.id === existingExp.id)?.merchant_name).toBe(
+        'Updated Merchant',
+      );
+
+      state.removeRemoteExpense('exp_remote_new');
+      expect(
+        useAppStore.getState().expenses.find((e) => e.id === 'exp_remote_new'),
+      ).toBeUndefined();
+    });
+
+    it('reconciles remote categories and removes remote category', () => {
+      const state = useAppStore.getState();
+      const remoteCat: Category = {
+        id: 'cat_remote_1',
+        family_id: 'fam_1',
+        name: 'Remote Category',
+        icon: 'Star',
+        color: '#F59E0B',
+      };
+
+      state.reconcileRemoteCategories([remoteCat]);
+      expect(useAppStore.getState().categories.find((c) => c.id === 'cat_remote_1')).toBeDefined();
+
+      state.removeRemoteCategory('cat_remote_1');
+      expect(
+        useAppStore.getState().categories.find((c) => c.id === 'cat_remote_1'),
+      ).toBeUndefined();
+    });
+
+    it('reconciles remote members and removes remote member', () => {
+      const state = useAppStore.getState();
+      const remoteMem: FamilyMember = {
+        id: 'mem_remote_1',
+        family_id: 'fam_1',
+        display_name: 'Remote Member',
+        role: 'MEMBER',
+        color_code: '#10B981',
+      };
+
+      state.reconcileRemoteMembers([remoteMem]);
+      expect(useAppStore.getState().members.find((m) => m.id === 'mem_remote_1')).toBeDefined();
+
+      state.removeRemoteMember('mem_remote_1');
+      expect(useAppStore.getState().members.find((m) => m.id === 'mem_remote_1')).toBeUndefined();
+    });
+  });
+
+  describe('Mutation Subscribers', () => {
+    it('registers mutation listener, receives mutation events, and unregisters', () => {
+      const capturedMutations: any[] = [];
+      const unsubscribe = registerStoreMutationListener((mutation) => {
+        capturedMutations.push(mutation);
+      });
+
+      useAppStore.getState().addCategory({
+        name: 'Listener Test Cat',
+        icon: 'Tag',
+        color: '#123456',
+      });
+
+      expect(capturedMutations).toHaveLength(1);
+      expect(capturedMutations[0].entity).toBe('category');
+
+      unsubscribe();
+
+      useAppStore.getState().addCategory({
+        name: 'After Unsubscribe',
+        icon: 'Tag',
+        color: '#654321',
+      });
+
+      expect(capturedMutations).toHaveLength(1);
+    });
+
+    it('safely handles throwing listeners without crashing store mutation', () => {
+      const faultyListener = jest.fn().mockImplementation(() => {
+        throw new Error('Listener crash');
+      });
+      const unsubscribe = registerStoreMutationListener(faultyListener);
+
+      expect(() => {
+        useAppStore.getState().addCategory({
+          name: 'Safe Category',
+          icon: 'Shield',
+          color: '#000000',
+        });
+      }).not.toThrow();
+
+      unsubscribe();
+    });
   });
 });
