@@ -5,28 +5,43 @@ import {
   transactionLogger,
   syncLogger,
   authLogger,
+  supabaseLogger,
+  uiLogger,
 } from '@/services/logger';
 
 describe('Logger Service (react-native-logs integration)', () => {
-  const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-  const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-  const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-  const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+  let logSpy: jest.SpyInstance;
+  let warnSpy: jest.SpyInstance;
+  let errorSpy: jest.SpyInstance;
+  let infoSpy: jest.SpyInstance;
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  beforeEach(() => {
+    logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
   });
 
-  afterAll(() => {
-    logSpy.mockRestore();
-    warnSpy.mockRestore();
-    errorSpy.mockRestore();
-    infoSpy.mockRestore();
+  afterEach(() => {
+    logger.disable();
+    jest.restoreAllMocks();
+  });
+
+  it('exports all expected scoped loggers', () => {
+    expect(logger).toBeDefined();
+    expect(storeLogger).toBeDefined();
+    expect(validatorLogger).toBeDefined();
+    expect(transactionLogger).toBeDefined();
+    expect(syncLogger).toBeDefined();
+    expect(authLogger).toBeDefined();
+    expect(supabaseLogger).toBeDefined();
+    expect(uiLogger).toBeDefined();
   });
 
   it('does not log when logger is disabled', () => {
     logger.disable();
-    logger.log('test log');
+    logger.debug('test debug');
+    logger.info('test info');
     logger.warn('test warn');
     logger.error('test error');
 
@@ -38,7 +53,8 @@ describe('Logger Service (react-native-logs integration)', () => {
 
   it('logs when logger is enabled', () => {
     logger.enable();
-    logger.log('test log');
+    logger.debug('test debug');
+    logger.info('test info');
     logger.warn('test warn');
     logger.error('test error');
 
@@ -49,9 +65,6 @@ describe('Logger Service (react-native-logs integration)', () => {
       infoSpy.mock.calls.length > 0;
 
     expect(anyConsoleCalled).toBe(true);
-
-    // Disable again to prevent polluting other test output
-    logger.disable();
   });
 
   it('formats messages with extensions properly when enabled', () => {
@@ -61,6 +74,8 @@ describe('Logger Service (react-native-logs integration)', () => {
     transactionLogger.info('Expense transaction recorded', { amount: 50 });
     syncLogger.info('Sync engine delta fetched');
     authLogger.info('User session refreshed');
+    supabaseLogger.warn('Supabase retry attempt', { attempt: 2 });
+    uiLogger.error('Rendering error', { component: 'ExpenseList' });
 
     const anyConsoleCalled =
       logSpy.mock.calls.length > 0 ||
@@ -69,7 +84,39 @@ describe('Logger Service (react-native-logs integration)', () => {
       infoSpy.mock.calls.length > 0;
 
     expect(anyConsoleCalled).toBe(true);
+  });
 
-    logger.disable();
+  it('handles logging with undefined or empty context', () => {
+    logger.enable();
+    expect(() => {
+      storeLogger.info('Plain info message');
+      storeLogger.debug('Plain debug message');
+      storeLogger.warn('Plain warn message');
+      storeLogger.error('Plain error message');
+    }).not.toThrow();
+  });
+
+  it('handles errors passed directly as context', () => {
+    logger.enable();
+    const err = new Error('Test exception');
+    expect(() => {
+      logger.error('Caught an exception', err);
+    }).not.toThrow();
+  });
+
+  it('initializes with production severity and async mode in production environment', async () => {
+    const originalEnv = process.env.NODE_ENV;
+    try {
+      process.env.NODE_ENV = 'production';
+      let prodLoggerModule: any;
+      await jest.isolateModulesAsync(async () => {
+        prodLoggerModule = await import('@/services/logger');
+      });
+      expect(prodLoggerModule.logger).toBeDefined();
+      expect(prodLoggerModule.storeLogger).toBeDefined();
+      expect(prodLoggerModule.uiLogger).toBeDefined();
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
   });
 });

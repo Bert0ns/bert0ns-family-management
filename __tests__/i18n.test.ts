@@ -89,6 +89,53 @@ describe('Internationalization & Dictionaries (Parity & Completeness Tests)', ()
     }
   });
 
+  it('handles category localization edge cases (null, empty, custom, and ID strings)', () => {
+    // Null and undefined
+    expect(getLocalizedCategoryName(null, enDict)).toBe(enDict.expenseDetail.uncategorized);
+    expect(getLocalizedCategoryName(undefined, itDict)).toBe(itDict.expenseDetail.uncategorized);
+
+    // Empty object without id or name
+    expect(getLocalizedCategoryName({} as any, enDict)).toBe(enDict.expenseDetail.uncategorized);
+
+    // Category passed as string ID
+    expect(getLocalizedCategoryName('cat_groceries', enDict)).toBe('Groceries');
+    expect(getLocalizedCategoryName('cat_groceries', itDict)).toBe('Spesa Alimentare');
+
+    // Category passed as string name normalized (key map matches name)
+    expect(getLocalizedCategoryName('groceries', itDict)).toBe('Spesa Alimentare');
+
+    // Category object with unknown ID but recognized name
+    expect(
+      getLocalizedCategoryName({ id: 'custom_legacy_1', name: 'Housing & Rent' } as any, itDict),
+    ).toBe('Casa & Affitto');
+
+    // Category fallback when dictionary key is empty string
+    const incompleteDict = {
+      ...enDict,
+      categories: {
+        ...enDict.categories,
+        housing: '',
+      },
+    };
+    expect(
+      getLocalizedCategoryName(
+        { id: 'cat_custom', name: 'Housing & Rent' } as any,
+        incompleteDict as any,
+      ),
+    ).toBe('Housing & Rent');
+
+    // Custom non-standard category returns its raw name
+    expect(getLocalizedCategoryName('Custom Hobby Equipment', enDict)).toBe(
+      'Custom Hobby Equipment',
+    );
+    expect(
+      getLocalizedCategoryName(
+        { id: 'cat_custom_hobby', name: 'Custom Hobby Equipment' } as any,
+        itDict,
+      ),
+    ).toBe('Custom Hobby Equipment');
+  });
+
   it('localizes payment methods in both English and Italian', () => {
     const methods = ['Credit Card', 'Cash', 'Bank Transfer', 'Debit Card'];
 
@@ -106,6 +153,12 @@ describe('Internationalization & Dictionaries (Parity & Completeness Tests)', ()
     expect(getLocalizedPaymentMethod('Credit Card', itDict)).toBe('Carta di Credito');
     expect(getLocalizedPaymentMethod('Bank Transfer', itDict)).toBe('Bonifico Bancario');
     expect(getLocalizedPaymentMethod('Cash', itDict)).toBe('Contanti');
+
+    // Edge cases: null, undefined, empty, unknown
+    expect(getLocalizedPaymentMethod(null, enDict)).toBe('');
+    expect(getLocalizedPaymentMethod(undefined, itDict)).toBe('');
+    expect(getLocalizedPaymentMethod('', enDict)).toBe('');
+    expect(getLocalizedPaymentMethod('Cryptocurrency', enDict)).toBe('Cryptocurrency');
   });
 
   it('translates main tab routes accurately', () => {

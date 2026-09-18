@@ -45,4 +45,35 @@ describe('migrationService', () => {
     const updatedStore = useAppStore.getState();
     expect(updatedStore.family.id).toBe(targetFamilyUUID);
   });
+
+  it('handles Supabase operation failure and returns error', async () => {
+    (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+
+    const upsertMock = jest
+      .fn()
+      .mockResolvedValue({ error: { message: 'RLS policy violated on family_members' } });
+    (supabase.from as jest.Mock).mockReturnValue({
+      upsert: upsertMock,
+    });
+
+    const result = await migrationService.migrateLocalDataToSupabase(
+      'e2908f58-a5be-4416-921c-a04473b18491',
+    );
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('RLS policy violated');
+  });
+
+  it('catches unexpected thrown exceptions during migration', async () => {
+    (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+
+    (supabase.from as jest.Mock).mockImplementation(() => {
+      throw new Error('Network socket disconnected during migration');
+    });
+
+    const result = await migrationService.migrateLocalDataToSupabase(
+      'e2908f58-a5be-4416-921c-a04473b18491',
+    );
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Network socket disconnected');
+  });
 });
