@@ -30,6 +30,20 @@ interface ThemeContextType {
 
 const STORAGE_KEY = '@bert0ns_family_app_theme';
 
+export function getInitialThemePreference(): ColorSchemePreference {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const saved = window.localStorage.getItem(STORAGE_KEY);
+      if (saved === 'light' || saved === 'dark' || saved === 'system') {
+        return saved as ColorSchemePreference;
+      }
+    } catch {
+      // Ignore localStorage read errors
+    }
+  }
+  return 'system';
+}
+
 const ThemeContext = createContext<ThemeContextType>({
   theme: LightTheme,
   isDark: false,
@@ -46,7 +60,7 @@ const ThemeContext = createContext<ThemeContextType>({
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
   const [colorSchemePreference, setColorSchemePreferenceState] =
-    useState<ColorSchemePreference>('system');
+    useState<ColorSchemePreference>(getInitialThemePreference);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((saved) => {
@@ -65,6 +79,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     colorSchemePreference === 'system' ? systemColorScheme || 'light' : colorSchemePreference;
   const isDark = activeScheme === 'dark';
   const theme = isDark ? DarkTheme : LightTheme;
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.backgroundColor = theme.colors.background;
+      document.body.style.backgroundColor = theme.colors.background;
+      const root = document.getElementById('root');
+      if (root) {
+        root.style.backgroundColor = theme.colors.background;
+      }
+    }
+  }, [theme.colors.background]);
 
   return (
     <ThemeContext.Provider

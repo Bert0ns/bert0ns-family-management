@@ -16,12 +16,20 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Family Expense" />
 
-    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
       /* These styles make the body full-height */
       html,
       body {
         height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #0b1326;
+      }
+      @media (prefers-color-scheme: light) {
+        html,
+        body {
+          background-color: #f8fafc;
+        }
       }
       /* These styles disable body scrolling if you are using <ScrollView> */
       body {
@@ -32,6 +40,12 @@
         display: flex;
         height: 100%;
         flex: 1;
+        background-color: #0b1326;
+      }
+      @media (prefers-color-scheme: light) {
+        #root {
+          background-color: #f8fafc;
+        }
       }
     </style>
   </head>

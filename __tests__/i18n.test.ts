@@ -1,6 +1,7 @@
 import { en as enDict } from '@/i18n/en';
 import { it as itDict } from '@/i18n/it';
 import { getLocalizedCategoryName, getLocalizedPaymentMethod } from '@/i18n/categories';
+import { getInitialLocale } from '@/i18n';
 import { INITIAL_CATEGORIES } from '@/data/mockData';
 
 describe('Internationalization & Dictionaries (Parity & Completeness Tests)', () => {
@@ -173,5 +174,52 @@ describe('Internationalization & Dictionaries (Parity & Completeness Tests)', ()
 
     expect(enDict.tabs.family).toBe('Family');
     expect(itDict.tabs.family).toBe('Famiglia');
+  });
+
+  describe('Synchronous Initial Locale Resolution', () => {
+    const originalWindow = (globalThis as any).window;
+
+    afterEach(() => {
+      (globalThis as any).window = originalWindow;
+    });
+
+    it('returns stored locale from localStorage if set to "it"', () => {
+      const mockStorage: Record<string, string> = {
+        '@bert0ns_family_app_locale': 'it',
+      };
+      (globalThis as any).window = {
+        localStorage: {
+          getItem: (key: string) => mockStorage[key] || null,
+        },
+      };
+
+      expect(getInitialLocale()).toBe('it');
+    });
+
+    it('returns browser locale if no stored locale and navigator is Italian', () => {
+      (globalThis as any).window = {
+        localStorage: {
+          getItem: () => null,
+        },
+        navigator: {
+          language: 'it-IT',
+        },
+      };
+
+      expect(getInitialLocale()).toBe('it');
+    });
+
+    it('falls back to "en" when localStorage is empty and navigator is English', () => {
+      (globalThis as any).window = {
+        localStorage: {
+          getItem: () => null,
+        },
+        navigator: {
+          language: 'en-US',
+        },
+      };
+
+      expect(getInitialLocale()).toBe('en');
+    });
   });
 });

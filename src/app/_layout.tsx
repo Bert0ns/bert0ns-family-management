@@ -1,3 +1,4 @@
+import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
@@ -17,10 +18,11 @@ function RootLayoutNav() {
   const { t } = useI18n();
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
+          animation: 'fade',
           headerStyle: {
             backgroundColor: theme.colors.surface,
           },
@@ -41,7 +43,7 @@ function RootLayoutNav() {
           }}
         />
       </Stack>
-    </>
+    </View>
   );
 }
 

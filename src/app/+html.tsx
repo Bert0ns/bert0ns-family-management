@@ -34,9 +34,28 @@ export default function Root({ children }: { children: React.ReactNode }) {
         */}
         <ScrollViewStyleReset />
 
+        {/* Prevent white flash during page transitions and hydration */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              html, body, #root {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                background-color: #0B1326;
+              }
+              @media (prefers-color-scheme: light) {
+                html, body, #root {
+                  background-color: #F8FAFC;
+                }
+              }
+            `,
+          }}
+        />
+
         {headNodes}
       </head>
-      <body {...bodyAttributes}>
+      <body {...bodyAttributes} style={{ backgroundColor: '#0B1326', margin: 0, padding: 0 }}>
         {children}
         {bodyNodes}
       </body>

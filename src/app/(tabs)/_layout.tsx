@@ -100,7 +100,12 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      detachInactiveScreens={false}
       screenOptions={{
+        animation: 'none',
+        sceneStyle: {
+          backgroundColor: theme.colors.background,
+        },
         tabBarActiveTintColor: theme.colors.brand,
         tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarShowLabel: false,
@@ -138,9 +143,19 @@ export default function TabsLayout() {
           paddingHorizontal: 6,
           overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
         },
-        tabBarButton: ({ ref: _ref, style, ...rest }: any) => (
+        tabBarButton: ({ ref: _ref, style, onPress, ...rest }: any) => (
           <Pressable
             {...rest}
+            onPress={(e: any) => {
+              if (Platform.OS === 'web' && e) {
+                const hasModifierKey = e.metaKey || e.altKey || e.ctrlKey || e.shiftKey;
+                const isLeftClick = e.button == null || e.button === 0;
+                if (!hasModifierKey && isLeftClick && typeof e.preventDefault === 'function') {
+                  e.preventDefault();
+                }
+              }
+              onPress?.(e);
+            }}
             style={[
               style,
               {
