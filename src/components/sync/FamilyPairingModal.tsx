@@ -220,7 +220,6 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
         members: [],
         categories: [],
         expenses: [],
-        settlements: [],
         importBatches: [],
         currentMemberId: joinedMemberId || storeState.currentMemberId,
       });

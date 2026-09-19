@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
-import { Split } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName } from '@/i18n';
 import { Expense, Category, FamilyMember } from '@/types';
@@ -24,7 +23,6 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
   const { theme, spacing, radius, typography } = useTheme();
   const { t, locale } = useI18n();
 
-  const isSplit = expense.splits && expense.splits.length > 0;
   const catColor = category?.color || theme.colors.brand;
   const catIcon = category?.icon || 'HelpCircle';
   const catName = category ? getLocalizedCategoryName(category, t) : t.categories.other;
@@ -100,7 +98,6 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
           >
             {expense.merchant_name}
           </Text>
-          {isSplit && <Split size={14} color={theme.colors.brand} style={{ flexShrink: 0 }} />}
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>

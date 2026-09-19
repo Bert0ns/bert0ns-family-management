@@ -1,5 +1,5 @@
 import { useAppStore, registerStoreMutationListener, StoreMutationEvent } from '@/services/store';
-import { RawExpenseReport, Expense } from '@/types';
+import { RawExpenseReport } from '@/types';
 
 describe('Store Remediation Tests (Partition 1)', () => {
   beforeEach(() => {
@@ -86,25 +86,6 @@ describe('Store Remediation Tests (Partition 1)', () => {
     unsubscribe();
   });
 
-  it('recalculates equal splits when an expense amount is updated without explicit splits', () => {
-    const state = useAppStore.getState();
-    const expWithSplits = state.expenses.find((e) => e.splits && e.splits.length > 1);
-    expect(expWithSplits).toBeDefined();
-
-    const originalMemberIds = expWithSplits!.splits!.map((s) => s.member_id);
-    const newAmount = 240.0;
-
-    useAppStore.getState().updateExpense(expWithSplits!.id, { amount: newAmount });
-
-    const updated = useAppStore.getState().expenses.find((e) => e.id === expWithSplits!.id);
-    expect(updated?.amount).toBe(newAmount);
-    expect(updated?.splits?.length).toBe(originalMemberIds.length);
-
-    const splitSum = updated?.splits?.reduce((sum, s) => sum + s.share_amount, 0) || 0;
-    expect(splitSum).toBeCloseTo(newAmount, 2);
-    expect(updated?.splits?.[0].share_amount).toBeCloseTo(newAmount / originalMemberIds.length, 2);
-  });
-
   it('prevents deletion when only one category remains in store', () => {
     const onlyCat = useAppStore.getState().categories[0];
     useAppStore.setState({ categories: [onlyCat] });
@@ -113,40 +94,6 @@ describe('Store Remediation Tests (Partition 1)', () => {
 
     expect(useAppStore.getState().categories).toHaveLength(1);
     expect(useAppStore.getState().categories[0].id).toBe(onlyCat.id);
-  });
-
-  it('preserves existing local splits when reconciling remote expenses with undefined splits', () => {
-    const testExpense: Expense = {
-      id: 'test-reconcile-split',
-      family_id: 'fam_1',
-      paid_by_member_id: 'mem_1',
-      category_id: 'cat_groceries',
-      amount: 100,
-      transaction_date: '2026-09-01',
-      merchant_name: 'Local Store',
-      splits: [
-        { member_id: 'mem_1', share_amount: 50 },
-        { member_id: 'mem_2', share_amount: 50 },
-      ],
-      created_at: '2026-09-01T10:00:00Z',
-      updated_at: '2026-09-01T10:00:00Z',
-    };
-
-    useAppStore.setState({ expenses: [testExpense] });
-
-    useAppStore.getState().reconcileRemoteExpenses([
-      {
-        ...testExpense,
-        merchant_name: 'Local Store Renamed',
-        updated_at: '2026-09-01T12:00:00Z',
-        splits: undefined,
-      },
-    ]);
-
-    const reconciled = useAppStore.getState().expenses.find((e) => e.id === testExpense.id);
-    expect(reconciled?.merchant_name).toBe('Local Store Renamed');
-    expect(reconciled?.splits?.length).toBe(2);
-    expect(reconciled?.splits?.[0].share_amount).toBe(50);
   });
 
   it('supports multiple mutation listeners and clean unregistration', () => {
@@ -225,54 +172,5 @@ describe('Store Remediation Tests (Partition 1)', () => {
     expect(allUpdatesBeforeDelete).toBe(true);
 
     unsubscribe();
-  });
-
-  it('cascades and removes settlements when a member is deleted', () => {
-    const mutations: StoreMutationEvent[] = [];
-    const unsubscribe = registerStoreMutationListener((event) => mutations.push(event));
-
-    // Record a settlement for mem_2
-    useAppStore.getState().recordSettlement({
-      from_member_id: 'mem_1',
-      to_member_id: 'mem_2',
-      amount: 75,
-      notes: 'Payback',
-    });
-
-    const recorded = useAppStore.getState().settlements.find((s) => s.to_member_id === 'mem_2');
-    expect(recorded).toBeDefined();
-
-    mutations.length = 0;
-
-    useAppStore.getState().deleteMember('mem_2');
-
-    // Member mem_2 must be gone
-    expect(useAppStore.getState().members.find((m) => m.id === 'mem_2')).toBeUndefined();
-    // Settlement must be removed from store
-    expect(useAppStore.getState().settlements.find((s) => s.id === recorded!.id)).toBeUndefined();
-
-    // Settlement DELETE mutation must have been emitted
-    const settlementDelete = mutations.find(
-      (m) => m.entity === 'settlement' && m.operation === 'DELETE',
-    );
-    expect(settlementDelete).toBeDefined();
-    expect(settlementDelete?.entity_id).toBe(recorded!.id);
-
-    unsubscribe();
-  });
-
-  it('removes remote settlement via removeRemoteSettlement', () => {
-    useAppStore.getState().recordSettlement({
-      from_member_id: 'mem_1',
-      to_member_id: 'mem_2',
-      amount: 30,
-    });
-
-    const settlement = useAppStore.getState().settlements[0];
-    expect(settlement).toBeDefined();
-
-    useAppStore.getState().removeRemoteSettlement(settlement.id);
-
-    expect(useAppStore.getState().settlements.find((s) => s.id === settlement.id)).toBeUndefined();
   });
 });

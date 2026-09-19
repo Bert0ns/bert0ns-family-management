@@ -51,10 +51,6 @@ const EditMemberContent: React.FC<EditMemberContentProps> = ({
   const memberExpenses = expenses.filter((e) => e.paid_by_member_id === member.id);
   const totalSpent = memberExpenses.reduce((sum, e) => sum + e.amount, 0);
 
-  const splitInvolvements = expenses.filter(
-    (e) => e.paid_by_member_id !== member.id && e.splits?.some((s) => s.member_id === member.id),
-  ).length;
-
   const handleSave = () => {
     if (!name.trim()) {
       setError(t.family.memberNamePlaceholder);
@@ -75,7 +71,7 @@ const EditMemberContent: React.FC<EditMemberContentProps> = ({
       return;
     }
 
-    const confirmMessage = `${t.family.deleteMemberConfirmMessage}\n\n• ${memberExpenses.length} ${t.dashboard.totalTransactions.toLowerCase()} (${currency}${totalSpent.toFixed(2)})\n• ${splitInvolvements} ${t.family.splitShares}`;
+    const confirmMessage = `${t.family.deleteMemberConfirmMessage}\n\n• ${memberExpenses.length} ${t.dashboard.totalTransactions.toLowerCase()} (${currency}${totalSpent.toFixed(2)})`;
 
     if (Platform.OS === 'web') {
       if (window.confirm(`${t.family.deleteMemberConfirmTitle}\n\n${confirmMessage}`)) {
@@ -288,7 +284,7 @@ const EditMemberContent: React.FC<EditMemberContentProps> = ({
           >
             {t.family.relatedData}: {memberExpenses.length}{' '}
             {t.dashboard.totalTransactions.toLowerCase()} ({currency}
-            {totalSpent.toFixed(2)}), {splitInvolvements} {t.family.splitParticipations}
+            {totalSpent.toFixed(2)})
           </Text>
         </View>
 

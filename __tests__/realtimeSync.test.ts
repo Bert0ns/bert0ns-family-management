@@ -9,7 +9,6 @@ jest.mock('@/services/syncEngine', () => ({
       pulledExpenses: 0,
       pulledCategories: 0,
       pulledMembers: 0,
-      pulledSettlements: 0,
       pulledNotifications: 0,
       pulledFamily: false,
     }),
@@ -123,7 +122,7 @@ describe('realtimeSync', () => {
   });
 
   describe('Expenses events', () => {
-    it('reconciles store when an expense INSERT event occurs and fetches splits', async () => {
+    it('reconciles store when an expense INSERT event occurs', () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
       realtimeSync.startRealtimeSync('fam_123');
 
@@ -144,47 +143,10 @@ describe('realtimeSync', () => {
         },
       });
 
-      // Wait a tick for async split fetch
-      await new Promise((r) => setTimeout(r, 20));
-
       const expenses = useAppStore.getState().expenses;
       const added = expenses.find((e) => e.id === 'remote-exp-1');
       expect(added).toBeDefined();
       expect(added?.merchant_name).toBe('Supermarket');
-      expect(added?.splits).toHaveLength(1);
-    });
-
-    it('handles expense INSERT when split query throws an exception', async () => {
-      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
-      (supabase.from as jest.Mock).mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockRejectedValue(new Error('Split table offline')),
-        }),
-      });
-
-      realtimeSync.startRealtimeSync('fam_123');
-      const expenseCallback = listeners['expenses'];
-
-      expenseCallback({
-        eventType: 'INSERT',
-        new: {
-          id: 'remote-exp-no-split',
-          family_id: 'fam_123',
-          paid_by_member_id: 'mem_1',
-          category_id: 'cat_groceries',
-          transaction_date: '2026-09-04',
-          merchant_name: 'Corner Store',
-          amount: 15.0,
-          created_at: new Date().toISOString(),
-        },
-      });
-
-      await new Promise((r) => setTimeout(r, 20));
-
-      const expenses = useAppStore.getState().expenses;
-      const added = expenses.find((e) => e.id === 'remote-exp-no-split');
-      expect(added).toBeDefined();
-      expect(added?.merchant_name).toBe('Corner Store');
     });
 
     it('removes expense when DELETE event occurs', () => {
@@ -319,60 +281,6 @@ describe('realtimeSync', () => {
 
       const members = useAppStore.getState().members;
       expect(members.find((m) => m.id === 'mem-to-remove')).toBeUndefined();
-    });
-  });
-
-  describe('Settlements events', () => {
-    it('reconciles settlement on INSERT or UPDATE event', () => {
-      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
-      realtimeSync.startRealtimeSync('fam_123');
-
-      const settlementCallback = listeners['settlements'];
-      expect(settlementCallback).toBeDefined();
-
-      settlementCallback({
-        eventType: 'INSERT',
-        new: {
-          id: 'new-settle-1',
-          family_id: 'fam_123',
-          from_member_id: 'mem_1',
-          to_member_id: 'mem_2',
-          amount: 55.0,
-          created_at: new Date().toISOString(),
-        },
-      });
-
-      const settlements = useAppStore.getState().settlements;
-      const found = settlements.find((s) => s.id === 'new-settle-1');
-      expect(found).toBeDefined();
-      expect(found?.amount).toBe(55.0);
-    });
-
-    it('removes settlement on DELETE event', () => {
-      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
-      realtimeSync.startRealtimeSync('fam_123');
-
-      useAppStore.setState({
-        settlements: [
-          {
-            id: 'settle-del',
-            family_id: 'fam_123',
-            from_member_id: 'mem_1',
-            to_member_id: 'mem_2',
-            amount: 20,
-            created_at: new Date().toISOString(),
-          },
-        ],
-      });
-
-      const settlementCallback = listeners['settlements'];
-      settlementCallback({
-        eventType: 'DELETE',
-        old: { id: 'settle-del' },
-      });
-
-      const settlements = useAppStore.getState().settlements;
-      expect(settlements.find((s) => s.id === 'settle-del')).toBeUndefined();
     });
   });
 

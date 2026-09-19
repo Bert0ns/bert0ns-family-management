@@ -3,21 +3,13 @@ import {
   registerStoreMutationListener,
   selectNotificationPreferences,
   selectNotifications,
-  selectSettlements,
   selectExpenses,
   selectMembers,
   selectCategories,
   selectFamily,
 } from '@/services/store';
 import { SAMPLE_IMPORT_REPORT } from '@/data/mockData';
-import {
-  RawExpenseReport,
-  Expense,
-  Category,
-  FamilyMember,
-  Settlement,
-  AppNotification,
-} from '@/types';
+import { RawExpenseReport, Expense, Category, FamilyMember, AppNotification } from '@/types';
 
 describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
   beforeEach(() => {
@@ -38,7 +30,6 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     expect(selectMembers(state)).toHaveLength(4);
     expect(selectCategories(state).length).toBeGreaterThan(0);
     expect(selectExpenses(state).length).toBeGreaterThan(0);
-    expect(selectSettlements(state)).toBeDefined();
     expect(selectNotifications(state)).toBeDefined();
     expect(selectNotificationPreferences(state)).toBeDefined();
   });
@@ -210,7 +201,7 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     expect(updatedState.filters.selectedMemberId).toBeUndefined();
   });
 
-  it('retains and calculates split details when importing a report with splits', () => {
+  it('imports an expense report successfully', () => {
     const state = useAppStore.getState();
     const result = state.importExpenseReport(SAMPLE_IMPORT_REPORT, 'sample.json');
     expect(result.importedCount).toBe(SAMPLE_IMPORT_REPORT.expenses.length);
@@ -218,10 +209,6 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     const updatedState = useAppStore.getState();
     const pizzaExpense = updatedState.expenses.find((e) => e.merchant_name === 'Pizzeria Da Mario');
     expect(pizzaExpense).toBeDefined();
-    expect(pizzaExpense?.splits).toBeDefined();
-    expect(pizzaExpense?.splits).toHaveLength(2);
-    expect(pizzaExpense?.splits?.[0].share_amount).toBe(32);
-    expect(pizzaExpense?.splits?.[1].share_amount).toBe(32);
   });
 
   it('updates member permissions, roles, and profile', () => {
@@ -241,7 +228,7 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     expect(modifiedMember?.color_code).toBe('#10B981');
   });
 
-  it('deletes member and all related data (cascade delete of expenses and split cleanup)', () => {
+  it('deletes member and all related data (cascade delete of expenses)', () => {
     const state = useAppStore.getState();
 
     const exp1 = state.addExpense({
@@ -260,10 +247,6 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
       paid_by_member_id: 'mem_1',
       transaction_date: '2026-08-16',
       is_recurring: false,
-      splits: [
-        { member_id: 'mem_1', share_amount: 50.0, percentage: 50 },
-        { member_id: 'mem_2', share_amount: 50.0, percentage: 50 },
-      ],
     });
 
     expect(useAppStore.getState().expenses.some((e) => e.id === exp1.id)).toBe(true);
@@ -279,7 +262,6 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
 
     const updatedJointExp = updated.expenses.find((e) => e.id === exp2.id);
     expect(updatedJointExp).toBeDefined();
-    expect(updatedJointExp?.splits).toBeUndefined();
     expect(updated.currentMemberId).not.toBe('mem_2');
     expect(updated.members.some((m) => m.id === updated.currentMemberId)).toBe(true);
   });
@@ -313,39 +295,6 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     expect(updated.categories.find((c) => c.id === 'cat_other')).toBeUndefined();
   });
 
-  describe('Settlements State', () => {
-    it('records, reconciles, and removes remote settlements', () => {
-      const state = useAppStore.getState();
-      const initialCount = state.settlements.length;
-
-      const newSettlement = state.recordSettlement({
-        from_member_id: 'mem_1',
-        to_member_id: 'mem_2',
-        amount: 45,
-        notes: 'Groceries reimbursement',
-      });
-
-      expect(useAppStore.getState().settlements).toHaveLength(initialCount + 1);
-      expect(newSettlement.amount).toBe(45);
-
-      // Reconcile remote settlements
-      const remoteSettlement: Settlement = {
-        id: 'remote_stl_1',
-        family_id: 'fam_1',
-        from_member_id: 'mem_2',
-        to_member_id: 'mem_1',
-        amount: 25,
-        created_at: new Date().toISOString(),
-      };
-      state.reconcileRemoteSettlements([remoteSettlement]);
-      expect(useAppStore.getState().settlements.some((s) => s.id === 'remote_stl_1')).toBe(true);
-
-      // Remove remote settlement
-      state.removeRemoteSettlement('remote_stl_1');
-      expect(useAppStore.getState().settlements.some((s) => s.id === 'remote_stl_1')).toBe(false);
-    });
-  });
-
   describe('In-app Notifications State', () => {
     it('adds, caps at 50, marks read, and clears notifications', () => {
       const state = useAppStore.getState();
@@ -354,9 +303,9 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
         id: 'notif_1',
         family_id: 'fam_1',
         recipient_member_id: 'mem_1',
-        type: 'SETTLEMENT',
-        title: 'Settlement Recorded',
-        body: 'Debt cleared',
+        type: 'EXPENSE_UPDATE',
+        title: 'Expense Updated',
+        body: 'Groceries updated',
         is_read: false,
         created_at: new Date().toISOString(),
       };
@@ -394,12 +343,11 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
       const updated = useAppStore.getState().notificationPreferences;
       expect(updated.push_enabled).toBe(false);
       expect(updated.notify_expense_updates).toBe(false);
-      expect(updated.notify_settlements).toBe(true);
     });
   });
 
   describe('Remote Reconciliation and Removal', () => {
-    it('reconciles remote expenses, preserves splits when missing, and sorts by date', () => {
+    it('reconciles remote expenses and sorts by date', () => {
       const state = useAppStore.getState();
       const existingExp = state.expenses[0];
 
@@ -407,7 +355,6 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
         ...existingExp,
         merchant_name: 'Updated Merchant',
         updated_at: '2026-12-31T00:00:00Z',
-        splits: undefined,
       };
 
       const remoteExpenseBrandNew: Expense = {

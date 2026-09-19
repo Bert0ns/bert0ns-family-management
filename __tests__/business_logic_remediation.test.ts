@@ -1,9 +1,8 @@
 import { csvExporter } from '@/services/csvExporter';
-import { calculateEqualSplits, calculateSettlements } from '@/services/splitCalculator';
 import { duplicateDetector } from '@/services/duplicateDetector';
 import { reportValidator } from '@/services/validator';
 import { calculateCategoryBreakdown } from '@/services/analytics';
-import { Expense, Category, FamilyMember, RawExpenseItem } from '@/types';
+import { Expense, Category, RawExpenseItem } from '@/types';
 
 describe('Business Logic & Math Remediation Tests (Partition 2)', () => {
   describe('CsvExporter CWE-1236 & UTF-8 BOM', () => {
@@ -44,48 +43,6 @@ describe('Business Logic & Math Remediation Tests (Partition 2)', () => {
       expect(csv).toContain('"\'+1234567890"');
       expect(csv).toContain('"\'@SUM(1+1)"');
       expect(csv).toContain('"\'-HYPERLINK(""http://evil.com"")"');
-    });
-  });
-
-  describe('SplitCalculator Exact 1-Cent & Balance Invariants', () => {
-    it('does not drop 1-cent debts during settlement', () => {
-      const members: FamilyMember[] = [
-        { id: 'm1', family_id: 'f1', display_name: 'Alice', role: 'ADMIN', color_code: '#000' },
-        { id: 'm2', family_id: 'f1', display_name: 'Bob', role: 'MEMBER', color_code: '#111' },
-      ];
-
-      // Alice pays 0.01 for Bob
-      const expenses: Expense[] = [
-        {
-          id: 'e1',
-          family_id: 'f1',
-          paid_by_member_id: 'm1',
-          category_id: 'c1',
-          transaction_date: '2026-09-01',
-          merchant_name: 'One Cent Item',
-          amount: 0.01,
-          splits: [{ member_id: 'm2', share_amount: 0.01 }],
-          created_at: '2026-09-01T00:00:00Z',
-        },
-      ];
-
-      const result = calculateSettlements(expenses, members);
-      expect(result.transfers).toHaveLength(1);
-      expect(result.transfers[0].amount).toBe(0.01);
-      expect(result.transfers[0].fromMember.id).toBe('m2');
-      expect(result.transfers[0].toMember.id).toBe('m1');
-    });
-
-    it('distributes remainder cents properly in calculateEqualSplits', () => {
-      const splits = calculateEqualSplits(100.0, ['m1', 'm2', 'm3']);
-      expect(splits).toHaveLength(3);
-
-      const totalSum = splits.reduce((sum, s) => sum + s.share_amount, 0);
-      expect(totalSum).toBeCloseTo(100.0, 2);
-
-      expect(splits[0].share_amount).toBe(33.33);
-      expect(splits[1].share_amount).toBe(33.33);
-      expect(splits[2].share_amount).toBe(33.34);
     });
   });
 

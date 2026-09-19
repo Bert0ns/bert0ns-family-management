@@ -6,7 +6,7 @@ export type SupportedCurrency = '€' | 'EUR';
 export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error';
 export type MutationOperation = 'INSERT' | 'UPDATE' | 'DELETE';
 export type MutationEntity =
-  'expense' | 'category' | 'member' | 'family' | 'settlement' | 'notification_preference';
+  'expense' | 'category' | 'member' | 'family' | 'notification_preference';
 
 export interface OutboxMutation {
   id: string;
@@ -51,14 +51,6 @@ export interface Category {
   updated_at?: string;
 }
 
-export interface ExpenseSplit {
-  member_id: string;
-  share_amount: number;
-  percentage?: number;
-  created_at?: string;
-  updated_at?: string;
-}
-
 export interface Expense {
   id: string;
   family_id: string;
@@ -72,7 +64,6 @@ export interface Expense {
   payment_method?: string;
   is_recurring?: boolean;
   is_verified?: boolean;
-  splits?: ExpenseSplit[];
   created_at: string;
   updated_at?: string;
 }
@@ -107,13 +98,6 @@ export const ExpenseItemSchema = z.object({
   paid_by: z.string().trim().max(100).optional(),
   payment_method: z.string().trim().max(50).optional(),
   is_recurring: z.boolean().default(false),
-  split: z
-    .object({
-      is_split: z.boolean().default(false),
-      type: z.enum(['EQUAL', 'PERCENTAGE', 'EXACT']).default('EQUAL'),
-      members: z.array(z.string().trim().max(100)).optional(),
-    })
-    .optional(),
 });
 
 export const ExpenseReportImportSchema = z.object({
@@ -153,13 +137,12 @@ export interface FilterOptions {
 }
 
 // -------------------------------------------------------------
-// Notification & Settlement Domain Types
+// Notification Domain Types
 // -------------------------------------------------------------
 
 export type NotificationType =
   | 'BATCH_IMPORT' // A3: Batch statement import completed
   | 'EXPENSE_UPDATE' // A4: Expense edited or deleted
-  | 'SETTLEMENT' // B1: Debt settlement payment recorded
   | 'MEMBER_JOINED' // E1: New family member joined
   | 'ROLE_CHANGED'; // E2: Member role/permissions updated
 
@@ -167,7 +150,6 @@ export interface NotificationPreferences {
   push_enabled: boolean;
   notify_batch_import: boolean; // A3
   notify_expense_updates: boolean; // A4
-  notify_settlements: boolean; // B1
   notify_member_joined: boolean; // E1
   notify_role_changed: boolean; // E2
 }
@@ -182,15 +164,5 @@ export interface AppNotification {
   body: string;
   data?: Record<string, any>;
   is_read: boolean;
-  created_at: string;
-}
-
-export interface Settlement {
-  id: string;
-  family_id: string;
-  from_member_id: string;
-  to_member_id: string;
-  amount: number;
-  notes?: string;
   created_at: string;
 }

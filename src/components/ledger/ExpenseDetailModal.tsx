@@ -10,7 +10,7 @@ import {
   Alert,
   useWindowDimensions,
 } from 'react-native';
-import { Calendar, User, CreditCard, Trash2, X, Split } from 'lucide-react-native';
+import { Calendar, User, CreditCard, Trash2, X } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName, getLocalizedPaymentMethod } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -25,7 +25,6 @@ interface ExpenseDetailModalProps {
   expense: Expense | null;
   category?: Category;
   member?: FamilyMember;
-  allMembers?: FamilyMember[];
   currency?: string;
   onClose: () => void;
   onDelete: (id: string) => void;
@@ -36,7 +35,6 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
   expense,
   category,
   member,
-  allMembers = [],
   currency = '€',
   onClose,
   onDelete,
@@ -51,7 +49,6 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
 
   const resolvedCategory = category || categories.find((c) => c.id === expense.category_id);
   const resolvedMember = member || members.find((m) => m.id === expense.paid_by_member_id);
-  const resolvedAllMembers = allMembers.length > 0 ? allMembers : members;
 
   const catColor = resolvedCategory?.color || theme.colors.brand;
   const catIcon = resolvedCategory?.icon || 'Tag';
@@ -463,98 +460,6 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                 </View>
               )}
             </View>
-
-            {/* Splits (if present) */}
-            {expense.splits && expense.splits.length > 0 && (
-              <View
-                style={{
-                  backgroundColor: theme.isDark
-                    ? theme.colors.surfaceContainerHigh
-                    : theme.colors.surfaceSubtle,
-                  borderRadius: radius.xl,
-                  borderWidth: 1.5,
-                  borderColor: theme.colors.borderTactile,
-                  padding: spacing.md,
-                  marginBottom: spacing.lg,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: spacing.xs,
-                    marginBottom: spacing.sm,
-                  }}
-                >
-                  <Split size={16} color={theme.colors.brand} />
-                  <Text
-                    style={{
-                      color: theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.sm,
-                      fontWeight: typography.fontWeights.bold,
-                    }}
-                  >
-                    {t.expenseDetail.splitBreakdown} ({expense.splits.length})
-                  </Text>
-                </View>
-
-                {expense.splits.map((s, idx) => {
-                  const m = resolvedAllMembers.find((mem) => mem.id === s.member_id);
-                  return (
-                    <View
-                      key={idx}
-                      style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        paddingVertical: 6,
-                        gap: spacing.sm,
-                      }}
-                    >
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: spacing.xs,
-                          flex: 1,
-                          minWidth: 0,
-                        }}
-                      >
-                        <Avatar
-                          name={m?.display_name || '?'}
-                          avatarUrl={m?.avatar_url}
-                          colorCode={m?.color_code}
-                          size="sm"
-                        />
-                        <Text
-                          style={{
-                            color: theme.colors.textPrimary,
-                            fontSize: typography.fontSizes.sm,
-                            fontWeight: typography.fontWeights.medium,
-                            flexShrink: 1,
-                          }}
-                          numberOfLines={1}
-                          ellipsizeMode="tail"
-                        >
-                          {m?.display_name || '?'}
-                        </Text>
-                      </View>
-                      <Text
-                        style={{
-                          color: theme.colors.brand,
-                          fontSize: typography.fontSizes.sm,
-                          fontWeight: typography.fontWeights.bold,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {currency}
-                        {s.share_amount.toFixed(2)}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
 
             {/* Actions */}
             <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs }}>

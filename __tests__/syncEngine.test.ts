@@ -147,16 +147,11 @@ describe('syncEngine', () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
     });
 
-    it('executes expense INSERT with splits', async () => {
+    it('executes expense INSERT', async () => {
       const upsertMock = jest.fn().mockResolvedValue({ error: null });
-      const deleteMock = jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ error: null }),
-      });
-      const insertMock = jest.fn().mockResolvedValue({ error: null });
 
       (supabase.from as jest.Mock).mockImplementation((table: string) => {
         if (table === 'expenses') return { upsert: upsertMock };
-        if (table === 'expense_splits') return { delete: deleteMock, insert: insertMock };
         return {};
       });
 
@@ -170,17 +165,11 @@ describe('syncEngine', () => {
         payload: {
           id: 'exp_1',
           amount: 60,
-          splits: [
-            { member_id: 'mem_1', share_amount: 30, percentage: 50 },
-            { member_id: 'mem_2', share_amount: 30, percentage: 50 },
-          ],
         },
       });
 
       expect(success).toBe(true);
       expect(upsertMock).toHaveBeenCalled();
-      expect(deleteMock).toHaveBeenCalled();
-      expect(insertMock).toHaveBeenCalled();
     });
 
     it('executes expense DELETE', async () => {
@@ -281,48 +270,6 @@ describe('syncEngine', () => {
       expect(eqMock).toHaveBeenCalledWith('id', 'fam_1');
     });
 
-    it('executes settlement INSERT and DELETE', async () => {
-      const insertMock = jest.fn().mockResolvedValue({ error: null });
-      const eqMock = jest.fn().mockResolvedValue({ error: null });
-      const deleteMock = jest.fn().mockReturnValue({ eq: eqMock });
-
-      (supabase.from as jest.Mock).mockReturnValue({
-        insert: insertMock,
-        delete: deleteMock,
-      });
-
-      const insSuccess = await syncEngine.executeMutation({
-        id: 'mut_7',
-        created_at: new Date().toISOString(),
-        retry_count: 0,
-        entity: 'settlement',
-        operation: 'INSERT',
-        entity_id: 'stl_1',
-        payload: {
-          id: 'stl_1',
-          family_id: 'fam_1',
-          from_member_id: 'm1',
-          to_member_id: 'm2',
-          amount: 45,
-          created_at: new Date().toISOString(),
-        },
-      });
-      expect(insSuccess).toBe(true);
-      expect(insertMock).toHaveBeenCalled();
-
-      const delSuccess = await syncEngine.executeMutation({
-        id: 'mut_8',
-        created_at: new Date().toISOString(),
-        retry_count: 0,
-        entity: 'settlement',
-        operation: 'DELETE',
-        entity_id: 'stl_1',
-        payload: { id: 'stl_1' },
-      });
-      expect(delSuccess).toBe(true);
-      expect(eqMock).toHaveBeenCalledWith('id', 'stl_1');
-    });
-
     it('executes notification_preference UPSERT', async () => {
       const upsertMock = jest.fn().mockResolvedValue({ error: null });
       (supabase.from as jest.Mock).mockReturnValue({ upsert: upsertMock });
@@ -339,7 +286,6 @@ describe('syncEngine', () => {
           push_enabled: true,
           notify_batch_import: false,
           notify_expense_updates: true,
-          notify_settlements: true,
           notify_member_joined: true,
           notify_role_changed: true,
         },
@@ -524,7 +470,6 @@ describe('syncEngine', () => {
               transaction_date: '2026-09-04',
               merchant_name: 'Delta Mart',
               amount: '120.50',
-              expense_splits: [{ member_id: 'mem_1', share_amount: 120.5 }],
               updated_at: '2026-09-04T10:00:00Z',
             },
           ]);
@@ -552,18 +497,6 @@ describe('syncEngine', () => {
             },
           ]);
         }
-        if (table === 'settlements') {
-          return mockQueryBuilder([
-            {
-              id: 'delta-stl-1',
-              family_id: 'fam_1',
-              from_member_id: 'mem_1',
-              to_member_id: 'mem_2',
-              amount: '75',
-              created_at: '2026-09-04T10:00:00Z',
-            },
-          ]);
-        }
         if (table === 'notification_preferences') {
           return mockQueryBuilder({
             member_id: 'mem_1',
@@ -574,14 +507,13 @@ describe('syncEngine', () => {
       });
 
       const res = await syncEngine.fetchDelta('fam_1', '2026-09-01T00:00:00Z');
-      expect(res.updatedCount).toBeGreaterThanOrEqual(4);
+      expect(res.updatedCount).toBeGreaterThanOrEqual(3);
 
       const store = useAppStore.getState();
       expect(store.family.name).toBe('Updated Robinson Family');
       expect(store.expenses.find((e) => e.id === 'delta-exp-1')).toBeDefined();
       expect(store.categories.find((c) => c.id === 'delta-cat-1')).toBeDefined();
       expect(store.members.find((m) => m.id === 'delta-mem-1')).toBeDefined();
-      expect(store.settlements.find((s) => s.id === 'delta-stl-1')).toBeDefined();
     });
 
     it('sets status to error when delta fetch query fails', async () => {

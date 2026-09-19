@@ -95,9 +95,9 @@ describe('ReportValidator (Zod Schema Validation Tests & Edge Cases)', () => {
     expect(result.error).toContain('Merchant name is required');
   });
 
-  it('validates reports with split metadata and custom optional statement periods', () => {
-    const splitReport = {
-      report_title: 'Shared Expenses',
+  it('validates reports with custom optional statement periods', () => {
+    const periodReport = {
+      report_title: 'Family Expenses',
       statement_period: {
         start_date: '2026-08-01',
         end_date: '2026-08-31',
@@ -113,19 +113,12 @@ describe('ReportValidator (Zod Schema Validation Tests & Edge Cases)', () => {
           paid_by: 'Elena',
           payment_method: 'Bank Transfer',
           is_recurring: true,
-          split: {
-            is_split: true,
-            type: 'EQUAL',
-            members: ['Berto', 'Elena'],
-          },
         },
       ],
     };
 
-    const result = reportValidator.validate(splitReport);
+    const result = reportValidator.validate(periodReport);
     expect(result.success).toBe(true);
-    expect(result.data?.expenses[0].split?.is_split).toBe(true);
-    expect(result.data?.expenses[0].split?.members).toEqual(['Berto', 'Elena']);
     expect(result.data?.statement_period?.start_date).toBe('2026-08-01');
     expect(result.data?.uploaded_by).toBe('Berto');
   });

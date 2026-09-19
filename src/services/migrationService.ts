@@ -3,7 +3,7 @@ import { supabaseLogger } from './logger';
 import { useAppStore } from './store';
 import { syncEngine } from './syncEngine';
 import { generateUUID, isValidUUID, generateInviteCode } from '@/utils/uuid';
-import { Expense, Category, FamilyMember, ExpenseSplit } from '@/types';
+import { Expense, Category, FamilyMember } from '@/types';
 
 export const migrationService = {
   async migrateLocalDataToSupabase(
@@ -127,46 +127,15 @@ export const migrationService = {
       );
       if (catError) throw catError;
 
-      // 5. Prepare and upsert Expenses and Splits
-      const mappedExpenses: Expense[] = [];
-      const splitsPayload: any[] = [];
-
-      localExpenses.forEach((e) => {
-        const newExpId = toUUID(e.id);
-        const mappedPaidBy = toUUID(e.paid_by_member_id);
-        const mappedCategory = toUUID(e.category_id);
-
-        let mappedSplits: ExpenseSplit[] | undefined = undefined;
-        if (e.splits && e.splits.length > 0) {
-          mappedSplits = e.splits.map((s) => {
-            const splitId = generateUUID();
-            const splitMemberId = toUUID(s.member_id);
-            splitsPayload.push({
-              id: splitId,
-              expense_id: newExpId,
-              member_id: splitMemberId,
-              share_amount: s.share_amount,
-              percentage: s.percentage ?? null,
-              updated_at: now,
-            });
-            return {
-              member_id: splitMemberId,
-              share_amount: s.share_amount,
-              percentage: s.percentage,
-            };
-          });
-        }
-
-        mappedExpenses.push({
-          ...e,
-          id: newExpId,
-          family_id: targetFamilyId,
-          paid_by_member_id: mappedPaidBy,
-          category_id: mappedCategory,
-          splits: mappedSplits,
-          updated_at: now,
-        });
-      });
+      // 5. Prepare and upsert Expenses
+      const mappedExpenses: Expense[] = localExpenses.map((e) => ({
+        ...e,
+        id: toUUID(e.id),
+        family_id: targetFamilyId,
+        paid_by_member_id: toUUID(e.paid_by_member_id),
+        category_id: toUUID(e.category_id),
+        updated_at: now,
+      }));
 
       if (mappedExpenses.length > 0) {
         const { error: expError } = await supabase.from('expenses').upsert(
@@ -188,11 +157,6 @@ export const migrationService = {
           })),
         );
         if (expError) throw expError;
-
-        if (splitsPayload.length > 0) {
-          const { error: splitError } = await supabase.from('expense_splits').upsert(splitsPayload);
-          if (splitError) throw splitError;
-        }
       }
 
       // 6. Update local store state with the mapped UUID entities
