@@ -193,12 +193,6 @@ export const INITIAL_EXPENSES: Expense[] = [
     is_recurring: false,
     is_verified: true,
     created_at: '2026-08-06T20:30:00Z',
-    splits: [
-      { member_id: 'mem_1', share_amount: 19.5, percentage: 25 },
-      { member_id: 'mem_2', share_amount: 19.5, percentage: 25 },
-      { member_id: 'mem_3', share_amount: 19.5, percentage: 25 },
-      { member_id: 'mem_4', share_amount: 19.5, percentage: 25 },
-    ],
   },
   {
     id: 'exp_5',
@@ -377,11 +371,6 @@ export const SAMPLE_IMPORT_REPORT: RawExpenseReport = {
       notes: 'Friday night family pizza dinner',
       payment_method: 'Credit Card',
       is_recurring: false,
-      split: {
-        is_split: true,
-        type: 'EQUAL' as const,
-        members: ['Berto', 'Elena'],
-      },
     },
     {
       date: '2026-09-07',

@@ -18,8 +18,6 @@ import { useAppStore } from '@/services/store';
 import { IconHelper } from '@/components/common/IconHelper';
 import { Avatar } from '@/components/common/Avatar';
 import { Input } from '@/components/common/Input';
-import { SplitCalculator } from '@/components/ledger/SplitCalculator';
-import { ExpenseSplit } from '@/types';
 
 // Native-safe local ISO date string helper
 const getTodayLocalIso = (): string => {
@@ -57,7 +55,6 @@ export default function AddExpenseScreen() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [merchant, setMerchant] = useState('');
   const [notes, setNotes] = useState('');
-  const [splits, setSplits] = useState<ExpenseSplit[] | undefined>(undefined);
   const [errors, setErrors] = useState<{ amount?: string; merchant?: string; date?: string }>({});
 
   const amountInputRef = useRef<TextInput>(null);
@@ -133,7 +130,6 @@ export default function AddExpenseScreen() {
       categoryId: selectedCategoryId,
       paidBy: paidByMemberId,
       date: activeDate.trim(),
-      splitsCount: splits?.length || 0,
     });
 
     addExpense({
@@ -146,7 +142,6 @@ export default function AddExpenseScreen() {
       payment_method: 'Standard',
       is_recurring: false,
       is_verified: true,
-      splits: splits && splits.length > 0 ? splits : undefined,
     });
 
     if (Platform.OS !== 'web') {
@@ -630,15 +625,6 @@ export default function AddExpenseScreen() {
               }}
               error={errors.merchant}
               leftIcon={<Building size={18} color={theme.colors.textMuted} strokeWidth={2.5} />}
-            />
-
-            {/* Split Expense Calculator */}
-            <SplitCalculator
-              totalAmount={numericAmount}
-              members={members}
-              currency={family.currency}
-              initialSplits={splits}
-              onSplitsChange={setSplits}
             />
 
             {/* Notes */}

@@ -638,7 +638,6 @@ export default function LedgerScreen() {
           expense={selectedExpense}
           category={categories.find((c) => c.id === selectedExpense?.category_id)}
           member={members.find((m) => m.id === selectedExpense?.paid_by_member_id)}
-          allMembers={members}
           currency={family.currency}
           onClose={() => setSelectedExpense(null)}
           onDelete={deleteExpense}

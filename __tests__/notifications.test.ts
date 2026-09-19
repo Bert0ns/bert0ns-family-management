@@ -1,9 +1,4 @@
-import {
-  useAppStore,
-  selectNotificationPreferences,
-  selectNotifications,
-  selectSettlements,
-} from '@/services/store';
+import { useAppStore, selectNotificationPreferences, selectNotifications } from '@/services/store';
 import { pushNotificationService } from '@/services/pushNotificationService';
 import { syncEngine } from '@/services/syncEngine';
 
@@ -29,7 +24,7 @@ jest.mock('expo-notifications', () => ({
   getExpoPushTokenAsync: jest.fn().mockResolvedValue({ data: 'ExponentPushToken[mock-token-123]' }),
 }));
 
-describe('Notifications & Settlements Subsystem', () => {
+describe('Notifications Subsystem', () => {
   beforeEach(() => {
     useAppStore.getState().resetToSampleData();
   });
@@ -42,7 +37,6 @@ describe('Notifications & Settlements Subsystem', () => {
       expect(prefs.push_enabled).toBe(true);
       expect(prefs.notify_batch_import).toBe(true); // A3
       expect(prefs.notify_expense_updates).toBe(true); // A4
-      expect(prefs.notify_settlements).toBe(true); // B1
       expect(prefs.notify_member_joined).toBe(true); // E1
       expect(prefs.notify_role_changed).toBe(true); // E2
     });
@@ -58,7 +52,6 @@ describe('Notifications & Settlements Subsystem', () => {
       expect(updated.push_enabled).toBe(false);
       expect(updated.notify_expense_updates).toBe(false);
       expect(updated.notify_batch_import).toBe(true);
-      expect(updated.notify_settlements).toBe(true);
     });
   });
 
@@ -79,14 +72,14 @@ describe('Notifications & Settlements Subsystem', () => {
         created_at: new Date().toISOString(),
       });
 
-      // 2. Add notification B1
+      // 2. Add notification A4
       store.addNotification({
         id: 'notif_2',
         family_id: store.family.id,
         recipient_member_id: 'mem_1',
-        type: 'SETTLEMENT',
-        title: 'Settlement Recorded',
-        body: 'Sofia paid €42.50 to Leo.',
+        type: 'EXPENSE_UPDATE',
+        title: 'Expense Updated',
+        body: 'Sofia edited Groceries expense.',
         is_read: false,
         created_at: new Date().toISOString(),
       });
@@ -113,51 +106,6 @@ describe('Notifications & Settlements Subsystem', () => {
     });
   });
 
-  describe('Settlement Payments Flow (Trigger B1)', () => {
-    it('records a new settlement locally and updates state', async () => {
-      const store = useAppStore.getState();
-      const initialSettlements = selectSettlements(store);
-      expect(initialSettlements).toHaveLength(0);
-
-      const settlement = await store.recordSettlement({
-        from_member_id: 'mem_2',
-        to_member_id: 'mem_1',
-        amount: 85.5,
-        notes: 'Monthly utility settlement',
-      });
-
-      expect(settlement.id).toBeDefined();
-      expect(settlement.family_id).toBe(store.family.id);
-      expect(settlement.from_member_id).toBe('mem_2');
-      expect(settlement.to_member_id).toBe('mem_1');
-      expect(settlement.amount).toBe(85.5);
-
-      const currentSettlements = selectSettlements(useAppStore.getState());
-      expect(currentSettlements).toHaveLength(1);
-      expect(currentSettlements[0].id).toBe(settlement.id);
-    });
-
-    it('reconciles remote settlements without duplicating', () => {
-      const store = useAppStore.getState();
-      const remoteSettlement = {
-        id: 'settle_remote_1',
-        family_id: store.family.id,
-        from_member_id: 'mem_1',
-        to_member_id: 'mem_2',
-        amount: 30.0,
-        notes: 'Remote dinner share',
-        created_at: new Date().toISOString(),
-      };
-
-      store.reconcileRemoteSettlements([remoteSettlement]);
-      expect(selectSettlements(useAppStore.getState())).toHaveLength(1);
-
-      // Reconciling same record again should not duplicate
-      store.reconcileRemoteSettlements([remoteSettlement]);
-      expect(selectSettlements(useAppStore.getState())).toHaveLength(1);
-    });
-  });
-
   describe('Push Notification Service', () => {
     it('registers push token and handles device permissions', async () => {
       const token = await pushNotificationService.registerForPushNotificationsAsync('test-user-id');
@@ -172,8 +120,8 @@ describe('Notifications & Settlements Subsystem', () => {
     });
   });
 
-  describe('Sync Engine Integration for Settlement and Preferences', () => {
-    it('handles settlement and notification_preference delta fetching without error', async () => {
+  describe('Sync Engine Integration for Preferences', () => {
+    it('handles notification_preference delta fetching without error', async () => {
       await expect(syncEngine.fetchDelta('fam_1')).resolves.not.toThrow();
     });
   });

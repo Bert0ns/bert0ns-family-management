@@ -7,13 +7,11 @@ import {
   FamilyMember,
   Family,
   FilterOptions,
-  ExpenseSplit,
   ImportBatch,
   RawExpenseReport,
   MutationOperation,
   NotificationPreferences,
   AppNotification,
-  Settlement,
 } from '@/types';
 import {
   INITIAL_EXPENSES,
@@ -21,7 +19,6 @@ import {
   INITIAL_MEMBERS,
   INITIAL_FAMILY,
 } from '@/data/mockData';
-import { calculateEqualSplits } from '@/services/splitCalculator';
 import { generateUUID } from '@/utils/uuid';
 import { CATEGORY_I18N_KEY_MAP } from '@/i18n/categories';
 import { storeLogger, transactionLogger } from '@/services/logger';
@@ -30,7 +27,6 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   push_enabled: true,
   notify_batch_import: true, // A3
   notify_expense_updates: true, // A4
-  notify_settlements: true, // B1
   notify_member_joined: true, // E1
   notify_role_changed: true, // E2
 };
@@ -42,7 +38,6 @@ export interface AppState {
   categories: Category[];
   expenses: Expense[];
   importBatches: ImportBatch[];
-  settlements: Settlement[];
   notifications: AppNotification[];
   notificationPreferences: NotificationPreferences;
 
@@ -75,9 +70,7 @@ export interface AppState {
   addCategory: (category: Omit<Category, 'id' | 'family_id'>) => Category;
   deleteCategory: (id: string) => void;
 
-  // Actions - Settlements & Notifications
-  recordSettlement: (settlement: Omit<Settlement, 'id' | 'created_at' | 'family_id'>) => Settlement;
-  reconcileRemoteSettlements: (settlements: Settlement[]) => void;
+  // Actions - Notifications
   updateNotificationPreferences: (preferences: Partial<NotificationPreferences>) => void;
   addNotification: (notification: AppNotification) => void;
   markNotificationAsRead: (id: string) => void;
@@ -101,11 +94,10 @@ export interface AppState {
   removeRemoteExpense: (id: string) => void;
   removeRemoteCategory: (id: string) => void;
   removeRemoteMember: (id: string) => void;
-  removeRemoteSettlement: (id: string) => void;
 }
 
 export type StoreMutationEvent = {
-  entity: 'expense' | 'category' | 'member' | 'family' | 'settlement' | 'notification_preference';
+  entity: 'expense' | 'category' | 'member' | 'family' | 'notification_preference';
   operation: MutationOperation;
   entity_id: string;
   payload: any;
@@ -151,7 +143,6 @@ export const useAppStore = create<AppState>()(
       categories: INITIAL_CATEGORIES,
       expenses: INITIAL_EXPENSES,
       importBatches: [],
-      settlements: [],
       notifications: [],
       notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
       currentMemberId: 'mem_1',
@@ -209,7 +200,6 @@ export const useAppStore = create<AppState>()(
           paidBy: newExpense.paid_by_member_id,
           category: newExpense.category_id,
           date: newExpense.transaction_date,
-          splitsCount: newExpense.splits?.length || 0,
         });
         storeLogger.debug('Expense added to state', {
           expenseId: newExpense.id,
@@ -239,19 +229,7 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           expenses: state.expenses.map((e) => {
             if (e.id === id) {
-              let nextSplits = updates.splits !== undefined ? updates.splits : e.splits;
-              if (
-                updates.amount !== undefined &&
-                updates.amount !== e.amount &&
-                updates.splits === undefined &&
-                nextSplits &&
-                nextSplits.length > 0
-              ) {
-                const memberIds = nextSplits.map((s) => s.member_id);
-                nextSplits = calculateEqualSplits(updates.amount, memberIds);
-              }
-
-              updatedExpense = { ...e, ...updates, splits: nextSplits, updated_at: now };
+              updatedExpense = { ...e, ...updates, updated_at: now };
               return updatedExpense;
             }
             return e;
@@ -357,35 +335,8 @@ export const useAppStore = create<AppState>()(
         }
 
         const remainingMembers = state.members.filter((m) => m.id !== id);
-
         const cascadedDeletedExpenses = state.expenses.filter((e) => e.paid_by_member_id === id);
-        const cascadedDeletedSettlements = state.settlements.filter(
-          (s) => s.from_member_id === id || s.to_member_id === id,
-        );
-        const remainingSettlements = state.settlements.filter(
-          (s) => s.from_member_id !== id && s.to_member_id !== id,
-        );
-        const modifiedJointExpenses: Expense[] = [];
-
-        const updatedExpenses = state.expenses
-          .filter((e) => e.paid_by_member_id !== id)
-          .map((e) => {
-            if (!e.splits || e.splits.length === 0) return e;
-            const remainingSplits = e.splits.filter((s) => s.member_id !== id);
-            if (remainingSplits.length <= 1) {
-              const modified = { ...e, splits: undefined, updated_at: new Date().toISOString() };
-              modifiedJointExpenses.push(modified);
-              return modified;
-            }
-            const remainingMemberIds = remainingSplits.map((s) => s.member_id);
-            const modified = {
-              ...e,
-              splits: calculateEqualSplits(e.amount, remainingMemberIds),
-              updated_at: new Date().toISOString(),
-            };
-            modifiedJointExpenses.push(modified);
-            return modified;
-          });
+        const updatedExpenses = state.expenses.filter((e) => e.paid_by_member_id !== id);
 
         const newCurrentMemberId =
           state.currentMemberId === id ? remainingMembers[0]?.id || '' : state.currentMemberId;
@@ -405,7 +356,6 @@ export const useAppStore = create<AppState>()(
         set({
           members: remainingMembers,
           expenses: updatedExpenses,
-          settlements: remainingSettlements,
           currentMemberId: newCurrentMemberId,
           importBatches: updatedBatches,
         });
@@ -416,24 +366,6 @@ export const useAppStore = create<AppState>()(
             operation: 'DELETE',
             entity_id: exp.id,
             payload: { id: exp.id },
-          });
-        });
-
-        cascadedDeletedSettlements.forEach((stl) => {
-          notifyStoreMutation({
-            entity: 'settlement',
-            operation: 'DELETE',
-            entity_id: stl.id,
-            payload: { id: stl.id },
-          });
-        });
-
-        modifiedJointExpenses.forEach((exp) => {
-          notifyStoreMutation({
-            entity: 'expense',
-            operation: 'UPDATE',
-            entity_id: exp.id,
-            payload: exp,
           });
         });
 
@@ -501,46 +433,6 @@ export const useAppStore = create<AppState>()(
           operation: 'DELETE',
           entity_id: id,
           payload: { id },
-        });
-      },
-
-      recordSettlement: (settlementData) => {
-        const state = get();
-        const now = new Date().toISOString();
-        const newSettlement: Settlement = {
-          ...settlementData,
-          id: generateUUID(),
-          family_id: state.family.id,
-          created_at: now,
-        };
-        transactionLogger.info('Settlement recorded', {
-          id: newSettlement.id,
-          from: newSettlement.from_member_id,
-          to: newSettlement.to_member_id,
-          amount: newSettlement.amount,
-        });
-        storeLogger.debug('Settlement added to state', { settlementId: newSettlement.id });
-        set((s) => ({ settlements: [newSettlement, ...s.settlements] }));
-        notifyStoreMutation({
-          entity: 'settlement',
-          operation: 'INSERT',
-          entity_id: newSettlement.id,
-          payload: newSettlement,
-        });
-        return newSettlement;
-      },
-
-      reconcileRemoteSettlements: (remoteList) => {
-        storeLogger.info('Reconciling remote settlements', { count: remoteList.length });
-        set((state) => {
-          const map = new Map(state.settlements.map((s) => [s.id, s]));
-          remoteList.forEach((remote) => {
-            map.set(remote.id, remote);
-          });
-          const sorted = Array.from(map.values()).sort(
-            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-          );
-          return { settlements: sorted };
         });
       },
 
@@ -631,24 +523,6 @@ export const useAppStore = create<AppState>()(
             state.categories.find((c) => c.id === 'cat_other') ||
             state.categories[0];
 
-          let splits: ExpenseSplit[] | undefined = undefined;
-          if (rawExp.split?.is_split) {
-            let targetMemberIds: string[] = [];
-            if (rawExp.split.members && rawExp.split.members.length > 0) {
-              targetMemberIds = rawExp.split.members
-                .map(
-                  (name) =>
-                    state.members.find((m) => m.display_name.toLowerCase() === name.toLowerCase())
-                      ?.id,
-                )
-                .filter((id): id is string => Boolean(id));
-            }
-            if (targetMemberIds.length === 0) {
-              targetMemberIds = state.members.map((m) => m.id);
-            }
-            splits = calculateEqualSplits(rawExp.amount, targetMemberIds);
-          }
-
           const now = new Date().toISOString();
           return {
             id: generateUUID(),
@@ -663,7 +537,6 @@ export const useAppStore = create<AppState>()(
             payment_method: rawExp.payment_method || 'Imported File',
             is_recurring: rawExp.is_recurring,
             is_verified: true,
-            splits: splits && splits.length > 0 ? splits : undefined,
             created_at: now,
             updated_at: now,
           };
@@ -705,7 +578,6 @@ export const useAppStore = create<AppState>()(
           categories: INITIAL_CATEGORIES,
           expenses: INITIAL_EXPENSES,
           importBatches: [],
-          settlements: [],
           notifications: [],
           notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
           currentMemberId: 'mem_1',
@@ -736,10 +608,7 @@ export const useAppStore = create<AppState>()(
               const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
               const localTime = local.updated_at ? new Date(local.updated_at).getTime() : 0;
               if (remoteTime >= localTime) {
-                map.set(remote.id, {
-                  ...remote,
-                  splits: remote.splits !== undefined ? remote.splits : local.splits,
-                });
+                map.set(remote.id, remote);
               }
             }
           });
@@ -805,13 +674,6 @@ export const useAppStore = create<AppState>()(
           members: state.members.filter((m) => m.id !== id),
         }));
       },
-
-      removeRemoteSettlement: (id) => {
-        storeLogger.info('Removing remote settlement from local store', { id });
-        set((state) => ({
-          settlements: state.settlements.filter((s) => s.id !== id),
-        }));
-      },
     }),
     {
       name: '@bert0ns_family_management_store',
@@ -825,7 +687,6 @@ export const useAppStore = create<AppState>()(
           expensesCount: state?.expenses?.length ?? 0,
           membersCount: state?.members?.length ?? 0,
           categoriesCount: state?.categories?.length ?? 0,
-          settlementsCount: state?.settlements?.length ?? 0,
           currentMemberId: state?.currentMemberId,
           selectedPeriod: state?.selectedPeriod,
         });
@@ -849,7 +710,6 @@ export const useAppStore = create<AppState>()(
         members: state.members,
         categories: state.categories,
         expenses: state.expenses,
-        settlements: state.settlements,
         notifications: state.notifications,
         notificationPreferences: state.notificationPreferences,
         importBatches: state.importBatches.map(({ raw_payload, ...rest }) => rest as ImportBatch),
@@ -871,4 +731,3 @@ export const selectFilters = (state: AppState) => state.filters;
 export const selectImportBatches = (state: AppState) => state.importBatches;
 export const selectNotificationPreferences = (state: AppState) => state.notificationPreferences;
 export const selectNotifications = (state: AppState) => state.notifications;
-export const selectSettlements = (state: AppState) => state.settlements;

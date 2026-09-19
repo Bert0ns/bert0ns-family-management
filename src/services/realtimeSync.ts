@@ -3,7 +3,7 @@ import { supabase, isSupabaseConfigured } from './supabase';
 import { supabaseLogger, syncLogger, transactionLogger, storeLogger } from './logger';
 import { useAppStore } from './store';
 import { syncEngine } from './syncEngine';
-import { Expense, Category, FamilyMember, Settlement, AppNotification } from '@/types';
+import { Expense, Category, FamilyMember, AppNotification } from '@/types';
 
 let activeChannel: RealtimeChannel | null = null;
 let currentSubscribedFamilyId: string | null = null;
@@ -57,43 +57,23 @@ export const realtimeSync = {
 
         if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
           const raw = payload.new as any;
-          (async () => {
-            let remoteSplits: any[] | null = null;
-            try {
-              const res = await supabase
-                .from('expense_splits')
-                .select('*')
-                .eq('expense_id', raw.id);
-              remoteSplits = res.data;
-            } catch (splitErr) {
-              supabaseLogger.debug('Failed to fetch splits for realtime expense', {
-                error: splitErr,
-              });
-            }
-
-            const mapped: Expense = {
-              id: raw.id,
-              family_id: raw.family_id,
-              paid_by_member_id: raw.paid_by_member_id,
-              category_id: raw.category_id,
-              import_batch_id: raw.import_batch_id,
-              transaction_date: raw.transaction_date,
-              merchant_name: raw.merchant_name,
-              amount: Number(raw.amount),
-              notes: raw.notes,
-              payment_method: raw.payment_method,
-              is_recurring: raw.is_recurring,
-              is_verified: raw.is_verified,
-              created_at: raw.created_at,
-              updated_at: raw.updated_at,
-              splits: remoteSplits?.map((s: any) => ({
-                member_id: s.member_id,
-                share_amount: Number(s.share_amount),
-                percentage: s.percentage ? Number(s.percentage) : undefined,
-              })),
-            };
-            store.reconcileRemoteExpenses([mapped]);
-          })();
+          const mapped: Expense = {
+            id: raw.id,
+            family_id: raw.family_id,
+            paid_by_member_id: raw.paid_by_member_id,
+            category_id: raw.category_id,
+            import_batch_id: raw.import_batch_id,
+            transaction_date: raw.transaction_date,
+            merchant_name: raw.merchant_name,
+            amount: Number(raw.amount),
+            notes: raw.notes,
+            payment_method: raw.payment_method,
+            is_recurring: raw.is_recurring,
+            is_verified: raw.is_verified,
+            created_at: raw.created_at,
+            updated_at: raw.updated_at,
+          };
+          store.reconcileRemoteExpenses([mapped]);
         } else if (payload.eventType === 'DELETE') {
           const oldRecord = payload.old as any;
           if (oldRecord?.id) {
@@ -186,46 +166,7 @@ export const realtimeSync = {
       },
     );
 
-    // 4. Settlements channel listener
-    channel.on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'settlements',
-        filter: `family_id=eq.${familyId}`,
-      },
-      (payload) => {
-        const rawItem = (payload.new || payload.old) as any;
-        transactionLogger.info('Realtime settlement event received', {
-          eventType: payload.eventType,
-          id: rawItem?.id,
-          amount: rawItem?.amount,
-        });
-        const store = useAppStore.getState();
-
-        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-          const raw = payload.new as any;
-          const mapped: Settlement = {
-            id: raw.id,
-            family_id: raw.family_id,
-            from_member_id: raw.from_member_id,
-            to_member_id: raw.to_member_id,
-            amount: Number(raw.amount),
-            notes: raw.notes,
-            created_at: raw.created_at,
-          };
-          store.reconcileRemoteSettlements([mapped]);
-        } else if (payload.eventType === 'DELETE') {
-          const oldRecord = payload.old as any;
-          if (oldRecord?.id) {
-            store.removeRemoteSettlement(oldRecord.id);
-          }
-        }
-      },
-    );
-
-    // 4b. Family metadata channel listener
+    // 4. Family metadata channel listener
     channel.on(
       'postgres_changes',
       {

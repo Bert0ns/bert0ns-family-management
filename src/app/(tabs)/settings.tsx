@@ -16,7 +16,6 @@ import {
   Bell,
   FileSpreadsheet,
   Edit3,
-  ArrowLeftRight,
   UserCheck,
   Shield,
 } from 'lucide-react-native';
@@ -719,65 +718,6 @@ export default function SettingsScreen() {
               onValueChange={(val) =>
                 updateNotificationPreferences({ notify_expense_updates: val })
               }
-              disabled={!notificationPreferences.push_enabled}
-              trackColor={{ false: theme.colors.border, true: theme.colors.brand }}
-              thumbColor="#FFFFFF"
-            />
-          </View>
-
-          {/* Group 2: Settlements */}
-          <Text
-            style={{
-              color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              fontWeight: typography.fontWeights.bold,
-              textTransform: 'uppercase',
-              letterSpacing: 0.5,
-              marginTop: spacing.xs,
-            }}
-          >
-            {t.notifications.debtsGroup}
-          </Text>
-
-          {/* B1: Settlement Payments */}
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              backgroundColor: theme.isDark
-                ? theme.colors.surfaceContainerHigh
-                : theme.colors.surfaceSubtle,
-              padding: spacing.md,
-              borderRadius: radius.md,
-              borderWidth: 1,
-              borderColor: theme.colors.borderTactile,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: spacing.sm,
-                flex: 1,
-                marginRight: spacing.sm,
-              }}
-            >
-              <ArrowLeftRight size={18} color={theme.colors.brand} strokeWidth={2.5} />
-              <Text
-                style={{
-                  color: theme.colors.textPrimary,
-                  fontSize: typography.fontSizes.sm,
-                  fontWeight: typography.fontWeights.semibold,
-                  flex: 1,
-                }}
-              >
-                {t.notifications.settlementLabel}
-              </Text>
-            </View>
-            <Switch
-              value={notificationPreferences.notify_settlements}
-              onValueChange={(val) => updateNotificationPreferences({ notify_settlements: val })}
               disabled={!notificationPreferences.push_enabled}
               trackColor={{ false: theme.colors.border, true: theme.colors.brand }}
               thumbColor="#FFFFFF"

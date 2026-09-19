@@ -11,7 +11,6 @@ export interface TranslationSchema {
     search: string;
     all: string;
     duplicate: string;
-    split: string;
     items: string;
     total: string;
     confirm: string;
@@ -51,7 +50,6 @@ export interface TranslationSchema {
     membersTab: string;
     trendsTab: string;
     heatmapTab: string;
-    settlementTab: string;
     topMerchants: string;
     noMerchantData: string;
     spendingVelocity: string;
@@ -60,16 +58,8 @@ export interface TranslationSchema {
     heatmapTitle: string;
     less: string;
     more: string;
-    whoOwesWho: string;
-    allSettledUp: string;
-    owes: string;
-    to: string;
-    toSettleInstruction: string;
     categoryRank: string;
     spendingPaceNotice: string;
-    balances: string;
-    paid: string;
-    fairShare: string;
     velocityTitle: string;
     velocitySubtitle: string;
     totalSpend: string;
@@ -178,8 +168,6 @@ export interface TranslationSchema {
     selectColor: string;
     currentUser: string;
     relatedData: string;
-    splitShares: string;
-    splitParticipations: string;
   };
   settings: {
     title: string;
@@ -225,11 +213,6 @@ export interface TranslationSchema {
     dateLabel: string;
     paidByLabel: string;
     categoryLabel: string;
-    splitExpense: string;
-    splitEnabled: string;
-    splitDisabled: string;
-    splitSelectMembers: string;
-    eachMemberOwes: string;
     notesLabel: string;
     notesPlaceholder: string;
     saveExpense: string;
@@ -251,7 +234,6 @@ export interface TranslationSchema {
     paidBy: string;
     date: string;
     paymentMethod: string;
-    splitBreakdown: string;
     notes: string;
     uncategorized: string;
   };
@@ -326,9 +308,6 @@ export interface TranslationSchema {
     batchImportDesc: string;
     expenseUpdatesLabel: string;
     expenseUpdatesDesc: string;
-    debtsGroup: string;
-    settlementLabel: string;
-    settlementDesc: string;
     familyGroup: string;
     memberJoinedLabel: string;
     memberJoinedDesc: string;
@@ -338,9 +317,5 @@ export interface TranslationSchema {
     emptyDesc: string;
     markAllAsRead: string;
     clearAll: string;
-    settleUpButton: string;
-    settleConfirmTitle: string;
-    settleConfirmMessage: string;
-    settleSuccessToast: string;
   };
 }

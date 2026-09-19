@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { PieChart, Users, TrendingUp, Calendar, ArrowLeftRight } from 'lucide-react-native';
+import { PieChart, Users, TrendingUp, Calendar } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -9,14 +9,12 @@ import {
   calculateMemberContributions,
   calculateSpendingVelocity,
 } from '@/services/analytics';
-import { calculateSettlements } from '@/services/splitCalculator';
 import { Card } from '@/components/common/Card';
 import { PeriodSelector } from '@/components/common/PeriodSelector';
 import { CategoryPieChart } from '@/components/charts/CategoryPieChart';
 import { MemberBarChart } from '@/components/charts/MemberBarChart';
 import { SpendingVelocityChart } from '@/components/charts/SpendingVelocityChart';
 import { HeatmapCalendar } from '@/components/charts/HeatmapCalendar';
-import { SettlementCard } from '@/components/charts/SettlementCard';
 
 export default function AnalyticsScreen() {
   const { theme, spacing, radius, typography } = useTheme();
@@ -24,9 +22,9 @@ export default function AnalyticsScreen() {
   const { family, members, categories, expenses, selectedPeriod, setSelectedPeriod } =
     useAppStore();
 
-  const [activeTab, setActiveTab] = useState<
-    'categories' | 'settlement' | 'members' | 'trends' | 'heatmap'
-  >('categories');
+  const [activeTab, setActiveTab] = useState<'categories' | 'members' | 'trends' | 'heatmap'>(
+    'categories',
+  );
 
   const periodExpenses = useMemo(
     () => expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod)),
@@ -46,11 +44,6 @@ export default function AnalyticsScreen() {
   const velocityData = useMemo(
     () => calculateSpendingVelocity(expenses, selectedPeriod),
     [expenses, selectedPeriod],
-  );
-
-  const settlementSummary = useMemo(
-    () => calculateSettlements(periodExpenses, members),
-    [periodExpenses, members],
   );
 
   // Top Merchants summary
@@ -94,7 +87,6 @@ export default function AnalyticsScreen() {
       >
         {[
           { id: 'categories' as const, label: t.analytics.categoriesTab, icon: PieChart },
-          { id: 'settlement' as const, label: t.analytics.settlementTab, icon: ArrowLeftRight },
           { id: 'members' as const, label: t.analytics.membersTab, icon: Users },
           { id: 'trends' as const, label: t.analytics.trendsTab, icon: TrendingUp },
           { id: 'heatmap' as const, label: t.analytics.heatmapTab, icon: Calendar },
@@ -238,12 +230,6 @@ export default function AnalyticsScreen() {
               </View>
             )}
           </Card>
-        </View>
-      )}
-
-      {activeTab === 'settlement' && (
-        <View style={{ gap: spacing.lg }}>
-          <SettlementCard summary={settlementSummary} currency={family.currency} />
         </View>
       )}
 

@@ -87,7 +87,7 @@ export const syncEngine = {
 
       const updated = [...current, newMutation];
       await AsyncStorage.setItem(OUTBOX_STORAGE_KEY, JSON.stringify(updated));
-      if (mutation.entity === 'expense' || mutation.entity === 'settlement') {
+      if (mutation.entity === 'expense') {
         transactionLogger.info('Transaction mutation enqueued for sync', {
           entity: mutation.entity,
           operation: mutation.operation,
@@ -190,30 +190,11 @@ export const syncEngine = {
     switch (entity) {
       case 'expense': {
         if (operation === 'INSERT' || operation === 'UPDATE') {
-          const { splits, ...expenseData } = payload;
           const { error: expError } = await supabase.from('expenses').upsert({
-            ...expenseData,
+            ...payload,
             updated_at: new Date().toISOString(),
           });
           if (expError) throw expError;
-
-          if (splits && Array.isArray(splits)) {
-            // Delete previous splits and re-insert
-            await supabase.from('expense_splits').delete().eq('expense_id', entity_id);
-            if (splits.length > 0) {
-              const splitsPayload = splits.map((s: any) => ({
-                id: s.id || generateUUID(),
-                expense_id: entity_id,
-                member_id: s.member_id,
-                share_amount: s.share_amount,
-                percentage: s.percentage ?? null,
-              }));
-              const { error: splitError } = await supabase
-                .from('expense_splits')
-                .insert(splitsPayload);
-              if (splitError) throw splitError;
-            }
-          }
         } else if (operation === 'DELETE') {
           const { error } = await supabase.from('expenses').delete().eq('id', entity_id);
           if (error) throw error;
@@ -265,25 +246,6 @@ export const syncEngine = {
         return true;
       }
 
-      case 'settlement': {
-        if (operation === 'INSERT') {
-          const { error } = await supabase.from('settlements').insert({
-            id: payload.id,
-            family_id: payload.family_id,
-            from_member_id: payload.from_member_id,
-            to_member_id: payload.to_member_id,
-            amount: payload.amount,
-            notes: payload.notes || null,
-            created_at: payload.created_at,
-          });
-          if (error) throw error;
-        } else if (operation === 'DELETE') {
-          const { error } = await supabase.from('settlements').delete().eq('id', entity_id);
-          if (error) throw error;
-        }
-        return true;
-      }
-
       case 'notification_preference': {
         if (operation === 'INSERT' || operation === 'UPDATE') {
           const { error } = await supabase.from('notification_preferences').upsert({
@@ -291,7 +253,6 @@ export const syncEngine = {
             push_enabled: payload.push_enabled,
             notify_batch_import: payload.notify_batch_import,
             notify_expense_updates: payload.notify_expense_updates,
-            notify_settlements: payload.notify_settlements,
             notify_member_joined: payload.notify_member_joined,
             notify_role_changed: payload.notify_role_changed,
             updated_at: new Date().toISOString(),
@@ -341,10 +302,7 @@ export const syncEngine = {
       }
 
       // 1. Fetch updated expenses
-      let expQuery = supabase
-        .from('expenses')
-        .select('*, expense_splits(*)')
-        .eq('family_id', familyId);
+      let expQuery = supabase.from('expenses').select('*').eq('family_id', familyId);
       if (lastSync) {
         expQuery = expQuery.gt('updated_at', lastSync);
       }
@@ -385,11 +343,6 @@ export const syncEngine = {
           is_verified: re.is_verified,
           created_at: re.created_at,
           updated_at: re.updated_at,
-          splits: re.expense_splits?.map((s: any) => ({
-            member_id: s.member_id,
-            share_amount: Number(s.share_amount),
-            percentage: s.percentage ? Number(s.percentage) : undefined,
-          })),
         }));
 
         this.mergeExpensesLWW(mappedExpenses);
@@ -427,31 +380,7 @@ export const syncEngine = {
         count += mappedMembers.length;
       }
 
-      // 4. Fetch updated settlements
-      try {
-        let stlQuery = supabase.from('settlements').select('*').eq('family_id', familyId);
-        if (lastSync) {
-          stlQuery = stlQuery.gt('created_at', lastSync);
-        }
-        const { data: remoteSettlements, error: stlErr } = await stlQuery;
-        if (!stlErr && remoteSettlements && remoteSettlements.length > 0) {
-          const mappedSettlements = remoteSettlements.map((s: any) => ({
-            id: s.id,
-            family_id: s.family_id,
-            from_member_id: s.from_member_id,
-            to_member_id: s.to_member_id,
-            amount: Number(s.amount),
-            notes: s.notes,
-            created_at: s.created_at,
-          }));
-          useAppStore.getState().reconcileRemoteSettlements(mappedSettlements);
-          count += mappedSettlements.length;
-        }
-      } catch (stlErr) {
-        supabaseLogger.warn('Optional settlements delta fetch skipped', { error: stlErr });
-      }
-
-      // 5. Fetch notification preferences for current member
+      // 4. Fetch notification preferences for current member
       try {
         const currentMemberId = useAppStore.getState().currentMemberId;
         if (currentMemberId) {
@@ -466,7 +395,6 @@ export const syncEngine = {
               push_enabled: prefData.push_enabled,
               notify_batch_import: prefData.notify_batch_import,
               notify_expense_updates: prefData.notify_expense_updates,
-              notify_settlements: prefData.notify_settlements,
               notify_member_joined: prefData.notify_member_joined,
               notify_role_changed: prefData.notify_role_changed,
             });
