@@ -58,6 +58,18 @@ export interface IReportValidator {
   };
 }
 
+export interface CsvParseResult {
+  success: boolean;
+  data?: RawExpenseReport;
+  error?: string;
+  totalParsedRows?: number;
+  skippedRows?: number;
+}
+
+export interface ICsvParser {
+  parse(csvContent: string, defaultCurrency?: 'EUR' | '€'): CsvParseResult;
+}
+
 export interface IExpenseRepository {
   getExpenses(): Expense[];
   getMembers(): FamilyMember[];

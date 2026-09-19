@@ -96,9 +96,13 @@ export const it: TranslationSchema = {
     bulkImportButton: 'Importa (JSON)',
   },
   import: {
-    dropzoneTitle: 'Tocca o Trascina il File JSON delle Spese',
-    dropzoneSubtitle: 'Supporta file .json strutturati con data, commerciante e importo',
+    dropzoneTitle: 'Tocca o Trascina Estratto Conto CSV o JSON',
+    dropzoneSubtitle:
+      'Supporta estratti conto bancari CSV (Revolut, Intesa, UniCredit, ecc.) e report JSON',
     selectJsonFile: 'Seleziona File JSON',
+    selectFile: 'Seleziona File CSV o JSON',
+    csvDirectNotice:
+      'Import CSV diretto: mappa automaticamente colonne, date e importi 100% sul dispositivo.',
     reviewConfirm: 'Rivedi e Conferma Importazione',
     exportLedger: 'Esporta Registro Famiglia',
     exportLedgerSub: 'Scarica lo storico completo delle transazioni in formato CSV o JSON.',
@@ -109,10 +113,11 @@ export const it: TranslationSchema = {
     successNotice: 'Transazioni importate con successo nel registro!',
     schemaTitle: 'Formato JSON Atteso',
     schemaSubtitle: 'Carica un file JSON ben formattato corrispondente allo schema:',
-    loadSample: 'Carica Esempio di Report JSON',
-    bulkImportTitle: 'Importa Spese in Blocco con Schema JSON',
+    loadSample: 'Carica Esempio JSON',
+    loadSampleCsv: 'Carica Esempio CSV Bancario',
+    bulkImportTitle: 'Estratto Conto Bancario & Import Spese',
     bulkImportSubtitle:
-      'Importa elenchi di spese familiari con rilevamento automatico dei duplicati e associazione dei membri.',
+      'Importa direttamente estratti conto CSV o report JSON con rilevamento duplicati automatico e associazione membri.',
     bulkImportButton: 'Importa Spese in Blocco (Schema JSON)',
     fileLabel: 'File',
     totalTransactions: 'Transazioni Totali',

@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import { Upload, FileJson, AlertCircle, ClipboardPaste } from 'lucide-react-native';
+import {
+  Upload,
+  FileJson,
+  FileSpreadsheet,
+  AlertCircle,
+  ClipboardPaste,
+} from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { RawExpenseReport } from '@/types';
 import { reportValidator } from '@/services/validator';
 import { jsonExtractor } from '@/services/jsonExtractor';
+import { csvParser } from '@/services/csvParser';
+import { importLogger } from '@/services/logger';
 
 interface JsonDropzoneProps {
   onFileParsed: (report: RawExpenseReport, fileName: string) => void;
@@ -17,29 +25,67 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
   const [loading, setLoading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const processJsonText = (jsonString: string, fileName: string) => {
+  const processFileContent = (content: string, fileName: string) => {
     try {
       setErrorMessage(null);
-      // Use resilient jsonExtractor to clean markdown blocks or preambles
-      const extracted = jsonExtractor.extract(jsonString);
-      if (!extracted.success || !extracted.data) {
-        setErrorMessage(`JSON error: ${extracted.error || 'Invalid JSON format'}`);
+      const isCsv = fileName.toLowerCase().endsWith('.csv');
+      const isJson = fileName.toLowerCase().endsWith('.json');
+
+      if (isCsv) {
+        importLogger.info('Parsing uploaded CSV bank statement', { fileName });
+        const result = csvParser.parse(content);
+        if (!result.success || !result.data) {
+          setErrorMessage(result.error || 'Failed to parse CSV bank statement');
+          return;
+        }
+        onFileParsed(result.data, fileName);
         return;
       }
 
-      const validationResult = reportValidator.validate(extracted.data);
-      if (!validationResult.success || !validationResult.data) {
-        setErrorMessage(
-          `Validation error: ${validationResult.error || 'Invalid expense report format'}`,
-        );
+      if (isJson) {
+        importLogger.info('Parsing uploaded JSON expense report', { fileName });
+        const extracted = jsonExtractor.extract(content);
+        if (!extracted.success || !extracted.data) {
+          setErrorMessage(`JSON error: ${extracted.error || 'Invalid JSON format'}`);
+          return;
+        }
+
+        const validationResult = reportValidator.validate(extracted.data);
+        if (!validationResult.success || !validationResult.data) {
+          setErrorMessage(
+            `Validation error: ${validationResult.error || 'Invalid expense report format'}`,
+          );
+          return;
+        }
+
+        onFileParsed(validationResult.data, fileName);
         return;
       }
 
-      onFileParsed(validationResult.data, fileName);
+      // If extension is ambiguous (.txt or without extension), try JSON first then CSV
+      const extracted = jsonExtractor.extract(content);
+      if (extracted.success && extracted.data) {
+        const validationResult = reportValidator.validate(extracted.data);
+        if (validationResult.success && validationResult.data) {
+          onFileParsed(validationResult.data, fileName);
+          return;
+        }
+      }
+
+      const csvResult = csvParser.parse(content);
+      if (csvResult.success && csvResult.data) {
+        onFileParsed(csvResult.data, fileName);
+        return;
+      }
+
+      setErrorMessage(
+        'Could not parse file as either a bank statement CSV or JSON expense report.',
+      );
     } catch (e: any) {
-      setErrorMessage(`Failed to parse JSON: ${e.message}`);
+      setErrorMessage(`Failed to process file: ${e.message}`);
     }
   };
 
@@ -49,7 +95,14 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
       setErrorMessage(null);
 
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/json', 'text/json', 'text/plain'],
+        type: [
+          'application/json',
+          'text/json',
+          'text/csv',
+          'text/comma-separated-values',
+          'application/vnd.ms-excel',
+          'text/plain',
+        ],
         copyToCacheDirectory: true,
       });
 
@@ -59,16 +112,16 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
         if (Platform.OS === 'web') {
           if (file.file) {
             const text = await (file.file as any).text();
-            processJsonText(text, file.name);
+            processFileContent(text, file.name);
           } else {
             const response = await fetch(file.uri);
             const text = await response.text();
-            processJsonText(text, file.name);
+            processFileContent(text, file.name);
           }
         } else {
           const response = await fetch(file.uri);
           const text = await response.text();
-          processJsonText(text, file.name);
+          processFileContent(text, file.name);
         }
       }
     } catch (error: any) {
@@ -78,19 +131,58 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
     }
   };
 
+  // HTML5 Drag and Drop handlers for Web
+  const webDropProps =
+    Platform.OS === 'web'
+      ? {
+          onDragOver: (e: any) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!isDragOver) setIsDragOver(true);
+          },
+          onDragLeave: (e: any) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsDragOver(false);
+          },
+          onDrop: async (e: any) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsDragOver(false);
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              const file = e.dataTransfer.files[0];
+              try {
+                setLoading(true);
+                const text = await file.text();
+                processFileContent(text, file.name);
+              } catch (err: any) {
+                setErrorMessage(err.message || 'Error reading dropped file');
+              } finally {
+                setLoading(false);
+              }
+            }
+          },
+        }
+      : {};
+
   return (
     <View style={{ gap: spacing.md }}>
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={handlePickDocument}
         disabled={loading}
+        {...(webDropProps as any)}
         style={{
           borderWidth: 2,
-          borderColor: errorMessage ? theme.colors.danger : theme.colors.brand,
+          borderColor: errorMessage
+            ? theme.colors.danger
+            : isDragOver
+              ? theme.colors.brand
+              : theme.colors.borderTactile,
           borderStyle: 'dashed',
           borderRadius: radius.xl,
           padding: spacing.xl,
-          backgroundColor: theme.colors.surfaceSubtle,
+          backgroundColor: isDragOver ? theme.colors.brandLight : theme.colors.surfaceSubtle,
           alignItems: 'center',
           justifyContent: 'center',
           minHeight: 180,
@@ -127,12 +219,13 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
             fontSize: typography.fontSizes.sm,
             textAlign: 'center',
             marginTop: spacing.xs,
-            maxWidth: 320,
+            maxWidth: 340,
           }}
         >
           {t.import.dropzoneSubtitle}
         </Text>
 
+        {/* Action Button */}
         <View
           pointerEvents="none"
           style={{
@@ -150,6 +243,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <>
+              <FileSpreadsheet size={18} color="#FFFFFF" />
               <FileJson size={18} color="#FFFFFF" />
               <Text
                 style={{
@@ -158,7 +252,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
                   fontSize: typography.fontSizes.sm,
                 }}
               >
-                {t.import.selectJsonFile}
+                {t.import.selectFile}
               </Text>
             </>
           )}
@@ -221,3 +315,5 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
     </View>
   );
 };
+
+export const FileDropzone = JsonDropzone;

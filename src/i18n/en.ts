@@ -96,9 +96,13 @@ export const en: TranslationSchema = {
     bulkImportButton: 'Bulk Import (JSON)',
   },
   import: {
-    dropzoneTitle: 'Tap or Drop JSON Expense Report',
-    dropzoneSubtitle: 'Supports structured .json files with date, merchant, and amount',
+    dropzoneTitle: 'Tap or Drop Bank Statement CSV or JSON',
+    dropzoneSubtitle:
+      'Supports CSV statements (Revolut, Intesa, UniCredit, etc.) and structured JSON reports',
     selectJsonFile: 'Select JSON File',
+    selectFile: 'Select CSV or JSON File',
+    csvDirectNotice:
+      'Direct CSV import: automatically maps headers, dates, and amounts 100% on-device.',
     reviewConfirm: 'Review & Confirm Import',
     exportLedger: 'Export Family Ledger',
     exportLedgerSub:
@@ -112,9 +116,10 @@ export const en: TranslationSchema = {
     schemaTitle: 'Expected JSON Format',
     schemaSubtitle: 'Upload a well-formatted JSON file matching the schema below:',
     loadSample: 'Load Sample JSON Report',
-    bulkImportTitle: 'Bulk Import Expenses with JSON Schema',
+    loadSampleCsv: 'Load Sample Bank CSV',
+    bulkImportTitle: 'Bank Statements & Bulk Expense Import',
     bulkImportSubtitle:
-      'Import batches of family expenses with automatic duplicate detection and member matching.',
+      'Import bank CSV statements or structured JSON reports with automatic duplicate detection and member matching.',
     bulkImportButton: 'Bulk Import Expenses (JSON Schema)',
     fileLabel: 'File',
     totalTransactions: 'Total Transactions',

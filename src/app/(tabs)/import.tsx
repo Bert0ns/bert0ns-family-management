@@ -13,8 +13,9 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { RawExpenseReport } from '@/types';
-import { SAMPLE_IMPORT_REPORT } from '@/data/mockData';
+import { SAMPLE_IMPORT_REPORT, SAMPLE_CSV_STATEMENT } from '@/data/mockData';
 import { csvExporter } from '@/services/csvExporter';
+import { csvParser } from '@/services/csvParser';
 import { exportAndShareFile } from '@/services/fileExporter';
 import { importLogger } from '@/services/logger';
 
@@ -70,6 +71,13 @@ export default function ImportScreen() {
 
   const handleLoadSample = () => {
     handleFileParsed(SAMPLE_IMPORT_REPORT, 'sample-family-expense-report.json');
+  };
+
+  const handleLoadSampleCsv = () => {
+    const parseResult = csvParser.parse(SAMPLE_CSV_STATEMENT);
+    if (parseResult.success && parseResult.data) {
+      handleFileParsed(parseResult.data, 'sample-bank-statement.csv');
+    }
   };
 
   const handleExportJson = async () => {
@@ -186,14 +194,28 @@ export default function ImportScreen() {
           </View>
         </View>
 
-        <Button
-          title={t.import.loadSample}
-          variant="secondary"
-          size="md"
-          icon={<FileJson size={20} color={theme.colors.brand} strokeWidth={2.5} />}
-          onPress={handleLoadSample}
-          style={{ width: '100%' }}
-        />
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <View style={{ flex: 1 }}>
+            <Button
+              title={t.import.loadSampleCsv}
+              variant="secondary"
+              size="md"
+              icon={<FileSpreadsheet size={18} color={theme.colors.brand} strokeWidth={2.5} />}
+              onPress={handleLoadSampleCsv}
+              style={{ width: '100%' }}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button
+              title={t.import.loadSample}
+              variant="secondary"
+              size="md"
+              icon={<FileJson size={18} color={theme.colors.brand} strokeWidth={2.5} />}
+              onPress={handleLoadSample}
+              style={{ width: '100%' }}
+            />
+          </View>
+        </View>
       </Card>
 
       {/* Free AI Prompt Generator Card */}

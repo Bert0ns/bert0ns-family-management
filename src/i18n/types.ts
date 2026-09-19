@@ -97,6 +97,8 @@ export interface TranslationSchema {
     dropzoneTitle: string;
     dropzoneSubtitle: string;
     selectJsonFile: string;
+    selectFile: string;
+    csvDirectNotice: string;
     reviewConfirm: string;
     exportLedger: string;
     exportLedgerSub: string;
@@ -108,6 +110,7 @@ export interface TranslationSchema {
     schemaTitle: string;
     schemaSubtitle: string;
     loadSample: string;
+    loadSampleCsv: string;
     bulkImportTitle: string;
     bulkImportSubtitle: string;
     bulkImportButton: string;
