@@ -42,5 +42,24 @@ jobs:
       - name: Unit & Integration Tests (Jest)
         run: pnpm test
 
+  web-build:
+    name: Web Export Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Web Export Smoke Test
         run: pnpm build:web

@@ -47,9 +47,18 @@ jobs:
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
           npx expo prebuild --platform android --no-install
+          cat << 'EOF' >> android/gradle.properties
+          org.gradle.parallel=true
+          org.gradle.caching=true
+          org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC
+          org.gradle.vfs.watch=true
+          EOF
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          build-root-directory: android
+          cache-read-only: false
 
       - name: Build Android APK with Gradle
         env:
@@ -59,9 +68,9 @@ jobs:
           cd android
           chmod +x gradlew
           if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
-            ./gradlew assembleDebug --no-daemon
+            ./gradlew assembleDebug --build-cache --parallel
           else
-            ./gradlew assembleRelease --no-daemon
+            ./gradlew assembleRelease --build-cache --parallel
           fi
 
       - name: Locate Output APK
