@@ -1,5 +1,16 @@
 import { Expense, Category, FamilyMember } from '@/types';
 
+function escapeCell(val: string | number | boolean | undefined): string {
+  if (val === undefined || val === null) return '""';
+  let str = String(val);
+  // Neutralize CSV Formula Injection (CWE-1236)
+  if (/^[=+\-\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
+  str = str.replace(/"/g, '""');
+  return `"${str}"`;
+}
+
 /**
  * CsvExporter follows Single Responsibility Principle (SRP)
  * to format transaction logs into clean CSV format.
@@ -24,20 +35,12 @@ export class CsvExporter {
       'Notes',
     ];
 
-    const rows = expenses.map((exp) => {
-      const category = categories.find((c) => c.id === exp.category_id)?.name || 'Uncategorized';
-      const member = members.find((m) => m.id === exp.paid_by_member_id)?.display_name || 'Family';
+    const categoryMap = new Map<string, string>(categories.map((c) => [c.id, c.name]));
+    const memberMap = new Map<string, string>(members.map((m) => [m.id, m.display_name]));
 
-      const escapeCell = (val: string | number | boolean | undefined) => {
-        if (val === undefined || val === null) return '""';
-        let str = String(val);
-        // Neutralize CSV Formula Injection (CWE-1236)
-        if (/^[=+\-@\t\r]/.test(str)) {
-          str = `'${str}`;
-        }
-        str = str.replace(/"/g, '""');
-        return `"${str}"`;
-      };
+    const rows = expenses.map((exp) => {
+      const category = categoryMap.get(exp.category_id) || 'Uncategorized';
+      const member = memberMap.get(exp.paid_by_member_id) || 'Family';
 
       return [
         escapeCell(exp.id),
@@ -60,7 +63,7 @@ export class CsvExporter {
       // Prepend UTF-8 BOM so spreadsheet applications (Excel, Numbers) open UTF-8 chars (e.g. €) correctly
       const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement('link');
       link.href = url;
       link.setAttribute('download', fileName);
       document.body.appendChild(link);

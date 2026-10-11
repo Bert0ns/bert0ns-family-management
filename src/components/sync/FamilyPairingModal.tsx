@@ -23,7 +23,8 @@ interface FamilyPairingModalProps {
 export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible, onClose }) => {
   const { theme, spacing, typography, radius } = useTheme();
   const { t } = useI18n();
-  const { family, updateFamilySettings } = useAppStore();
+  const family = useAppStore((s) => s.family);
+  const updateFamilySettings = useAppStore((s) => s.updateFamilySettings);
 
   const [copied, setCopied] = useState(false);
   const [regenerated, setRegenerated] = useState(false);

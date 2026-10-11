@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -70,10 +70,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   }, []);
 
-  const setColorSchemePreference = (pref: ColorSchemePreference) => {
+  const setColorSchemePreference = useCallback((pref: ColorSchemePreference) => {
     setColorSchemePreferenceState(pref);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, pref);
+      } catch {
+        // Ignore localStorage write errors
+      }
+    }
     AsyncStorage.setItem(STORAGE_KEY, pref).catch(() => {});
-  };
+  }, []);
 
   const activeScheme =
     colorSchemePreference === 'system' ? systemColorScheme || 'light' : colorSchemePreference;
@@ -91,24 +98,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [theme.colors.background]);
 
-  return (
-    <ThemeContext.Provider
-      value={{
-        theme,
-        isDark,
-        colorSchemePreference,
-        setColorSchemePreference,
-        spacing: Spacing,
-        radius: Radius,
-        touchTargets: TouchTargets,
-        typography: Typography,
-        palette: Palette,
-        memberColors: MemberColors,
-      }}
-    >
-      {children}
-    </ThemeContext.Provider>
+  const value = useMemo(
+    () => ({
+      theme,
+      isDark,
+      colorSchemePreference,
+      setColorSchemePreference,
+      spacing: Spacing,
+      radius: Radius,
+      touchTargets: TouchTargets,
+      typography: Typography,
+      palette: Palette,
+      memberColors: MemberColors,
+    }),
+    [theme, isDark, colorSchemePreference, setColorSchemePreference],
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
 export const useTheme = () => useContext(ThemeContext);

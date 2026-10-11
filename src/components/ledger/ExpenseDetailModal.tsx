@@ -41,7 +41,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
   const { t, locale } = useI18n();
-  const { categories, members } = useAppStore();
+  const categories = useAppStore((s) => s.categories);
+  const members = useAppStore((s) => s.members);
   const { width: windowWidth } = useWindowDimensions();
   const isDesktop = windowWidth >= 768;
 
