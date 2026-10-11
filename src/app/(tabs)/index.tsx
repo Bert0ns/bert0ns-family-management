@@ -30,9 +30,20 @@ export default function DashboardScreen() {
     deleteExpense,
   } = useAppStore();
 
+  const refreshTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+    };
+  }, []);
+
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 600);
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    refreshTimerRef.current = setTimeout(() => setRefreshing(false), 600);
   }, []);
 
   const metrics = calculateMonthlyMetrics(expenses, categories, members, selectedPeriod);

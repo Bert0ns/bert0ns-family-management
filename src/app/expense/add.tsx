@@ -676,7 +676,7 @@ export default function AddExpenseScreen() {
       {/* Bulk Import Button */}
       <TouchableOpacity
         activeOpacity={0.75}
-        onPress={() => router.push('/(tabs)/import')}
+        onPress={() => router.replace('/(tabs)/import')}
         accessibilityLabel={t.addExpense.bulkImportButton}
         style={{
           marginTop: spacing.md,
