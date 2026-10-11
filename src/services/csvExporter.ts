@@ -4,7 +4,7 @@ function escapeCell(val: string | number | boolean | undefined): string {
   if (val === undefined || val === null) return '""';
   let str = String(val);
   // Neutralize CSV Formula Injection (CWE-1236)
-  if (/^[=+\-\t\r]/.test(str)) {
+  if (/^[=+\-@\t\r]/.test(str)) {
     str = `'${str}`;
   }
   str = str.replace(/"/g, '""');
