@@ -141,7 +141,9 @@ export const FormModal: React.FC<FormModalProps> = ({
 
             <TouchableOpacity
               onPress={onClose}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              accessibilityRole="button"
+              accessibilityLabel={cancelTitle || 'Close'}
               style={{ flexShrink: 0 }}
             >
               <X size={24} color={theme.colors.textSecondary} />

@@ -19,6 +19,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { IconHelper } from '@/components/common/IconHelper';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
+import { hexToRgba } from '@/utils/color';
 
 interface ExpenseDetailModalProps {
   visible: boolean;
@@ -182,7 +183,9 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
             </Text>
             <TouchableOpacity
               onPress={onClose}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityRole="button"
+              accessibilityLabel={t.common.close}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               style={{
                 width: 36,
                 height: 36,
@@ -217,9 +220,9 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   width: 56,
                   height: 56,
                   borderRadius: radius.xl,
-                  backgroundColor: `${catColor}22`,
+                  backgroundColor: hexToRgba(catColor, 0.14),
                   borderWidth: 1.5,
-                  borderColor: `${catColor}35`,
+                  borderColor: hexToRgba(catColor, 0.22),
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: spacing.sm,

@@ -55,11 +55,16 @@ export function OptionSelector<T extends string | number>({
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         {options.map((opt) => {
           const isSelected = selectedValue === opt.value;
+          const a11yLabel = opt.sublabel ? `${opt.label}, ${opt.sublabel}` : opt.label;
           return (
             <TouchableOpacity
               key={String(opt.value)}
               activeOpacity={0.75}
               onPress={() => onSelect(opt.value)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: isSelected }}
+              accessibilityLabel={a11yLabel}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               style={{
                 flex: 1,
                 minHeight: 52,

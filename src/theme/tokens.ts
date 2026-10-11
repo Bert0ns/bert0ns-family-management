@@ -99,7 +99,7 @@ export const Palette = {
 export const LightTheme = {
   isDark: false,
   colors: {
-    brand: Palette.emerald[600],
+    brand: Palette.emerald[700],
     brandSecondary: Palette.indigo[600],
     brandLight: 'rgba(5, 150, 105, 0.12)',
     brandSecondaryLight: 'rgba(79, 70, 229, 0.12)',
@@ -120,7 +120,7 @@ export const LightTheme = {
     textInverse: '#FFFFFF',
     success: Palette.emerald[600],
     successBg: 'rgba(5, 150, 105, 0.12)',
-    warning: Palette.amber[600],
+    warning: Palette.amber[700],
     warningBg: 'rgba(217, 119, 6, 0.12)',
     danger: Palette.rose[600],
     dangerBg: 'rgba(225, 29, 72, 0.12)',
@@ -161,7 +161,7 @@ export const DarkTheme = {
     borderTactile: '#334155',
     textPrimary: '#F8FAFC',
     textSecondary: '#94A3B8',
-    textMuted: '#64748B',
+    textMuted: Palette.neutral[400],
     textInverse: '#0B1326',
     success: Palette.emerald[400],
     successBg: 'rgba(16, 185, 129, 0.18)',
