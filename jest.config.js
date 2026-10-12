@@ -8,6 +8,7 @@ module.exports = {
     '^@react-native-async-storage/async-storage$':
       '@react-native-async-storage/async-storage/jest/async-storage-mock',
     '^expo-secure-store$': '<rootDir>/__mocks__/expo-secure-store.ts',
+    '^expo-crypto$': '<rootDir>/__mocks__/expo-crypto.ts',
   },
   testMatch: ['**/__tests__/**/*.test.(ts|tsx|js)'],
   transform: {

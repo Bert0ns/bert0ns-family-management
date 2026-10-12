@@ -11,7 +11,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public, pg_temp;
 
 -- 3. Families Table
 CREATE TABLE IF NOT EXISTS public.families (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -203,7 +203,18 @@ BEGIN
     WHERE family_id = f_id AND user_id = auth.uid()
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+
+-- Helper function: check if authenticated user is admin of family
+CREATE OR REPLACE FUNCTION public.is_admin_of_family(f_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.family_members
+    WHERE family_id = f_id AND user_id = auth.uid() AND role = 'ADMIN'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 -- Families Policies
 CREATE POLICY "Family members can view their family"
@@ -223,14 +234,25 @@ CREATE POLICY "Family members can view members"
 ON public.family_members FOR SELECT
 USING (public.is_member_of_family(family_id) OR user_id = auth.uid());
 
-CREATE POLICY "Authenticated users can join or add family members"
+CREATE POLICY "Authorized users can insert family members"
 ON public.family_members FOR INSERT
-WITH CHECK (auth.uid() IS NOT NULL);
+WITH CHECK (
+  auth.uid() IS NOT NULL AND (
+    NOT EXISTS (
+      SELECT 1 FROM public.family_members fm
+      WHERE fm.family_id = family_members.family_id
+    )
+    OR public.is_member_of_family(family_id)
+  )
+);
 
 CREATE POLICY "Family members can update members"
 ON public.family_members FOR UPDATE
 USING (public.is_member_of_family(family_id) OR user_id = auth.uid())
-WITH CHECK (public.is_member_of_family(family_id) OR user_id = auth.uid());
+WITH CHECK (
+  (public.is_member_of_family(family_id) OR user_id = auth.uid())
+  AND (role <> 'ADMIN' OR public.is_admin_of_family(family_id))
+);
 
 CREATE POLICY "Family members can delete members"
 ON public.family_members FOR DELETE
@@ -370,6 +392,24 @@ USING (
   )
 );
 
+-- Budgets Policies
+CREATE POLICY "budgets_family_access" ON public.budgets
+  FOR ALL USING (
+    family_id IN (SELECT family_id FROM public.family_members WHERE user_id = auth.uid())
+  )
+  WITH CHECK (
+    family_id IN (SELECT family_id FROM public.family_members WHERE user_id = auth.uid())
+  );
+
+-- Import Batches Policies
+CREATE POLICY "import_batches_family_access" ON public.import_batches
+  FOR ALL USING (
+    family_id IN (SELECT family_id FROM public.family_members WHERE user_id = auth.uid())
+  )
+  WITH CHECK (
+    family_id IN (SELECT family_id FROM public.family_members WHERE user_id = auth.uid())
+  );
+
 -- 15. Realtime Publication Setup
 ALTER PUBLICATION supabase_realtime ADD TABLE public.families;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.family_members;
@@ -440,7 +480,7 @@ BEGIN
 
     RETURN jsonb_build_object('family_id', v_family_id, 'member_id', v_member_id, 'status', 'success');
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 -- 17. Notification Dispatch Triggers
 -- A3: Batch Statement Imported
@@ -475,7 +515,7 @@ BEGIN
   END LOOP;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 DROP TRIGGER IF EXISTS tr_notify_import_batch ON public.import_batches;
 CREATE TRIGGER tr_notify_import_batch
@@ -526,7 +566,7 @@ BEGIN
   END LOOP;
   RETURN COALESCE(NEW, OLD);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 DROP TRIGGER IF EXISTS tr_notify_expense_change ON public.expenses;
 CREATE TRIGGER tr_notify_expense_change
@@ -568,7 +608,7 @@ BEGIN
   END LOOP;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 DROP TRIGGER IF EXISTS tr_notify_settlement ON public.settlements;
 CREATE TRIGGER tr_notify_settlement
@@ -622,7 +662,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 DROP TRIGGER IF EXISTS tr_notify_member_lifecycle ON public.family_members;
 CREATE TRIGGER tr_notify_member_lifecycle
