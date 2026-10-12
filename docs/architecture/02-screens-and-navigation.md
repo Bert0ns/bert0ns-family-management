@@ -1,26 +1,44 @@
-# Screens, Navigation & UX Architecture
+# 02 — Screens and Navigation Architecture
 
-> **Module 02: Presentation, Routing & Navigation Architecture**  
-> Routing Framework: `Expo Router ^57.0.21` (File-based routing) | Platform Targets: `iOS, Android, Web (PWA)`
+## 1. System Navigation Overview
 
-[← Previous: C4 Context & Containers](./01-c4-context-and-containers.md) | [Index](./index.md) | [Next: State Management & Domain Logic →](./03-state-management-and-domain.md)
+The application utilizes **Expo Router v5** (built upon React Navigation v7) implementing a hybrid file-based navigation model. The route hierarchy is structured around two primary layers:
 
----
-
-## 1. Routing Architecture & Presentation Topology
-
-The presentation layer is governed by **Expo Router**, utilizing a file-system routing hierarchy that unifies native mobile stack/tab navigation with web browser URL routing. The root navigator initializes context providers (Theme, i18n, Toast) and declares the top-level stack layout, which nests the primary bottom tab navigator and registers modal presentation routes.
+1. **Root Stack Layout (`src/app/_layout.tsx`):** Manages modal overlays, system-level route interceptors, and application bootstrapping (theme injection, internationalization context, and notification subscribers).
+2. **Bottom Tabs Layout (`src/app/(tabs)/_layout.tsx`):** Houses the persistent core experience comprising six primary navigation surfaces with responsive touch targets ($\ge 48\times 48\,\text{pt}$).
 
 ```mermaid
-flowchart TB
-    subgraph RootStack ["Root Stack Navigator (src/app/_layout.tsx)"]
+graph TD
+    Root["Root Layout (_layout.tsx)"] --> AuthBoundary{"Session & Active Family?"}
+    AuthBoundary -->|Initialized| Tabs["Tabs Layout ((tabs)/_layout.tsx)"]
+    AuthBoundary -->|Unauthenticated/Pairing| PairingModal["FamilyPairingModal / AuthModal"]
+
+    Tabs --> TabDashboard["Dashboard (index.tsx)"]
+    Tabs --> TabLedger["Ledger (ledger.tsx)"]
+    Tabs --> TabAnalytics["Analytics (analytics.tsx)"]
+    Tabs --> TabImport["Import / Export (import.tsx)"]
+    Tabs --> TabFamily["Family Management (family.tsx)"]
+    Tabs --> TabSettings["Settings & Sync (settings.tsx)"]
+
+    TabLedger --> ModalExpenseDetail["ExpenseDetailModal.tsx"]
+    TabAnalytics --> ModalCategoryDetail["CategoryDetailModal.tsx"]
+    TabDashboard -.-> FAB["Floating Action Button / Quick Add"]
+    TabLedger -.-> FAB
+    FAB --> ModalAddExpense["Add Expense (expense/add.tsx)"]
+```
+
+### Complete Screen Navigation Flow
+
+```mermaid
+graph TB
+    subgraph NavigationRoot ["Expo Router Root Stack (_layout.tsx)"]
         direction TB
-        TabsGroup["(tabs) [Bottom Tab Group Navigator]"]
-        AddExpenseModal["expense/add [Stack Modal (slide_from_bottom)]"]
-        NotFoundRoute["+not-found [Fallback Route]"]
+        RootStack["Root Stack Navigator"]
+        AddExpenseModal["expense/add.tsx<br/>(Slide-from-bottom Sheet)"]
+        RootStack --> AddExpenseModal
     end
 
-    subgraph BottomTabs ["Bottom Tab Navigator (src/app/(tabs)/_layout.tsx)"]
+    subgraph TabsGroup ["Bottom Tabs Navigator ((tabs)/_layout.tsx)"]
         direction TB
         TabDashboard["index.tsx<br/>Home / Dashboard<br/>(LayoutDashboard icon)"]
         TabLedger["ledger.tsx<br/>Expense Ledger<br/>(Receipt icon)"]
@@ -33,6 +51,7 @@ flowchart TB
     subgraph ModalRegistry ["Interactive Modal Registry (Components)"]
         direction TB
         DetailModal["ExpenseDetailModal<br/>(Transaction inspection & splits)"]
+        CategoryDetailModal["CategoryDetailModal<br/>(Category drilldown & transaction list)"]
         SplitCalcModal["SplitCalculator<br/>(Cent-exact split configurator)"]
         MemberModals["AddMemberModal / EditMemberModal<br/>(Member lifecycle & avatar selection)"]
         CategoryModal["AddCategoryModal<br/>(Category name, color, icon picker)"]
@@ -42,6 +61,7 @@ flowchart TB
 
     TabsGroup --> BottomTabs
     TabLedger -.->|"Opens inspection"| DetailModal
+    TabAnalytics -.->|"Category tap drilldown"| CategoryDetailModal
     DetailModal -.->|"Invokes custom split"| SplitCalcModal
     TabFamily -.->|"Manages household"| MemberModals
     TabFamily -.->|"Customizes tags"| CategoryModal
@@ -57,17 +77,17 @@ flowchart TB
 
 The following table catalogs all application routes, presentation styles, core UI components, and state bindings.
 
-| Route Path                                                                                                            | Presentation Style | Primary Intent & Visual Sections                                                                                                                                   | Key Child Components                                                                               | Store Bindings & Selectors                                 |
-| :-------------------------------------------------------------------------------------------------------------------- | :----------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------- | :--------------------------------------------------------- |
-| [`src/app/_layout.tsx`](file:///home/berto/bert0ns-family-management/src/app/_layout.tsx#L1-L85)                      | Root Stack         | Global provider hierarchy (ThemeProvider, I18nProvider, ToastContainer, StatusBar).                                                                                | `ThemeProvider`, `I18nProvider`, `Stack`                                                           | Global theme and locale bootstrap                          |
-| [`src/app/(tabs)/_layout.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/_layout.tsx#L1-L120>)     | Bottom Tabs        | Primary navigation bar with 6 persistent tabs, dynamic icon tinting, and haptic tab switches.                                                                      | `Tabs`, `IconHelper`, `SyncBadge`                                                                  | `syncEngine.getSyncStatus`                                 |
-| [`src/app/(tabs)/index.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/index.tsx#L1-L240>)         | Tab Screen         | **Dashboard**: Monthly financial summary, KPI stat cards, active member balance ring, mini velocity preview, recent expense feed.                                  | `KPIStat`, `Card`, `Button`, `Avatar`, `ExpenseItem`, `PeriodSelector`                             | `expenses`, `members`, `categories`, `selectedPeriod`      |
-| [`src/app/(tabs)/ledger.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/ledger.tsx#L1-L320>)       | Tab Screen         | **Expense Ledger**: Searchable, filterable transaction list. Filter bar (category, payer, search), date grouping, expense detail trigger.                          | `Input`, `ExpenseItem`, `ExpenseDetailModal`, `OptionSelector`                                     | `expenses`, `filters`, `setFilters`, `resetFilters`        |
-| [`src/app/(tabs)/analytics.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/analytics.tsx#L1-L310>) | Tab Screen         | **Analytics**: Multi-tab financial insights. Spending velocity chart, category donut/pie chart, member contributions bar chart, and heatmap calendar.              | `SpendingVelocityChart`, `CategoryPieChart`, `MemberBarChart`, `HeatmapCalendar`, `SettlementCard` | `expenses`, `members`, `categories`, `selectedPeriod`      |
-| [`src/app/(tabs)/import.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/import.tsx#L1-L280>)       | Tab Screen         | **Import & Export Center**: JSON drag-and-drop dropzone, text paste modal, Zod schema viewer, AI statement prompt generator card, and CSV/JSON export actions.     | `JsonDropzone`, `AiPromptCard`, `SchemaViewer`, `ImportPreviewModal`, `PasteJsonModal`             | `importExpenseReport`, `expenses`, `categories`, `members` |
-| [`src/app/(tabs)/family.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/family.tsx#L1-L260>)       | Tab Screen         | **Family & Categories**: Family profile, member cards with color codes and roles, debt balance overview, custom category manager.                                  | `MemberCard`, `AddMemberModal`, `EditMemberModal`, `AddCategoryModal`                              | `family`, `members`, `categories`, `settlements`           |
-| [`src/app/(tabs)/settings.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/settings.tsx#L1-L250>)   | Tab Screen         | **Settings & Cloud Sync**: Theme selection (Light/Dark/System), Language switch (EN/IT), Notification preferences, Supabase Cloud Pairing, and sample data reset.  | `Card`, `Button`, `SyncBadge`, `AuthModal`, `FamilyPairingModal`                                   | `notificationPreferences`, `resetToSampleData`, `family`   |
-| [`src/app/expense/add.tsx`](file:///home/berto/bert0ns-family-management/src/app/expense/add.tsx#L1-L260)             | Stack Modal        | **Add/Edit Expense Form**: Modal sheet with numeric currency input, merchant name, category selector, payer selector, date picker, split config button, and notes. | `Input`, `OptionSelector`, `Button`, `SplitCalculator`                                             | `addExpense`, `updateExpense`, `members`, `categories`     |
+| Route Path                                                                                                            | Presentation Style | Primary Intent & Visual Sections                                                                                                                                                                                                         | Key Child Components                                                                                                                                                 | Store Bindings & Selectors                                 |
+| :-------------------------------------------------------------------------------------------------------------------- | :----------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------- |
+| [`src/app/_layout.tsx`](file:///home/berto/bert0ns-family-management/src/app/_layout.tsx#L1-L85)                      | Root Stack         | Global provider hierarchy (ThemeProvider, I18nProvider, ToastContainer, StatusBar).                                                                                                                                                      | `ThemeProvider`, `I18nProvider`, `Stack`                                                                                                                             | Global theme and locale bootstrap                          |
+| [`src/app/(tabs)/_layout.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/_layout.tsx#L1-L120>)     | Bottom Tabs        | Primary navigation bar with 6 persistent tabs, dynamic icon tinting, and haptic tab switches.                                                                                                                                            | `Tabs`, `IconHelper`, `SyncBadge`                                                                                                                                    | `syncEngine.getSyncStatus`                                 |
+| [`src/app/(tabs)/index.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/index.tsx#L1-L240>)         | Tab Screen         | **Dashboard**: Monthly financial summary, KPI stat cards, active member balance ring, mini velocity preview, recent expense feed.                                                                                                        | `KPIStat`, `Card`, `Button`, `Avatar`, `ExpenseItem`, `PeriodSelector`                                                                                               | `expenses`, `members`, `categories`, `selectedPeriod`      |
+| [`src/app/(tabs)/ledger.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/ledger.tsx#L1-L320>)       | Tab Screen         | **Expense Ledger**: Searchable, filterable transaction list. Filter bar (category, payer, search), date grouping, expense detail trigger.                                                                                                | `Input`, `ExpenseItem`, `ExpenseDetailModal`, `OptionSelector`                                                                                                       | `expenses`, `filters`, `setFilters`, `resetFilters`        |
+| [`src/app/(tabs)/analytics.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/analytics.tsx#L1-L350>) | Tab Screen         | **Analytics**: Multi-tab financial insights. Spending velocity comparative chart, monthly trends with rolling averages, day-of-week patterns, payment method breakdown, category donut chart with drilldown modal, and heatmap calendar. | `SpendingVelocityChart`, `MonthlyTrendChart`, `DayOfWeekChart`, `PaymentMethodChart`, `CategoryPieChart`, `CategoryDetailModal`, `MemberBarChart`, `HeatmapCalendar` | `expenses`, `members`, `categories`, `selectedPeriod`      |
+| [`src/app/(tabs)/import.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/import.tsx#L1-L280>)       | Tab Screen         | **Import & Export Center**: JSON drag-and-drop dropzone, text paste modal, Zod schema viewer, AI statement prompt generator card, and CSV/JSON export actions.                                                                           | `JsonDropzone`, `AiPromptCard`, `SchemaViewer`, `ImportPreviewModal`, `PasteJsonModal`                                                                               | `importExpenseReport`, `expenses`, `categories`, `members` |
+| [`src/app/(tabs)/family.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/family.tsx#L1-L260>)       | Tab Screen         | **Family & Categories**: Family profile, member cards with color codes and roles, debt balance overview, custom category manager.                                                                                                        | `MemberCard`, `AddMemberModal`, `EditMemberModal`, `AddCategoryModal`                                                                                                | `family`, `members`, `categories`, `settlements`           |
+| [`src/app/(tabs)/settings.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/settings.tsx#L1-L250>)   | Tab Screen         | **Settings & Cloud Sync**: Theme selection (Light/Dark/System), Language switch (EN/IT), Notification preferences, Supabase Cloud Pairing, and sample data reset.                                                                        | `Card`, `Button`, `SyncBadge`, `AuthModal`, `FamilyPairingModal`                                                                                                     | `notificationPreferences`, `resetToSampleData`, `family`   |
+| [`src/app/expense/add.tsx`](file:///home/berto/bert0ns-family-management/src/app/expense/add.tsx#L1-L260)             | Stack Modal        | **Add/Edit Expense Form**: Modal sheet with numeric currency input, merchant name, category selector, payer selector, date picker, split config button, and notes.                                                                       | `Input`, `OptionSelector`, `Button`, `SplitCalculator`                                                                                                               | `addExpense`, `updateExpense`, `members`, `categories`     |
 
 ---
 
@@ -88,11 +108,11 @@ The following table catalogs all application routes, presentation styles, core U
 ### 3.3 Financial Analytics (`src/app/(tabs)/analytics.tsx`)
 
 - **Layout Structure:** Segmented view selector switching between:
-  1. _Velocity:_ Cumulative daily spend curve vs projected linear budget ceiling.
-  2. _Categories:_ Interactive SVG Donut chart with category legend and percentage tags.
-  3. _Members:_ Horizontal bar chart comparing gross paid vs net consumption share.
-  4. _Heatmap:_ 7-column calendar matrix color-coded by daily expenditure intensity.
-  5. _Settlements:_ "Chi deve a Chi" debt settlement transfer matrix ([`SettlementCard`](file:///home/berto/bert0ns-family-management/src/components/charts/SettlementCard.tsx#L1-L110)).
+  1. _Categories:_ Interactive SVG Donut chart with category legend and percentage tags, payment method channel distribution bar (`PaymentMethodChart`), top merchants ranking, and category drill-down inspection sheet (`CategoryDetailModal`).
+  2. _Members:_ Horizontal bar chart comparing gross paid vs net consumption share per family member.
+  3. _Trends:_ Dual-curve comparative spending velocity (`SpendingVelocityChart`) comparing current month trajectory against previous month on the same elapsed calendar day with day inspection scrubber and pacing assessment, plus 6-month historical cash flow bar chart (`MonthlyTrendChart`) with Month-over-Month (MoM) badges and 3-month rolling averages.
+  4. _Patterns:_ Day-of-week distribution (`DayOfWeekChart`) across ISO days Monday–Sunday, Weekday vs Weekend split ratio bar, peak spending day identification, and density calendar.
+  5. _Heatmap:_ 7-column calendar matrix color-coded by daily expenditure intensity.
 - **Performance Optimization:** Chart data is computed on demand via [`AnalyticsCalculator`](file:///home/berto/bert0ns-family-management/src/services/analytics.ts#L15-L65) and memoized with `useMemo`, preventing expensive SVG recalculations during re-renders.
 
 ### 3.4 Import & Export Center (`src/app/(tabs)/import.tsx`)
@@ -143,11 +163,16 @@ stateDiagram-v2
     AddExpense --> Ledger : Return on Submit
 
     state Analytics {
-        [*] --> VelocityView
-        VelocityView --> CategoryView : Select Category Tab
+        [*] --> CategoryView
+        CategoryView --> CategoryDrilldown : Tap Category Bar / Slice
+        CategoryDrilldown --> CategoryView : Dismiss Modal
         CategoryView --> MemberView : Select Member Tab
-        MemberView --> HeatmapView : Select Heatmap Tab
-        HeatmapView --> SettlementView : Select Settlements Tab
+        MemberView --> TrendView : Select Trends Tab
+        TrendView --> InspectVelocityDay : Tap Day Scrubber Button
+        TrendView --> SelectHistoricalPeriod : Tap Historical Month Bar
+        TrendView --> PatternView : Select Patterns Tab
+        PatternView --> InspectDayOfWeek : Tap Day Column
+        PatternView --> HeatmapView : Select Heatmap Tab
     }
 
     Dashboard --> ImportExport : Tap Import Tab
