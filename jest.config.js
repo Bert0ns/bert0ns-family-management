@@ -7,6 +7,7 @@ module.exports = {
     '^react-native$': 'react-native-web',
     '^@react-native-async-storage/async-storage$':
       '@react-native-async-storage/async-storage/jest/async-storage-mock',
+    '^expo-secure-store$': '<rootDir>/__mocks__/expo-secure-store.ts',
   },
   testMatch: ['**/__tests__/**/*.test.(ts|tsx|js)'],
   transform: {
