@@ -1,194 +1,115 @@
 ---
 name: using-agent-skills
-description: Discovers and invokes agent skills. Use when starting a session, or when you need to decide which skill or workflow applies to the piece of work at hand. This is the meta-skill that governs how all other skills are discovered and invoked.
+description: Discovers and selects skills in this repository. Use at session start or when deciding which skill applies to a task.
 ---
 
-# Using Agent Skills
+# Using agent skills
 
 ## Overview
 
-Agent Skills is a collection of engineering workflow skills organized by development phase. Each skill encodes a specific process that senior engineers follow. This meta-skill helps you discover and apply the right skill for your current task.
+This repository (`Bert0ns/agent-skills`) contains engineering skills for coding agents, indexed on [skills.sh](https://skills.sh/). Compatible agents include Antigravity, Claude Code, Cursor, Codex, Windsurf, and Gemini CLI.
 
-## Skill Discovery
+This skill routes incoming tasks to the matching skill for each stage of development.
 
-When a task arrives, identify the development phase and apply the corresponding skill:
+---
 
-```
-Task arrives
-    │
-    ├── Don't know what you want yet? ──────→ interview-me
-    ├── Have a rough concept, need variants? → idea-refine
-    ├── New project/feature/change? ──→ spec-driven-development
-    ├── No quality bar written down? ──→ constraint-driven-development
-    ├── Have a spec, need tasks? ──────→ planning-and-task-breakdown
-    ├── Implementing code? ────────────→ incremental-implementation
-    │   ├── UI work? ─────────────────→ frontend-ui-engineering
-    │   ├── API work? ────────────────→ api-and-interface-design
-    │   ├── Need better context? ─────→ context-engineering
-    │   ├── Need doc-verified code? ───→ source-driven-development
-    │   └── Stakes high / unfamiliar code? ──→ doubt-driven-development
-    ├── Writing/running tests? ────────→ test-driven-development
-    │   └── Browser-based? ───────────→ browser-testing-with-devtools
-    ├── Something broke? ──────────────→ debugging-and-error-recovery
-    ├── Reviewing code? ───────────────→ code-review-and-quality
-    │   ├── Too complex? ─────────────→ code-simplification
-    │   ├── Security concerns? ───────→ security-and-hardening
-    │   └── Performance concerns? ────→ performance-optimization
-    ├── Committing/branching? ─────────→ git-workflow-and-versioning
-    ├── CI/CD pipeline work? ──────────→ ci-cd-and-automation
-    ├── Deprecating/migrating? ────────→ deprecation-and-migration
-    ├── Writing docs/ADRs? ───────────→ documentation-and-adrs
-    ├── Adding logs/metrics/alerts? ───→ observability-and-instrumentation
-    └── Deploying/launching? ─────────→ shipping-and-launch
-```
+## Skill discovery and routing
 
-## Core Operating Behaviors
+When a task arrives, identify the primary goal and invoke the matching skill:
 
-These behaviors apply at all times, across all skills. They are non-negotiable.
+```mermaid
+flowchart TD
+    Task([Task arrives]) --> Intent{Primary goal?}
 
-### 1. Surface Assumptions
+    %% Ideation and scoping
+    Intent -->|Clarify vague idea| Idea[idea-refine]
+    Intent -->|Test assumptions| Grill[grill-me / grilling]
+    Intent -->|Manage context limits| Context[context-engineering]
+    Intent -->|Cut conversation tokens| Cave[caveman]
 
-Before implementing anything non-trivial, explicitly state your assumptions:
+    %% Architecture and design
+    Intent -->|Generate C4 architecture docs| SysDocs[system-design-docs]
+    Intent -->|Find shallow modules| ArchSmells[improve-codebase-architecture]
+    Intent -->|Smallest change / YAGNI| Pony[ponytail]
+    Intent -->|Strict TypeScript types| TS[typescript-best-practices]
 
-```
-ASSUMPTIONS I'M MAKING:
-1. [assumption about requirements]
-2. [assumption about architecture]
-3. [assumption about scope]
-→ Correct me now or I'll proceed with these.
+    %% Code quality and review
+    Intent -->|Multi-agent codebase audit| DistAudit[distributed-code-audit]
+    Intent -->|Review standards and specs| Review[code-review]
+    Intent -->|Audit bloat and conditionals| Thermo[thermo-nuclear-code-quality-review]
+    Intent -->|Simplify logic| Simplify[code-simplification]
+    Intent -->|Security and OWASP audit| Sec[security-and-hardening]
+    Intent -->|Remove AI boilerplate| Deslop[deslop]
+    Intent -->|Cut AI tells from writing| Unslop[unslop]
+
+    %% Implementation and testing
+    Intent -->|Red-green-refactor loop| TDD[tdd]
+
+    %% Frontend and mobile
+    Intent -->|Distinctive UI styling| FrontDesign[frontend-design]
+    Intent -->|Accessibility and UI audit| WebGuide[web-design-guidelines]
+    Intent -->|React and Next.js performance| ReactRules[vercel-react-best-practices]
+    Intent -->|React Native and Expo patterns| NativeRules[vercel-react-native-skills]
 ```
 
-Don't silently fill in ambiguous requirements. The most common failure mode is making wrong assumptions and running with them unchecked. Surface uncertainty early — it's cheaper than rework.
+---
 
-### 2. Manage Confusion Actively
+## Available skills by category
 
-When you encounter inconsistencies, conflicting requirements, or unclear specifications:
+### 1. Ideation, scoping, and context
 
-1. **STOP.** Do not proceed with a guess.
-2. Name the specific confusion.
-3. Present the tradeoff or ask the clarifying question.
-4. Wait for resolution before continuing.
+- `idea-refine`. Clarify ideas with structured divergent and convergent thinking.
+- `grill-me`. Interview user to test assumptions before building.
+- `grilling`. Question engine backing `grill-me`.
+- `context-engineering`. Curate active files, rules, and token budgets to keep context within limits.
+- `caveman`. Terse communication voice that cuts fluff and saves tokens while keeping technical facts.
 
-**Bad:** Silently picking one interpretation and hoping it's right.
-**Good:** "I see X in the spec but Y in the existing code. Which takes precedence?"
+### 2. Architecture and engineering practices
 
-### 3. Push Back When Warranted
+- `system-design-docs`. Generate C4 diagrams and docs under `docs/architecture/` with subagents.
+- `improve-codebase-architecture`. Scan shallow modules and generate an interactive HTML report.
+- `ponytail`. Smallest working change, minimal diffs, standard libraries, and no bloat.
+- `typescript-best-practices`. Enforce typed boundaries, runtime validation, and domain modeling.
+- `tdd`. Test-driven development with red-green-refactor loops.
 
-You are not a yes-machine. When an approach has clear problems:
+### 3. Code quality, review, and anti-slop
 
-- Point out the issue directly
-- Explain the concrete downside (quantify when possible — "this adds ~200ms latency" not "this might be slower")
-- Propose an alternative
-- Accept the human's decision if they override with full information
+- `distributed-code-audit`. Partition codebase across parallel review agents and generate an HTML scorecard.
+- `code-review`. Run two review passes for repository standards and task specs.
+- `code-simplification`. Simplify logic and cut unnecessary abstractions without breaking behavior.
+- `security-and-hardening`. Audit code against OWASP Top 10, auth flaws, and dependency risks.
+- `thermo-nuclear-code-quality-review`. Strict audit for bloated files, tangled logic, and leaky abstractions.
+- `deslop`. Remove AI boilerplate, duplicate comments, and defensive clutter from code.
+- `unslop`. Cut AI writing tells, filler phrases, and sycophantic phrasing from prose.
 
-Sycophancy is a failure mode. "Of course!" followed by implementing a bad idea helps no one. Honest technical disagreement is more valuable than false agreement.
+### 4. Frontend, design systems, and mobile
 
-### 4. Enforce Simplicity
+- `frontend-design`. Guide visual hierarchy, typography, and color to avoid generic default styling.
+- `web-design-guidelines`. Audit interfaces for accessibility, keyboard navigation, and layout consistency.
+- `vercel-react-best-practices`. Apply performance and composition rules for React and Next.js applications.
+- `vercel-react-native-skills`. Apply performance patterns for React Native and Expo lists and animations.
 
-Your natural tendency is to overcomplicate. Actively resist it.
+---
 
-Before finishing any implementation, ask:
+## Core operating behaviors
 
-- Can this be done in fewer lines?
-- Are these abstractions earning their complexity?
-- Would a staff engineer look at this and say "why didn't you just..."?
+These rules govern agent execution across all skills:
 
-If you build 1000 lines and 100 would suffice, you have failed. Prefer the boring, obvious solution. Cleverness is expensive.
+1. **Surface assumptions early.** State non-obvious assumptions before making multi-file changes.
+2. **Clarify confusion.** When requirements or code are unclear, stop and ask. Never guess.
+3. **Push back with tradeoffs.** If a request adds security flaws, regressions, or bloat, state the tradeoff and propose an alternative.
+4. **Build the minimum.** Solve the core need with the least code. Add no speculative abstractions, options, or wrappers.
+5. **Keep scope tight.** Touch only files needed for the task. Do not refactor adjacent code or delete unread comments.
+6. **Verify with evidence.** Prove changes work: run tests, type checks, builds, or runtime validation. Never claim done on assumption.
 
-### 5. Maintain Scope Discipline
+---
 
-Touch only what you're asked to touch.
+## Common workflows
 
-Do NOT:
+Skills can be combined for specific workflows:
 
-- Remove comments you don't understand
-- "Clean up" code orthogonal to the task
-- Refactor adjacent systems as a side effect
-- Delete code that seems unused without explicit approval
-- Add features not in the spec because they "seem useful"
-
-Your job is surgical precision, not unsolicited renovation.
-
-### 6. Verify, Don't Assume
-
-Every skill includes a verification step. A task is not complete until verification passes. "Seems right" is never sufficient — there must be evidence (passing tests, build output, runtime data).
-
-Per-skill verification is the local check. The project-wide bar that applies to _every_ change, regardless of which skill is active, is the Definition of Done: tests pass, no regressions, behavior verified at runtime, docs updated. See `../../references/definition-of-done.md`. It complements each task's acceptance criteria rather than replacing them.
-
-## Failure Modes to Avoid
-
-These are the subtle errors that look like productivity but create problems:
-
-1. Making wrong assumptions without checking
-2. Not managing your own confusion — plowing ahead when lost
-3. Not surfacing inconsistencies you notice
-4. Not presenting tradeoffs on non-obvious decisions
-5. Being sycophantic ("Of course!") to approaches with clear problems
-6. Overcomplicating code and APIs
-7. Modifying code or comments orthogonal to the task
-8. Removing things you don't fully understand
-9. Building without a spec because "it's obvious"
-10. Skipping verification because "it looks right"
-
-## Skill Rules
-
-1. **Check for an applicable skill before starting work.** Skills encode processes that prevent common mistakes.
-
-2. **Skills are workflows, not suggestions.** Follow the steps in order. Don't skip verification steps.
-
-3. **Multiple skills can apply.** A feature implementation might involve `idea-refine` → `spec-driven-development` → `planning-and-task-breakdown` → `incremental-implementation` → `test-driven-development` → `code-review-and-quality` → `code-simplification` → `shipping-and-launch` in sequence.
-
-4. **When in doubt, start with a spec.** If the task is non-trivial and there's no spec, begin with `spec-driven-development`.
-
-## Lifecycle Sequence
-
-For a complete feature, the typical skill sequence is:
-
-```
-1.  interview-me                → Extract what the user actually wants
-2.  idea-refine                 → Refine vague ideas
-3.  spec-driven-development     → Define what we're building
-4.  planning-and-task-breakdown → Break into verifiable chunks
-5.  context-engineering         → Load the right context
-6.  source-driven-development   → Verify against official docs
-7.  incremental-implementation  → Build slice by slice
-8.  observability-and-instrumentation → Instrument as you build (runs parallel with 7-9, not after)
-9.  doubt-driven-development    → Cross-examine non-trivial decisions in-flight
-10. test-driven-development     → Prove each slice works
-11. code-review-and-quality     → Review before merge
-12. code-simplification         → Reduce unnecessary complexity while preserving behavior
-13. git-workflow-and-versioning → Clean commit history
-14. documentation-and-adrs      → Document decisions
-15. deprecation-and-migration   → Retire old systems and move users safely when needed
-16. shipping-and-launch         → Deploy safely
-```
-
-Not every task needs every skill. A bug fix might only need: `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`.
-
-## Quick Reference
-
-| Phase  | Skill                             | One-Line Summary                                                           |
-| ------ | --------------------------------- | -------------------------------------------------------------------------- |
-| Define | interview-me                      | Surface what the user actually wants before any plan, spec, or code exists |
-| Define | idea-refine                       | Refine ideas through structured divergent and convergent thinking          |
-| Define | spec-driven-development           | Requirements and acceptance criteria before code                           |
-| Plan   | planning-and-task-breakdown       | Decompose into small, verifiable tasks                                     |
-| Build  | incremental-implementation        | Thin vertical slices, test each before expanding                           |
-| Build  | source-driven-development         | Verify against official docs before implementing                           |
-| Build  | doubt-driven-development          | Adversarial fresh-context review of every non-trivial decision             |
-| Build  | context-engineering               | Right context at the right time                                            |
-| Build  | frontend-ui-engineering           | Production-quality UI with accessibility                                   |
-| Build  | api-and-interface-design          | Stable interfaces with clear contracts                                     |
-| Verify | test-driven-development           | Failing test first, then make it pass                                      |
-| Verify | browser-testing-with-devtools     | Chrome DevTools MCP for runtime verification                               |
-| Verify | debugging-and-error-recovery      | Reproduce → localize → fix → guard                                         |
-| Review | code-review-and-quality           | Five-axis review with quality gates                                        |
-| Review | code-simplification               | Preserve behavior while reducing unnecessary complexity                    |
-| Review | security-and-hardening            | OWASP prevention, input validation, least privilege                        |
-| Review | performance-optimization          | Measure first, optimize only what matters                                  |
-| Ship   | git-workflow-and-versioning       | Atomic commits, clean history                                              |
-| Ship   | ci-cd-and-automation              | Automated quality gates on every change                                    |
-| Ship   | deprecation-and-migration         | Remove old systems and migrate users safely                                |
-| Ship   | documentation-and-adrs            | Document the why, not just the what                                        |
-| Ship   | observability-and-instrumentation | Structured logs, RED metrics, traces, symptom-based alerts                 |
-| Ship   | shipping-and-launch               | Pre-launch checklist, monitoring, rollback plan                            |
+- **New feature.** `idea-refine` to scope, `grill-me` to test assumptions, `ponytail` or `tdd` to build minimum code, `code-simplification` to clean logic, and `deslop` to remove AI clutter.
+- **Codebase health check.** `distributed-code-audit` for parallel review, `improve-codebase-architecture` for module depth, and `security-and-hardening` for vulnerability audit.
+- **Architecture documentation.** `system-design-docs` to extract C4 blueprints and markdown docs.
+- **Frontend overhaul.** `frontend-design` for visual guidelines, `web-design-guidelines` for accessibility, and `vercel-react-best-practices` for runtime speed.
+- **Low-token terminal work.** `caveman` to keep agent output terse during long debug sessions.
