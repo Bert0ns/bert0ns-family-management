@@ -7,6 +7,8 @@ import {
   authLogger,
   supabaseLogger,
   uiLogger,
+  redactSensitiveData,
+  redactContext,
 } from '@/services/logger';
 
 describe('Logger Service (react-native-logs integration)', () => {
@@ -118,5 +120,112 @@ describe('Logger Service (react-native-logs integration)', () => {
     } finally {
       process.env.NODE_ENV = originalEnv;
     }
+  });
+
+  describe('redactSensitiveData and logger redaction pipeline', () => {
+    it('masks sensitive keys including amount, merchant, email, token, notes, password', () => {
+      const sensitiveContext = {
+        id: 'tx_123',
+        amount: 49.99,
+        candidateAmount: 50.0,
+        merchant: 'Grocery Outlet',
+        candidateMerchant: 'Grocery Outlet LLC',
+        merchant_name: 'Grocery Outlet',
+        email: 'user@example.com',
+        token: 'secret-token-xyz',
+        notes: 'Personal transaction note',
+        password: 'my-password-123',
+        refreshToken: 'refresh-token-abc',
+        accessToken: 'access-token-def',
+        nonSensitiveProp: 'safe_value',
+      };
+
+      const result = redactSensitiveData(sensitiveContext);
+      expect(result).toEqual({
+        id: 'tx_123',
+        amount: '[REDACTED]',
+        candidateAmount: '[REDACTED]',
+        merchant: '[REDACTED]',
+        candidateMerchant: '[REDACTED]',
+        merchant_name: '[REDACTED]',
+        email: '[REDACTED]',
+        token: '[REDACTED]',
+        notes: '[REDACTED]',
+        password: '[REDACTED]',
+        refreshToken: '[REDACTED]',
+        accessToken: '[REDACTED]',
+        nonSensitiveProp: 'safe_value',
+      });
+      expect(redactContext(sensitiveContext)).toEqual(result);
+    });
+
+    it('redacts plaintext email addresses embedded within string messages', () => {
+      const msg = 'User with email test.account+foo@domain.co.uk attempted login';
+      const redacted = redactSensitiveData(msg);
+      expect(redacted).toBe('User with email [REDACTED] attempted login');
+    });
+
+    it('recursively redacts nested objects and arrays', () => {
+      const payload = {
+        meta: {
+          initiator: 'admin',
+          financials: {
+            amount: 1000,
+            notes: 'Bonus payment',
+          },
+        },
+        transactions: [
+          { merchant: 'Shop 1', amount: 20 },
+          { merchant: 'Shop 2', amount: 35 },
+        ],
+      };
+
+      const redacted = redactSensitiveData(payload);
+      expect(redacted).toEqual({
+        meta: {
+          initiator: 'admin',
+          financials: {
+            amount: '[REDACTED]',
+            notes: '[REDACTED]',
+          },
+        },
+        transactions: [
+          { merchant: '[REDACTED]', amount: '[REDACTED]' },
+          { merchant: '[REDACTED]', amount: '[REDACTED]' },
+        ],
+      });
+    });
+
+    it('handles circular references and Error instances safely', () => {
+      const circular: any = { name: 'cycle' };
+      circular.self = circular;
+      const redacted = redactSensitiveData(circular);
+      expect(redacted.self).toBe('[Circular Reference]');
+
+      const err = new Error('Failure contacting server at support@company.org');
+      const redactedErr = redactSensitiveData(err);
+      expect(redactedErr.message).toBe('Failure contacting server at [REDACTED]');
+    });
+
+    it('redacts sensitive fields when logs are dispatched via enabled loggers', () => {
+      logger.enable();
+      transactionLogger.info('Expense created', {
+        id: 'exp_999',
+        amount: 88.5,
+        merchant: 'Fine Dining Bistro',
+      });
+      authLogger.info('User authenticated', {
+        email: 'confidential@household.org',
+        token: 'supabase-session-token',
+      });
+
+      const loggedOutput = logSpy.mock.calls.map((call) => call.join(' ')).join('\n');
+      expect(loggedOutput).not.toContain('88.5');
+      expect(loggedOutput).not.toContain('Fine Dining Bistro');
+      expect(loggedOutput).not.toContain('confidential@household.org');
+      expect(loggedOutput).not.toContain('supabase-session-token');
+      expect(loggedOutput).toContain('[REDACTED]');
+      expect(loggedOutput).toContain('INFO');
+    });
   });
 });
