@@ -19,8 +19,12 @@ import { HeatmapCalendar } from '@/components/charts/HeatmapCalendar';
 export default function AnalyticsScreen() {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
-  const { family, members, categories, expenses, selectedPeriod, setSelectedPeriod } =
-    useAppStore();
+  const family = useAppStore((s) => s.family);
+  const members = useAppStore((s) => s.members);
+  const categories = useAppStore((s) => s.categories);
+  const expenses = useAppStore((s) => s.expenses);
+  const selectedPeriod = useAppStore((s) => s.selectedPeriod);
+  const setSelectedPeriod = useAppStore((s) => s.setSelectedPeriod);
 
   const [activeTab, setActiveTab] = useState<'categories' | 'members' | 'trends' | 'heatmap'>(
     'categories',

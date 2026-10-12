@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { UploadCloud, CheckCircle2, History, FileSpreadsheet, FileJson } from 'lucide-react-native';
 import { useTheme } from '@/theme';
@@ -21,8 +21,12 @@ import { importLogger } from '@/services/logger';
 export default function ImportScreen() {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
-  const { family, members, categories, expenses, importBatches, importExpenseReport } =
-    useAppStore();
+  const family = useAppStore((s) => s.family);
+  const members = useAppStore((s) => s.members);
+  const categories = useAppStore((s) => s.categories);
+  const expenses = useAppStore((s) => s.expenses);
+  const importBatches = useAppStore((s) => s.importBatches);
+  const importExpenseReport = useAppStore((s) => s.importExpenseReport);
 
   const [stagedReport, setStagedReport] = useState<RawExpenseReport | null>(null);
   const [stagedFileName, setStagedFileName] = useState<string>('');
@@ -30,16 +34,16 @@ export default function ImportScreen() {
   const [isPasteModalOpen, setIsPasteModalOpen] = useState(false);
 
   // Dynamic category names from household store
-  const categoryNames = React.useMemo(() => {
+  const categoryNames = useMemo(() => {
     return categories.map((cat) => cat.name);
   }, [categories]);
 
   // Family member names from household store
-  const memberNames = React.useMemo(() => {
+  const memberNames = useMemo(() => {
     return members.map((member) => member.display_name);
   }, [members]);
 
-  const handleFileParsed = (report: RawExpenseReport, fileName: string) => {
+  const handleFileParsed = useCallback((report: RawExpenseReport, fileName: string) => {
     importLogger.info('Staging expense report for preview', {
       fileName,
       expensesCount: report.expenses.length,
@@ -47,9 +51,9 @@ export default function ImportScreen() {
     });
     setStagedReport(report);
     setStagedFileName(fileName);
-  };
+  }, []);
 
-  const handleConfirmImport = () => {
+  const handleConfirmImport = useCallback(() => {
     if (!stagedReport) return;
 
     importLogger.info('Confirming expense report import', { fileName: stagedFileName });
@@ -58,9 +62,13 @@ export default function ImportScreen() {
     setSuccessNotice(
       `${t.import.successNotice} (${result.importedCount} ${t.common.items} • ${family.currency}${result.totalAmount.toFixed(2)})`,
     );
-  };
+  }, [stagedReport, stagedFileName, importExpenseReport, t, family.currency]);
 
-  React.useEffect(() => {
+  const handleClosePreview = useCallback(() => {
+    setStagedReport(null);
+  }, []);
+
+  useEffect(() => {
     if (!successNotice) return;
     const timer = setTimeout(() => {
       setSuccessNotice(null);
@@ -356,7 +364,7 @@ export default function ImportScreen() {
         report={stagedReport}
         fileName={stagedFileName}
         existingExpenses={expenses}
-        onClose={() => setStagedReport(null)}
+        onClose={handleClosePreview}
         onConfirm={handleConfirmImport}
       />
     </ScrollView>
