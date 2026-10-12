@@ -69,14 +69,18 @@ export async function exportAndShareFile(
     }
   } catch (error: any) {
     exportLogger.error('Failed to export file', error);
-    if (file && file.exists) {
-      try {
-        file.delete();
-      } catch {}
-    }
     if (showAlertOnFailure) {
       Alert.alert('Export Error', error?.message || 'Failed to export file on this device.');
     }
     return false;
+  } finally {
+    if (file && file.exists) {
+      try {
+        file.delete();
+        exportLogger.debug('Temporary export file cleaned up from cache', { fileName });
+      } catch (cleanupErr: any) {
+        exportLogger.warn('Failed to delete temporary export file', { error: cleanupErr?.message });
+      }
+    }
   }
 }
