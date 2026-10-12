@@ -310,6 +310,10 @@ export default function FamilyScreen() {
         member={selectedMemberForEdit}
         expenses={expenses}
         isOnlyMember={members.length <= 1}
+        isSoleAdmin={
+          selectedMemberForEdit?.role === 'ADMIN' &&
+          members.filter((m) => m.role === 'ADMIN').length <= 1
+        }
         currency={family.currency}
         onClose={() => setSelectedMemberForEdit(null)}
         onSave={(updates) => {
