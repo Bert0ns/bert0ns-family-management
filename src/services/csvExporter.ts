@@ -63,7 +63,7 @@ export class CsvExporter {
       // Prepend UTF-8 BOM so spreadsheet applications (Excel, Numbers) open UTF-8 chars (e.g. €) correctly
       const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('link');
+      const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', fileName);
       document.body.appendChild(link);
