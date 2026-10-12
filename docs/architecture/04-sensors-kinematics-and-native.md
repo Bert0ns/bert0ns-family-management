@@ -26,20 +26,18 @@ The application leverages cross-platform native hardware abstractions provided b
 
 The notification subsystem ([`src/services/pushNotificationService.ts`](file:///home/berto/bert0ns-family-management/src/services/pushNotificationService.ts#L1-L150)) coordinates both remote cloud push notifications and scheduled local alarms.
 
-### 2.1 Foreground Presentation Configuration
+### 2.1 Foreground Presentation Configuration & Android Channels
 
-On native mobile devices, foreground notifications are intercepted and configured to present visual banners and auditory cues without disrupting active screens:
+On native mobile devices, foreground notifications are intercepted and configured to present visual banners and auditory cues without disrupting active screens. Additionally, Android 8.0+ notification channels are initialized:
 
 ```typescript
-if (Platform.OS !== 'web') {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
+if (Platform.OS === 'android') {
+  await Notifications.setNotificationChannelAsync('default', {
+    name: 'Family Activity & Alerts',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: '#10B981',
+    sound: 'default',
   });
 }
 ```
@@ -55,9 +53,9 @@ flowchart TB
 
         RequestPermission --> PermissionGate{"Permission Granted?"}
         PermissionGate -->|No| LogReject["pushNotificationService: Permission Denied"]
-        PermissionGate -->|Yes| FetchExpoToken["Notifications.getExpoPushTokenAsync()"]
+        PermissionGate -->|Yes| FetchExpoToken["Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined)"]
 
-        FetchExpoToken --> UpsertSupabase["Upsert into Supabase 'push_tokens'<br/>(user_id, token, platform, updated_at)"]
+        FetchExpoToken --> UpsertSupabase["Upsert into Supabase 'push_tokens'<br/>(user_id, expo_push_token, platform, updated_at)"]
     end
 
     subgraph ScheduledLocalAlerts ["Local Notification Triggers"]

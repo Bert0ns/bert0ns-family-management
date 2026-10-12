@@ -89,7 +89,7 @@ serve(async (req: Request) => {
     // 2. Query push tokens for this user
     const { data: tokenRows, error: tokenError } = await supabase
       .from('push_tokens')
-      .select('token')
+      .select('expo_push_token')
       .eq('user_id', userId);
 
     if (tokenError || !tokenRows || tokenRows.length === 0) {
@@ -101,11 +101,12 @@ serve(async (req: Request) => {
 
     // 3. Prepare Expo Push messages
     const messages: ExpoPushMessage[] = tokenRows.map((t) => ({
-      to: t.token,
+      to: t.expo_push_token,
       title: record.title,
       body: record.body,
       sound: 'default',
       priority: 'high',
+      channelId: 'default',
       data: {
         ...(record.data || {}),
         notificationId: record.id,
