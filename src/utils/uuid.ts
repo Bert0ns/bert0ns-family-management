@@ -2,6 +2,7 @@
  * RFC 4122 compliant UUID v4 generator and validator.
  * Safe for React Native Hermes, Web, and Node / Jest test environments.
  */
+import * as Crypto from 'expo-crypto';
 
 export function generateUUID(): string {
   if (typeof globalThis !== 'undefined' && globalThis.crypto?.randomUUID) {
@@ -24,9 +25,18 @@ export function isValidUUID(uuid: string): boolean {
 
 export function generateInviteCode(length = 6): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Exclude ambiguous chars like 0, O, 1, I
-  let code = '';
-  for (let i = 0; i < length; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  try {
+    const randomBytes = Crypto.getRandomBytes(length);
+    let code = '';
+    for (let i = 0; i < length; i++) {
+      code += chars.charAt(randomBytes[i] % chars.length);
+    }
+    return code;
+  } catch {
+    let code = '';
+    for (let i = 0; i < length; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
   }
-  return code;
 }

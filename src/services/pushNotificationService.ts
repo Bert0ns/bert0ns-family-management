@@ -2,8 +2,9 @@ import { Platform } from 'react-native';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { supabaseLogger } from './logger';
 
-// Type-only import ensures zero runtime bundle overhead or native side-effects on Web
+// Type-only imports ensure zero runtime bundle overhead or native side-effects on Web
 import type * as NotificationsType from 'expo-notifications';
+import type ConstantsType from 'expo-constants';
 
 /**
  * Safely resolves the expo-notifications module on native platforms (iOS/Android).
@@ -24,11 +25,28 @@ function getNotificationsModule(): typeof NotificationsType | null {
   }
 }
 
-// Configure foreground notification presentation only on native platforms
-if (Platform.OS !== 'web') {
+/**
+ * Safely resolves the expo-constants module to extract EAS project ID.
+ */
+function getConstantsModule(): typeof ConstantsType | null {
   try {
-    const Notifications = getNotificationsModule();
-    Notifications?.setNotificationHandler?.({
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('expo-constants');
+    return mod?.default ?? mod ?? null;
+  } catch {
+    return null;
+  }
+}
+
+let isForegroundHandlerConfigured = false;
+let activeDeviceToken: string | null = null;
+
+function ensureForegroundNotificationHandler(Notifications: typeof NotificationsType | null): void {
+  if (Platform.OS === 'web' || isForegroundHandlerConfigured || !Notifications) {
+    return;
+  }
+  try {
+    Notifications.setNotificationHandler?.({
       handleNotification: async () => ({
         shouldShowAlert: true,
         shouldPlaySound: true,
@@ -37,6 +55,7 @@ if (Platform.OS !== 'web') {
         shouldShowList: true,
       }),
     });
+    isForegroundHandlerConfigured = true;
   } catch (err: unknown) {
     supabaseLogger.warn('Failed to configure foreground notification handler', {
       error: err instanceof Error ? err.message : String(err),
@@ -50,6 +69,48 @@ export const pushNotificationService = {
    */
   isSupported(): boolean {
     return Platform.OS !== 'web';
+  },
+
+  /**
+   * Returns the cached active device push token if registered during the current session.
+   */
+  getActiveDeviceToken(): string | null {
+    return activeDeviceToken;
+  },
+
+  /**
+   * Resets internal state for unit test isolation.
+   */
+  resetState(): void {
+    activeDeviceToken = null;
+    isForegroundHandlerConfigured = false;
+  },
+
+  /**
+   * Configures Android Notification Channel with sound, vibration, and lights.
+   * Required for Android 8.0+ (API level 26+).
+   */
+  async setupNotificationChannelAsync(): Promise<void> {
+    if (Platform.OS !== 'android') {
+      return;
+    }
+    const Notifications = getNotificationsModule();
+    if (!Notifications?.setNotificationChannelAsync) {
+      return;
+    }
+    try {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'Family Activity & Alerts',
+        importance: Notifications.AndroidImportance?.MAX ?? 5,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#10B981',
+        sound: 'default',
+      });
+    } catch (err: unknown) {
+      supabaseLogger.warn('Failed to configure Android notification channel', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   },
 
   /**
@@ -75,7 +136,15 @@ export const pushNotificationService = {
       return null;
     }
 
+    // Configure foreground presentation handler without module-load side effects
+    ensureForegroundNotificationHandler(Notifications);
+
     try {
+      // Set up Android notification channel prior to token registration
+      if (Platform.OS === 'android') {
+        await this.setupNotificationChannelAsync();
+      }
+
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
 
@@ -89,8 +158,15 @@ export const pushNotificationService = {
         return null;
       }
 
-      const tokenResponse = await Notifications.getExpoPushTokenAsync();
+      // Resolve EAS projectId for SDK 50+ standalone/EAS builds
+      const Constants = getConstantsModule();
+      const projectId =
+        Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+      const tokenResponse = await Notifications.getExpoPushTokenAsync(
+        projectId ? { projectId } : undefined,
+      );
       const token = tokenResponse.data;
+      activeDeviceToken = token;
 
       supabaseLogger.info('Obtained Expo Push Token', { token: token.slice(0, 15) + '...' });
 
@@ -99,11 +175,11 @@ export const pushNotificationService = {
         const { error } = await supabase.from('push_tokens').upsert(
           {
             user_id: userId,
-            token,
+            expo_push_token: token,
             platform: Platform.OS,
             updated_at: new Date().toISOString(),
           },
-          { onConflict: 'user_id,token' },
+          { onConflict: 'expo_push_token' },
         );
 
         if (error) {
@@ -123,19 +199,30 @@ export const pushNotificationService = {
   },
 
   /**
-   * Unregister / remove push token when signing out.
+   * Unregister / remove push token when signing out or disabling push notifications.
+   * If a specific token is provided (or cached for this device), only that device token is removed,
+   * avoiding accidental revocation across other devices belonging to the user.
    */
-  async unregisterPushTokenAsync(userId: string): Promise<void> {
+  async unregisterPushTokenAsync(userId: string, token?: string): Promise<void> {
     if (!userId || !isSupabaseConfigured()) {
       return;
     }
 
+    const tokenToRemove = token ?? activeDeviceToken;
+
     try {
-      const { error } = await supabase.from('push_tokens').delete().eq('user_id', userId);
+      let query = supabase.from('push_tokens').delete().eq('user_id', userId);
+      if (tokenToRemove) {
+        query = query.eq('expo_push_token', tokenToRemove);
+      }
+      const { error } = await query;
       if (error) {
         supabaseLogger.error('Failed to unregister push token', { error: error.message });
       } else {
         supabaseLogger.info('Unregistered push token from Supabase');
+        if (tokenToRemove === activeDeviceToken) {
+          activeDeviceToken = null;
+        }
       }
     } catch (err: unknown) {
       supabaseLogger.error('Error removing push token', {

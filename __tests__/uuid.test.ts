@@ -1,3 +1,4 @@
+import * as Crypto from 'expo-crypto';
 import { generateUUID, isValidUUID, generateInviteCode } from '@/utils/uuid';
 
 describe('UUID and Invite Code Utilities', () => {
@@ -53,10 +54,13 @@ describe('UUID and Invite Code Utilities', () => {
     expect(isValidUUID(12345)).toBe(false);
   });
 
-  it('generates a clean 6-character uppercase invite code', () => {
+  it('generates a clean 6-character uppercase invite code using Crypto.getRandomBytes', () => {
+    const getRandomBytesSpy = jest.spyOn(Crypto, 'getRandomBytes');
+
     const code = generateInviteCode(6);
     expect(code).toHaveLength(6);
     expect(/^[A-Z2-9]{6}$/.test(code)).toBe(true);
+    expect(getRandomBytesSpy).toHaveBeenCalledWith(6);
 
     const defaultCode = generateInviteCode();
     expect(defaultCode).toHaveLength(6);
@@ -64,5 +68,20 @@ describe('UUID and Invite Code Utilities', () => {
 
     const longCode = generateInviteCode(10);
     expect(longCode).toHaveLength(10);
+    expect(getRandomBytesSpy).toHaveBeenCalledWith(10);
+
+    getRandomBytesSpy.mockRestore();
+  });
+
+  it('falls back safely when Crypto.getRandomBytes throws an error', () => {
+    const getRandomBytesSpy = jest.spyOn(Crypto, 'getRandomBytes').mockImplementation(() => {
+      throw new Error('Crypto module unavailable');
+    });
+
+    const fallbackCode = generateInviteCode(6);
+    expect(fallbackCode).toHaveLength(6);
+    expect(/^[A-Z2-9]{6}$/.test(fallbackCode)).toBe(true);
+
+    getRandomBytesSpy.mockRestore();
   });
 });
