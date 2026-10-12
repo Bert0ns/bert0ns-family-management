@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     family_id UUID NOT NULL REFERENCES public.families(id) ON DELETE CASCADE,
     recipient_member_id UUID NOT NULL REFERENCES public.family_members(id) ON DELETE CASCADE,
     actor_member_id UUID REFERENCES public.family_members(id) ON DELETE SET NULL,
-    type VARCHAR(32) NOT NULL CHECK (type IN ('BATCH_IMPORT', 'EXPENSE_UPDATE', 'SETTLEMENT', 'MEMBER_JOINED', 'ROLE_CHANGED') themes: text),
+    type VARCHAR(32) NOT NULL CHECK (type IN ('BATCH_IMPORT', 'EXPENSE_UPDATE', 'SETTLEMENT', 'MEMBER_JOINED', 'ROLE_CHANGED')),
     title TEXT NOT NULL,
     body TEXT NOT NULL,
     data JSONB DEFAULT '{}'::jsonb,
@@ -202,7 +202,7 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 CREATE OR REPLACE FUNCTION public.is_member_of_family(f_id UUID)
 RETURNS BOOLEAN AS $$
 BEGIN
-  RETURN EXISTS (\
+  RETURN EXISTS (
     SELECT 1 FROM public.family_members
     WHERE family_id = f_id AND user_id = auth.uid()
   );
