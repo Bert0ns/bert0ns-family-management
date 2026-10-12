@@ -71,7 +71,8 @@ export interface AppState {
 
   // Actions - Categories
   addCategory: (category: Omit<Category, 'id' | 'family_id'>) => Category;
-  deleteCategory: (id: string) => void;
+  updateCategory: (id: string, updates: Partial<Category>) => void;
+  deleteCategory: (id: string, fallbackCategoryId?: string) => void;
 
   // Actions - Notifications
   updateNotificationPreferences: (preferences: Partial<NotificationPreferences>) => void;
@@ -463,14 +464,53 @@ export const useAppStore = create<AppState>()(
         return newCategory;
       },
 
-      deleteCategory: (id) => {
+      updateCategory: (id, updates) => {
+        const state = get();
+        const existing = state.categories.find((c) => c.id === id);
+        if (!existing) {
+          storeLogger.warn('Attempted to update non-existent category', { id });
+          return;
+        }
+        const now = new Date().toISOString();
+        const { id: _callerId, family_id: _callerFamId, ...safeUpdates } = updates as any;
+        let updatedCategory: Category | undefined;
+        set((state) => ({
+          categories: state.categories.map((c) => {
+            if (c.id === id) {
+              const updated: Category = {
+                ...c,
+                ...safeUpdates,
+                id: c.id,
+                family_id: c.family_id,
+                updated_at: now,
+              };
+              updatedCategory = updated;
+              return updated;
+            }
+            return c;
+          }),
+        }));
+        if (updatedCategory) {
+          storeLogger.info('Category updated', { id, name: updatedCategory.name });
+          notifyStoreMutation({
+            entity: 'category',
+            operation: 'UPDATE',
+            entity_id: id,
+            payload: updatedCategory,
+          });
+        }
+      },
+
+      deleteCategory: (id, fallbackCategoryId) => {
         const state = get();
         if (state.categories.length <= 1) {
           storeLogger.warn('Attempted to delete the only remaining category', { id });
           return;
         }
 
-        const fallbackCat = state.categories.find((c) => c.id !== id);
+        const fallbackCat = fallbackCategoryId
+          ? state.categories.find((c) => c.id === fallbackCategoryId && c.id !== id)
+          : state.categories.find((c) => c.id !== id);
         if (!fallbackCat) return;
 
         storeLogger.info('Category deleted', { id, fallbackId: fallbackCat?.id });

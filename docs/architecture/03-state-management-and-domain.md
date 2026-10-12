@@ -206,7 +206,7 @@ flowchart TB
     CheckSplits -->|Yes| UseCustom["Validate Sum Matches Total Exactly"]
     CheckSplits -->|No| AutoEqualSplit["calculateEqualSplits(totalAmount, activeMemberIds)"]
 
-    AutoEqualSplit --> IntegerCentConversion["Convert Total to Integer Cents<br/>rawShare = Math.round(total / count)"]
+    AutoEqualSplit --> IntegerCentConversion["Convert Total to Integer Cents<br/>rawShare = Math.round("total / count")"]
     IntegerCentConversion --> RemainderAdjustment["Allocate Remainder Penny to Final Member<br/>remainder = total - sumSoFar"]
     RemainderAdjustment --> AttachSplits["Attach splits array to Expense object"]
     UseCustom --> AttachSplits

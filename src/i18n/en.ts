@@ -98,7 +98,10 @@ export const en: TranslationSchema = {
   import: {
     dropzoneTitle: 'Tap or Drop JSON Expense Report',
     dropzoneSubtitle: 'Supports structured .json files with date, merchant, and amount',
+    dropzoneTitleCsv: 'Tap or Drop CSV / JSON Statement',
+    dropzoneSubtitleCsv: 'Supports CSV bank statements and structured JSON files',
     selectJsonFile: 'Select JSON File',
+    selectCsvFile: 'Select CSV File',
     reviewConfirm: 'Review & Confirm Import',
     exportLedger: 'Export Family Ledger',
     exportLedgerSub:
@@ -141,6 +144,10 @@ export const en: TranslationSchema = {
     step2Label: '2. Attach PDF in ChatGPT / Claude',
     step3Label: '3. Paste or Drop JSON',
     categoriesIncluded: '{count} categories included',
+    csvFormatHelp:
+      'Auto-detects delimiters (comma, semicolon, tab) and European/US number formats.',
+    csvImportSuccess: 'Successfully parsed and staged CSV bank transactions!',
+    csvInvalidFormat: 'Could not parse bank statement CSV. Check column headers and delimiter.',
   },
   family: {
     activeWorkspace: 'Active Workspace',
@@ -177,6 +184,15 @@ export const en: TranslationSchema = {
     selectColor: 'Select Color',
     currentUser: 'You',
     relatedData: 'Related Data',
+    editCategoryTitle: 'Edit Category',
+    editCategory: 'Edit Category',
+    deleteCategory: 'Delete Category',
+    deleteCategoryConfirmTitle: 'Delete Category?',
+    deleteCategoryConfirmMessage:
+      'Are you sure you want to delete this category? Expenses in this category will be reassigned to the fallback category.',
+    cannotDeleteDefaultCategory: 'Default system categories cannot be deleted.',
+    cannotDeleteLastCategory: 'Cannot delete the only remaining category in the household.',
+    fallbackCategoryLabel: 'Reassign Existing Expenses To',
   },
   settings: {
     title: 'Settings & Preferences',
@@ -249,6 +265,8 @@ export const en: TranslationSchema = {
     paymentMethod: 'Payment Method',
     notes: 'Notes',
     uncategorized: 'Uncategorized',
+    editExpense: 'Edit',
+    editExpenseTitle: 'Edit Expense',
   },
   categories: {
     groceries: 'Groceries',

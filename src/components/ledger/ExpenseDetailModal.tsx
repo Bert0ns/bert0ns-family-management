@@ -10,7 +10,7 @@ import {
   Alert,
   useWindowDimensions,
 } from 'react-native';
-import { Calendar, User, CreditCard, Trash2, X } from 'lucide-react-native';
+import { Calendar, User, CreditCard, Trash2, X, Pencil } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName, getLocalizedPaymentMethod } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -29,6 +29,7 @@ interface ExpenseDetailModalProps {
   currency?: string;
   onClose: () => void;
   onDelete: (id: string) => void;
+  onEdit?: (expense: Expense) => void;
 }
 
 export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
@@ -39,6 +40,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
   currency = '€',
   onClose,
   onDelete,
+  onEdit,
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
   const { t, locale } = useI18n();
@@ -467,6 +469,18 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
 
             {/* Actions */}
             <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs }}>
+              {Boolean(onEdit) && (
+                <Button
+                  title={t.expenseDetail.editExpense}
+                  variant="secondary"
+                  icon={<Pencil size={18} color={theme.colors.brand} strokeWidth={2.5} />}
+                  onPress={() => {
+                    onClose();
+                    onEdit?.(expense);
+                  }}
+                  style={{ flex: 1 }}
+                />
+              )}
               <Button
                 title={t.common.delete}
                 variant="danger"

@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Users, Plus, Tag, UserPlus } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName } from '@/i18n';
@@ -8,11 +8,12 @@ import { MemberCard } from '@/components/family/MemberCard';
 import { AddMemberModal } from '@/components/family/AddMemberModal';
 import { EditMemberModal } from '@/components/family/EditMemberModal';
 import { AddCategoryModal } from '@/components/family/AddCategoryModal';
+import { EditCategoryModal } from '@/components/family/EditCategoryModal';
 import { IconHelper } from '@/components/common/IconHelper';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
-import { FamilyMember } from '@/types';
+import { FamilyMember, Category } from '@/types';
 import { sumBy, toCents, fromCents } from '@/utils/numberParser';
 
 export default function FamilyScreen() {
@@ -29,10 +30,13 @@ export default function FamilyScreen() {
   const updateMember = useAppStore((s) => s.updateMember);
   const deleteMember = useAppStore((s) => s.deleteMember);
   const addCategory = useAppStore((s) => s.addCategory);
+  const updateCategory = useAppStore((s) => s.updateCategory);
+  const deleteCategory = useAppStore((s) => s.deleteCategory);
 
   const [isAddMemberVisible, setIsAddMemberVisible] = useState(false);
   const [isAddCategoryVisible, setIsAddCategoryVisible] = useState(false);
   const [selectedMemberForEdit, setSelectedMemberForEdit] = useState<FamilyMember | null>(null);
+  const [selectedCategoryForEdit, setSelectedCategoryForEdit] = useState<Category | null>(null);
 
   const periodExpenses = useMemo(
     () => expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod)),
@@ -68,55 +72,76 @@ export default function FamilyScreen() {
         width: '100%',
         alignSelf: 'center',
       }}
-      showsVerticalScrollIndicator={false}
     >
-      {/* Family Info Card */}
+      {/* Household Info Banner */}
       <Card
-        padding="lg"
+        variant="elevated"
         style={{
-          marginBottom: spacing.lg,
-          backgroundColor: theme.isDark
-            ? theme.colors.surfaceContainerHigh
-            : theme.colors.surfaceSubtle,
-          borderColor: theme.colors.borderTactile,
+          marginBottom: spacing.xl,
+          padding: spacing.lg,
+          borderRadius: radius.xxl,
+          backgroundColor: theme.colors.surface,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
         }}
       >
         <View
           style={{
             flexDirection: 'row',
-            justifyContent: 'space-between',
             alignItems: 'center',
-            gap: spacing.sm,
+            justifyContent: 'space-between',
+            marginBottom: spacing.xs,
           }}
         >
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.sm,
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            <View
               style={{
-                color: theme.colors.textPrimary,
-                fontSize: typography.fontSizes.xl,
-                fontWeight: typography.fontWeights.heavy,
+                width: 44,
+                height: 44,
+                borderRadius: radius.xl,
+                backgroundColor: theme.colors.brandLight,
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
-              numberOfLines={1}
-              ellipsizeMode="tail"
             >
-              {family.name}
-            </Text>
-            <Text
-              style={{
-                color: theme.colors.textSecondary,
-                fontSize: typography.fontSizes.sm,
-                fontWeight: typography.fontWeights.medium,
-                marginTop: 4,
-              }}
-              numberOfLines={1}
-            >
-              {family.currency} • {members.length} {t.family.membersCount}
-            </Text>
+              <Users size={22} color={theme.colors.brand} strokeWidth={2.5} />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text
+                style={{
+                  color: theme.colors.textSecondary,
+                  fontSize: typography.fontSizes.xs,
+                  fontWeight: typography.fontWeights.medium,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.8,
+                }}
+              >
+                {t.family.activeWorkspace}
+              </Text>
+              <Text
+                style={{
+                  color: theme.colors.textPrimary,
+                  fontSize: typography.fontSizes.xl,
+                  fontWeight: typography.fontWeights.heavy,
+                }}
+                numberOfLines={1}
+              >
+                {family.name}
+              </Text>
+            </View>
           </View>
 
           <View style={{ flexShrink: 0 }}>
             <Badge
-              label={t.family.activeWorkspace}
+              label={`${members.length} ${t.family.membersCount}`}
               color={theme.colors.brand}
               variant="solid"
               size="md"
@@ -125,7 +150,7 @@ export default function FamilyScreen() {
         </View>
       </Card>
 
-      {/* Family Members Section */}
+      {/* Members Section */}
       <View style={{ marginBottom: spacing.xl }}>
         <View
           style={{
@@ -172,21 +197,22 @@ export default function FamilyScreen() {
           />
         </View>
 
-        {members.map((member) => {
-          const stats = memberStats.get(member.id) || { totalSpent: 0, count: 0 };
-
-          return (
-            <MemberCard
-              key={member.id}
-              member={member}
-              totalSpent={stats.totalSpent}
-              transactionCount={stats.count}
-              currency={family.currency}
-              isCurrentUser={member.is_current_user || member.id === currentMemberId}
-              onSelect={handleSelectMember}
-            />
-          );
-        })}
+        <View style={{ gap: spacing.sm }}>
+          {members.map((member) => {
+            const stats = memberStats.get(member.id) || { totalSpent: 0, count: 0 };
+            return (
+              <MemberCard
+                key={member.id}
+                member={member}
+                totalSpent={stats.totalSpent}
+                transactionCount={stats.count}
+                currency={family.currency}
+                isCurrentUser={member.is_current_user || member.id === currentMemberId}
+                onSelect={handleSelectMember}
+              />
+            );
+          })}
+        </View>
       </View>
 
       {/* Categories Section */}
@@ -237,81 +263,88 @@ export default function FamilyScreen() {
             const actualSpend = sumBy(catTxs, (e) => e.amount);
 
             return (
-              <Card
+              <Pressable
                 key={category.id}
-                padding="md"
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  borderWidth: 1.5,
-                  borderColor: theme.colors.cardBorder,
-                }}
+                onPress={() => setSelectedCategoryForEdit(category)}
+                accessibilityRole="button"
+                accessibilityLabel={`${getLocalizedCategoryName(category, t)}, ${catTxs.length} ${t.dashboard.txs}`}
+                style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
               >
-                <View
+                <Card
+                  variant="outlined"
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    gap: spacing.sm,
-                    flex: 1,
-                    minWidth: 0,
-                    marginRight: spacing.sm,
+                    justifyContent: 'space-between',
+                    padding: spacing.md,
+                    borderRadius: radius.xl,
                   }}
                 >
                   <View
                     style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: radius.lg,
-                      backgroundColor: `${category.color}22`,
-                      borderWidth: 1.5,
-                      borderColor: `${category.color}35`,
+                      flexDirection: 'row',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
+                      gap: spacing.sm,
+                      flex: 1,
+                      minWidth: 0,
+                      marginRight: spacing.sm,
                     }}
                   >
-                    <IconHelper name={category.icon} size={20} color={category.color} />
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: radius.lg,
+                        backgroundColor: `${category.color}22`,
+                        borderWidth: 1.5,
+                        borderColor: `${category.color}35`,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <IconHelper name={category.icon} size={20} color={category.color} />
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text
+                        style={{
+                          color: theme.colors.textPrimary,
+                          fontSize: typography.fontSizes.md,
+                          fontWeight: typography.fontWeights.bold,
+                        }}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {getLocalizedCategoryName(category, t)}
+                      </Text>
+                      <Text
+                        style={{
+                          color: theme.colors.textSecondary,
+                          fontSize: typography.fontSizes.xs,
+                          marginTop: 2,
+                        }}
+                        numberOfLines={1}
+                      >
+                        {catTxs.length} {t.dashboard.txs}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={{ flex: 1, minWidth: 0 }}>
+
+                  <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
                     <Text
                       style={{
                         color: theme.colors.textPrimary,
                         fontSize: typography.fontSizes.md,
-                        fontWeight: typography.fontWeights.bold,
-                      }}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {getLocalizedCategoryName(category, t)}
-                    </Text>
-                    <Text
-                      style={{
-                        color: theme.colors.textSecondary,
-                        fontSize: typography.fontSizes.xs,
-                        marginTop: 2,
+                        fontWeight: typography.fontWeights.heavy,
                       }}
                       numberOfLines={1}
                     >
-                      {catTxs.length} {t.dashboard.txs}
+                      {family.currency}
+                      {actualSpend.toFixed(2)}
                     </Text>
                   </View>
-                </View>
-
-                <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-                  <Text
-                    style={{
-                      color: theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.md,
-                      fontWeight: typography.fontWeights.heavy,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {family.currency}
-                    {actualSpend.toFixed(2)}
-                  </Text>
-                </View>
-              </Card>
+                </Card>
+              </Pressable>
             );
           })}
         </View>
@@ -351,6 +384,21 @@ export default function FamilyScreen() {
         visible={isAddCategoryVisible}
         onClose={() => setIsAddCategoryVisible(false)}
         onSave={addCategory}
+      />
+
+      {/* Edit Category Modal */}
+      <EditCategoryModal
+        visible={!!selectedCategoryForEdit}
+        category={selectedCategoryForEdit}
+        categories={categories}
+        expenses={expenses}
+        onClose={() => setSelectedCategoryForEdit(null)}
+        onSave={(id, updates) => {
+          updateCategory(id, updates);
+        }}
+        onDelete={(categoryId, fallbackId) => {
+          deleteCategory(categoryId, fallbackId);
+        }}
       />
     </ScrollView>
   );
