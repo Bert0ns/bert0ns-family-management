@@ -74,6 +74,9 @@ export default function SettingsScreen() {
         setUserEmail(user?.email || null);
         if (user) {
           setShowAuthModal(false);
+          if (Platform.OS !== 'web' && pushEnabled) {
+            pushNotificationService.registerForPushNotificationsAsync(user.id);
+          }
         }
       }
     });
@@ -94,7 +97,8 @@ export default function SettingsScreen() {
   const handleSignOut = async () => {
     const user = await authService.getUser();
     if (user && Platform.OS !== 'web') {
-      await pushNotificationService.unregisterPushTokenAsync(user.id);
+      const activeToken = pushNotificationService.getActiveDeviceToken();
+      await pushNotificationService.unregisterPushTokenAsync(user.id, activeToken ?? undefined);
     }
     await authService.signOut();
     realtimeSync.stopRealtimeSync();
@@ -103,10 +107,15 @@ export default function SettingsScreen() {
 
   const handleTogglePushMaster = async (enabled: boolean) => {
     updateNotificationPreferences({ push_enabled: enabled });
-    if (enabled && Platform.OS !== 'web') {
+    if (Platform.OS !== 'web') {
       const user = await authService.getUser();
       if (user) {
-        await pushNotificationService.registerForPushNotificationsAsync(user.id);
+        if (enabled) {
+          await pushNotificationService.registerForPushNotificationsAsync(user.id);
+        } else {
+          const activeToken = pushNotificationService.getActiveDeviceToken();
+          await pushNotificationService.unregisterPushTokenAsync(user.id, activeToken ?? undefined);
+        }
       }
     }
   };
