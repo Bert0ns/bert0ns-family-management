@@ -6,6 +6,7 @@ import {
   DailySpendPoint,
   MonthlyKPIMetrics,
 } from './interfaces';
+import { toCents, fromCents, sumBy, roundToTwoDecimals } from '@/utils/numberParser';
 
 export { CategorySummary, MemberSummary, DailySpendPoint, MonthlyKPIMetrics };
 
@@ -21,7 +22,7 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
     referenceDate: Date = new Date(),
   ): MonthlyKPIMetrics {
     const periodExpenses = expenses.filter((e) => e.transaction_date.startsWith(period));
-    const totalSpend = periodExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalSpend = sumBy(periodExpenses, (e) => e.amount);
 
     const [yearStr, monthStr] = period.split('-');
     const year = parseInt(yearStr, 10);
@@ -44,7 +45,7 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
       // Current active month - use actual calendar day of month
       daysElapsed = Math.min(Math.max(referenceDate.getDate(), 1), totalDaysInMonth);
       const dailyAverageBurn = daysElapsed > 0 ? totalSpend / daysElapsed : 0;
-      projectedMonthEnd = dailyAverageBurn * totalDaysInMonth;
+      projectedMonthEnd = roundToTwoDecimals(dailyAverageBurn * totalDaysInMonth);
     } else {
       // Future month
       daysElapsed = 1;
@@ -56,24 +57,29 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
     const catSummaries = this.calculateCategoryBreakdown(periodExpenses, categories);
     const memSummaries = this.calculateMemberContributions(periodExpenses, members);
 
+    const topCategory =
+      catSummaries.length > 0 && catSummaries[0].total > 0 ? catSummaries[0] : undefined;
+    const topSpender =
+      memSummaries.length > 0 && memSummaries[0].total > 0 ? memSummaries[0] : undefined;
+
     return {
       totalSpend,
       dailyAverageBurn,
       projectedMonthEnd,
       transactionCount: periodExpenses.length,
-      topCategory: catSummaries[0],
-      topSpender: memSummaries[0],
+      topCategory,
+      topSpender,
     };
   }
 
   calculateCategoryBreakdown(expenses: Expense[], categories: Category[]): CategorySummary[] {
-    const totalSpend = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const catMap = new Map<string, { total: number; count: number }>();
+    const totalSpend = sumBy(expenses, (e) => e.amount);
+    const catMap = new Map<string, { totalCents: number; count: number }>();
 
     expenses.forEach((e) => {
-      const current = catMap.get(e.category_id) || { total: 0, count: 0 };
+      const current = catMap.get(e.category_id) || { totalCents: 0, count: 0 };
       catMap.set(e.category_id, {
-        total: current.total + e.amount,
+        totalCents: current.totalCents + toCents(e.amount),
         count: current.count + 1,
       });
     });
@@ -84,11 +90,12 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
     categories.forEach((cat) => {
       seenCategoryIds.add(cat.id);
       const data = catMap.get(cat.id);
-      if (data && data.total > 0) {
+      if (data && data.totalCents > 0) {
+        const catTotal = fromCents(data.totalCents);
         summaries.push({
           category: cat,
-          total: data.total,
-          percentage: totalSpend > 0 ? (data.total / totalSpend) * 100 : 0,
+          total: catTotal,
+          percentage: totalSpend > 0 ? (catTotal / totalSpend) * 100 : 0,
           transactionCount: data.count,
         });
       }
@@ -96,7 +103,8 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
 
     // Account for orphaned or unmapped category IDs
     catMap.forEach((data, catId) => {
-      if (!seenCategoryIds.has(catId) && data.total > 0) {
+      if (!seenCategoryIds.has(catId) && data.totalCents > 0) {
+        const catTotal = fromCents(data.totalCents);
         summaries.push({
           category: {
             id: catId,
@@ -105,8 +113,8 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
             icon: 'HelpCircle',
             color: '#94A3B8',
           },
-          total: data.total,
-          percentage: totalSpend > 0 ? (data.total / totalSpend) * 100 : 0,
+          total: catTotal,
+          percentage: totalSpend > 0 ? (catTotal / totalSpend) * 100 : 0,
           transactionCount: data.count,
         });
       }
@@ -116,13 +124,13 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
   }
 
   calculateMemberContributions(expenses: Expense[], members: FamilyMember[]): MemberSummary[] {
-    const totalSpend = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const memMap = new Map<string, { total: number; count: number }>();
+    const totalSpend = sumBy(expenses, (e) => e.amount);
+    const memMap = new Map<string, { totalCents: number; count: number }>();
 
     expenses.forEach((e) => {
-      const current = memMap.get(e.paid_by_member_id) || { total: 0, count: 0 };
+      const current = memMap.get(e.paid_by_member_id) || { totalCents: 0, count: 0 };
       memMap.set(e.paid_by_member_id, {
-        total: current.total + e.amount,
+        totalCents: current.totalCents + toCents(e.amount),
         count: current.count + 1,
       });
     });
@@ -133,11 +141,12 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
     members.forEach((mem) => {
       seenMemberIds.add(mem.id);
       const data = memMap.get(mem.id);
-      if (data && data.total > 0) {
+      if (data && data.totalCents > 0) {
+        const memTotal = fromCents(data.totalCents);
         summaries.push({
           member: mem,
-          total: data.total,
-          percentage: totalSpend > 0 ? (data.total / totalSpend) * 100 : 0,
+          total: memTotal,
+          percentage: totalSpend > 0 ? (memTotal / totalSpend) * 100 : 0,
           transactionCount: data.count,
         });
       } else {
@@ -152,7 +161,8 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
 
     // Account for former or unknown member IDs
     memMap.forEach((data, memId) => {
-      if (!seenMemberIds.has(memId) && data.total > 0) {
+      if (!seenMemberIds.has(memId) && data.totalCents > 0) {
+        const memTotal = fromCents(data.totalCents);
         summaries.push({
           member: {
             id: memId,
@@ -161,8 +171,8 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
             role: 'MEMBER',
             color_code: '#94A3B8',
           },
-          total: data.total,
-          percentage: totalSpend > 0 ? (data.total / totalSpend) * 100 : 0,
+          total: memTotal,
+          percentage: totalSpend > 0 ? (memTotal / totalSpend) * 100 : 0,
           transactionCount: data.count,
         });
       }
@@ -177,26 +187,26 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
     const month = parseInt(monthStr, 10);
     const totalDays = new Date(year, month, 0).getDate();
 
-    const dayAmounts = new Map<number, number>();
+    const dayCents = new Map<number, number>();
     expenses
       .filter((e) => e.transaction_date.startsWith(period))
       .forEach((e) => {
         const day = parseInt(e.transaction_date.split('-')[2], 10);
-        dayAmounts.set(day, (dayAmounts.get(day) || 0) + e.amount);
+        dayCents.set(day, (dayCents.get(day) || 0) + toCents(e.amount));
       });
 
-    let runningTotal = 0;
+    let runningTotalCents = 0;
     const points: DailySpendPoint[] = [];
 
     for (let d = 1; d <= totalDays; d++) {
-      const amount = dayAmounts.get(d) || 0;
-      runningTotal += amount;
+      const amountCents = dayCents.get(d) || 0;
+      runningTotalCents += amountCents;
       const dateStr = `${period}-${String(d).padStart(2, '0')}`;
       points.push({
         day: d,
         dateStr,
-        dailyAmount: amount,
-        cumulativeAmount: runningTotal,
+        dailyAmount: fromCents(amountCents),
+        cumulativeAmount: fromCents(runningTotalCents),
       });
     }
 

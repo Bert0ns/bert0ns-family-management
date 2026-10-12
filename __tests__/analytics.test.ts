@@ -135,6 +135,44 @@ describe('AnalyticsCalculator (Unit Tests & Edge Cases)', () => {
       expect(metrics.dailyAverageBurn).toBe(0);
       expect(metrics.projectedMonthEnd).toBe(0);
       expect(metrics.transactionCount).toBe(0);
+      expect(metrics.topCategory).toBeUndefined();
+      expect(metrics.topSpender).toBeUndefined();
+    });
+
+    it('eliminates floating point accumulation drift across multiple fractional expenses', () => {
+      const precisionExpenses: Expense[] = [
+        {
+          id: 'p1',
+          family_id: 'fam_1',
+          paid_by_member_id: 'mem_1',
+          category_id: 'cat_1',
+          transaction_date: '2026-08-01',
+          merchant_name: 'Store 1',
+          amount: 0.1,
+          created_at: '2026-08-01T00:00:00Z',
+        },
+        {
+          id: 'p2',
+          family_id: 'fam_1',
+          paid_by_member_id: 'mem_2',
+          category_id: 'cat_2',
+          transaction_date: '2026-08-02',
+          merchant_name: 'Store 2',
+          amount: 0.2,
+          created_at: '2026-08-02T00:00:00Z',
+        },
+      ];
+
+      const metrics = calculateMonthlyMetrics(
+        precisionExpenses,
+        mockCategories,
+        mockMembers,
+        '2026-08',
+        new Date('2026-08-15T00:00:00Z'),
+      );
+
+      // In standard JS: 0.1 + 0.2 === 0.30000000000000004
+      expect(metrics.totalSpend).toBe(0.3);
     });
   });
 
