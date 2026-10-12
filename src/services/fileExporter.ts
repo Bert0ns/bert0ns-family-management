@@ -18,13 +18,20 @@ export async function exportAndShareFile(
 ): Promise<boolean> {
   exportLogger.info('Starting file export', { fileName, mimeType, platform: Platform.OS });
 
+  // Sanitize filename to prevent directory traversal or invalid characters
+  const sanitizedFileName = fileName.replace(/[/\\?%*:|"<>]/g, '_').replace(/\.\.+/g, '_');
+
+  // Prepend UTF-8 BOM to CSV export strings so currency symbols (€) and Italian accents display correctly in Microsoft Excel
+  const fileContent =
+    mimeType === 'text/csv' && !content.startsWith('\uFEFF') ? `\uFEFF${content}` : content;
+
   if (Platform.OS === 'web') {
     if (typeof document !== 'undefined') {
-      const blob = new Blob([content], { type: `${mimeType};charset=utf-8;` });
+      const blob = new Blob([fileContent], { type: `${mimeType};charset=utf-8;` });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', fileName);
+      link.setAttribute('download', sanitizedFileName);
       document.body.appendChild(link);
       link.click();
       setTimeout(() => {
@@ -35,7 +42,7 @@ export async function exportAndShareFile(
           URL.revokeObjectURL(url);
         }
       }, 100);
-      exportLogger.info('Web blob download completed', { fileName });
+      exportLogger.info('Web blob download completed', { fileName: sanitizedFileName });
       return true;
     }
     exportLogger.warn('Web document object not found for file export');
@@ -44,21 +51,21 @@ export async function exportAndShareFile(
 
   let file: File | undefined;
   try {
-    file = new File(Paths.cache, fileName);
+    file = new File(Paths.cache, sanitizedFileName);
     if (file.exists) {
       file.delete();
     }
     file.create();
-    file.write(content);
+    file.write(fileContent);
 
     const canShare = await Sharing.isAvailableAsync();
     if (canShare) {
       await Sharing.shareAsync(file.uri, {
         mimeType,
-        dialogTitle: `Export ${fileName}`,
+        dialogTitle: `Export ${sanitizedFileName}`,
         UTI: mimeType === 'text/csv' ? 'public.comma-separated-values-text' : 'public.json',
       });
-      exportLogger.info('Native share sheet opened successfully', { fileName });
+      exportLogger.info('Native share sheet opened successfully', { fileName: sanitizedFileName });
       return true;
     } else {
       exportLogger.warn('Native sharing unavailable on device');

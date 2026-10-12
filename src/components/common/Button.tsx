@@ -7,6 +7,9 @@ import {
   TextStyle,
   StyleProp,
   Platform,
+  AccessibilityRole,
+  AccessibilityState,
+  Insets,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/theme';
@@ -26,6 +29,10 @@ interface ButtonProps {
   textStyle?: StyleProp<TextStyle>;
   fullWidth?: boolean;
   accessibilityLabel?: string;
+  accessibilityHint?: string;
+  accessibilityRole?: AccessibilityRole;
+  accessibilityState?: AccessibilityState;
+  hitSlop?: Insets | number;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -40,6 +47,10 @@ export const Button: React.FC<ButtonProps> = ({
   textStyle,
   fullWidth = false,
   accessibilityLabel,
+  accessibilityHint,
+  accessibilityRole,
+  accessibilityState,
+  hitSlop,
 }) => {
   const { theme, spacing, radius, typography } = useTheme();
 
@@ -72,13 +83,13 @@ export const Button: React.FC<ButtonProps> = ({
   const isIconOnly = !title && Boolean(icon);
 
   const iconOnlyDimensionMap: Record<ButtonSize, number> = {
-    sm: 44,
+    sm: 48,
     md: 52,
     lg: 60,
   };
 
   const sizeHeightMap: Record<ButtonSize, number> = {
-    sm: 44,
+    sm: 48,
     md: 52,
     lg: 60,
   };
@@ -161,7 +172,15 @@ export const Button: React.FC<ButtonProps> = ({
       onPress={handlePress}
       style={[buttonStyle, style]}
       disabled={disabled || loading}
+      accessibilityRole={accessibilityRole || 'button'}
+      accessibilityState={{
+        disabled: Boolean(disabled || loading),
+        busy: Boolean(loading),
+        ...accessibilityState,
+      }}
       accessibilityLabel={accessibilityLabel || title}
+      accessibilityHint={accessibilityHint}
+      hitSlop={hitSlop ?? { top: 8, bottom: 8, left: 8, right: 8 }}
     >
       {loading ? (
         <ActivityIndicator size="small" color={textColor} />

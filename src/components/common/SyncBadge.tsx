@@ -15,7 +15,7 @@ interface SyncBadgeProps {
 export const SyncBadge: React.FC<SyncBadgeProps> = ({ onPress, showLabel = true }) => {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
-  const { family } = useAppStore();
+  const family = useAppStore((s) => s.family);
   const [status, setStatus] = useState<SyncStatus>(syncEngine.getSyncStatus());
   const [isManualSyncing, setIsManualSyncing] = useState(false);
 
@@ -81,7 +81,9 @@ export const SyncBadge: React.FC<SyncBadgeProps> = ({ onPress, showLabel = true 
     <TouchableOpacity
       activeOpacity={0.75}
       onPress={handlePress}
+      accessibilityRole="button"
       accessibilityLabel={`Sync: ${label}`}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       style={{
         flexDirection: 'row',
         alignItems: 'center',

@@ -21,7 +21,7 @@ export interface OutboxMutation {
 export interface Family {
   id: string;
   name: string;
-  currency: '€';
+  currency: string;
   invite_code?: string;
   created_at: string;
   updated_at?: string;

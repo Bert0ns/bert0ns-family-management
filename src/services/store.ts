@@ -20,6 +20,7 @@ import {
   INITIAL_FAMILY,
 } from '@/data/mockData';
 import { generateUUID } from '@/utils/uuid';
+import { roundToTwoDecimals, sumBy } from '@/utils/numberParser';
 import { CATEGORY_I18N_KEY_MAP } from '@/i18n/categories';
 import { storeLogger, transactionLogger } from '@/services/logger';
 
@@ -187,9 +188,17 @@ export const useAppStore = create<AppState>()(
 
       addExpense: (expenseData) => {
         const state = get();
+        if (!expenseData.paid_by_member_id || !expenseData.paid_by_member_id.trim()) {
+          throw new Error('Expense must have a valid paid_by_member_id');
+        }
+        if (!expenseData.category_id || !expenseData.category_id.trim()) {
+          throw new Error('Expense must have a valid category_id');
+        }
         const now = new Date().toISOString();
+        const normalizedAmount = roundToTwoDecimals(expenseData.amount);
         const newExpense: Expense = {
           ...expenseData,
+          amount: normalizedAmount,
           id: generateUUID(),
           family_id: state.family.id,
           created_at: now,
@@ -223,16 +232,23 @@ export const useAppStore = create<AppState>()(
         const existing = state.expenses.find((e) => e.id === id);
         const now = new Date().toISOString();
         let updatedExpense: Expense | undefined;
+        const normalizedAmount =
+          updates.amount !== undefined ? roundToTwoDecimals(updates.amount) : existing?.amount;
         transactionLogger.info('Expense updated', {
           id,
           merchant: updates.merchant_name || existing?.merchant_name,
-          amount: updates.amount !== undefined ? updates.amount : existing?.amount,
+          amount: normalizedAmount,
           changedFields: Object.keys(updates),
         });
         set((state) => ({
           expenses: state.expenses.map((e) => {
             if (e.id === id) {
-              updatedExpense = { ...e, ...updates, updated_at: now };
+              updatedExpense = {
+                ...e,
+                ...updates,
+                amount: normalizedAmount ?? e.amount,
+                updated_at: now,
+              };
               return updatedExpense;
             }
             return e;
@@ -308,6 +324,17 @@ export const useAppStore = create<AppState>()(
       },
 
       updateMember: (id, updates) => {
+        const state = get();
+        if (updates.role && updates.role !== 'ADMIN') {
+          const memberToUpdate = state.members.find((m) => m.id === id);
+          if (memberToUpdate && memberToUpdate.role === 'ADMIN') {
+            const adminCount = state.members.filter((m) => m.role === 'ADMIN').length;
+            if (adminCount <= 1) {
+              storeLogger.warn('Attempted to demote the sole administrator', { id });
+              throw new Error('Cannot demote the sole administrator of the family.');
+            }
+          }
+        }
         const now = new Date().toISOString();
         let updatedMember: FamilyMember | undefined;
         storeLogger.info('Member updated', { id, updates });
@@ -332,6 +359,17 @@ export const useAppStore = create<AppState>()(
 
       deleteMember: (id) => {
         const state = get();
+        const memberToDelete = state.members.find((m) => m.id === id);
+        if (!memberToDelete) {
+          return;
+        }
+
+        const adminCount = state.members.filter((m) => m.role === 'ADMIN').length;
+        if (memberToDelete.role === 'ADMIN' && adminCount <= 1) {
+          storeLogger.warn('Attempted to delete the sole administrator', { id });
+          throw new Error('Cannot delete the sole administrator of the family.');
+        }
+
         if (state.members.length <= 1) {
           storeLogger.warn('Attempted to delete the only remaining member', { id });
           return;
@@ -497,34 +535,49 @@ export const useAppStore = create<AppState>()(
         });
 
         const batchId = generateUUID();
-        const totalAmount = report.expenses.reduce((sum, e) => sum + e.amount, 0);
+        const totalAmount = sumBy(report.expenses, (e) => e.amount);
 
         const uploaderMember =
           state.members.find((m) => m.id === state.currentMemberId) || state.members[0];
 
+        // Pre-build index for members and categories to provide O(1) lookups
+        const memberByName = new Map<string, FamilyMember>();
+        state.members.forEach((m) => {
+          memberByName.set(m.display_name.toLowerCase(), m);
+        });
+
+        const categoryByName = new Map<string, Category>();
+        const categoryById = new Map<string, Category>();
+        const categoryByMappedKey = new Map<string, Category>();
+        state.categories.forEach((c) => {
+          categoryByName.set(c.name.toLowerCase().trim(), c);
+          categoryById.set(c.id.toLowerCase(), c);
+          const keyFromId = CATEGORY_I18N_KEY_MAP[c.id.toLowerCase()];
+          if (keyFromId && !categoryByMappedKey.has(keyFromId)) {
+            categoryByMappedKey.set(keyFromId, c);
+          }
+          const keyFromName = CATEGORY_I18N_KEY_MAP[c.name.toLowerCase().trim()];
+          if (keyFromName && !categoryByMappedKey.has(keyFromName)) {
+            categoryByMappedKey.set(keyFromName, c);
+          }
+        });
+        const fallbackCat =
+          state.categories.find((c) => c.id === 'cat_other') || state.categories[0];
+
         const newExpenses: Expense[] = report.expenses.map((rawExp) => {
           let paidMember = uploaderMember;
           if (rawExp.paid_by) {
-            const found = state.members.find(
-              (m) => m.display_name.toLowerCase() === rawExp.paid_by?.toLowerCase(),
-            );
+            const found = memberByName.get(rawExp.paid_by.toLowerCase());
             if (found) paidMember = found;
           }
 
           const rawCat = rawExp.category ? rawExp.category.toLowerCase().trim() : '';
           const mappedKey = CATEGORY_I18N_KEY_MAP[rawCat];
           const matchedCat =
-            state.categories.find((c) => c.name.toLowerCase().trim() === rawCat) ||
-            state.categories.find((c) => c.id.toLowerCase() === rawCat) ||
-            (mappedKey
-              ? state.categories.find(
-                  (c) =>
-                    CATEGORY_I18N_KEY_MAP[c.id.toLowerCase()] === mappedKey ||
-                    CATEGORY_I18N_KEY_MAP[c.name.toLowerCase().trim()] === mappedKey,
-                )
-              : undefined) ||
-            state.categories.find((c) => c.id === 'cat_other') ||
-            state.categories[0];
+            categoryByName.get(rawCat) ||
+            categoryById.get(rawCat) ||
+            (mappedKey ? categoryByMappedKey.get(mappedKey) : undefined) ||
+            fallbackCat;
 
           const now = new Date().toISOString();
           return {
@@ -535,7 +588,7 @@ export const useAppStore = create<AppState>()(
             import_batch_id: batchId,
             transaction_date: rawExp.date,
             merchant_name: rawExp.merchant,
-            amount: rawExp.amount,
+            amount: roundToTwoDecimals(rawExp.amount),
             notes: rawExp.notes,
             payment_method: rawExp.payment_method || 'Imported File',
             is_recurring: rawExp.is_recurring,
@@ -637,9 +690,8 @@ export const useAppStore = create<AppState>()(
             }
           });
 
-          const sorted = Array.from(map.values()).sort(
-            (a, b) =>
-              new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime(),
+          const sorted = Array.from(map.values()).sort((a, b) =>
+            b.transaction_date.localeCompare(a.transaction_date),
           );
           return { expenses: sorted };
         });

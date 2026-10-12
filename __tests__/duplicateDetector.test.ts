@@ -143,4 +143,63 @@ describe('DuplicateDetector (Unit Tests)', () => {
     expect(detector.isMerchantMatch('test', '')).toBe(false);
     expect(duplicateDetector).toBeInstanceOf(DuplicateDetector);
   });
+
+  it('normalizes European accented letters without losing characters', () => {
+    expect(detector.normalizeMerchant('Cafè')).toBe('cafe');
+    expect(detector.normalizeMerchant('Crédit Agricole')).toBe('credit agricole');
+    expect(detector.normalizeMerchant('Lidl Müller')).toBe('lidl muller');
+    expect(detector.normalizeMerchant('München Hbf')).toBe('munchen hbf');
+
+    expect(detector.isMerchantMatch('Cafè', 'Cafe')).toBe(true);
+    expect(detector.isMerchantMatch('Crédit Agricole', 'Credit Agricole')).toBe(true);
+    expect(detector.isMerchantMatch('Lidl Müller', 'Lidl Muller')).toBe(true);
+  });
+
+  it('does not falsely flag distinct merchants sharing a single word prefix', () => {
+    expect(detector.isMerchantMatch('Target', 'Target Optical')).toBe(false);
+    expect(detector.isMerchantMatch('Target Optical', 'Target')).toBe(false);
+    expect(detector.isMerchantMatch('Shell', 'Shell Gas Station')).toBe(false);
+    expect(detector.isMerchantMatch('Target Optics', 'Target Optic Store')).toBe(false);
+  });
+
+  it('detects duplicates within the same import batch (intra-batch collisions)', () => {
+    const batchWithInternalDuplicates: RawExpenseItem[] = [
+      {
+        date: '2026-09-01',
+        merchant: 'Carrefour Express',
+        amount: 25.5,
+        category: 'Groceries',
+        is_recurring: false,
+      },
+      {
+        date: '2026-09-01',
+        merchant: 'Carrefour Express',
+        amount: 25.5,
+        category: 'Groceries',
+        is_recurring: false,
+      },
+      {
+        date: '2026-09-01',
+        merchant: 'Carrefour Express',
+        amount: 25.5,
+        category: 'Groceries',
+        is_recurring: false,
+      },
+    ];
+
+    const results = detector.checkBatchDuplicates(batchWithInternalDuplicates, []);
+    expect(results).toHaveLength(3);
+    // First occurrence is not a duplicate
+    expect(results[0].isDuplicate).toBe(false);
+
+    // Second occurrence is flagged as duplicate of item 1
+    expect(results[1].isDuplicate).toBe(true);
+    expect(results[1].matchedExpenseId).toBe('batch_item_0');
+    expect(results[1].matchReason).toContain('Matches item #1 in this import batch');
+
+    // Third occurrence is also flagged as duplicate of item 1
+    expect(results[2].isDuplicate).toBe(true);
+    expect(results[2].matchedExpenseId).toBe('batch_item_0');
+    expect(results[2].matchReason).toContain('Matches item #1 in this import batch');
+  });
 });

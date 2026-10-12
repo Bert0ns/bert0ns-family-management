@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
 import { Cloud, Mail, KeyRound, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react-native';
 import { FormModal } from '@/components/common/FormModal';
 import { Input } from '@/components/common/Input';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
-import { authService } from '@/services/authService';
-import { migrationService } from '@/services/migrationService';
-import { realtimeSync } from '@/services/realtimeSync';
-import { syncEngine } from '@/services/syncEngine';
 import { useAppStore } from '@/services/store';
+import { authWorkflowService } from '@/services/authWorkflowService';
 
 interface AuthModalProps {
   visible: boolean;
@@ -20,7 +17,7 @@ interface AuthModalProps {
 export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSuccess }) => {
   const { theme, spacing, typography, radius } = useTheme();
   const { t } = useI18n();
-  const { family } = useAppStore();
+  const family = useAppStore((s) => s.family);
 
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
@@ -29,7 +26,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
+
   const resetForm = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+    }
     setStep('email');
     setEmail('');
     setOtp('');
@@ -55,7 +65,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
 
     const redirectUrl =
       Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined;
-    const res = await authService.sendOtp(trimmedEmail, redirectUrl);
+    const res = await authWorkflowService.sendOtp(trimmedEmail, redirectUrl);
     setIsLoading(false);
 
     if (res.error) {
@@ -75,30 +85,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
     setIsLoading(true);
     setError(null);
 
-    const res = await authService.verifyOtp(email, trimmedOtp);
-    if (res.error) {
-      setIsLoading(false);
-      setError(res.error);
-      return;
-    }
+    const res = await authWorkflowService.verifyOtpAndMigrate(email, trimmedOtp, family.id);
+    setIsLoading(false);
 
-    // Successfully authenticated: run data migration & start realtime sync
-    const userId = res.session?.user?.id;
-    const migrationRes = await migrationService.migrateLocalDataToSupabase(family.id, userId);
-
-    if (!migrationRes.success && migrationRes.error) {
-      setIsLoading(false);
-      setError(migrationRes.error);
+    if (!res.success) {
+      setError(res.error || 'Authentication failed');
       return;
     }
 
     setSuccess(t.sync.migrateSuccess);
-    const activeFamilyId = migrationRes.targetFamilyId || useAppStore.getState().family.id;
-    realtimeSync.startRealtimeSync(activeFamilyId);
-    await syncEngine.fetchDelta(activeFamilyId);
-
-    setIsLoading(false);
-    setTimeout(() => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
       handleClose();
       onSuccess?.();
     }, 1200);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Users, Plus, Tag, UserPlus } from 'lucide-react-native';
 import { useTheme } from '@/theme';
@@ -13,29 +13,50 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { FamilyMember } from '@/types';
+import { sumBy, toCents, fromCents } from '@/utils/numberParser';
 
 export default function FamilyScreen() {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
 
-  const {
-    family,
-    members,
-    categories,
-    expenses,
-    selectedPeriod,
-    currentMemberId,
-    addMember,
-    updateMember,
-    deleteMember,
-    addCategory,
-  } = useAppStore();
+  const family = useAppStore((s) => s.family);
+  const members = useAppStore((s) => s.members);
+  const categories = useAppStore((s) => s.categories);
+  const expenses = useAppStore((s) => s.expenses);
+  const selectedPeriod = useAppStore((s) => s.selectedPeriod);
+  const currentMemberId = useAppStore((s) => s.currentMemberId);
+  const addMember = useAppStore((s) => s.addMember);
+  const updateMember = useAppStore((s) => s.updateMember);
+  const deleteMember = useAppStore((s) => s.deleteMember);
+  const addCategory = useAppStore((s) => s.addCategory);
 
   const [isAddMemberVisible, setIsAddMemberVisible] = useState(false);
   const [isAddCategoryVisible, setIsAddCategoryVisible] = useState(false);
   const [selectedMemberForEdit, setSelectedMemberForEdit] = useState<FamilyMember | null>(null);
 
-  const periodExpenses = expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod));
+  const periodExpenses = useMemo(
+    () => expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod)),
+    [expenses, selectedPeriod],
+  );
+
+  const memberStats = useMemo(() => {
+    const stats = new Map<string, { totalCents: number; count: number }>();
+    periodExpenses.forEach((e) => {
+      const entry = stats.get(e.paid_by_member_id) || { totalCents: 0, count: 0 };
+      entry.totalCents += toCents(e.amount);
+      entry.count += 1;
+      stats.set(e.paid_by_member_id, entry);
+    });
+    const result = new Map<string, { totalSpent: number; count: number }>();
+    stats.forEach((val, key) => {
+      result.set(key, { totalSpent: fromCents(val.totalCents), count: val.count });
+    });
+    return result;
+  }, [periodExpenses]);
+
+  const handleSelectMember = useCallback((member: FamilyMember) => {
+    setSelectedMemberForEdit(member);
+  }, []);
 
   return (
     <ScrollView
@@ -152,18 +173,17 @@ export default function FamilyScreen() {
         </View>
 
         {members.map((member) => {
-          const memberTxs = periodExpenses.filter((e) => e.paid_by_member_id === member.id);
-          const totalSpent = memberTxs.reduce((sum, e) => sum + e.amount, 0);
+          const stats = memberStats.get(member.id) || { totalSpent: 0, count: 0 };
 
           return (
             <MemberCard
               key={member.id}
               member={member}
-              totalSpent={totalSpent}
-              transactionCount={memberTxs.length}
+              totalSpent={stats.totalSpent}
+              transactionCount={stats.count}
               currency={family.currency}
               isCurrentUser={member.is_current_user || member.id === currentMemberId}
-              onSelect={() => setSelectedMemberForEdit(member)}
+              onSelect={handleSelectMember}
             />
           );
         })}
@@ -214,7 +234,7 @@ export default function FamilyScreen() {
         <View style={{ gap: spacing.sm }}>
           {categories.map((category) => {
             const catTxs = periodExpenses.filter((e) => e.category_id === category.id);
-            const actualSpend = catTxs.reduce((sum, e) => sum + e.amount, 0);
+            const actualSpend = sumBy(catTxs, (e) => e.amount);
 
             return (
               <Card
@@ -310,6 +330,10 @@ export default function FamilyScreen() {
         member={selectedMemberForEdit}
         expenses={expenses}
         isOnlyMember={members.length <= 1}
+        isSoleAdmin={
+          selectedMemberForEdit?.role === 'ADMIN' &&
+          members.filter((m) => m.role === 'ADMIN').length <= 1
+        }
         currency={family.currency}
         onClose={() => setSelectedMemberForEdit(null)}
         onSave={(updates) => {

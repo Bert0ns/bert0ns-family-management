@@ -64,6 +64,42 @@ Let me know if you need anything else!`;
     expect(result.data).toEqual({ expenses: [] });
   });
 
+  it('correctly extracts and parses top-level JSON arrays', () => {
+    const rawArray = `Here is the transaction list:
+[
+  {
+    "date": "2026-09-01",
+    "merchant": "Bakery",
+    "amount": 3.50
+  },
+  {
+    "date": "2026-09-02",
+    "merchant": "Pharmacy",
+    "amount": 18.20
+  }
+]
+Processed successfully.`;
+
+    const result = jsonExtractor.extract(rawArray);
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual([
+      { date: '2026-09-01', merchant: 'Bakery', amount: 3.5 },
+      { date: '2026-09-02', merchant: 'Pharmacy', amount: 18.2 },
+    ]);
+  });
+
+  it('correctly parses top-level JSON arrays in markdown code fences', () => {
+    const rawFenceArray = `\`\`\`json
+[
+  {"merchant": "Corner Shop", "amount": 12.0}
+]
+\`\`\``;
+
+    const result = jsonExtractor.extract(rawFenceArray);
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual([{ merchant: 'Corner Shop', amount: 12.0 }]);
+  });
+
   it('forgivingly parses JSON with trailing commas produced by LLMs', () => {
     const jsonWithTrailingCommas = `\`\`\`json
 {
@@ -92,6 +128,30 @@ Let me know if you need anything else!`;
         },
       ],
     });
+  });
+
+  it('preserves commas and brackets inside string literals when forgiving trailing commas', () => {
+    const jsonWithStringCommas = `
+{
+  "report_title": "Statement with special text",
+  "notes": "Items: bread, milk, } and eggs, ]",
+  "items": [
+    "first item, } test",
+  ],
+}
+`;
+    const result = jsonExtractor.extract(jsonWithStringCommas);
+    expect(result.success).toBe(true);
+    expect((result.data as any).notes).toBe('Items: bread, milk, } and eggs, ]');
+    expect((result.data as any).items).toEqual(['first item, } test']);
+  });
+
+  it('rejects payloads exceeding the 2MB size limit', () => {
+    const largePayload = 'a'.repeat(2 * 1024 * 1024 + 1);
+    const result = jsonExtractor.extract(largePayload);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Payload exceeds maximum allowed size of 2MB');
   });
 
   it('rejects empty input or strings without JSON objects', () => {
