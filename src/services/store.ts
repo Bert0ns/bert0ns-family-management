@@ -175,7 +175,8 @@ export const useAppStore = create<AppState>()(
       updateFamilySettings: (updates) => {
         storeLogger.info('Updating family settings', updates);
         set((state) => {
-          const updatedFamily = { ...state.family, ...updates };
+          const { id: _callerId, created_at: _callerCreatedAt, ...safeUpdates } = updates as any;
+          const updatedFamily = { ...state.family, ...safeUpdates, id: state.family.id };
           notifyStoreMutation({
             entity: 'family',
             operation: 'UPDATE',
@@ -196,8 +197,9 @@ export const useAppStore = create<AppState>()(
         }
         const now = new Date().toISOString();
         const normalizedAmount = roundToTwoDecimals(expenseData.amount);
+        const { id: _callerId, family_id: _callerFamId, ...safeExpenseData } = expenseData as any;
         const newExpense: Expense = {
-          ...expenseData,
+          ...safeExpenseData,
           amount: normalizedAmount,
           id: generateUUID(),
           family_id: state.family.id,
@@ -240,16 +242,20 @@ export const useAppStore = create<AppState>()(
           amount: normalizedAmount,
           changedFields: Object.keys(updates),
         });
+        const { id: _callerId, family_id: _callerFamId, ...safeUpdates } = updates as any;
         set((state) => ({
           expenses: state.expenses.map((e) => {
             if (e.id === id) {
-              updatedExpense = {
+              const updated: Expense = {
                 ...e,
-                ...updates,
+                ...safeUpdates,
+                id: e.id,
+                family_id: e.family_id,
                 amount: normalizedAmount ?? e.amount,
                 updated_at: now,
               };
-              return updatedExpense;
+              updatedExpense = updated;
+              return updated;
             }
             return e;
           }),
@@ -301,8 +307,9 @@ export const useAppStore = create<AppState>()(
       addMember: (memberData) => {
         const state = get();
         const now = new Date().toISOString();
+        const { id: _callerId, family_id: _callerFamId, ...safeMemberData } = memberData as any;
         const newMember: FamilyMember = {
-          ...memberData,
+          ...safeMemberData,
           id: generateUUID(),
           family_id: state.family.id,
           created_at: now,
@@ -338,11 +345,19 @@ export const useAppStore = create<AppState>()(
         const now = new Date().toISOString();
         let updatedMember: FamilyMember | undefined;
         storeLogger.info('Member updated', { id, updates });
+        const { id: _callerId, family_id: _callerFamId, ...safeUpdates } = updates as any;
         set((state) => ({
           members: state.members.map((m) => {
             if (m.id === id) {
-              updatedMember = { ...m, ...updates, updated_at: now };
-              return updatedMember;
+              const updated: FamilyMember = {
+                ...m,
+                ...safeUpdates,
+                id: m.id,
+                family_id: m.family_id,
+                updated_at: now,
+              };
+              updatedMember = updated;
+              return updated;
             }
             return m;
           }),
@@ -420,8 +435,9 @@ export const useAppStore = create<AppState>()(
 
       addCategory: (catData) => {
         const state = get();
+        const { id: _callerId, family_id: _callerFamId, ...safeCatData } = catData as any;
         const newCategory: Category = {
-          ...catData,
+          ...safeCatData,
           id: generateUUID(),
           family_id: state.family.id,
         };
