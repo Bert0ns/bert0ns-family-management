@@ -88,6 +88,10 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ visible, onClose
               <TouchableOpacity
                 key={r}
                 onPress={() => setRole(r)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={label}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                 style={{
                   flex: 1,
                   flexDirection: 'column',
@@ -95,6 +99,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ visible, onClose
                   justifyContent: 'center',
                   paddingVertical: spacing.sm,
                   paddingHorizontal: spacing.xs,
+                  minHeight: 48,
                   borderRadius: radius.md,
                   backgroundColor: isSelected
                     ? theme.colors.brandLight
@@ -145,6 +150,10 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ visible, onClose
               <TouchableOpacity
                 key={mc.name}
                 onPress={() => setColorCode(mc.bg)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={mc.name}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={{
                   width: 36,
                   height: 36,

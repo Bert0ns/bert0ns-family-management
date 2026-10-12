@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -43,6 +43,16 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
   const [copied, setCopied] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
 
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) {
+        clearTimeout(copyTimerRef.current);
+      }
+    };
+  }, []);
+
   // Normalized active categories (handles fallbacks when empty)
   const activeCategories = React.useMemo(() => {
     return normalizeCategories(categories);
@@ -60,7 +70,10 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
   const handleCopyPrompt = async () => {
     await Clipboard.setStringAsync(dynamicPrompt);
     setCopied(true);
-    setTimeout(() => {
+    if (copyTimerRef.current) {
+      clearTimeout(copyTimerRef.current);
+    }
+    copyTimerRef.current = setTimeout(() => {
       setCopied(false);
     }, 3000);
   };
@@ -300,6 +313,7 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
           onPress={onOpenPasteModal}
           activeOpacity={0.7}
           accessibilityRole="button"
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={{
             marginTop: spacing.sm,
             flexDirection: 'row',
@@ -387,6 +401,7 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
                 onPress={() => setModalVisible(false)}
                 accessibilityRole="button"
                 accessibilityLabel={t.common.close}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={{
                   width: 36,
                   height: 36,

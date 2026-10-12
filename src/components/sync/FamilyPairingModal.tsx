@@ -1,5 +1,5 @@
-import { uiLogger, syncLogger } from '@/services/logger';
-import React, { useState, useEffect } from 'react';
+import { uiLogger } from '@/services/logger';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Alert, Platform } from 'react-native';
 import { Users, Copy, Check, LogIn, AlertCircle, RefreshCw } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -10,10 +10,7 @@ import { Card } from '@/components/common/Card';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
-import { supabase, isSupabaseConfigured } from '@/services/supabase';
-import { syncEngine } from '@/services/syncEngine';
-import { realtimeSync } from '@/services/realtimeSync';
-import { generateInviteCode, isValidUUID } from '@/utils/uuid';
+import { pairingService } from '@/services/pairingService';
 
 interface FamilyPairingModalProps {
   visible: boolean;
@@ -23,7 +20,7 @@ interface FamilyPairingModalProps {
 export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible, onClose }) => {
   const { theme, spacing, typography, radius } = useTheme();
   const { t } = useI18n();
-  const { family, updateFamilySettings } = useAppStore();
+  const family = useAppStore((s) => s.family);
 
   const [copied, setCopied] = useState(false);
   const [regenerated, setRegenerated] = useState(false);
@@ -32,46 +29,25 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const regenerateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      if (regenerateTimerRef.current) clearTimeout(regenerateTimerRef.current);
+    };
+  }, []);
+
   // Ensure family has an invite code
   const currentInviteCode = family.invite_code || 'FAM-8492';
 
   // Synchronize remote invite code when modal opens or family changes
   useEffect(() => {
-    let isMounted = true;
-    async function loadRemoteInviteCode() {
-      if (!visible) return;
-
-      // If local family doesn't have an invite code, initialize one
-      if (!family.invite_code) {
-        const generated = generateInviteCode(6);
-        updateFamilySettings({ invite_code: generated });
-      }
-
-      if (isSupabaseConfigured() && isValidUUID(family.id)) {
-        try {
-          const { data, error: famErr } = await supabase
-            .from('families')
-            .select('invite_code')
-            .eq('id', family.id)
-            .maybeSingle();
-
-          if (
-            isMounted &&
-            !famErr &&
-            data?.invite_code &&
-            data.invite_code !== family.invite_code
-          ) {
-            updateFamilySettings({ invite_code: data.invite_code });
-          }
-        } catch {}
-      }
-    }
-
-    loadRemoteInviteCode();
-    return () => {
-      isMounted = false;
-    };
-  }, [visible, family.id, family.invite_code, updateFamilySettings]);
+    if (!visible) return;
+    pairingService.syncInviteCode(family.id, family.invite_code).catch(() => {});
+  }, [visible, family.id, family.invite_code]);
 
   const handleCopyCode = async () => {
     try {
@@ -84,10 +60,12 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
         } catch {}
       }
       setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2500);
     } catch {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2500);
     }
   };
 
@@ -96,40 +74,23 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
     setIsRegenerating(true);
     setError(null);
 
-    const newCode = generateInviteCode(6);
+    const res = await pairingService.regenerateInviteCode(family.id);
+    setIsRegenerating(false);
 
-    try {
-      if (isSupabaseConfigured() && isValidUUID(family.id)) {
-        const { error: updateErr } = await supabase
-          .from('families')
-          .update({
-            invite_code: newCode,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', family.id);
-
-        if (updateErr) {
-          setError(updateErr.message);
-          setIsRegenerating(false);
-          return;
-        }
-      }
-
-      updateFamilySettings({ invite_code: newCode });
-
-      if (Platform.OS !== 'web') {
-        try {
-          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        } catch {}
-      }
-
-      setRegenerated(true);
-      setTimeout(() => setRegenerated(false), 2500);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to regenerate code');
-    } finally {
-      setIsRegenerating(false);
+    if (!res.success) {
+      setError(res.error || 'Failed to regenerate code');
+      return;
     }
+
+    if (Platform.OS !== 'web') {
+      try {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch {}
+    }
+
+    setRegenerated(true);
+    if (regenerateTimerRef.current) clearTimeout(regenerateTimerRef.current);
+    regenerateTimerRef.current = setTimeout(() => setRegenerated(false), 2500);
   };
 
   const handleJoinFamily = async () => {
@@ -143,102 +104,24 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
     setIsJoining(true);
     setError(null);
 
-    try {
-      if (!isSupabaseConfigured()) {
-        // Mock join for offline demonstration
-        updateFamilySettings({ name: `Household (${code})` });
-        setIsJoining(false);
-        onClose();
-        if (Platform.OS === 'web') {
-          window.alert(t.sync.migrateSuccess);
-        } else {
-          Alert.alert(t.sync.joinedHouseholdTitle, t.sync.migrateSuccess);
-        }
-        return;
-      }
+    const res = await pairingService.joinFamilyByInviteCode(code);
+    setIsJoining(false);
 
-      // 1. Check if user is authenticated
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session?.user) {
+    if (!res.success) {
+      if (res.error === 'AUTH_REQUIRED') {
         setError(t.sync.authRequiredToJoin);
-        setIsJoining(false);
-        return;
-      }
-
-      // 2. Call RPC to join family via invite code
-      const storeState = useAppStore.getState();
-      const currentMember = storeState.members.find((m) => m.id === storeState.currentMemberId);
-      const displayName =
-        currentMember?.display_name ||
-        sessionData.session.user.email?.split('@')[0] ||
-        'New Member';
-
-      const { data: rpcRes, error: rpcError } = await supabase.rpc('join_family_via_invite_code', {
-        p_invite_code: code,
-        p_display_name: displayName,
-      });
-
-      if (rpcError || !rpcRes || !rpcRes.family_id) {
-        setError(rpcError?.message || t.sync.invalidCodeError);
-        setIsJoining(false);
-        return;
-      }
-
-      const joinedFamilyId = rpcRes.family_id as string;
-      syncLogger.info('User joined household successfully via invite code', {
-        familyId: joinedFamilyId,
-      });
-      const joinedMemberId = rpcRes.member_id as string;
-
-      // 3. User is now authorized under RLS to fetch the family profile
-      const { data: remoteFamily, error: findError } = await supabase
-        .from('families')
-        .select('*')
-        .eq('id', joinedFamilyId)
-        .single();
-
-      if (findError || !remoteFamily) {
-        setError(findError?.message || t.sync.invalidCodeError);
-        setIsJoining(false);
-        return;
-      }
-
-      // 4. Clear previous family outbox and sync timestamp so we do a clean delta fetch
-      await syncEngine.clearOutbox();
-      await syncEngine.setLastSyncTimestamp('');
-
-      // Reset store data to avoid mixing previous local mock data with the new family
-      useAppStore.setState({
-        family: {
-          id: remoteFamily.id,
-          name: remoteFamily.name,
-          currency: remoteFamily.currency || '€',
-          invite_code: remoteFamily.invite_code,
-          created_at: remoteFamily.created_at,
-          updated_at: remoteFamily.updated_at,
-        },
-        members: [],
-        categories: [],
-        expenses: [],
-        importBatches: [],
-        currentMemberId: joinedMemberId || storeState.currentMemberId,
-      });
-
-      // 5. Start realtime sync and fetch remote delta
-      realtimeSync.startRealtimeSync(remoteFamily.id);
-      await syncEngine.fetchDelta(remoteFamily.id);
-
-      setIsJoining(false);
-      onClose();
-
-      if (Platform.OS === 'web') {
-        window.alert(t.sync.migrateSuccess);
       } else {
-        Alert.alert(t.sync.joinedHouseholdTitle, t.sync.migrateSuccess);
+        setError(res.error || t.sync.invalidCodeError);
       }
-    } catch (err: any) {
-      setError(err?.message || t.sync.invalidCodeError);
-      setIsJoining(false);
+      return;
+    }
+
+    onClose();
+
+    if (Platform.OS === 'web') {
+      window.alert(t.sync.migrateSuccess);
+    } else {
+      Alert.alert(t.sync.joinedHouseholdTitle, t.sync.migrateSuccess);
     }
   };
 

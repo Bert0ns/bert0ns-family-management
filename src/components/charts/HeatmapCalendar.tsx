@@ -4,11 +4,48 @@ import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { DailySpendPoint } from '@/services/analytics';
 import { Card } from '@/components/common/Card';
+import { hexToRgba } from '@/utils/color';
 
 interface HeatmapCalendarProps {
   data: DailySpendPoint[];
   period: string; // YYYY-MM
   currency?: string;
+}
+
+export function parseSafePeriod(period?: string): {
+  year: number;
+  month: number;
+  daysInMonth: number;
+  adjustedFirstDay: number;
+} {
+  const now = new Date();
+  let year = now.getFullYear();
+  let month = now.getMonth() + 1;
+
+  if (period && typeof period === 'string') {
+    const trimmed = period.trim();
+    if (/^\d{4}-(0[1-9]|1[0-2])$/.test(trimmed)) {
+      const [yearStr, monthStr] = trimmed.split('-');
+      const parsedYear = parseInt(yearStr, 10);
+      const parsedMonth = parseInt(monthStr, 10);
+      if (!isNaN(parsedYear) && !isNaN(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12) {
+        year = parsedYear;
+        month = parsedMonth;
+      }
+    }
+  }
+
+  const rawFirstDay = new Date(year, month - 1, 1).getDay(); // 0 = Sun
+  const rawDaysInMonth = new Date(year, month, 0).getDate();
+
+  const adjustedFirstDay = isNaN(rawFirstDay)
+    ? 0
+    : rawFirstDay === 0
+      ? 6
+      : Math.max(0, Math.min(6, rawFirstDay - 1));
+  const daysInMonth = isNaN(rawDaysInMonth) ? 30 : Math.max(1, Math.min(31, rawDaysInMonth));
+
+  return { year, month, daysInMonth, adjustedFirstDay };
 }
 
 export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
@@ -24,19 +61,13 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   const getHeatColor = (amount: number) => {
     if (amount === 0) return theme.colors.surfaceSubtle;
     const ratio = amount / maxDaily;
-    if (ratio < 0.25) return `${theme.colors.brand}30`;
-    if (ratio < 0.5) return `${theme.colors.brand}60`;
-    if (ratio < 0.75) return `${theme.colors.brand}A0`;
+    if (ratio < 0.25) return hexToRgba(theme.colors.brand, 0.2);
+    if (ratio < 0.5) return hexToRgba(theme.colors.brand, 0.45);
+    if (ratio < 0.75) return hexToRgba(theme.colors.brand, 0.7);
     return theme.colors.brand;
   };
 
-  const [yearStr, monthStr] = period.split('-');
-  const year = parseInt(yearStr, 10);
-  const month = parseInt(monthStr, 10);
-  const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 0 = Sun
-  const adjustedFirstDay = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // 0 = Mon
-
-  const daysInMonth = new Date(year, month, 0).getDate();
+  const { adjustedFirstDay, daysInMonth } = parseSafePeriod(period);
 
   const dateLocale = locale === 'it' ? 'it-IT' : 'en-US';
   const dayHeaders = Array.from({ length: 7 }).map((_, i) => {
@@ -148,7 +179,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
             width: 12,
             height: 12,
             borderRadius: 2,
-            backgroundColor: `${theme.colors.brand}30`,
+            backgroundColor: hexToRgba(theme.colors.brand, 0.2),
           }}
         />
         <View
@@ -156,7 +187,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
             width: 12,
             height: 12,
             borderRadius: 2,
-            backgroundColor: `${theme.colors.brand}60`,
+            backgroundColor: hexToRgba(theme.colors.brand, 0.45),
           }}
         />
         <View
@@ -164,7 +195,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
             width: 12,
             height: 12,
             borderRadius: 2,
-            backgroundColor: `${theme.colors.brand}A0`,
+            backgroundColor: hexToRgba(theme.colors.brand, 0.7),
           }}
         />
         <View
