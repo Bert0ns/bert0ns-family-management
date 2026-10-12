@@ -1,13 +1,18 @@
 import { useState, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { PieChart, Users, TrendingUp, Calendar } from 'lucide-react-native';
+import { PieChart, Users, TrendingUp, Activity, Calendar } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import {
+  CategorySummary,
   calculateCategoryBreakdown,
   calculateMemberContributions,
   calculateSpendingVelocity,
+  calculateHistoricalMonthlyTrends,
+  calculateComparativeSpendingVelocity,
+  calculateDayOfWeekDistribution,
+  calculatePaymentMethodDistribution,
 } from '@/services/analytics';
 import { Card } from '@/components/common/Card';
 import { PeriodSelector } from '@/components/common/PeriodSelector';
@@ -15,6 +20,10 @@ import { CategoryPieChart } from '@/components/charts/CategoryPieChart';
 import { MemberBarChart } from '@/components/charts/MemberBarChart';
 import { SpendingVelocityChart } from '@/components/charts/SpendingVelocityChart';
 import { HeatmapCalendar } from '@/components/charts/HeatmapCalendar';
+import { MonthlyTrendChart } from '@/components/charts/MonthlyTrendChart';
+import { DayOfWeekChart } from '@/components/charts/DayOfWeekChart';
+import { PaymentMethodChart } from '@/components/charts/PaymentMethodChart';
+import { CategoryDetailModal } from '@/components/charts/CategoryDetailModal';
 
 export default function AnalyticsScreen() {
   const { theme, spacing, radius, typography } = useTheme();
@@ -26,9 +35,11 @@ export default function AnalyticsScreen() {
   const selectedPeriod = useAppStore((s) => s.selectedPeriod);
   const setSelectedPeriod = useAppStore((s) => s.setSelectedPeriod);
 
-  const [activeTab, setActiveTab] = useState<'categories' | 'members' | 'trends' | 'heatmap'>(
-    'categories',
-  );
+  const [activeTab, setActiveTab] = useState<
+    'categories' | 'members' | 'trends' | 'patterns' | 'heatmap'
+  >('categories');
+
+  const [selectedCategory, setSelectedCategory] = useState<CategorySummary | null>(null);
 
   const periodExpenses = useMemo(
     () => expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod)),
@@ -48,6 +59,26 @@ export default function AnalyticsScreen() {
   const velocityData = useMemo(
     () => calculateSpendingVelocity(expenses, selectedPeriod),
     [expenses, selectedPeriod],
+  );
+
+  const comparativeVelocity = useMemo(
+    () => calculateComparativeSpendingVelocity(expenses, selectedPeriod),
+    [expenses, selectedPeriod],
+  );
+
+  const historicalTrends = useMemo(
+    () => calculateHistoricalMonthlyTrends(expenses, selectedPeriod, 6),
+    [expenses, selectedPeriod],
+  );
+
+  const dayOfWeekDistribution = useMemo(
+    () => calculateDayOfWeekDistribution(periodExpenses),
+    [periodExpenses],
+  );
+
+  const paymentMethodDistribution = useMemo(
+    () => calculatePaymentMethodDistribution(periodExpenses),
+    [periodExpenses],
   );
 
   // Top Merchants summary
@@ -93,6 +124,7 @@ export default function AnalyticsScreen() {
           { id: 'categories' as const, label: t.analytics.categoriesTab, icon: PieChart },
           { id: 'members' as const, label: t.analytics.membersTab, icon: Users },
           { id: 'trends' as const, label: t.analytics.trendsTab, icon: TrendingUp },
+          { id: 'patterns' as const, label: t.analytics.patternsTab, icon: Activity },
           { id: 'heatmap' as const, label: t.analytics.heatmapTab, icon: Calendar },
         ].map(({ id, label, icon: TabIcon }) => {
           const isActive = activeTab === id;
@@ -145,7 +177,18 @@ export default function AnalyticsScreen() {
       {/* Tab Panels */}
       {activeTab === 'categories' && (
         <View style={{ gap: spacing.lg }}>
-          <CategoryPieChart data={categoryBreakdown} currency={family.currency} />
+          <CategoryPieChart
+            data={categoryBreakdown}
+            currency={family.currency}
+            onSelectCategory={(catId) => {
+              const found = categoryBreakdown.find((c) => c.category.id === catId);
+              if (found) {
+                setSelectedCategory(found);
+              }
+            }}
+          />
+
+          <PaymentMethodChart data={paymentMethodDistribution} currency={family.currency} />
 
           {/* Top Merchants Card */}
           <Card padding="lg">
@@ -245,7 +288,20 @@ export default function AnalyticsScreen() {
 
       {activeTab === 'trends' && (
         <View style={{ gap: spacing.lg }}>
-          <SpendingVelocityChart data={velocityData} currency={family.currency} />
+          <SpendingVelocityChart comparativeData={comparativeVelocity} currency={family.currency} />
+          <MonthlyTrendChart
+            data={historicalTrends}
+            currency={family.currency}
+            selectedPeriod={selectedPeriod}
+            onSelectPeriod={(period) => setSelectedPeriod(period)}
+          />
+        </View>
+      )}
+
+      {activeTab === 'patterns' && (
+        <View style={{ gap: spacing.lg }}>
+          <DayOfWeekChart data={dayOfWeekDistribution} currency={family.currency} />
+          <HeatmapCalendar data={velocityData} period={selectedPeriod} currency={family.currency} />
         </View>
       )}
 
@@ -254,6 +310,16 @@ export default function AnalyticsScreen() {
           <HeatmapCalendar data={velocityData} period={selectedPeriod} currency={family.currency} />
         </View>
       )}
+
+      {/* Category Drilldown Modal */}
+      <CategoryDetailModal
+        visible={!!selectedCategory}
+        categorySummary={selectedCategory}
+        expenses={periodExpenses}
+        members={members}
+        currency={family.currency}
+        onClose={() => setSelectedCategory(null)}
+      />
     </ScrollView>
   );
 }

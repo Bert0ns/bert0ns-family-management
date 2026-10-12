@@ -30,6 +30,61 @@ export interface MonthlyKPIMetrics {
   topSpender?: MemberSummary;
 }
 
+export interface MonthlyTrendPoint {
+  period: string; // YYYY-MM
+  label: string; // e.g. "Aug"
+  totalSpend: number;
+  transactionCount: number;
+  momGrowthPercentage: number | null; // null for first baseline month
+  rollingAverage: number;
+}
+
+export interface ComparativeVelocityData {
+  currentPeriod: string;
+  previousPeriod: string;
+  currentPoints: DailySpendPoint[];
+  previousPoints: DailySpendPoint[];
+  currentTotal: number;
+  previousTotal: number;
+  currentElapsedDays: number;
+  currentToDate: number;
+  previousToDate: number;
+  pacingPercentage: number | null;
+  daysInMonth: number;
+}
+
+export type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+
+export interface DayOfWeekPoint {
+  dayOfWeek: number; // 1 = Monday ... 7 = Sunday (ISO)
+  dayKey: DayKey;
+  totalAmount: number;
+  percentage: number;
+  transactionCount: number;
+  averageTransaction: number;
+  isWeekend: boolean;
+}
+
+export interface DayOfWeekDistribution {
+  days: DayOfWeekPoint[];
+  totalAmount: number;
+  weekdayTotal: number;
+  weekendTotal: number;
+  weekdayPercentage: number;
+  weekendPercentage: number;
+  peakDay: DayOfWeekPoint | null;
+}
+
+export interface PaymentMethodSummary {
+  method: string;
+  label: string;
+  totalAmount: number;
+  percentage: number;
+  transactionCount: number;
+  averageTransaction: number;
+  color: string;
+}
+
 /**
  * Interface Segregation Principle (ISP) & Dependency Inversion Principle (DIP):
  * High-level modules depend on abstractions, and client code only depends on methods it uses.
@@ -48,6 +103,22 @@ export interface IAnalyticsCalculator {
   calculateMemberContributions(expenses: Expense[], members: FamilyMember[]): MemberSummary[];
 
   calculateSpendingVelocity(expenses: Expense[], period: string): DailySpendPoint[];
+
+  calculateHistoricalMonthlyTrends(
+    expenses: Expense[],
+    currentPeriod: string,
+    monthsCount?: number,
+  ): MonthlyTrendPoint[];
+
+  calculateComparativeSpendingVelocity(
+    expenses: Expense[],
+    currentPeriod: string,
+    referenceDate?: Date,
+  ): ComparativeVelocityData;
+
+  calculateDayOfWeekDistribution(expenses: Expense[], period?: string): DayOfWeekDistribution;
+
+  calculatePaymentMethodDistribution(expenses: Expense[], period?: string): PaymentMethodSummary[];
 }
 
 export interface IReportValidator {
