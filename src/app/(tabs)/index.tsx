@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Plus, ArrowRight, FileJson, Wallet, Receipt } from 'lucide-react-native';
@@ -20,30 +20,59 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
-  const {
-    family,
-    members,
-    categories,
-    expenses,
-    selectedPeriod,
-    setSelectedPeriod,
-    deleteExpense,
-  } = useAppStore();
+  const family = useAppStore((s) => s.family);
+  const members = useAppStore((s) => s.members);
+  const categories = useAppStore((s) => s.categories);
+  const expenses = useAppStore((s) => s.expenses);
+  const selectedPeriod = useAppStore((s) => s.selectedPeriod);
+  const setSelectedPeriod = useAppStore((s) => s.setSelectedPeriod);
+  const deleteExpense = useAppStore((s) => s.deleteExpense);
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 600);
   }, []);
 
-  const metrics = calculateMonthlyMetrics(expenses, categories, members, selectedPeriod);
-  const periodExpensesAll = expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod));
-  const memberContributions = calculateMemberContributions(periodExpensesAll, members);
+  const metrics = useMemo(
+    () => calculateMonthlyMetrics(expenses, categories, members, selectedPeriod),
+    [expenses, categories, members, selectedPeriod],
+  );
+  const periodExpensesAll = useMemo(
+    () => expenses.filter((e) => e.transaction_date.startsWith(selectedPeriod)),
+    [expenses, selectedPeriod],
+  );
+  const memberContributions = useMemo(
+    () => calculateMemberContributions(periodExpensesAll, members),
+    [periodExpensesAll, members],
+  );
 
   // Filter expenses for selected period, sorted newest first, top 5
-  const periodExpenses = expenses
-    .filter((e) => e.transaction_date.startsWith(selectedPeriod))
-    .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())
-    .slice(0, 5);
+  const periodExpenses = useMemo(
+    () =>
+      [...periodExpensesAll]
+        .sort((a, b) => b.transaction_date.localeCompare(a.transaction_date))
+        .slice(0, 5),
+    [periodExpensesAll],
+  );
+
+  const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
+  const memberMap = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
+
+  const handleSelectExpense = useCallback((expense: Expense) => {
+    setSelectedExpense(expense);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setSelectedExpense(null);
+  }, []);
+
+  const handleDeleteExpense = useCallback(
+    (id: string) => {
+      deleteExpense(id);
+      setSelectedExpense(null);
+    },
+    [deleteExpense],
+  );
 
   return (
     <ScrollView
@@ -374,20 +403,16 @@ export default function DashboardScreen() {
             </Text>
           </Card>
         ) : (
-          periodExpenses.map((expense) => {
-            const cat = categories.find((c) => c.id === expense.category_id);
-            const mem = members.find((m) => m.id === expense.paid_by_member_id);
-            return (
-              <ExpenseItem
-                key={expense.id}
-                expense={expense}
-                category={cat}
-                member={mem}
-                currency={family.currency}
-                onPress={() => setSelectedExpense(expense)}
-              />
-            );
-          })
+          periodExpenses.map((expense) => (
+            <ExpenseItem
+              key={expense.id}
+              expense={expense}
+              category={categoryMap.get(expense.category_id)}
+              member={memberMap.get(expense.paid_by_member_id)}
+              currency={family.currency}
+              onPress={handleSelectExpense}
+            />
+          ))
         )}
       </View>
 
@@ -396,14 +421,11 @@ export default function DashboardScreen() {
         <ExpenseDetailModal
           visible={Boolean(selectedExpense)}
           expense={selectedExpense}
-          category={categories.find((c) => c.id === selectedExpense.category_id)}
-          member={members.find((m) => m.id === selectedExpense.paid_by_member_id)}
+          category={categoryMap.get(selectedExpense.category_id)}
+          member={memberMap.get(selectedExpense.paid_by_member_id)}
           currency={family.currency}
-          onClose={() => setSelectedExpense(null)}
-          onDelete={(id) => {
-            deleteExpense(id);
-            setSelectedExpense(null);
-          }}
+          onClose={handleCloseModal}
+          onDelete={handleDeleteExpense}
         />
       )}
     </ScrollView>

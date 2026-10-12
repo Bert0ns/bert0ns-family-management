@@ -20,7 +20,7 @@ interface AuthModalProps {
 export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSuccess }) => {
   const { theme, spacing, typography, radius } = useTheme();
   const { t } = useI18n();
-  const { family } = useAppStore();
+  const family = useAppStore((s) => s.family);
 
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
