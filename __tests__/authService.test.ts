@@ -1,6 +1,8 @@
 import { authService } from '@/services/authService';
 import { supabase, isSupabaseConfigured } from '@/services/supabase';
 import { realtimeSync } from '@/services/realtimeSync';
+import { useAppStore, STORE_STORAGE_KEY } from '@/services/store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 jest.mock('@/services/supabase', () => ({
   isSupabaseConfigured: jest.fn(),
@@ -166,6 +168,31 @@ describe('authService', () => {
 
       const res = await authService.signOut();
       expect(res.error).toBe('Sign out crashed');
+    });
+
+    it('tears down Zustand state and purges AsyncStorage on signOut', async () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+      (supabase.auth.signOut as jest.Mock).mockResolvedValue({ error: null });
+
+      // Seed state with sample data
+      useAppStore.getState().resetToSampleData();
+      expect(useAppStore.getState().expenses.length).toBeGreaterThan(0);
+      expect(useAppStore.getState().members.length).toBeGreaterThan(0);
+
+      const res = await authService.signOut();
+      expect(res.error).toBeNull();
+
+      // State is completely reset
+      expect(useAppStore.getState().expenses).toEqual([]);
+      expect(useAppStore.getState().members).toEqual([]);
+      expect(useAppStore.getState().currentMemberId).toBe('');
+      expect(useAppStore.getState().family.id).toBe('');
+
+      // AsyncStorage is purged of previous family data and sync queues
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith(STORE_STORAGE_KEY);
+      expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(
+        expect.arrayContaining(['@bert0ns_sync_outbox', '@bert0ns_last_sync_timestamp']),
+      );
     });
   });
 

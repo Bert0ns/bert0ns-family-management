@@ -30,11 +30,8 @@ jest.mock('expo-sharing', () => ({
   shareAsync: jest.fn(),
 }));
 
-describe('fileExporter (Cross-platform export and sharing)', () => {
-  const originalOS = Platform.OS;
-  const originalDocument = (globalThis as any).document;
-  const originalUrl = (globalThis as any).URL;
-  const originalBlob = (globalThis as any).Blob;
+describe('fileExporter (exportAndShareFile)', () => {
+  const originalPlatform = Platform.OS;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -43,10 +40,10 @@ describe('fileExporter (Cross-platform export and sharing)', () => {
   });
 
   afterEach(() => {
-    Platform.OS = originalOS;
-    (globalThis as any).document = originalDocument;
-    (globalThis as any).URL = originalUrl;
-    (globalThis as any).Blob = originalBlob;
+    Platform.OS = originalPlatform;
+    delete (globalThis as any).document;
+    delete (globalThis as any).Blob;
+    delete (globalThis as any).URL;
   });
 
   describe('Web Platform', () => {
@@ -54,7 +51,7 @@ describe('fileExporter (Cross-platform export and sharing)', () => {
       Platform.OS = 'web';
     });
 
-    it('prepends UTF-8 BOM to CSV export strings for Excel compatibility', async () => {
+    it('exports CSV file with UTF-8 BOM, triggers link click, and revokes URL', async () => {
       let createdBlobContent: any[] = [];
       let createdBlobOptions: any = {};
 
@@ -286,6 +283,13 @@ describe('fileExporter (Cross-platform export and sharing)', () => {
       await exportAndShareFile('data', '../../dangerous/path/report.csv', 'text/csv');
 
       expect(File).toHaveBeenCalledWith(expect.anything(), '____dangerous_path_report.csv');
+    });
+
+    it('cleans up temporary file in finally block after sharing succeeds or fails (cache cleanup)', async () => {
+      mockFileExists = true;
+      const result = await exportAndShareFile('data', 'test.csv', 'text/csv');
+      expect(result).toBe(true);
+      expect(mockDelete).toHaveBeenCalled();
     });
   });
 });

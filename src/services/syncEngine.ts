@@ -5,8 +5,8 @@ import { useAppStore, registerStoreMutationListener } from './store';
 import { OutboxMutation, SyncStatus, Expense, Category, FamilyMember } from '@/types';
 import { generateUUID } from '@/utils/uuid';
 
-const OUTBOX_STORAGE_KEY = '@bert0ns_sync_outbox';
-const LAST_SYNC_STORAGE_KEY = '@bert0ns_last_sync_timestamp';
+export const OUTBOX_STORAGE_KEY = '@bert0ns_sync_outbox';
+export const LAST_SYNC_STORAGE_KEY = '@bert0ns_last_sync_timestamp';
 
 let currentSyncStatus: SyncStatus = 'offline';
 let activeFlushPromise: Promise<{ processed: number; errors: number }> | null = null;
@@ -70,6 +70,16 @@ export const syncEngine = {
       await AsyncStorage.removeItem(OUTBOX_STORAGE_KEY);
     } catch (err) {
       supabaseLogger.error('Failed to clear sync outbox', { error: err });
+    }
+  },
+
+  async clearAllSyncData(): Promise<void> {
+    try {
+      await AsyncStorage.multiRemove([OUTBOX_STORAGE_KEY, LAST_SYNC_STORAGE_KEY]);
+      currentSyncStatus = 'offline';
+      syncLogger.info('All sync outbox and timestamp data cleared from storage');
+    } catch (err) {
+      supabaseLogger.error('Failed to clear all sync data from storage', { error: err });
     }
   },
 
