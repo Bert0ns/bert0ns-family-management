@@ -54,7 +54,7 @@ export const migrationService = {
       const { error: famError } = await supabase.from('families').upsert({
         id: targetFamilyId,
         name: localFamily.name,
-        currency: '€',
+        currency: localFamily.currency || '€',
         invite_code: targetInviteCode,
         updated_at: now,
       });

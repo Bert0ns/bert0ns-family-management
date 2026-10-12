@@ -76,4 +76,31 @@ describe('migrationService', () => {
     expect(result.success).toBe(false);
     expect(result.error).toContain('Network socket disconnected');
   });
+
+  it('preserves user-configured currency instead of overwriting with default', async () => {
+    (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+
+    const upsertMock = jest.fn().mockResolvedValue({ error: null });
+    (supabase.from as jest.Mock).mockReturnValue({
+      upsert: upsertMock,
+    });
+
+    // Configure a custom currency in local family store
+    useAppStore.setState((state) => ({
+      family: { ...state.family, currency: 'USD' },
+    }));
+
+    const targetFamilyUUID = 'e2908f58-a5be-4416-921c-a04473b18491';
+    const result = await migrationService.migrateLocalDataToSupabase(targetFamilyUUID, 'user-123');
+
+    expect(result.success).toBe(true);
+
+    // Check that families table was upserted with 'USD'
+    expect(upsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: targetFamilyUUID,
+        currency: 'USD',
+      }),
+    );
+  });
 });
