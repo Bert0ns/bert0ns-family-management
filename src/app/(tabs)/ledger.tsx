@@ -23,6 +23,7 @@ import { Card } from '@/components/common/Card';
 import { Avatar } from '@/components/common/Avatar';
 import { IconHelper } from '@/components/common/IconHelper';
 import { Expense, PeriodPreset, AmountBracket } from '@/types';
+import { sumBy } from '@/utils/numberParser';
 
 export default function LedgerScreen() {
   const router = useRouter();
@@ -135,7 +136,7 @@ export default function LedgerScreen() {
     }
   });
 
-  const totalFilteredAmount = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalFilteredAmount = sumBy(filteredExpenses, (e) => e.amount);
 
   const toggleSort = () => {
     switch (filters.sortBy) {

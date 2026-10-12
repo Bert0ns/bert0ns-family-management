@@ -7,6 +7,7 @@ import { Expense, RawExpenseReport } from '@/types';
 import { duplicateDetector } from '@/services/duplicateDetector';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
+import { sumBy } from '@/utils/numberParser';
 
 interface ImportPreviewModalProps {
   visible: boolean;
@@ -33,12 +34,16 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 
   if (!report) return null;
 
-  const totalAmount = report.expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalAmount = sumBy(report.expenses, (e) => e.amount);
   const currency = report.currency || '€';
 
-  // Check for duplicates
-  const checkedExpenses = report.expenses.map((exp) => {
-    const dupResult = duplicateDetector.checkDuplicate(exp, existingExpenses);
+  // Check for duplicates (both against existing ledger and intra-batch collisions)
+  const batchCheckResults = duplicateDetector.checkBatchDuplicates(
+    report.expenses,
+    existingExpenses,
+  );
+  const checkedExpenses = report.expenses.map((exp, index) => {
+    const dupResult = batchCheckResults[index] || { isDuplicate: false };
     return {
       ...exp,
       isDuplicate: dupResult.isDuplicate,

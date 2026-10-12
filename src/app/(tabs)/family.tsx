@@ -13,6 +13,7 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { FamilyMember } from '@/types';
+import { sumBy } from '@/utils/numberParser';
 
 export default function FamilyScreen() {
   const { theme, spacing, radius, typography } = useTheme();
@@ -153,7 +154,7 @@ export default function FamilyScreen() {
 
         {members.map((member) => {
           const memberTxs = periodExpenses.filter((e) => e.paid_by_member_id === member.id);
-          const totalSpent = memberTxs.reduce((sum, e) => sum + e.amount, 0);
+          const totalSpent = sumBy(memberTxs, (e) => e.amount);
 
           return (
             <MemberCard
@@ -214,7 +215,7 @@ export default function FamilyScreen() {
         <View style={{ gap: spacing.sm }}>
           {categories.map((category) => {
             const catTxs = periodExpenses.filter((e) => e.category_id === category.id);
-            const actualSpend = catTxs.reduce((sum, e) => sum + e.amount, 0);
+            const actualSpend = sumBy(catTxs, (e) => e.amount);
 
             return (
               <Card
