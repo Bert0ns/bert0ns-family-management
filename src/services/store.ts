@@ -291,11 +291,22 @@ export const useAppStore = create<AppState>()(
 
       clearAllExpenses: () => {
         const state = get();
+        const expensesToClear = [...state.expenses];
         transactionLogger.warn('All expenses cleared from store', {
-          count: state.expenses.length,
+          count: expensesToClear.length,
           batchCount: state.importBatches.length,
         });
         set({ expenses: [], importBatches: [] });
+
+        // Propagate deletions to Supabase outbox so cloud is cleared and records don't resurrect
+        for (const exp of expensesToClear) {
+          notifyStoreMutation({
+            entity: 'expense',
+            operation: 'DELETE',
+            entity_id: exp.id,
+            payload: { id: exp.id },
+          });
+        }
       },
 
       addMember: (memberData) => {
@@ -679,14 +690,21 @@ export const useAppStore = create<AppState>()(
 
           remoteList.forEach((remote) => {
             const local = map.get(remote.id);
+            const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
+            const localTime = local?.updated_at ? new Date(local.updated_at).getTime() : 0;
+
+            if (remote.deleted_at) {
+              const deleteTime = new Date(remote.deleted_at).getTime();
+              if (!local || deleteTime >= localTime) {
+                map.delete(remote.id);
+              }
+              return;
+            }
+
             if (!local) {
               map.set(remote.id, remote);
-            } else {
-              const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
-              const localTime = local.updated_at ? new Date(local.updated_at).getTime() : 0;
-              if (remoteTime >= localTime) {
-                map.set(remote.id, remote);
-              }
+            } else if (remoteTime >= localTime) {
+              map.set(remote.id, remote);
             }
           });
 
@@ -702,7 +720,23 @@ export const useAppStore = create<AppState>()(
         set((state) => {
           const map = new Map(state.categories.map((c) => [c.id, c]));
           remoteList.forEach((remote) => {
-            map.set(remote.id, remote);
+            const local = map.get(remote.id);
+            const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
+            const localTime = local?.updated_at ? new Date(local.updated_at).getTime() : 0;
+
+            if (remote.deleted_at) {
+              const deleteTime = new Date(remote.deleted_at).getTime();
+              if (!local || deleteTime >= localTime) {
+                map.delete(remote.id);
+              }
+              return;
+            }
+
+            if (!local) {
+              map.set(remote.id, remote);
+            } else if (remoteTime >= localTime) {
+              map.set(remote.id, remote);
+            }
           });
           return { categories: Array.from(map.values()) };
         });
@@ -716,14 +750,21 @@ export const useAppStore = create<AppState>()(
             const local = map.get(remote.id);
             const isCurrent =
               remote.id === state.currentMemberId || (local ? local.is_current_user : false);
+            const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
+            const localTime = local?.updated_at ? new Date(local.updated_at).getTime() : 0;
+
+            if (remote.deleted_at) {
+              const deleteTime = new Date(remote.deleted_at).getTime();
+              if (!local || deleteTime >= localTime) {
+                map.delete(remote.id);
+              }
+              return;
+            }
+
             if (!local) {
               map.set(remote.id, { ...remote, is_current_user: isCurrent });
-            } else {
-              const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
-              const localTime = local.updated_at ? new Date(local.updated_at).getTime() : 0;
-              if (remoteTime >= localTime) {
-                map.set(remote.id, { ...remote, is_current_user: isCurrent });
-              }
+            } else if (remoteTime >= localTime) {
+              map.set(remote.id, { ...remote, is_current_user: isCurrent });
             }
           });
           return { members: Array.from(map.values()) };

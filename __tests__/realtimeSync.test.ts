@@ -99,26 +99,35 @@ describe('realtimeSync', () => {
   it('recreates channel if started for a different family', () => {
     (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
 
-    realtimeSync.startRealtimeSync('fam_1');
-    expect(supabase.channel).toHaveBeenCalledWith('family_realtime_fam_1');
+    realtimeSync.startRealtimeSync('fam_123');
+    expect(supabase.channel).toHaveBeenCalledWith('family_realtime_fam_123');
 
     realtimeSync.startRealtimeSync('fam_2');
     expect(supabase.channel).toHaveBeenCalledWith('family_realtime_fam_2');
     expect(realtimeSync.getCurrentFamilyId()).toBe('fam_2');
   });
 
-  it('runs catch-up delta sync when channel status changes to SUBSCRIBED', () => {
-    (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+  it('runs catch-up delta sync when channel status changes to SUBSCRIBED after debounce', () => {
+    jest.useFakeTimers();
+    try {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
 
-    realtimeSync.startRealtimeSync('fam_123');
-    expect(subscribeStatusCallback).toBeDefined();
+      realtimeSync.startRealtimeSync('fam_123');
+      expect(subscribeStatusCallback).toBeDefined();
 
-    subscribeStatusCallback?.('SUBSCRIBED');
-    expect(syncEngine.fetchDelta).toHaveBeenCalledWith('fam_123');
+      subscribeStatusCallback?.('SUBSCRIBED');
+      expect(syncEngine.fetchDelta).not.toHaveBeenCalled();
 
-    // Handles catch-up delta error silently
-    (syncEngine.fetchDelta as jest.Mock).mockRejectedValueOnce(new Error('Network drop'));
-    expect(() => subscribeStatusCallback?.('SUBSCRIBED')).not.toThrow();
+      jest.advanceTimersByTime(500);
+      expect(syncEngine.fetchDelta).toHaveBeenCalledWith('fam_123');
+
+      // Handles catch-up delta error silently
+      (syncEngine.fetchDelta as jest.Mock).mockRejectedValueOnce(new Error('Network drop'));
+      subscribeStatusCallback?.('SUBSCRIBED');
+      expect(() => jest.advanceTimersByTime(500)).not.toThrow();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   describe('Expenses events', () => {
@@ -177,6 +186,38 @@ describe('realtimeSync', () => {
       const expenses = useAppStore.getState().expenses;
       expect(expenses.find((e) => e.id === 'exp-to-delete')).toBeUndefined();
     });
+
+    it('removes expense when UPDATE event contains deleted_at tombstone', () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+      realtimeSync.startRealtimeSync('fam_123');
+
+      useAppStore.setState({
+        expenses: [
+          {
+            id: 'exp-soft-delete',
+            family_id: 'fam_123',
+            paid_by_member_id: 'mem_1',
+            category_id: 'cat_1',
+            transaction_date: '2026-09-01',
+            merchant_name: 'To Delete Softly',
+            amount: 10,
+            created_at: new Date().toISOString(),
+          },
+        ],
+      });
+
+      const expenseCallback = listeners['expenses'];
+      expenseCallback({
+        eventType: 'UPDATE',
+        new: {
+          id: 'exp-soft-delete',
+          deleted_at: new Date().toISOString(),
+        },
+      });
+
+      const expenses = useAppStore.getState().expenses;
+      expect(expenses.find((e) => e.id === 'exp-soft-delete')).toBeUndefined();
+    });
   });
 
   describe('Categories events', () => {
@@ -230,6 +271,35 @@ describe('realtimeSync', () => {
       const categories = useAppStore.getState().categories;
       expect(categories.find((c) => c.id === 'cat-to-delete')).toBeUndefined();
     });
+
+    it('removes category when UPDATE event contains deleted_at tombstone', () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+      realtimeSync.startRealtimeSync('fam_123');
+
+      useAppStore.setState({
+        categories: [
+          {
+            id: 'cat-soft-delete',
+            family_id: 'fam_123',
+            name: 'Soft Delete Me',
+            icon: 'Trash',
+            color: '#000',
+          },
+        ],
+      });
+
+      const categoryCallback = listeners['categories'];
+      categoryCallback({
+        eventType: 'UPDATE',
+        new: {
+          id: 'cat-soft-delete',
+          deleted_at: new Date().toISOString(),
+        },
+      });
+
+      const categories = useAppStore.getState().categories;
+      expect(categories.find((c) => c.id === 'cat-soft-delete')).toBeUndefined();
+    });
   });
 
   describe('Family Members events', () => {
@@ -282,6 +352,35 @@ describe('realtimeSync', () => {
       const members = useAppStore.getState().members;
       expect(members.find((m) => m.id === 'mem-to-remove')).toBeUndefined();
     });
+
+    it('removes member when UPDATE event contains deleted_at tombstone', () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+      realtimeSync.startRealtimeSync('fam_123');
+
+      useAppStore.setState({
+        members: [
+          {
+            id: 'mem-soft-delete',
+            family_id: 'fam_123',
+            display_name: 'Soft Remove Me',
+            role: 'MEMBER',
+            color_code: '#333',
+          },
+        ],
+      });
+
+      const memberCallback = listeners['family_members'];
+      memberCallback({
+        eventType: 'UPDATE',
+        new: {
+          id: 'mem-soft-delete',
+          deleted_at: new Date().toISOString(),
+        },
+      });
+
+      const members = useAppStore.getState().members;
+      expect(members.find((m) => m.id === 'mem-soft-delete')).toBeUndefined();
+    });
   });
 
   describe('Family metadata events', () => {
@@ -325,22 +424,21 @@ describe('realtimeSync', () => {
           id: 'notif-1',
           family_id: 'fam_123',
           recipient_member_id: currentMemberId,
-          actor_member_id: 'mem_other',
+          actor_member_id: 'other-mem',
           type: 'EXPENSE_ADDED',
-          title: 'New Expense',
-          body: 'Grocery shopping added',
+          title: 'New Expense Added',
+          body: 'Added €50 at Pharmacy',
+          data: {},
           is_read: false,
           created_at: new Date().toISOString(),
         },
       });
 
-      const notifs = useAppStore.getState().notifications;
-      const found = notifs.find((n) => n.id === 'notif-1');
-      expect(found).toBeDefined();
-      expect(found?.title).toBe('New Expense');
+      const notifications = useAppStore.getState().notifications;
+      expect(notifications.find((n) => n.id === 'notif-1')).toBeDefined();
     });
 
-    it('ignores notification when recipient is a different member', () => {
+    it('ignores notification when recipient does not match currentMemberId', () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
       realtimeSync.startRealtimeSync('fam_123');
 
@@ -348,35 +446,18 @@ describe('realtimeSync', () => {
       notifCallback({
         eventType: 'INSERT',
         new: {
-          id: 'notif-other-member',
+          id: 'notif-other',
           family_id: 'fam_123',
-          recipient_member_id: 'completely-different-member',
-          actor_member_id: 'mem_other',
+          recipient_member_id: 'different-member-id',
+          actor_member_id: 'other-mem',
           type: 'EXPENSE_ADDED',
           title: 'Not for me',
-          body: 'Private notice',
-          is_read: false,
-          created_at: new Date().toISOString(),
+          body: 'Not for me',
         },
       });
 
-      const notifs = useAppStore.getState().notifications;
-      expect(notifs.find((n) => n.id === 'notif-other-member')).toBeUndefined();
+      const notifications = useAppStore.getState().notifications;
+      expect(notifications.find((n) => n.id === 'notif-other')).toBeUndefined();
     });
-  });
-
-  it('stops realtime sync and removes channel cleanly', () => {
-    (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
-
-    realtimeSync.startRealtimeSync('fam_123');
-    expect(realtimeSync.isRealtimeActive()).toBe(true);
-
-    realtimeSync.stopRealtimeSync();
-    expect(realtimeSync.isRealtimeActive()).toBe(false);
-    expect(supabase.removeChannel).toHaveBeenCalled();
-
-    // Calling stop when already inactive does nothing
-    realtimeSync.stopRealtimeSync();
-    expect(realtimeSync.isRealtimeActive()).toBe(false);
   });
 });

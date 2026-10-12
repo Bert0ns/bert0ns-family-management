@@ -27,6 +27,9 @@ export const migrationService = {
       };
     }
 
+    let targetFamilyId: string | null = null;
+    let createdFamily = false;
+
     try {
       supabaseLogger.info('Starting local data migration to Supabase', { familyId, userId });
 
@@ -49,7 +52,7 @@ export const migrationService = {
       const now = new Date().toISOString();
 
       // 2. Prepare and upsert Family record
-      const targetFamilyId = isValidUUID(familyId) ? familyId : toUUID(familyId);
+      targetFamilyId = isValidUUID(familyId) ? familyId : toUUID(familyId);
       const targetInviteCode = localFamily.invite_code || generateInviteCode(6);
       const { error: famError } = await supabase.from('families').upsert({
         id: targetFamilyId,
@@ -59,6 +62,7 @@ export const migrationService = {
         updated_at: now,
       });
       if (famError) throw famError;
+      createdFamily = true;
 
       // 3. Prepare and upsert Members FIRST so that is_member_of_family(targetFamilyId) passes for categories & expenses
       const mappedMembers: FamilyMember[] = localMembers.map((m) => {
@@ -66,7 +70,7 @@ export const migrationService = {
         return {
           ...m,
           id: toUUID(m.id),
-          family_id: targetFamilyId,
+          family_id: targetFamilyId!,
           user_id: isCurrent && userId ? userId : m.user_id,
           updated_at: now,
         };
@@ -110,7 +114,7 @@ export const migrationService = {
       const mappedCategories: Category[] = localCategories.map((c) => ({
         ...c,
         id: toUUID(c.id),
-        family_id: targetFamilyId,
+        family_id: targetFamilyId!,
         updated_at: now,
       }));
 
@@ -131,7 +135,7 @@ export const migrationService = {
       const mappedExpenses: Expense[] = localExpenses.map((e) => ({
         ...e,
         id: toUUID(e.id),
-        family_id: targetFamilyId,
+        family_id: targetFamilyId!,
         paid_by_member_id: toUUID(e.paid_by_member_id),
         category_id: toUUID(e.category_id),
         updated_at: now,
@@ -195,6 +199,25 @@ export const migrationService = {
       supabaseLogger.error('Failed to migrate local data to Supabase', {
         error: err?.message || err,
       });
+
+      // Compensation rollback: if migration failed mid-way, attempt to clean up the partially created target family
+      if (createdFamily && targetFamilyId) {
+        try {
+          await supabase.from('families').delete().eq('id', targetFamilyId);
+          supabaseLogger.info(
+            'Rolled back partially created family record after migration failure',
+            {
+              targetFamilyId,
+            },
+          );
+        } catch (cleanupErr) {
+          supabaseLogger.warn('Failed to rollback partially created family record', {
+            targetFamilyId,
+            cleanupErr,
+          });
+        }
+      }
+
       return {
         success: false,
         expensesCount: 0,

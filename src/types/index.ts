@@ -16,6 +16,8 @@ export interface OutboxMutation {
   payload: any;
   created_at: string;
   retry_count: number;
+  last_error?: string;
+  next_retry_at?: string;
 }
 
 export interface Family {
@@ -25,6 +27,7 @@ export interface Family {
   invite_code?: string;
   created_at: string;
   updated_at?: string;
+  deleted_at?: string | null;
 }
 
 export interface FamilyMember {
@@ -38,6 +41,7 @@ export interface FamilyMember {
   is_current_user?: boolean;
   created_at?: string;
   updated_at?: string;
+  deleted_at?: string | null;
 }
 
 export interface Category {
@@ -49,6 +53,7 @@ export interface Category {
   is_default?: boolean;
   created_at?: string;
   updated_at?: string;
+  deleted_at?: string | null;
 }
 
 export interface Expense {
@@ -66,6 +71,7 @@ export interface Expense {
   is_verified?: boolean;
   created_at: string;
   updated_at?: string;
+  deleted_at?: string | null;
 }
 
 export interface ImportBatch {
