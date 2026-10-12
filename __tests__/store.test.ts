@@ -463,4 +463,25 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
       unsubscribe();
     });
   });
+
+  describe('resetToDefaults', () => {
+    it('clears all local expenses, members, and currentMemberId to empty defaults', () => {
+      // Ensure sample data is populated
+      useAppStore.getState().resetToSampleData();
+      expect(useAppStore.getState().expenses.length).toBeGreaterThan(0);
+      expect(useAppStore.getState().members.length).toBeGreaterThan(0);
+
+      // Reset to defaults
+      useAppStore.getState().resetToDefaults();
+      const state = useAppStore.getState();
+
+      expect(state.expenses).toEqual([]);
+      expect(state.members).toEqual([]);
+      expect(state.currentMemberId).toBe('');
+      expect(state.family.id).toBe('');
+      expect(state.importBatches).toEqual([]);
+      expect(state.notifications).toEqual([]);
+      expect(state.categories.length).toBeGreaterThan(0);
+    });
+  });
 });

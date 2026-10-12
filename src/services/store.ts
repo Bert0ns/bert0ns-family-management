@@ -23,6 +23,8 @@ import { generateUUID } from '@/utils/uuid';
 import { CATEGORY_I18N_KEY_MAP } from '@/i18n/categories';
 import { storeLogger, transactionLogger } from '@/services/logger';
 
+export const STORE_STORAGE_KEY = '@bert0ns_family_management_store';
+
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   push_enabled: true,
   notify_batch_import: true, // A3
@@ -85,6 +87,7 @@ export interface AppState {
 
   // Data Reset
   resetToSampleData: () => void;
+  resetToDefaults: () => void;
 
   // Remote Sync Actions
   setFamily: (family: Family) => void;
@@ -586,6 +589,27 @@ export const useAppStore = create<AppState>()(
         });
       },
 
+      resetToDefaults: () => {
+        storeLogger.info('Store reset to defaults');
+        set({
+          family: {
+            id: '',
+            name: '',
+            currency: '€',
+            created_at: new Date().toISOString(),
+          },
+          members: [],
+          categories: INITIAL_CATEGORIES,
+          expenses: [],
+          importBatches: [],
+          notifications: [],
+          notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
+          currentMemberId: '',
+          selectedPeriod: new Date().toISOString().slice(0, 7),
+          filters: DEFAULT_FILTERS,
+        });
+      },
+
       setFamily: (family) => {
         storeLogger.info('Family state set', {
           familyId: family.id,
@@ -676,7 +700,7 @@ export const useAppStore = create<AppState>()(
       },
     }),
     {
-      name: '@bert0ns_family_management_store',
+      name: STORE_STORAGE_KEY,
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => (state, error) => {
         if (error) {

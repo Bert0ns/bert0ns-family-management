@@ -1,7 +1,10 @@
 import { User, Session } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { realtimeSync } from './realtimeSync';
 import { supabaseLogger, authLogger } from './logger';
+import { useAppStore, STORE_STORAGE_KEY } from './store';
+import { syncEngine } from './syncEngine';
 
 export interface AuthState {
   user: User | null;
@@ -67,12 +70,29 @@ export const authService = {
   },
 
   async signOut(): Promise<{ error: string | null }> {
-    if (!isSupabaseConfigured()) {
-      return { error: null };
-    }
     try {
-      authLogger.info('User signing out from Supabase');
+      authLogger.info('User signing out from session');
       realtimeSync.stopRealtimeSync();
+
+      try {
+        useAppStore.getState().resetToDefaults();
+      } catch (err: any) {
+        authLogger.warn('Failed to reset store state during sign out', { error: err?.message });
+      }
+
+      try {
+        await syncEngine.clearAllSyncData();
+        await AsyncStorage.removeItem(STORE_STORAGE_KEY);
+      } catch (err: any) {
+        authLogger.warn('Failed to clear persistent storage during sign out', {
+          error: err?.message,
+        });
+      }
+
+      if (!isSupabaseConfigured()) {
+        return { error: null };
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         supabaseLogger.error('Failed to sign out from Supabase', { error: error.message });
