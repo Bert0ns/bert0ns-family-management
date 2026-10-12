@@ -7,6 +7,7 @@ import { Expense, Category, FamilyMember, AppNotification } from '@/types';
 
 let activeChannel: RealtimeChannel | null = null;
 let currentSubscribedFamilyId: string | null = null;
+let reconnectDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 export const realtimeSync = {
   isRealtimeActive(): boolean {
@@ -57,6 +58,10 @@ export const realtimeSync = {
 
         if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
           const raw = payload.new as any;
+          if (raw.deleted_at) {
+            store.removeRemoteExpense(raw.id);
+            return;
+          }
           const mapped: Expense = {
             id: raw.id,
             family_id: raw.family_id,
@@ -72,6 +77,7 @@ export const realtimeSync = {
             is_verified: raw.is_verified,
             created_at: raw.created_at,
             updated_at: raw.updated_at,
+            deleted_at: raw.deleted_at || null,
           };
           store.reconcileRemoteExpenses([mapped]);
         } else if (payload.eventType === 'DELETE') {
@@ -104,6 +110,10 @@ export const realtimeSync = {
 
         if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
           const raw = payload.new as any;
+          if (raw.deleted_at) {
+            store.removeRemoteCategory(raw.id);
+            return;
+          }
           const mapped: Category = {
             id: raw.id,
             family_id: raw.family_id,
@@ -113,6 +123,7 @@ export const realtimeSync = {
             is_default: raw.is_default,
             created_at: raw.created_at,
             updated_at: raw.updated_at,
+            deleted_at: raw.deleted_at || null,
           };
           store.reconcileRemoteCategories([mapped]);
         } else if (payload.eventType === 'DELETE') {
@@ -145,6 +156,10 @@ export const realtimeSync = {
 
         if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
           const raw = payload.new as any;
+          if (raw.deleted_at) {
+            store.removeRemoteMember(raw.id);
+            return;
+          }
           const mapped: FamilyMember = {
             id: raw.id,
             family_id: raw.family_id,
@@ -155,6 +170,7 @@ export const realtimeSync = {
             color_code: raw.color_code,
             created_at: raw.created_at,
             updated_at: raw.updated_at,
+            deleted_at: raw.deleted_at || null,
           };
           store.reconcileRemoteMembers([mapped]);
         } else if (payload.eventType === 'DELETE') {
@@ -234,10 +250,16 @@ export const realtimeSync = {
     channel.subscribe((status) => {
       supabaseLogger.info('Realtime subscription status update', { status });
       if (status === 'SUBSCRIBED') {
-        // Run catch-up delta sync in case anything was missed
-        syncEngine.fetchDelta(familyId).catch((err: unknown) => {
-          supabaseLogger.debug('Catch-up delta error', { error: err });
-        });
+        // Debounce catch-up delta sync (500ms) to avoid fetch storms during rapid reconnections
+        if (reconnectDebounceTimer) {
+          clearTimeout(reconnectDebounceTimer);
+        }
+        reconnectDebounceTimer = setTimeout(() => {
+          syncEngine.fetchDelta(familyId).catch((err: unknown) => {
+            supabaseLogger.debug('Catch-up delta error', { error: err });
+          });
+          reconnectDebounceTimer = null;
+        }, 500);
       }
     });
 
@@ -245,6 +267,10 @@ export const realtimeSync = {
   },
 
   stopRealtimeSync(): void {
+    if (reconnectDebounceTimer) {
+      clearTimeout(reconnectDebounceTimer);
+      reconnectDebounceTimer = null;
+    }
     if (activeChannel) {
       supabaseLogger.info('Stopping Supabase Realtime sync');
       supabase.removeChannel(activeChannel);

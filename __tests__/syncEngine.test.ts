@@ -18,6 +18,7 @@ describe('syncEngine', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     await AsyncStorage.clear();
+    await syncEngine.clearDeadLetterQueue();
     useAppStore.getState().resetToSampleData();
   });
 
@@ -37,6 +38,29 @@ describe('syncEngine', () => {
       expect(outbox[0].entity).toBe('expense');
       expect(outbox[0].operation).toBe('INSERT');
       expect(outbox[0].entity_id).toBe('test-exp-1');
+    });
+
+    it('serializes rapid concurrent enqueue operations with mutex without dropping mutations', async () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(false);
+
+      const count = 10;
+      const promises = Array.from({ length: count }, (_, i) =>
+        syncEngine.enqueueMutation({
+          entity: 'expense',
+          operation: 'INSERT',
+          entity_id: `concurrent-exp-${i}`,
+          payload: { id: `concurrent-exp-${i}`, amount: 10 + i },
+        }),
+      );
+
+      await Promise.all(promises);
+
+      const outbox = await syncEngine.getOutbox();
+      expect(outbox).toHaveLength(count);
+      const ids = outbox.map((m) => m.entity_id);
+      for (let i = 0; i < count; i++) {
+        expect(ids).toContain(`concurrent-exp-${i}`);
+      }
     });
 
     it('clears outbox cleanly', async () => {
@@ -108,14 +132,14 @@ describe('syncEngine', () => {
       expect(res1.processed).toBe(1);
     });
 
-    it('increments retry count on mutation failure and drops after 5 retries', async () => {
+    it('increments retry count on mutation failure and drops into DLQ after 5 retries', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
 
       (supabase.from as jest.Mock).mockReturnValue({
         upsert: jest.fn().mockResolvedValue({ error: { message: 'Database error' } }),
       });
 
-      // Enqueue mutation with initial retry count of 4
+      // Enqueue mutation
       await syncEngine.enqueueMutation({
         entity: 'category',
         operation: 'INSERT',
@@ -129,16 +153,23 @@ describe('syncEngine', () => {
       let outbox = await syncEngine.getOutbox();
       expect(outbox[0].retry_count).toBe(1);
 
-      // Manually simulate reaching retry_count = 4 in storage
+      // Manually simulate reaching retry_count = 4 in storage with next_retry_at cleared
       outbox[0].retry_count = 4;
+      outbox[0].next_retry_at = undefined;
       await AsyncStorage.setItem('@bert0ns_sync_outbox', JSON.stringify(outbox));
 
-      // Second failure: retry_count becomes 5, which drops it (< 5 condition)
+      // Second failure: retry_count becomes 5, which drops it into dead-letter queue
       const res2 = await syncEngine.flushOutbox();
       expect(res2.errors).toBe(1);
 
       outbox = await syncEngine.getOutbox();
       expect(outbox).toHaveLength(0);
+
+      const dlq = await syncEngine.getDeadLetterQueue();
+      expect(dlq).toHaveLength(1);
+      expect(dlq[0].entity_id).toBe('cat-fail-1');
+      expect(dlq[0].retry_count).toBe(5);
+      expect(dlq[0].last_error).toBe('Database error');
     });
   });
 
@@ -172,10 +203,10 @@ describe('syncEngine', () => {
       expect(upsertMock).toHaveBeenCalled();
     });
 
-    it('executes expense DELETE', async () => {
+    it('executes expense DELETE as soft-delete update', async () => {
       const eqMock = jest.fn().mockResolvedValue({ error: null });
-      const deleteMock = jest.fn().mockReturnValue({ eq: eqMock });
-      (supabase.from as jest.Mock).mockReturnValue({ delete: deleteMock });
+      const updateMock = jest.fn().mockReturnValue({ eq: eqMock });
+      (supabase.from as jest.Mock).mockReturnValue({ update: updateMock });
 
       const success = await syncEngine.executeMutation({
         id: 'mut_2',
@@ -188,14 +219,19 @@ describe('syncEngine', () => {
       });
 
       expect(success).toBe(true);
-      expect(deleteMock).toHaveBeenCalled();
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          deleted_at: expect.any(String),
+          updated_at: expect.any(String),
+        }),
+      );
       expect(eqMock).toHaveBeenCalledWith('id', 'exp_to_del');
     });
 
-    it('executes category DELETE', async () => {
+    it('executes category DELETE as soft-delete update', async () => {
       const eqMock = jest.fn().mockResolvedValue({ error: null });
-      const deleteMock = jest.fn().mockReturnValue({ eq: eqMock });
-      (supabase.from as jest.Mock).mockReturnValue({ delete: deleteMock });
+      const updateMock = jest.fn().mockReturnValue({ eq: eqMock });
+      (supabase.from as jest.Mock).mockReturnValue({ update: updateMock });
 
       const success = await syncEngine.executeMutation({
         id: 'mut_3',
@@ -208,17 +244,23 @@ describe('syncEngine', () => {
       });
 
       expect(success).toBe(true);
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          deleted_at: expect.any(String),
+          updated_at: expect.any(String),
+        }),
+      );
       expect(eqMock).toHaveBeenCalledWith('id', 'cat_del');
     });
 
-    it('executes member INSERT/UPDATE and DELETE', async () => {
+    it('executes member INSERT/UPDATE and soft DELETE', async () => {
       const upsertMock = jest.fn().mockResolvedValue({ error: null });
       const eqMock = jest.fn().mockResolvedValue({ error: null });
-      const deleteMock = jest.fn().mockReturnValue({ eq: eqMock });
+      const updateMock = jest.fn().mockReturnValue({ eq: eqMock });
 
       (supabase.from as jest.Mock).mockReturnValue({
         upsert: upsertMock,
-        delete: deleteMock,
+        update: updateMock,
       });
 
       // Test INSERT
@@ -234,7 +276,7 @@ describe('syncEngine', () => {
       expect(insSuccess).toBe(true);
       expect(upsertMock).toHaveBeenCalled();
 
-      // Test DELETE
+      // Test soft DELETE
       const delSuccess = await syncEngine.executeMutation({
         id: 'mut_5',
         created_at: new Date().toISOString(),
@@ -245,6 +287,12 @@ describe('syncEngine', () => {
         payload: { id: 'mem_new' },
       });
       expect(delSuccess).toBe(true);
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          deleted_at: expect.any(String),
+          updated_at: expect.any(String),
+        }),
+      );
       expect(eqMock).toHaveBeenCalledWith('id', 'mem_new');
     });
 
@@ -434,7 +482,7 @@ describe('syncEngine', () => {
       expect(await syncEngine.fetchDelta('')).toEqual({ updatedCount: 0 });
     });
 
-    it('fetches cloud delta and reconciles all entities', async () => {
+    it('fetches cloud delta and reconciles all entities including soft-deletes', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
 
       const mockQueryBuilder = (data: any = []) => {
@@ -442,6 +490,8 @@ describe('syncEngine', () => {
           select: jest.fn().mockReturnThis(),
           eq: jest.fn().mockReturnThis(),
           gt: jest.fn().mockReturnThis(),
+          or: jest.fn().mockReturnThis(),
+          is: jest.fn().mockReturnThis(),
           maybeSingle: jest.fn().mockResolvedValue({
             data: {
               id: 'fam_1',
@@ -455,6 +505,10 @@ describe('syncEngine', () => {
         };
         return builder;
       };
+
+      // Set up existing expense that will be purged by tombstone
+      const storeInit = useAppStore.getState();
+      const existingExpenseToTombstone = storeInit.expenses[0];
 
       (supabase.from as jest.Mock).mockImplementation((table: string) => {
         if (table === 'families') {
@@ -471,6 +525,17 @@ describe('syncEngine', () => {
               merchant_name: 'Delta Mart',
               amount: '120.50',
               updated_at: '2026-09-04T10:00:00Z',
+            },
+            {
+              id: existingExpenseToTombstone.id,
+              family_id: 'fam_1',
+              paid_by_member_id: existingExpenseToTombstone.paid_by_member_id,
+              category_id: existingExpenseToTombstone.category_id,
+              transaction_date: existingExpenseToTombstone.transaction_date,
+              merchant_name: existingExpenseToTombstone.merchant_name,
+              amount: existingExpenseToTombstone.amount,
+              updated_at: '2026-09-10T10:00:00Z',
+              deleted_at: '2026-09-10T10:00:00Z',
             },
           ]);
         }
@@ -507,11 +572,12 @@ describe('syncEngine', () => {
       });
 
       const res = await syncEngine.fetchDelta('fam_1', '2026-09-01T00:00:00Z');
-      expect(res.updatedCount).toBeGreaterThanOrEqual(3);
+      expect(res.updatedCount).toBeGreaterThanOrEqual(4);
 
       const store = useAppStore.getState();
       expect(store.family.name).toBe('Updated Robinson Family');
       expect(store.expenses.find((e) => e.id === 'delta-exp-1')).toBeDefined();
+      expect(store.expenses.find((e) => e.id === existingExpenseToTombstone.id)).toBeUndefined();
       expect(store.categories.find((c) => c.id === 'delta-cat-1')).toBeDefined();
       expect(store.members.find((m) => m.id === 'delta-mem-1')).toBeDefined();
     });
@@ -525,6 +591,8 @@ describe('syncEngine', () => {
             select: jest.fn().mockReturnThis(),
             eq: jest.fn().mockReturnThis(),
             gt: jest.fn().mockReturnThis(),
+            or: jest.fn().mockReturnThis(),
+            is: jest.fn().mockReturnThis(),
             then: (resolve: any) => resolve({ data: null, error: { message: 'Network offline' } }),
           };
           return builder;
@@ -532,6 +600,8 @@ describe('syncEngine', () => {
         const builder: any = {
           select: jest.fn().mockReturnThis(),
           eq: jest.fn().mockReturnThis(),
+          or: jest.fn().mockReturnThis(),
+          is: jest.fn().mockReturnThis(),
           maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
           then: (resolve: any) => resolve({ data: [], error: null }),
         };

@@ -14,7 +14,8 @@ END;
 $$ LANGUAGE plpgsql SET search_path = public, pg_temp;
 
 -- 3. Families Table
-CREATE TABLE IF NOT EXISTS public.families (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS public.families (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     currency TEXT NOT NULL DEFAULT '€',
     invite_code VARCHAR(12) UNIQUE NOT NULL DEFAULT UPPER(SUBSTRING(MD5(RANDOM()::TEXT) FROM 1 FOR 6)),
@@ -35,6 +36,7 @@ CREATE TABLE IF NOT EXISTS public.family_members (
     role TEXT NOT NULL CHECK (role IN ('ADMIN', 'MEMBER', 'VIEWER')) DEFAULT 'MEMBER',
     avatar_url TEXT,
     color_code TEXT NOT NULL DEFAULT '#4F46E5',
+    deleted_at TIMESTAMPTZ DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -51,6 +53,7 @@ CREATE TABLE IF NOT EXISTS public.categories (
     icon TEXT NOT NULL DEFAULT 'Tag',
     color TEXT NOT NULL DEFAULT '#6366F1',
     is_default BOOLEAN DEFAULT FALSE,
+    deleted_at TIMESTAMPTZ DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -102,6 +105,7 @@ CREATE TABLE IF NOT EXISTS public.expenses (
     payment_method TEXT,
     is_recurring BOOLEAN DEFAULT FALSE,
     is_verified BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMPTZ DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -473,17 +477,23 @@ BEGIN
     ) VALUES (
         v_family_id,
         auth.uid(),
-        COALESCE(p_display_name, 'New Member'),
+        TRIM(p_display_name),
         'MEMBER',
-        '#3B82F6'
-    ) RETURNING id INTO v_member_id;
+        '#10B981'
+    )
+    RETURNING id INTO v_member_id;
 
-    RETURN jsonb_build_object('family_id', v_family_id, 'member_id', v_member_id, 'status', 'success');
+    RETURN jsonb_build_object(
+        'family_id', v_family_id,
+        'member_id', v_member_id,
+        'status', 'success'
+    );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
--- 17. Notification Dispatch Triggers
--- A3: Batch Statement Imported
+-- 17. Supabase Database Triggers for Automated In-App Notifications
+
+-- A3: Batch Import Notification
 CREATE OR REPLACE FUNCTION public.handle_import_batch_notification()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -491,7 +501,7 @@ DECLARE
   rec RECORD;
 BEGIN
   SELECT display_name INTO importer_name FROM public.family_members WHERE id = NEW.imported_by_member_id;
-  IF importer_name IS NULL THEN importer_name := 'A member'; END IF;
+  IF importer_name IS NULL THEN importer_name := 'A family member'; END IF;
 
   FOR rec IN
     SELECT fm.id
@@ -522,7 +532,7 @@ CREATE TRIGGER tr_notify_import_batch
 AFTER INSERT ON public.import_batches
 FOR EACH ROW EXECUTE FUNCTION public.handle_import_batch_notification();
 
--- A4: Expense Edited / Deleted
+-- A4: Expense Edited / Deleted (Handles both hard deletes and soft deletes via deleted_at)
 CREATE OR REPLACE FUNCTION public.handle_expense_change_notification()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -532,16 +542,18 @@ DECLARE
   notif_title TEXT;
   notif_body TEXT;
 BEGIN
-  IF TG_OP = 'DELETE' THEN
-    fam_id := OLD.family_id;
-    actor_id := OLD.paid_by_member_id;
+  IF TG_OP = 'DELETE' OR (TG_OP = 'UPDATE' AND NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL) THEN
+    fam_id := COALESCE(OLD.family_id, NEW.family_id);
+    actor_id := COALESCE(OLD.paid_by_member_id, NEW.paid_by_member_id);
     notif_title := 'Expense Deleted';
-    notif_body := 'Expense at ' || OLD.merchant_name || ' (€' || OLD.amount || ') was removed';
-  ELSE
+    notif_body := 'Expense at ' || COALESCE(OLD.merchant_name, NEW.merchant_name) || ' (€' || COALESCE(OLD.amount, NEW.amount) || ') was removed';
+  ELSIF TG_OP = 'UPDATE' AND NEW.deleted_at IS NULL THEN
     fam_id := NEW.family_id;
     actor_id := NEW.paid_by_member_id;
     notif_title := 'Expense Updated';
     notif_body := 'Expense at ' || NEW.merchant_name || ' was updated to €' || NEW.amount;
+  ELSE
+    RETURN COALESCE(NEW, OLD);
   END IF;
 
   FOR rec IN
@@ -672,10 +684,13 @@ FOR EACH ROW EXECUTE FUNCTION public.handle_member_lifecycle_notification();
 -- 18. Performance Optimization Indexes
 CREATE INDEX IF NOT EXISTS idx_family_members_user_fam ON public.family_members(user_id, family_id);
 CREATE INDEX IF NOT EXISTS idx_family_members_fam ON public.family_members(family_id);
+CREATE INDEX IF NOT EXISTS idx_family_members_deleted_at ON public.family_members(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_expenses_fam_updated ON public.expenses(family_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_expenses_fam_date ON public.expenses(family_id, transaction_date DESC);
+CREATE INDEX IF NOT EXISTS idx_expenses_deleted_at ON public.expenses(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_expense_splits_exp_id ON public.expense_splits(expense_id);
 CREATE INDEX IF NOT EXISTS idx_categories_fam_id ON public.categories(family_id);
+CREATE INDEX IF NOT EXISTS idx_categories_deleted_at ON public.categories(deleted_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_families_invite_code ON public.families(UPPER(invite_code)) WHERE invite_code IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_settlements_fam ON public.settlements(family_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON public.notifications(recipient_member_id, created_at DESC);

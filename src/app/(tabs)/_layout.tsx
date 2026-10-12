@@ -66,6 +66,7 @@ export default function TabsLayout() {
     return () => {
       isMounted = false;
       authSub?.unsubscribe?.();
+      realtimeSync.stopRealtimeSync();
     };
   }, [family?.id]);
 
