@@ -7,6 +7,7 @@ import { Expense, RawExpenseReport } from '@/types';
 import { duplicateDetector } from '@/services/duplicateDetector';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
+import { sumBy } from '@/utils/numberParser';
 
 interface ImportPreviewModalProps {
   visible: boolean;
@@ -26,7 +27,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = React.memo(
     const isDesktop = windowWidth >= 768;
 
     const totalAmount = useMemo(
-      () => (report ? report.expenses.reduce((sum, e) => sum + e.amount, 0) : 0),
+      () => (report ? sumBy(report.expenses, (e) => e.amount) : 0),
       [report],
     );
     const currency = report?.currency || '€';

@@ -268,21 +268,71 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
 
   it('prevents deletion of the last remaining member', () => {
     const state = useAppStore.getState();
-    const remainingIds = state.members.map((m) => m.id);
-
-    for (let i = 0; i < remainingIds.length - 1; i++) {
-      state.deleteMember(remainingIds[i]);
-    }
+    // Delete non-admin members first, then non-sole admin to leave one sole admin
+    state.deleteMember('mem_4');
+    state.deleteMember('mem_3');
+    state.deleteMember('mem_2');
 
     const stateWithOne = useAppStore.getState();
     expect(stateWithOne.members).toHaveLength(1);
     const lastMemberId = stateWithOne.members[0].id;
 
-    stateWithOne.deleteMember(lastMemberId);
+    // Deleting the last member (who is the sole admin) throws descriptive error
+    expect(() => {
+      stateWithOne.deleteMember(lastMemberId);
+    }).toThrow('Cannot delete the sole administrator of the family.');
 
     const finalState = useAppStore.getState();
     expect(finalState.members).toHaveLength(1);
     expect(finalState.members[0].id).toBe(lastMemberId);
+  });
+
+  it('throws a descriptive validation error when deleting the sole administrator', () => {
+    const state = useAppStore.getState();
+    // Initially mem_1 and mem_2 are ADMINs. Delete mem_2 so mem_1 is the sole ADMIN.
+    state.deleteMember('mem_2');
+    expect(useAppStore.getState().members.filter((m) => m.role === 'ADMIN')).toHaveLength(1);
+
+    // Attempting to delete the sole admin must throw
+    expect(() => {
+      useAppStore.getState().deleteMember('mem_1');
+    }).toThrow('Cannot delete the sole administrator of the family.');
+  });
+
+  it('throws a descriptive validation error when demoting the sole administrator', () => {
+    const state = useAppStore.getState();
+    // Delete mem_2 so mem_1 is the sole ADMIN.
+    state.deleteMember('mem_2');
+    expect(useAppStore.getState().members.filter((m) => m.role === 'ADMIN')).toHaveLength(1);
+
+    // Attempting to demote mem_1 to MEMBER must throw
+    expect(() => {
+      useAppStore.getState().updateMember('mem_1', { role: 'MEMBER' });
+    }).toThrow('Cannot demote the sole administrator of the family.');
+  });
+
+  it('throws validation error when saving an expense with empty paid_by_member_id or category_id', () => {
+    const state = useAppStore.getState();
+
+    expect(() => {
+      state.addExpense({
+        paid_by_member_id: '',
+        category_id: 'cat_groceries',
+        transaction_date: '2026-09-01',
+        merchant_name: 'Test Store',
+        amount: 25.0,
+      });
+    }).toThrow('Expense must have a valid paid_by_member_id');
+
+    expect(() => {
+      state.addExpense({
+        paid_by_member_id: 'mem_1',
+        category_id: '',
+        transaction_date: '2026-09-01',
+        merchant_name: 'Test Store',
+        amount: 25.0,
+      });
+    }).toThrow('Expense must have a valid category_id');
   });
 
   it('deletes categories correctly', () => {

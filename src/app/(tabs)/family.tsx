@@ -13,6 +13,7 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { FamilyMember } from '@/types';
+import { sumBy, toCents, fromCents } from '@/utils/numberParser';
 
 export default function FamilyScreen() {
   const { theme, spacing, radius, typography } = useTheme();
@@ -39,14 +40,18 @@ export default function FamilyScreen() {
   );
 
   const memberStats = useMemo(() => {
-    const stats = new Map<string, { totalSpent: number; count: number }>();
+    const stats = new Map<string, { totalCents: number; count: number }>();
     periodExpenses.forEach((e) => {
-      const entry = stats.get(e.paid_by_member_id) || { totalSpent: 0, count: 0 };
-      entry.totalSpent += e.amount;
+      const entry = stats.get(e.paid_by_member_id) || { totalCents: 0, count: 0 };
+      entry.totalCents += toCents(e.amount);
       entry.count += 1;
       stats.set(e.paid_by_member_id, entry);
     });
-    return stats;
+    const result = new Map<string, { totalSpent: number; count: number }>();
+    stats.forEach((val, key) => {
+      result.set(key, { totalSpent: fromCents(val.totalCents), count: val.count });
+    });
+    return result;
   }, [periodExpenses]);
 
   const handleSelectMember = useCallback((member: FamilyMember) => {
@@ -229,7 +234,7 @@ export default function FamilyScreen() {
         <View style={{ gap: spacing.sm }}>
           {categories.map((category) => {
             const catTxs = periodExpenses.filter((e) => e.category_id === category.id);
-            const actualSpend = catTxs.reduce((sum, e) => sum + e.amount, 0);
+            const actualSpend = sumBy(catTxs, (e) => e.amount);
 
             return (
               <Card
@@ -325,6 +330,10 @@ export default function FamilyScreen() {
         member={selectedMemberForEdit}
         expenses={expenses}
         isOnlyMember={members.length <= 1}
+        isSoleAdmin={
+          selectedMemberForEdit?.role === 'ADMIN' &&
+          members.filter((m) => m.role === 'ADMIN').length <= 1
+        }
         currency={family.currency}
         onClose={() => setSelectedMemberForEdit(null)}
         onSave={(updates) => {

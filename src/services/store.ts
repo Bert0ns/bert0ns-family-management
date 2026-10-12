@@ -20,6 +20,7 @@ import {
   INITIAL_FAMILY,
 } from '@/data/mockData';
 import { generateUUID } from '@/utils/uuid';
+import { roundToTwoDecimals, sumBy } from '@/utils/numberParser';
 import { CATEGORY_I18N_KEY_MAP } from '@/i18n/categories';
 import { storeLogger, transactionLogger } from '@/services/logger';
 
@@ -184,9 +185,17 @@ export const useAppStore = create<AppState>()(
 
       addExpense: (expenseData) => {
         const state = get();
+        if (!expenseData.paid_by_member_id || !expenseData.paid_by_member_id.trim()) {
+          throw new Error('Expense must have a valid paid_by_member_id');
+        }
+        if (!expenseData.category_id || !expenseData.category_id.trim()) {
+          throw new Error('Expense must have a valid category_id');
+        }
         const now = new Date().toISOString();
+        const normalizedAmount = roundToTwoDecimals(expenseData.amount);
         const newExpense: Expense = {
           ...expenseData,
+          amount: normalizedAmount,
           id: generateUUID(),
           family_id: state.family.id,
           created_at: now,
@@ -220,16 +229,23 @@ export const useAppStore = create<AppState>()(
         const existing = state.expenses.find((e) => e.id === id);
         const now = new Date().toISOString();
         let updatedExpense: Expense | undefined;
+        const normalizedAmount =
+          updates.amount !== undefined ? roundToTwoDecimals(updates.amount) : existing?.amount;
         transactionLogger.info('Expense updated', {
           id,
           merchant: updates.merchant_name || existing?.merchant_name,
-          amount: updates.amount !== undefined ? updates.amount : existing?.amount,
+          amount: normalizedAmount,
           changedFields: Object.keys(updates),
         });
         set((state) => ({
           expenses: state.expenses.map((e) => {
             if (e.id === id) {
-              updatedExpense = { ...e, ...updates, updated_at: now };
+              updatedExpense = {
+                ...e,
+                ...updates,
+                amount: normalizedAmount ?? e.amount,
+                updated_at: now,
+              };
               return updatedExpense;
             }
             return e;
@@ -305,6 +321,17 @@ export const useAppStore = create<AppState>()(
       },
 
       updateMember: (id, updates) => {
+        const state = get();
+        if (updates.role && updates.role !== 'ADMIN') {
+          const memberToUpdate = state.members.find((m) => m.id === id);
+          if (memberToUpdate && memberToUpdate.role === 'ADMIN') {
+            const adminCount = state.members.filter((m) => m.role === 'ADMIN').length;
+            if (adminCount <= 1) {
+              storeLogger.warn('Attempted to demote the sole administrator', { id });
+              throw new Error('Cannot demote the sole administrator of the family.');
+            }
+          }
+        }
         const now = new Date().toISOString();
         let updatedMember: FamilyMember | undefined;
         storeLogger.info('Member updated', { id, updates });
@@ -329,6 +356,17 @@ export const useAppStore = create<AppState>()(
 
       deleteMember: (id) => {
         const state = get();
+        const memberToDelete = state.members.find((m) => m.id === id);
+        if (!memberToDelete) {
+          return;
+        }
+
+        const adminCount = state.members.filter((m) => m.role === 'ADMIN').length;
+        if (memberToDelete.role === 'ADMIN' && adminCount <= 1) {
+          storeLogger.warn('Attempted to delete the sole administrator', { id });
+          throw new Error('Cannot delete the sole administrator of the family.');
+        }
+
         if (state.members.length <= 1) {
           storeLogger.warn('Attempted to delete the only remaining member', { id });
           return;
@@ -494,7 +532,7 @@ export const useAppStore = create<AppState>()(
         });
 
         const batchId = generateUUID();
-        const totalAmount = report.expenses.reduce((sum, e) => sum + e.amount, 0);
+        const totalAmount = sumBy(report.expenses, (e) => e.amount);
 
         const uploaderMember =
           state.members.find((m) => m.id === state.currentMemberId) || state.members[0];
@@ -547,7 +585,7 @@ export const useAppStore = create<AppState>()(
             import_batch_id: batchId,
             transaction_date: rawExp.date,
             merchant_name: rawExp.merchant,
-            amount: rawExp.amount,
+            amount: roundToTwoDecimals(rawExp.amount),
             notes: rawExp.notes,
             payment_method: rawExp.payment_method || 'Imported File',
             is_recurring: rawExp.is_recurring,

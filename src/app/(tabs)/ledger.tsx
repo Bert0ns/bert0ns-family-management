@@ -23,6 +23,7 @@ import { Card } from '@/components/common/Card';
 import { Avatar } from '@/components/common/Avatar';
 import { IconHelper } from '@/components/common/IconHelper';
 import { Expense, PeriodPreset, AmountBracket } from '@/types';
+import { sumBy } from '@/utils/numberParser';
 
 // Hoisted helper date preset checker
 const matchesPeriod = (dateStr: string, preset: PeriodPreset): boolean => {
@@ -145,7 +146,7 @@ export default function LedgerScreen() {
   }, [expenses, filters, activePeriodPreset, activeAmountBracket]);
 
   const totalFilteredAmount = useMemo(
-    () => filteredExpenses.reduce((sum, e) => sum + e.amount, 0),
+    () => sumBy(filteredExpenses, (e) => e.amount),
     [filteredExpenses],
   );
 

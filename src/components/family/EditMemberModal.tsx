@@ -7,6 +7,7 @@ import { FamilyMember, UserRole, Expense } from '@/types';
 import { Input } from '@/components/common/Input';
 import { FormModal } from '@/components/common/FormModal';
 import { Button } from '@/components/common/Button';
+import { sumBy } from '@/utils/numberParser';
 import { hexToRgba } from '@/utils/color';
 
 interface EditMemberModalProps {
@@ -14,6 +15,7 @@ interface EditMemberModalProps {
   member: FamilyMember | null;
   expenses: Expense[];
   isOnlyMember: boolean;
+  isSoleAdmin?: boolean;
   currency?: string;
   onClose: () => void;
   onSave: (updates: { display_name: string; role: UserRole; color_code: string }) => void;
@@ -25,6 +27,7 @@ interface EditMemberContentProps {
   member: FamilyMember;
   expenses: Expense[];
   isOnlyMember: boolean;
+  isSoleAdmin?: boolean;
   currency: string;
   onClose: () => void;
   onSave: (updates: { display_name: string; role: UserRole; color_code: string }) => void;
@@ -36,6 +39,7 @@ const EditMemberContent: React.FC<EditMemberContentProps> = ({
   member,
   expenses,
   isOnlyMember,
+  isSoleAdmin = false,
   currency,
   onClose,
   onSave,
@@ -50,20 +54,28 @@ const EditMemberContent: React.FC<EditMemberContentProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const memberExpenses = expenses.filter((e) => e.paid_by_member_id === member.id);
-  const totalSpent = memberExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalSpent = sumBy(memberExpenses, (e) => e.amount);
 
   const handleSave = () => {
     if (!name.trim()) {
       setError(t.family.memberNamePlaceholder);
       return;
     }
+    if (isSoleAdmin && role !== 'ADMIN') {
+      Alert.alert(t.family.editMember, 'Cannot demote the sole administrator of the family.');
+      return;
+    }
     setError(null);
-    onSave({
-      display_name: name.trim(),
-      role,
-      color_code: colorCode,
-    });
-    onClose();
+    try {
+      onSave({
+        display_name: name.trim(),
+        role,
+        color_code: colorCode,
+      });
+      onClose();
+    } catch (err: any) {
+      Alert.alert(t.family.editMember, err?.message || 'Error updating member');
+    }
   };
 
   const handleDelete = () => {
@@ -72,12 +84,21 @@ const EditMemberContent: React.FC<EditMemberContentProps> = ({
       return;
     }
 
+    if (isSoleAdmin) {
+      Alert.alert(t.family.deleteMember, 'Cannot delete the sole administrator of the family.');
+      return;
+    }
+
     const confirmMessage = `${t.family.deleteMemberConfirmMessage}\n\n• ${memberExpenses.length} ${t.dashboard.totalTransactions.toLowerCase()} (${currency}${totalSpent.toFixed(2)})`;
 
     if (Platform.OS === 'web') {
       if (window.confirm(`${t.family.deleteMemberConfirmTitle}\n\n${confirmMessage}`)) {
-        onDelete(member.id);
-        onClose();
+        try {
+          onDelete(member.id);
+          onClose();
+        } catch (err: any) {
+          alert(err?.message || 'Error deleting member');
+        }
       }
     } else {
       Alert.alert(t.family.deleteMemberConfirmTitle, confirmMessage, [
@@ -86,8 +107,12 @@ const EditMemberContent: React.FC<EditMemberContentProps> = ({
           text: t.family.deleteMember,
           style: 'destructive',
           onPress: () => {
-            onDelete(member.id);
-            onClose();
+            try {
+              onDelete(member.id);
+              onClose();
+            } catch (err: any) {
+              Alert.alert(t.family.deleteMember, err?.message || 'Error deleting member');
+            }
           },
         },
       ]);
@@ -317,6 +342,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
   member,
   expenses,
   isOnlyMember,
+  isSoleAdmin = false,
   currency = '€',
   onClose,
   onSave,
@@ -331,6 +357,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
       member={member}
       expenses={expenses}
       isOnlyMember={isOnlyMember}
+      isSoleAdmin={isSoleAdmin}
       currency={currency}
       onClose={onClose}
       onSave={onSave}

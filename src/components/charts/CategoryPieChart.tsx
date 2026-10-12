@@ -4,8 +4,9 @@ import { PieChart } from 'react-native-gifted-charts';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName } from '@/i18n';
 import { CategorySummary } from '@/services/analytics';
-import { IconHelper } from '@/components/common/IconHelper';
 import { Card } from '@/components/common/Card';
+import { IconHelper } from '@/components/common/IconHelper';
+import { sumBy } from '@/utils/numberParser';
 import { hexToRgba } from '@/utils/color';
 
 export interface ComputedPieSlice {
@@ -55,7 +56,7 @@ export function computeCategoryPieSlices(
   });
 
   if (tailCategories.length > 0) {
-    const tailTotal = tailCategories.reduce((sum, item) => sum + item.total, 0);
+    const tailTotal = sumBy(tailCategories, (item) => item.total);
     const tailPercentage = totalSpend > 0 ? (tailTotal / totalSpend) * 100 : 0;
     const isSelected = options?.selectedIndex === 5;
     slices.push({
@@ -98,7 +99,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   const { t } = useI18n();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  const totalSpend = data.reduce((sum, item) => sum + item.total, 0);
+  const totalSpend = sumBy(data, (item) => item.total);
 
   if (data.length === 0 || totalSpend === 0) {
     return (

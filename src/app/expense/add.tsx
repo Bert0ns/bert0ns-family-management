@@ -18,6 +18,7 @@ import { useAppStore } from '@/services/store';
 import { IconHelper } from '@/components/common/IconHelper';
 import { Avatar } from '@/components/common/Avatar';
 import { Input } from '@/components/common/Input';
+import { parseLocalizedNumber } from '@/utils/numberParser';
 
 // Native-safe local ISO date string helper
 const getTodayLocalIso = (): string => {
@@ -50,20 +51,28 @@ export default function AddExpenseScreen() {
   const currentMemberId = useAppStore((s) => s.currentMemberId);
 
   const [amount, setAmount] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
-    categories[0]?.id || 'cat_groceries',
-  );
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [dateMode, setDateMode] = useState<'today' | 'yesterday' | 'custom'>('today');
   const [customDate, setCustomDate] = useState(getTodayLocalIso());
-  const [paidByMemberId, setPaidByMemberId] = useState(currentMemberId || members[0]?.id || '');
+  const [paidByMemberId, setPaidByMemberId] = useState<string>('');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [merchant, setMerchant] = useState('');
   const [notes, setNotes] = useState('');
-  const [errors, setErrors] = useState<{ amount?: string; merchant?: string; date?: string }>({});
+  const [errors, setErrors] = useState<{
+    amount?: string;
+    merchant?: string;
+    date?: string;
+    paidBy?: string;
+    category?: string;
+  }>({});
 
   const amountInputRef = useRef<TextInput>(null);
 
-  const selectedCategory = categories.find((c) => c.id === selectedCategoryId) || categories[0];
+  // Derived state ensures robust default fallback even if store hydration finishes after initial mount
+  const activeCategoryId = selectedCategoryId || categories[0]?.id || 'cat_groceries';
+  const activePaidByMemberId = paidByMemberId || currentMemberId || members[0]?.id || '';
+
+  const selectedCategory = categories.find((c) => c.id === activeCategoryId) || categories[0];
   const localizedCategoryName = selectedCategory
     ? getLocalizedCategoryName(selectedCategory, t)
     : t.categories.other;
@@ -75,11 +84,11 @@ export default function AddExpenseScreen() {
         ? getYesterdayLocalIso()
         : customDate;
 
-  const numericAmount = parseFloat(amount.replace(',', '.'));
+  const numericAmount = parseLocalizedNumber(amount);
 
   const handleQuickAdd = (increment: number) => {
     const current = isNaN(numericAmount) ? 0 : numericAmount;
-    const updated = (current + increment).toFixed(2);
+    const updated = (Math.round((current + increment) * 100) / 100).toFixed(2);
     setAmount(updated);
     if (errors.amount) setErrors((prev) => ({ ...prev, amount: undefined }));
     try {
@@ -89,6 +98,15 @@ export default function AddExpenseScreen() {
 
   const handleSelectCategory = (catId: string) => {
     setSelectedCategoryId(catId);
+    if (errors.category) setErrors((prev) => ({ ...prev, category: undefined }));
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {}
+  };
+
+  const handleSelectMember = (memberId: string) => {
+    setPaidByMemberId(memberId);
+    if (errors.paidBy) setErrors((prev) => ({ ...prev, paidBy: undefined }));
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch {}
@@ -107,11 +125,25 @@ export default function AddExpenseScreen() {
   };
 
   const handleSave = () => {
-    const errs: { amount?: string; merchant?: string; date?: string } = {};
+    const errs: {
+      amount?: string;
+      merchant?: string;
+      date?: string;
+      paidBy?: string;
+      category?: string;
+    } = {};
 
     if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
       errs.amount = t.addExpense.errorAmount;
       amountInputRef.current?.focus();
+    }
+
+    if (!activePaidByMemberId || activePaidByMemberId.trim() === '') {
+      errs.paidBy = 'Please select a valid family member who paid';
+    }
+
+    if (!activeCategoryId || activeCategoryId.trim() === '') {
+      errs.category = 'Please select a valid expense category';
     }
 
     // Default merchant to localized category name if left empty
@@ -131,14 +163,14 @@ export default function AddExpenseScreen() {
     uiLogger.info('Submitting new expense from UI form', {
       merchant: finalMerchant,
       amount: numericAmount,
-      categoryId: selectedCategoryId,
-      paidBy: paidByMemberId,
+      categoryId: activeCategoryId,
+      paidBy: activePaidByMemberId,
       date: activeDate.trim(),
     });
 
     addExpense({
-      paid_by_member_id: paidByMemberId,
-      category_id: selectedCategoryId,
+      paid_by_member_id: activePaidByMemberId,
+      category_id: activeCategoryId,
       transaction_date: activeDate.trim(),
       merchant_name: finalMerchant,
       amount: numericAmount,
@@ -319,7 +351,7 @@ export default function AddExpenseScreen() {
           }}
         >
           {categories.map((c) => {
-            const isSelected = selectedCategoryId === c.id;
+            const isSelected = activeCategoryId === c.id;
             const catDisplayName = getLocalizedCategoryName(c, t);
             return (
               <TouchableOpacity
@@ -390,6 +422,18 @@ export default function AddExpenseScreen() {
             );
           })}
         </View>
+        {errors.category && (
+          <Text
+            style={{
+              color: theme.colors.danger,
+              fontSize: typography.fontSizes.sm,
+              fontWeight: typography.fontWeights.bold,
+              marginTop: spacing.sm,
+            }}
+          >
+            {errors.category}
+          </Text>
+        )}
       </View>
 
       {/* Date Quick Pills */}
@@ -529,12 +573,12 @@ export default function AddExpenseScreen() {
           contentContainerStyle={{ gap: spacing.sm, paddingVertical: 2 }}
         >
           {members.map((m) => {
-            const isSelected = paidByMemberId === m.id;
+            const isSelected = activePaidByMemberId === m.id;
             return (
               <TouchableOpacity
                 key={m.id}
                 activeOpacity={0.75}
-                onPress={() => setPaidByMemberId(m.id)}
+                onPress={() => handleSelectMember(m.id)}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -568,6 +612,18 @@ export default function AddExpenseScreen() {
             );
           })}
         </ScrollView>
+        {errors.paidBy && (
+          <Text
+            style={{
+              color: theme.colors.danger,
+              fontSize: typography.fontSizes.sm,
+              fontWeight: typography.fontWeights.bold,
+              marginTop: spacing.sm,
+            }}
+          >
+            {errors.paidBy}
+          </Text>
+        )}
       </View>
 
       {/* Progressive Disclosure: More Options Toggle */}
