@@ -11,6 +11,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { PeriodSelector } from '@/components/common/PeriodSelector';
 import { ExpenseItem } from '@/components/ledger/ExpenseItem';
 import { ExpenseDetailModal } from '@/components/ledger/ExpenseDetailModal';
+import { EditExpenseModal } from '@/components/ledger/EditExpenseModal';
 import { Expense } from '@/types';
 
 export default function DashboardScreen() {
@@ -19,6 +20,7 @@ export default function DashboardScreen() {
   const { t } = useI18n();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [selectedExpenseForEdit, setSelectedExpenseForEdit] = useState<Expense | null>(null);
 
   const family = useAppStore((s) => s.family);
   const members = useAppStore((s) => s.members);
@@ -27,6 +29,7 @@ export default function DashboardScreen() {
   const selectedPeriod = useAppStore((s) => s.selectedPeriod);
   const setSelectedPeriod = useAppStore((s) => s.setSelectedPeriod);
   const deleteExpense = useAppStore((s) => s.deleteExpense);
+  const updateExpense = useAppStore((s) => s.updateExpense);
 
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -437,8 +440,22 @@ export default function DashboardScreen() {
           currency={family.currency}
           onClose={handleCloseModal}
           onDelete={handleDeleteExpense}
+          onEdit={(exp) => setSelectedExpenseForEdit(exp)}
         />
       )}
+
+      {/* Edit Expense Modal */}
+      <EditExpenseModal
+        visible={!!selectedExpenseForEdit}
+        expense={selectedExpenseForEdit}
+        categories={categories}
+        members={members}
+        currency={family.currency}
+        onClose={() => setSelectedExpenseForEdit(null)}
+        onSave={(id, updates) => {
+          updateExpense(id, updates);
+        }}
+      />
     </ScrollView>
   );
 }

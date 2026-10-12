@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import { Upload, FileJson, AlertCircle, ClipboardPaste } from 'lucide-react-native';
+import { Upload, AlertCircle, ClipboardPaste, FileSpreadsheet } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { RawExpenseReport } from '@/types';
 import { reportValidator } from '@/services/validator';
 import { jsonExtractor } from '@/services/jsonExtractor';
+import { parseCsvStatement } from '@/services/csvParser';
 
 interface JsonDropzoneProps {
   onFileParsed: (report: RawExpenseReport, fileName: string) => void;
@@ -19,13 +20,30 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const processJsonText = (jsonString: string, fileName: string) => {
+  const processFileText = (rawText: string, fileName: string) => {
     try {
       setErrorMessage(null);
+      const isCsv =
+        fileName.toLowerCase().endsWith('.csv') ||
+        (!rawText.trim().startsWith('{') &&
+          !rawText.trim().startsWith('[') &&
+          rawText.includes('\n'));
+
+      if (isCsv) {
+        const csvResult = parseCsvStatement(rawText);
+        if (csvResult.success && csvResult.report) {
+          onFileParsed(csvResult.report, fileName);
+          return;
+        } else if (fileName.toLowerCase().endsWith('.csv')) {
+          setErrorMessage(csvResult.errors.join('; ') || t.import.csvInvalidFormat);
+          return;
+        }
+      }
+
       // Use resilient jsonExtractor to clean markdown blocks or preambles
-      const extracted = jsonExtractor.extract(jsonString);
+      const extracted = jsonExtractor.extract(rawText);
       if (!extracted.success || !extracted.data) {
-        setErrorMessage(`JSON error: ${extracted.error || 'Invalid JSON format'}`);
+        setErrorMessage(`Format error: ${extracted.error || 'Invalid JSON or CSV format'}`);
         return;
       }
 
@@ -39,7 +57,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
 
       onFileParsed(validationResult.data, fileName);
     } catch (e: any) {
-      setErrorMessage(`Failed to parse JSON: ${e.message}`);
+      setErrorMessage(`Failed to parse file: ${e.message}`);
     }
   };
 
@@ -49,7 +67,14 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
       setErrorMessage(null);
 
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/json', 'text/json', 'text/plain'],
+        type: [
+          'application/json',
+          'text/json',
+          'text/plain',
+          'text/csv',
+          'application/vnd.ms-excel',
+          'text/comma-separated-values',
+        ],
         copyToCacheDirectory: true,
       });
 
@@ -59,16 +84,16 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
         if (Platform.OS === 'web') {
           if (file.file) {
             const text = await (file.file as any).text();
-            processJsonText(text, file.name);
+            processFileText(text, file.name);
           } else {
             const response = await fetch(file.uri);
             const text = await response.text();
-            processJsonText(text, file.name);
+            processFileText(text, file.name);
           }
         } else {
           const response = await fetch(file.uri);
           const text = await response.text();
-          processJsonText(text, file.name);
+          processFileText(text, file.name);
         }
       }
     } catch (error: any) {
@@ -118,7 +143,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
             textAlign: 'center',
           }}
         >
-          {t.import.dropzoneTitle}
+          {t.import.dropzoneTitleCsv || t.import.dropzoneTitle}
         </Text>
 
         <Text
@@ -127,10 +152,10 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
             fontSize: typography.fontSizes.sm,
             textAlign: 'center',
             marginTop: spacing.xs,
-            maxWidth: 320,
+            maxWidth: 340,
           }}
         >
-          {t.import.dropzoneSubtitle}
+          {t.import.dropzoneSubtitleCsv || t.import.dropzoneSubtitle}
         </Text>
 
         <View
@@ -150,7 +175,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <>
-              <FileJson size={18} color="#FFFFFF" />
+              <FileSpreadsheet size={18} color="#FFFFFF" />
               <Text
                 style={{
                   color: '#FFFFFF',
@@ -158,7 +183,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
                   fontSize: typography.fontSizes.sm,
                 }}
               >
-                {t.import.selectJsonFile}
+                {t.import.selectJsonFile} / CSV
               </Text>
             </>
           )}
@@ -194,24 +219,27 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
         </TouchableOpacity>
       )}
 
+      {/* Error Alert */}
       {errorMessage && (
         <View
           style={{
             flexDirection: 'row',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             backgroundColor: theme.colors.dangerBg,
-            padding: spacing.md,
+            borderColor: theme.colors.danger,
+            borderWidth: 1,
             borderRadius: radius.md,
+            padding: spacing.md,
             gap: spacing.sm,
           }}
         >
-          <AlertCircle size={20} color={theme.colors.danger} />
+          <AlertCircle size={20} color={theme.colors.danger} style={{ marginTop: 2 }} />
           <Text
             style={{
               color: theme.colors.danger,
               fontSize: typography.fontSizes.sm,
-              flex: 1,
               fontWeight: typography.fontWeights.medium,
+              flex: 1,
             }}
           >
             {errorMessage}

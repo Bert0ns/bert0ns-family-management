@@ -98,7 +98,10 @@ export const it: TranslationSchema = {
   import: {
     dropzoneTitle: 'Tocca o Trascina il File JSON delle Spese',
     dropzoneSubtitle: 'Supporta file .json strutturati con data, commerciante e importo',
+    dropzoneTitleCsv: 'Tocca o Trascina Estratto Conto CSV / JSON',
+    dropzoneSubtitleCsv: 'Supporta estratti conto bancari CSV e file JSON strutturati',
     selectJsonFile: 'Seleziona File JSON',
+    selectCsvFile: 'Seleziona File CSV',
     reviewConfirm: 'Rivedi e Conferma Importazione',
     exportLedger: 'Esporta Registro Famiglia',
     exportLedgerSub: 'Scarica lo storico completo delle transazioni in formato CSV o JSON.',
@@ -139,6 +142,10 @@ export const it: TranslationSchema = {
     step2Label: '2. Allega PDF in ChatGPT / Claude',
     step3Label: '3. Incolla o Trascina JSON',
     categoriesIncluded: '{count} categorie incluse',
+    csvFormatHelp:
+      'Rileva automaticamente separatori (virgola, punto e virgola, tab) e formati numerici.',
+    csvImportSuccess: 'Estratto conto CSV analizzato e preparato con successo!',
+    csvInvalidFormat: 'Impossibile elaborare il file CSV. Verifica intestazioni e delimitatore.',
   },
   family: {
     activeWorkspace: 'Spazio Attivo',
@@ -175,6 +182,17 @@ export const it: TranslationSchema = {
     selectColor: 'Seleziona Colore',
     currentUser: 'Tu',
     relatedData: 'Dati correlati',
+    editCategoryTitle: 'Modifica Categoria',
+    editCategory: 'Modifica Categoria',
+    deleteCategory: 'Elimina Categoria',
+    deleteCategoryConfirmTitle: 'Eliminare la Categoria?',
+    deleteCategoryConfirmMessage:
+      'Sei sicuro di voler eliminare questa categoria? Le spese associate verranno riassegnate alla categoria alternativa.',
+    cannotDeleteDefaultCategory:
+      'Le categorie predefinite di sistema non possono essere eliminate.',
+    cannotDeleteLastCategory:
+      "Impossibile eliminare l'unica categoria rimasta nel nucleo familiare.",
+    fallbackCategoryLabel: 'Riassegna Spese Esistenti A',
   },
   settings: {
     title: 'Impostazioni & Preferenze',
@@ -247,6 +265,8 @@ export const it: TranslationSchema = {
     paymentMethod: 'Metodo di Pagamento',
     notes: 'Note',
     uncategorized: 'Senza Categoria',
+    editExpense: 'Modifica',
+    editExpenseTitle: 'Modifica Spesa',
   },
   categories: {
     groceries: 'Spesa Alimentare',

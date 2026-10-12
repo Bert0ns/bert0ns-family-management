@@ -16,6 +16,7 @@ import { useI18n, getLocalizedCategoryName } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import { ExpenseItem } from '@/components/ledger/ExpenseItem';
 import { ExpenseDetailModal } from '@/components/ledger/ExpenseDetailModal';
+import { EditExpenseModal } from '@/components/ledger/EditExpenseModal';
 import { FormModal } from '@/components/common/FormModal';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
@@ -77,8 +78,10 @@ export default function LedgerScreen() {
   const setFilters = useAppStore((s) => s.setFilters);
   const resetFilters = useAppStore((s) => s.resetFilters);
   const deleteExpense = useAppStore((s) => s.deleteExpense);
+  const updateExpense = useAppStore((s) => s.updateExpense);
 
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [selectedExpenseForEdit, setSelectedExpenseForEdit] = useState<Expense | null>(null);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
 
   const activePeriodPreset: PeriodPreset = filters.periodPreset || 'all';
@@ -673,6 +676,20 @@ export default function LedgerScreen() {
           currency={family.currency}
           onClose={handleCloseModal}
           onDelete={handleDeleteExpense}
+          onEdit={(exp) => setSelectedExpenseForEdit(exp)}
+        />
+
+        {/* Edit Expense Modal */}
+        <EditExpenseModal
+          visible={!!selectedExpenseForEdit}
+          expense={selectedExpenseForEdit}
+          categories={categories}
+          members={members}
+          currency={family.currency}
+          onClose={() => setSelectedExpenseForEdit(null)}
+          onSave={(id, updates) => {
+            updateExpense(id, updates);
+          }}
         />
 
         {/* Detailed Senior-Accessible Filter Modal */}

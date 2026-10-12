@@ -96,7 +96,10 @@ export interface TranslationSchema {
   import: {
     dropzoneTitle: string;
     dropzoneSubtitle: string;
+    dropzoneTitleCsv: string;
+    dropzoneSubtitleCsv: string;
     selectJsonFile: string;
+    selectCsvFile: string;
     reviewConfirm: string;
     exportLedger: string;
     exportLedgerSub: string;
@@ -133,6 +136,9 @@ export interface TranslationSchema {
     step2Label: string;
     step3Label: string;
     categoriesIncluded: string;
+    csvFormatHelp: string;
+    csvImportSuccess: string;
+    csvInvalidFormat: string;
   };
   family: {
     activeWorkspace: string;
@@ -168,6 +174,14 @@ export interface TranslationSchema {
     selectColor: string;
     currentUser: string;
     relatedData: string;
+    editCategoryTitle: string;
+    editCategory: string;
+    deleteCategory: string;
+    deleteCategoryConfirmTitle: string;
+    deleteCategoryConfirmMessage: string;
+    cannotDeleteDefaultCategory: string;
+    cannotDeleteLastCategory: string;
+    fallbackCategoryLabel: string;
   };
   settings: {
     title: string;
@@ -236,6 +250,8 @@ export interface TranslationSchema {
     paymentMethod: string;
     notes: string;
     uncategorized: string;
+    editExpense: string;
+    editExpenseTitle: string;
   };
   categories: {
     groceries: string;
