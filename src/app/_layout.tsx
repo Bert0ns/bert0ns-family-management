@@ -1,5 +1,5 @@
-import { View } from 'react-native';
-import { Stack } from 'expo-router';
+import { View, TouchableOpacity, Text } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '@/theme';
@@ -16,6 +16,7 @@ const defaultInitialMetrics = initialWindowMetrics ?? {
 function RootLayoutNav() {
   const { theme, isDark } = useTheme();
   const { t } = useI18n();
+  const router = useRouter();
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -39,6 +40,31 @@ function RootLayoutNav() {
           options={{
             presentation: 'modal',
             title: t.addExpense.title,
+            headerShown: true,
+            headerLeft: () => (
+              <TouchableOpacity
+                onPress={() => router.back()}
+                accessibilityRole="button"
+                accessibilityLabel={t.common.cancel}
+                style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+              >
+                <Text
+                  style={{
+                    color: theme.colors.brand,
+                    fontSize: 16,
+                    fontWeight: '600',
+                  }}
+                >
+                  {t.common.cancel}
+                </Text>
+              </TouchableOpacity>
+            ),
+          }}
+        />
+        <Stack.Screen
+          name="+not-found"
+          options={{
+            title: 'Oops!',
             headerShown: true,
           }}
         />

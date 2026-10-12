@@ -4,9 +4,85 @@ import { PieChart } from 'react-native-gifted-charts';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName } from '@/i18n';
 import { CategorySummary } from '@/services/analytics';
-import { IconHelper } from '@/components/common/IconHelper';
 import { Card } from '@/components/common/Card';
+import { IconHelper } from '@/components/common/IconHelper';
 import { sumBy } from '@/utils/numberParser';
+import { hexToRgba } from '@/utils/color';
+
+export interface ComputedPieSlice {
+  value: number;
+  color: string;
+  text: string;
+  focused?: boolean;
+  onPress?: () => void;
+  category: CategorySummary['category'];
+  percentage: number;
+  isOther?: boolean;
+}
+
+export function computeCategoryPieSlices(
+  data: CategorySummary[],
+  totalSpend: number,
+  options?: {
+    selectedIndex?: number | null;
+    otherLabel?: string;
+    otherColor?: string;
+    onSelectIndex?: (index: number | null) => void;
+    onSelectCategory?: (categoryId: string) => void;
+  },
+): ComputedPieSlice[] {
+  if (!data || data.length === 0 || totalSpend <= 0) return [];
+
+  const topCategories = data.slice(0, 5);
+  const tailCategories = data.slice(5);
+
+  const slices: ComputedPieSlice[] = topCategories.map((item, index) => {
+    const isSelected = options?.selectedIndex === index;
+    return {
+      value: item.total,
+      color: item.category.color,
+      text: `${item.percentage.toFixed(0)}%`,
+      focused: isSelected,
+      category: item.category,
+      percentage: item.percentage,
+      isOther: false,
+      onPress: () => {
+        options?.onSelectIndex?.(isSelected ? null : index);
+        if (options?.onSelectCategory) {
+          options.onSelectCategory(item.category.id);
+        }
+      },
+    };
+  });
+
+  if (tailCategories.length > 0) {
+    const tailTotal = sumBy(tailCategories, (item) => item.total);
+    const tailPercentage = totalSpend > 0 ? (tailTotal / totalSpend) * 100 : 0;
+    const isSelected = options?.selectedIndex === 5;
+    slices.push({
+      value: tailTotal,
+      color: options?.otherColor || '#94A3B8',
+      text: `${tailPercentage.toFixed(0)}%`,
+      focused: isSelected,
+      percentage: tailPercentage,
+      isOther: true,
+      category: {
+        id: 'other',
+        name: options?.otherLabel || 'Other',
+        icon: 'MoreHorizontal',
+        color: options?.otherColor || '#94A3B8',
+        family_id: '',
+        is_default: false,
+        created_at: '',
+      },
+      onPress: () => {
+        options?.onSelectIndex?.(isSelected ? null : 5);
+      },
+    });
+  }
+
+  return slices;
+}
 
 interface CategoryPieChartProps {
   data: CategorySummary[];
@@ -35,23 +111,15 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
     );
   }
 
-  const pieData = data.slice(0, 6).map((item, index) => {
-    const isSelected = selectedIndex === index;
-    return {
-      value: item.total,
-      color: item.category.color,
-      text: `${item.percentage.toFixed(0)}%`,
-      focused: isSelected,
-      onPress: () => {
-        setSelectedIndex(isSelected ? null : index);
-        if (onSelectCategory) {
-          onSelectCategory(item.category.id);
-        }
-      },
-    };
+  const pieData = computeCategoryPieSlices(data, totalSpend, {
+    selectedIndex,
+    onSelectIndex: setSelectedIndex,
+    onSelectCategory,
+    otherLabel: t.categories.other || 'Other',
+    otherColor: theme.colors.textMuted,
   });
 
-  const activeCategory = selectedIndex !== null ? data[selectedIndex] : null;
+  const activeSlice = selectedIndex !== null ? pieData[selectedIndex] : null;
 
   return (
     <Card padding="lg">
@@ -86,8 +154,10 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                 }}
                 numberOfLines={1}
               >
-                {activeCategory
-                  ? getLocalizedCategoryName(activeCategory.category, t)
+                {activeSlice
+                  ? activeSlice.isOther
+                    ? t.categories.other || 'Other'
+                    : getLocalizedCategoryName(activeSlice.category, t)
                   : t.analytics.totalSpend}
               </Text>
               <Text
@@ -102,19 +172,19 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                 minimumFontScale={0.7}
               >
                 {currency}
-                {(activeCategory ? activeCategory.total : totalSpend).toFixed(0)}
+                {(activeSlice ? activeSlice.value : totalSpend).toFixed(0)}
               </Text>
-              {activeCategory && (
+              {activeSlice && (
                 <Text
                   style={{
-                    color: activeCategory.category.color,
+                    color: activeSlice.color,
                     fontSize: typography.fontSizes.xs,
                     fontWeight: typography.fontWeights.bold,
                     marginTop: 2,
                   }}
                   numberOfLines={1}
                 >
-                  {activeCategory.percentage.toFixed(1)}%
+                  {activeSlice.percentage.toFixed(1)}%
                 </Text>
               )}
             </View>
@@ -133,6 +203,8 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
             <TouchableOpacity
               key={item.category.id}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`${localizedCategoryName}: ${currency}${item.total.toFixed(2)}, ${item.percentage.toFixed(0)}%`}
               onPress={() => {
                 setSelectedIndex(isSelected ? null : idx);
                 if (onSelectCategory) {
@@ -170,7 +242,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                       width: 36,
                       height: 36,
                       borderRadius: radius.md,
-                      backgroundColor: `${item.category.color}20`,
+                      backgroundColor: hexToRgba(item.category.color, 0.12),
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,

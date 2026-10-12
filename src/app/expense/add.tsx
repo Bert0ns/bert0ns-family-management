@@ -44,7 +44,11 @@ export default function AddExpenseScreen() {
   const router = useRouter();
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
-  const { family, members, categories, addExpense, currentMemberId } = useAppStore();
+  const family = useAppStore((s) => s.family);
+  const members = useAppStore((s) => s.members);
+  const categories = useAppStore((s) => s.categories);
+  const addExpense = useAppStore((s) => s.addExpense);
+  const currentMemberId = useAppStore((s) => s.currentMemberId);
 
   const [amount, setAmount] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
@@ -732,7 +736,7 @@ export default function AddExpenseScreen() {
       {/* Bulk Import Button */}
       <TouchableOpacity
         activeOpacity={0.75}
-        onPress={() => router.push('/(tabs)/import')}
+        onPress={() => router.replace('/(tabs)/import')}
         accessibilityLabel={t.addExpense.bulkImportButton}
         style={{
           marginTop: spacing.md,

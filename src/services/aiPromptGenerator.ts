@@ -47,8 +47,24 @@ const DEFAULT_CATEGORIES = [
 ];
 
 /**
+ * Sanitizes metadata (names, descriptions) before injecting into LLM prompts
+ * to prevent prompt injection and delimiter breaking.
+ */
+export function sanitizePromptText(text: string, maxLength = 100): string {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/["\\]/g, '')
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .slice(0, maxLength);
+}
+
+/**
  * Normalizes input categories into unique formatted names and descriptions.
  * Performs case-insensitive deduplication and preserves optional descriptions.
+ * Sanitizes category names and descriptions against prompt injection.
  */
 export function normalizeCategories(
   categories: (string | PromptCategoryItem)[],
@@ -56,12 +72,14 @@ export function normalizeCategories(
   const map = new Map<string, NormalizedPromptCategory>();
 
   for (const item of categories) {
-    const name = typeof item === 'string' ? item.trim() : item.name.trim();
-    const description =
-      typeof item !== 'string' && item.description ? item.description.trim() : undefined;
+    const rawName = typeof item === 'string' ? item : item?.name;
+    const rawDesc = typeof item !== 'string' ? item?.description : undefined;
+
+    const name = sanitizePromptText(rawName || '', 80);
+    const description = rawDesc ? sanitizePromptText(rawDesc, 200) : undefined;
 
     if (name.length > 0 && !map.has(name.toLowerCase())) {
-      map.set(name.toLowerCase(), { name, description });
+      map.set(name.toLowerCase(), { name, description: description || undefined });
     }
   }
 
@@ -79,7 +97,9 @@ export function generateBankStatementPrompt(options: BankStatementPromptOptions)
   // The app strictly supports EUR ('EUR' or '€') in ExpenseReportImportSchema
   const currency = options.currency === '€' ? '€' : 'EUR';
   const categoryList = normalizeCategories(options.categories);
-  const members = (options.familyMembers || []).map((m) => m.trim()).filter((m) => m.length > 0);
+  const members = (options.familyMembers || [])
+    .map((m) => sanitizePromptText(m, 50))
+    .filter((m) => m.length > 0);
 
   const formattedCategories = categoryList
     .map((cat) =>
@@ -127,6 +147,7 @@ Return ONLY a valid, parseable JSON object matching this schema (do not wrap in 
       "merchant": "Clean Merchant Name",
       "amount": 42.50,
       "category": "Matching Category Name",
+      "paid_by": "Family Member Name",
       "notes": "Original raw bank line description",
       "payment_method": "Debit Card",
       "is_recurring": false

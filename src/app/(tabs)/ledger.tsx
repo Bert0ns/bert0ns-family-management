@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { View, Text, ScrollView, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -25,20 +25,58 @@ import { IconHelper } from '@/components/common/IconHelper';
 import { Expense, PeriodPreset, AmountBracket } from '@/types';
 import { sumBy } from '@/utils/numberParser';
 
+// Hoisted helper date preset checker
+const matchesPeriod = (dateStr: string, preset: PeriodPreset): boolean => {
+  if (preset === 'all') return true;
+  const parts = dateStr.split('-');
+  if (parts.length < 2) return true;
+  const expYear = parseInt(parts[0], 10);
+  const expMonth = parseInt(parts[1], 10); // 1-indexed
+
+  const now = new Date();
+  const curYear = now.getFullYear();
+  const curMonth = now.getMonth() + 1; // 1-indexed
+
+  if (preset === 'this_month') {
+    return expYear === curYear && expMonth === curMonth;
+  }
+  if (preset === 'last_month') {
+    const prevYear = curMonth === 1 ? curYear - 1 : curYear;
+    const prevMonth = curMonth === 1 ? 12 : curMonth - 1;
+    return expYear === prevYear && expMonth === prevMonth;
+  }
+  if (preset === 'last_3_months') {
+    const diffMonths = (curYear - expYear) * 12 + (curMonth - expMonth);
+    return diffMonths >= 0 && diffMonths <= 2;
+  }
+  if (preset === 'this_year') {
+    return expYear === curYear;
+  }
+  return true;
+};
+
+// Hoisted helper amount bracket checker
+const matchesAmountBracket = (amount: number, bracket: AmountBracket): boolean => {
+  if (bracket === 'all') return true;
+  if (bracket === 'under_20') return amount < 20;
+  if (bracket === '20_to_100') return amount >= 20 && amount <= 100;
+  if (bracket === 'over_100') return amount > 100;
+  return true;
+};
+
 export default function LedgerScreen() {
   const router = useRouter();
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
-  const {
-    family,
-    members,
-    categories,
-    expenses,
-    filters,
-    setFilters,
-    resetFilters,
-    deleteExpense,
-  } = useAppStore();
+
+  const family = useAppStore((s) => s.family);
+  const members = useAppStore((s) => s.members);
+  const categories = useAppStore((s) => s.categories);
+  const expenses = useAppStore((s) => s.expenses);
+  const filters = useAppStore((s) => s.filters);
+  const setFilters = useAppStore((s) => s.setFilters);
+  const resetFilters = useAppStore((s) => s.resetFilters);
+  const deleteExpense = useAppStore((s) => s.deleteExpense);
 
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
@@ -46,97 +84,102 @@ export default function LedgerScreen() {
   const activePeriodPreset: PeriodPreset = filters.periodPreset || 'all';
   const activeAmountBracket: AmountBracket = filters.amountBracket || 'all';
 
-  const selectedMember = members.find((m) => m.id === filters.selectedMemberId);
-  const selectedCategory = categories.find((c) => c.id === filters.selectedCategoryId);
+  const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
+  const memberMap = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
 
-  // Helper date preset checker
-  const matchesPeriod = (dateStr: string, preset: PeriodPreset): boolean => {
-    if (preset === 'all') return true;
-    const parts = dateStr.split('-');
-    if (parts.length < 2) return true;
-    const expYear = parseInt(parts[0], 10);
-    const expMonth = parseInt(parts[1], 10); // 1-indexed
+  const selectedMember = useMemo(
+    () => (filters.selectedMemberId ? memberMap.get(filters.selectedMemberId) : undefined),
+    [filters.selectedMemberId, memberMap],
+  );
+  const selectedCategory = useMemo(
+    () => (filters.selectedCategoryId ? categoryMap.get(filters.selectedCategoryId) : undefined),
+    [filters.selectedCategoryId, categoryMap],
+  );
 
-    const now = new Date();
-    const curYear = now.getFullYear();
-    const curMonth = now.getMonth() + 1; // 1-indexed
+  // Apply filters and sorting with ISO comparison
+  const filteredExpenses = useMemo(() => {
+    const q = filters.searchQuery ? filters.searchQuery.toLowerCase() : '';
+    const filtered = expenses.filter((exp) => {
+      // Search query
+      if (q) {
+        const matchMerchant = exp.merchant_name.toLowerCase().includes(q);
+        const matchNotes = (exp.notes || '').toLowerCase().includes(q);
+        if (!matchMerchant && !matchNotes) return false;
+      }
 
-    if (preset === 'this_month') {
-      return expYear === curYear && expMonth === curMonth;
-    }
-    if (preset === 'last_month') {
-      const prevYear = curMonth === 1 ? curYear - 1 : curYear;
-      const prevMonth = curMonth === 1 ? 12 : curMonth - 1;
-      return expYear === prevYear && expMonth === prevMonth;
-    }
-    if (preset === 'last_3_months') {
-      const diffMonths = (curYear - expYear) * 12 + (curMonth - expMonth);
-      return diffMonths >= 0 && diffMonths <= 2;
-    }
-    if (preset === 'this_year') {
-      return expYear === curYear;
-    }
-    return true;
-  };
+      // Member filter
+      if (filters.selectedMemberId && exp.paid_by_member_id !== filters.selectedMemberId) {
+        return false;
+      }
 
-  // Helper amount bracket checker
-  const matchesAmountBracket = (amount: number, bracket: AmountBracket): boolean => {
-    if (bracket === 'all') return true;
-    if (bracket === 'under_20') return amount < 20;
-    if (bracket === '20_to_100') return amount >= 20 && amount <= 100;
-    if (bracket === 'over_100') return amount > 100;
-    return true;
-  };
+      // Category filter
+      if (filters.selectedCategoryId && exp.category_id !== filters.selectedCategoryId) {
+        return false;
+      }
 
-  // Apply filters
-  let filteredExpenses = expenses.filter((exp) => {
-    // Search query
-    if (filters.searchQuery) {
-      const q = filters.searchQuery.toLowerCase();
-      const matchMerchant = exp.merchant_name.toLowerCase().includes(q);
-      const matchNotes = (exp.notes || '').toLowerCase().includes(q);
-      if (!matchMerchant && !matchNotes) return false;
-    }
+      // Period preset filter
+      if (!matchesPeriod(exp.transaction_date, activePeriodPreset)) {
+        return false;
+      }
 
-    // Member filter
-    if (filters.selectedMemberId && exp.paid_by_member_id !== filters.selectedMemberId) {
-      return false;
-    }
+      // Amount bracket filter
+      if (!matchesAmountBracket(exp.amount, activeAmountBracket)) {
+        return false;
+      }
 
-    // Category filter
-    if (filters.selectedCategoryId && exp.category_id !== filters.selectedCategoryId) {
-      return false;
-    }
+      return true;
+    });
 
-    // Period preset filter
-    if (!matchesPeriod(exp.transaction_date, activePeriodPreset)) {
-      return false;
-    }
+    return filtered.sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'date_asc':
+          return a.transaction_date.localeCompare(b.transaction_date);
+        case 'amount_desc':
+          return b.amount - a.amount;
+        case 'amount_asc':
+          return a.amount - b.amount;
+        case 'date_desc':
+        default:
+          return b.transaction_date.localeCompare(a.transaction_date);
+      }
+    });
+  }, [expenses, filters, activePeriodPreset, activeAmountBracket]);
 
-    // Amount bracket filter
-    if (!matchesAmountBracket(exp.amount, activeAmountBracket)) {
-      return false;
-    }
+  const totalFilteredAmount = useMemo(
+    () => sumBy(filteredExpenses, (e) => e.amount),
+    [filteredExpenses],
+  );
 
-    return true;
-  });
+  const handleSelectExpense = useCallback((item: Expense) => {
+    setSelectedExpense(item);
+  }, []);
 
-  // Apply sorting
-  filteredExpenses = [...filteredExpenses].sort((a, b) => {
-    switch (filters.sortBy) {
-      case 'date_asc':
-        return new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime();
-      case 'amount_desc':
-        return b.amount - a.amount;
-      case 'amount_asc':
-        return a.amount - b.amount;
-      case 'date_desc':
-      default:
-        return new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime();
-    }
-  });
+  const handleCloseModal = useCallback(() => {
+    setSelectedExpense(null);
+  }, []);
 
-  const totalFilteredAmount = sumBy(filteredExpenses, (e) => e.amount);
+  const handleDeleteExpense = useCallback(
+    (id: string) => {
+      deleteExpense(id);
+      setSelectedExpense(null);
+    },
+    [deleteExpense],
+  );
+
+  const keyExtractor = useCallback((item: Expense) => item.id, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: Expense }) => (
+      <ExpenseItem
+        expense={item}
+        category={categoryMap.get(item.category_id)}
+        member={memberMap.get(item.paid_by_member_id)}
+        currency={family.currency}
+        onPress={handleSelectExpense}
+      />
+    ),
+    [categoryMap, memberMap, family.currency, handleSelectExpense],
+  );
 
   const toggleSort = () => {
     switch (filters.sortBy) {
@@ -571,22 +614,10 @@ export default function LedgerScreen() {
         {/* Expense List */}
         <FlatList
           data={filteredExpenses}
-          keyExtractor={(item) => item.id}
+          keyExtractor={keyExtractor}
           contentContainerStyle={{ padding: spacing.lg, paddingBottom: 130 }}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => {
-            const cat = categories.find((c) => c.id === item.category_id);
-            const mem = members.find((m) => m.id === item.paid_by_member_id);
-            return (
-              <ExpenseItem
-                expense={item}
-                category={cat}
-                member={mem}
-                currency={family.currency}
-                onPress={() => setSelectedExpense(item)}
-              />
-            );
-          }}
+          renderItem={renderItem}
           ListEmptyComponent={
             <Card
               padding="lg"
@@ -637,11 +668,11 @@ export default function LedgerScreen() {
         <ExpenseDetailModal
           visible={!!selectedExpense}
           expense={selectedExpense}
-          category={categories.find((c) => c.id === selectedExpense?.category_id)}
-          member={members.find((m) => m.id === selectedExpense?.paid_by_member_id)}
+          category={selectedExpense ? categoryMap.get(selectedExpense.category_id) : undefined}
+          member={selectedExpense ? memberMap.get(selectedExpense.paid_by_member_id) : undefined}
           currency={family.currency}
-          onClose={() => setSelectedExpense(null)}
-          onDelete={deleteExpense}
+          onClose={handleCloseModal}
+          onDelete={handleDeleteExpense}
         />
 
         {/* Detailed Senior-Accessible Filter Modal */}

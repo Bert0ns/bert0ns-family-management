@@ -103,7 +103,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
         {headNodes}
       </head>
-      <body {...bodyAttributes} style={{ backgroundColor: '#0B1326', margin: 0, padding: 0 }}>
+      <body {...bodyAttributes} style={{ margin: 0, padding: 0 }}>
         {children}
         {bodyNodes}
       </body>

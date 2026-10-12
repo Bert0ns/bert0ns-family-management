@@ -100,6 +100,11 @@ export const Input: React.FC<InputProps> = ({
         <TextInput
           placeholderTextColor={theme.colors.textMuted}
           style={[inputStyle, style]}
+          accessibilityLabel={props.accessibilityLabel || label || props.placeholder}
+          accessibilityState={{
+            disabled: props.editable === false,
+            ...props.accessibilityState,
+          }}
           onFocus={(e) => {
             setIsFocused(true);
             onFocus?.(e);

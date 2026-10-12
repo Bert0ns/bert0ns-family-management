@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TranslationSchema } from './types';
 import { en } from './en';
@@ -14,9 +14,33 @@ interface I18nContextType {
 
 const STORAGE_KEY = '@bert0ns_family_app_locale';
 
-const DICTIONARIES: Record<SupportedLocale, TranslationSchema> = {
+export function deepMergeDictionaries<T extends Record<string, any>>(
+  base: T,
+  override: Partial<T> | Record<string, any>,
+): T {
+  const result = { ...base } as any;
+  for (const key of Object.keys(override)) {
+    const overrideVal = override[key];
+    const baseVal = base[key];
+    if (
+      overrideVal !== undefined &&
+      overrideVal !== null &&
+      typeof overrideVal === 'object' &&
+      !Array.isArray(overrideVal) &&
+      typeof baseVal === 'object' &&
+      !Array.isArray(baseVal)
+    ) {
+      result[key] = deepMergeDictionaries(baseVal, overrideVal);
+    } else if (overrideVal !== undefined && overrideVal !== '') {
+      result[key] = overrideVal;
+    }
+  }
+  return result;
+}
+
+export const DICTIONARIES: Record<SupportedLocale, TranslationSchema> = {
   en,
-  it,
+  it: deepMergeDictionaries(en, it),
 };
 
 export function getInitialLocale(): SupportedLocale {
@@ -30,13 +54,21 @@ export function getInitialLocale(): SupportedLocale {
       // Ignore localStorage read errors
     }
     try {
-      const navLang = window.navigator?.language || '';
-      if (navLang.toLowerCase().startsWith('it')) {
-        return 'it';
+      const navLang = window.navigator?.language;
+      if (typeof navLang === 'string' && navLang.length > 0) {
+        return navLang.toLowerCase().startsWith('it') ? 'it' : 'en';
       }
     } catch {
       // Ignore navigator errors
     }
+  }
+  try {
+    const deviceLocale = Intl.DateTimeFormat().resolvedOptions().locale;
+    if (deviceLocale && deviceLocale.toLowerCase().startsWith('it')) {
+      return 'it';
+    }
+  } catch {
+    // Ignore Intl errors
   }
   return 'en';
 }
@@ -60,14 +92,23 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
-  const setLocale = (newLocale: SupportedLocale) => {
+  const setLocale = useCallback((newLocale: SupportedLocale) => {
     setLocaleState(newLocale);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, newLocale);
+      } catch {
+        // Ignore localStorage write errors
+      }
+    }
     AsyncStorage.setItem(STORAGE_KEY, newLocale).catch(() => {});
-  };
+  }, []);
 
   const t = DICTIONARIES[locale] || en;
 
-  return <I18nContext.Provider value={{ locale, setLocale, t }}>{children}</I18nContext.Provider>;
+  const value = useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 };
 
 export const useI18n = () => useContext(I18nContext);

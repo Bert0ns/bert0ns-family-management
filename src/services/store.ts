@@ -537,29 +537,44 @@ export const useAppStore = create<AppState>()(
         const uploaderMember =
           state.members.find((m) => m.id === state.currentMemberId) || state.members[0];
 
+        // Pre-build index for members and categories to provide O(1) lookups
+        const memberByName = new Map<string, FamilyMember>();
+        state.members.forEach((m) => {
+          memberByName.set(m.display_name.toLowerCase(), m);
+        });
+
+        const categoryByName = new Map<string, Category>();
+        const categoryById = new Map<string, Category>();
+        const categoryByMappedKey = new Map<string, Category>();
+        state.categories.forEach((c) => {
+          categoryByName.set(c.name.toLowerCase().trim(), c);
+          categoryById.set(c.id.toLowerCase(), c);
+          const keyFromId = CATEGORY_I18N_KEY_MAP[c.id.toLowerCase()];
+          if (keyFromId && !categoryByMappedKey.has(keyFromId)) {
+            categoryByMappedKey.set(keyFromId, c);
+          }
+          const keyFromName = CATEGORY_I18N_KEY_MAP[c.name.toLowerCase().trim()];
+          if (keyFromName && !categoryByMappedKey.has(keyFromName)) {
+            categoryByMappedKey.set(keyFromName, c);
+          }
+        });
+        const fallbackCat =
+          state.categories.find((c) => c.id === 'cat_other') || state.categories[0];
+
         const newExpenses: Expense[] = report.expenses.map((rawExp) => {
           let paidMember = uploaderMember;
           if (rawExp.paid_by) {
-            const found = state.members.find(
-              (m) => m.display_name.toLowerCase() === rawExp.paid_by?.toLowerCase(),
-            );
+            const found = memberByName.get(rawExp.paid_by.toLowerCase());
             if (found) paidMember = found;
           }
 
           const rawCat = rawExp.category ? rawExp.category.toLowerCase().trim() : '';
           const mappedKey = CATEGORY_I18N_KEY_MAP[rawCat];
           const matchedCat =
-            state.categories.find((c) => c.name.toLowerCase().trim() === rawCat) ||
-            state.categories.find((c) => c.id.toLowerCase() === rawCat) ||
-            (mappedKey
-              ? state.categories.find(
-                  (c) =>
-                    CATEGORY_I18N_KEY_MAP[c.id.toLowerCase()] === mappedKey ||
-                    CATEGORY_I18N_KEY_MAP[c.name.toLowerCase().trim()] === mappedKey,
-                )
-              : undefined) ||
-            state.categories.find((c) => c.id === 'cat_other') ||
-            state.categories[0];
+            categoryByName.get(rawCat) ||
+            categoryById.get(rawCat) ||
+            (mappedKey ? categoryByMappedKey.get(mappedKey) : undefined) ||
+            fallbackCat;
 
           const now = new Date().toISOString();
           return {
@@ -651,9 +666,8 @@ export const useAppStore = create<AppState>()(
             }
           });
 
-          const sorted = Array.from(map.values()).sort(
-            (a, b) =>
-              new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime(),
+          const sorted = Array.from(map.values()).sort((a, b) =>
+            b.transaction_date.localeCompare(a.transaction_date),
           );
           return { expenses: sorted };
         });
