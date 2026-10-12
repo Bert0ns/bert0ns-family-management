@@ -105,6 +105,10 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ visible, onC
               <TouchableOpacity
                 key={ic}
                 onPress={() => setSelectedIcon(ic)}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={ic}
                 style={{
                   width: 44,
                   height: 44,
@@ -148,6 +152,10 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ visible, onC
               <TouchableOpacity
                 key={col}
                 onPress={() => setSelectedColor(col)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={col}
                 style={{
                   width: 36,
                   height: 36,

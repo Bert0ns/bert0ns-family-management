@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName } from '@/i18n';
@@ -10,192 +10,205 @@ interface ExpenseItemProps {
   category?: Category;
   member?: FamilyMember;
   currency?: string;
-  onPress: () => void;
+  onPress?: ((expense: Expense) => void) | (() => void);
 }
 
-export const ExpenseItem: React.FC<ExpenseItemProps> = ({
-  expense,
-  category,
-  member,
-  currency = '€',
-  onPress,
-}) => {
-  const { theme, spacing, radius, typography } = useTheme();
-  const { t, locale } = useI18n();
+// Hoist date formatters to prevent allocating Intl instances per render
+const DATE_FORMATTERS: Record<string, Intl.DateTimeFormat> = {
+  it: new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short' }),
+  en: new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short' }),
+};
 
-  const catColor = category?.color || theme.colors.brand;
-  const catIcon = category?.icon || 'HelpCircle';
-  const catName = category ? getLocalizedCategoryName(category, t) : t.categories.other;
-  const memberName = member?.display_name || '?';
+function formatExpenseDate(dateStr: string, locale: string): string {
+  const formatter = locale === 'it' ? DATE_FORMATTERS.it : DATE_FORMATTERS.en;
+  try {
+    return formatter.format(new Date(dateStr));
+  } catch {
+    return dateStr;
+  }
+}
 
-  const dateLocale = locale === 'it' ? 'it-IT' : 'en-US';
-  const formattedDate = new Date(expense.transaction_date).toLocaleDateString(dateLocale, {
-    day: 'numeric',
-    month: 'short',
-  });
+export const ExpenseItem: React.FC<ExpenseItemProps> = React.memo(
+  ({ expense, category, member, currency = '€', onPress }) => {
+    const { theme, spacing, radius, typography } = useTheme();
+    const { t, locale } = useI18n();
 
-  const webGlassStyles =
-    Platform.OS === 'web'
-      ? ({
-          cursor: 'pointer',
-          transition: 'all 0.15s ease',
-        } as any)
-      : {};
+    const catColor = category?.color || theme.colors.brand;
+    const catIcon = category?.icon || 'HelpCircle';
+    const catName = category ? getLocalizedCategoryName(category, t) : t.categories.other;
+    const memberName = member?.display_name || '?';
 
-  return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${expense.merchant_name}, ${currency}${expense.amount.toFixed(2)}`}
-      style={[
-        {
-          flexDirection: 'row',
-          alignItems: 'center',
-          minHeight: 64,
-          paddingVertical: spacing.sm + 2,
-          paddingHorizontal: spacing.sm + 4,
-          backgroundColor: theme.colors.card,
-          borderRadius: radius.xl,
-          borderWidth: 1.5,
-          borderColor: theme.colors.cardBorder,
-          marginBottom: spacing.sm,
-          ...webGlassStyles,
-        },
-      ]}
-    >
-      {/* Category Icon */}
-      <View
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: radius.lg,
-          backgroundColor: `${catColor}18`,
-          borderWidth: 1.5,
-          borderColor: `${catColor}30`,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginRight: spacing.sm + 2,
-          flexShrink: 0,
-        }}
+    const formattedDate = formatExpenseDate(expense.transaction_date, locale);
+
+    const handlePress = useCallback(() => {
+      onPress?.(expense);
+    }, [onPress, expense]);
+
+    const webGlassStyles =
+      Platform.OS === 'web'
+        ? ({
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          } as any)
+        : {};
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityLabel={`${expense.merchant_name}, ${currency}${expense.amount.toFixed(2)}`}
+        style={[
+          {
+            flexDirection: 'row',
+            alignItems: 'center',
+            minHeight: 64,
+            paddingVertical: spacing.sm + 2,
+            paddingHorizontal: spacing.sm + 4,
+            backgroundColor: theme.colors.card,
+            borderRadius: radius.xl,
+            borderWidth: 1.5,
+            borderColor: theme.colors.cardBorder,
+            marginBottom: spacing.sm,
+            ...webGlassStyles,
+          },
+        ]}
       >
-        <IconHelper name={catIcon} size={20} color={catColor} />
-      </View>
+        {/* Category Icon */}
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: radius.lg,
+            backgroundColor: `${catColor}18`,
+            borderWidth: 1.5,
+            borderColor: `${catColor}30`,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: spacing.sm + 2,
+            flexShrink: 0,
+          }}
+        >
+          <IconHelper name={catIcon} size={20} color={catColor} />
+        </View>
 
-      {/* Details */}
-      <View style={{ flex: 1, minWidth: 0, marginRight: spacing.xs }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+        {/* Details */}
+        <View style={{ flex: 1, minWidth: 0, marginRight: spacing.xs }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Text
+              style={{
+                color: theme.colors.textPrimary,
+                fontSize: typography.fontSizes.md,
+                fontWeight: typography.fontWeights.bold,
+                flex: 1,
+                minWidth: 0,
+              }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {expense.merchant_name}
+            </Text>
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+            <Text
+              style={{
+                color: theme.colors.textSecondary,
+                fontSize: typography.fontSizes.xs,
+                fontWeight: typography.fontWeights.medium,
+                flexShrink: 1,
+                minWidth: 0,
+              }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {catName}
+            </Text>
+            <Text
+              style={{
+                color: theme.colors.textMuted,
+                fontSize: typography.fontSizes.xs,
+                flexShrink: 0,
+              }}
+            >
+              •
+            </Text>
+            <Text
+              style={{
+                color: theme.colors.textSecondary,
+                fontSize: typography.fontSizes.xs,
+                fontWeight: typography.fontWeights.medium,
+                flexShrink: 0,
+              }}
+            >
+              {formattedDate}
+            </Text>
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
+            <View
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: 3,
+                backgroundColor: member?.color_code || theme.colors.brand,
+                flexShrink: 0,
+              }}
+            />
+            <Text
+              style={{
+                color: theme.colors.textMuted,
+                fontSize: 11,
+                fontWeight: typography.fontWeights.medium,
+                flexShrink: 1,
+                minWidth: 0,
+              }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {memberName}
+            </Text>
+          </View>
+        </View>
+
+        {/* Amount */}
+        <View
+          style={{
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            flexShrink: 0,
+            marginLeft: spacing.xs,
+          }}
+        >
           <Text
             style={{
               color: theme.colors.textPrimary,
-              fontSize: typography.fontSizes.md,
-              fontWeight: typography.fontWeights.bold,
-              flex: 1,
-              minWidth: 0,
+              fontSize: typography.fontSizes.lg,
+              fontWeight: typography.fontWeights.heavy,
             }}
             numberOfLines={1}
-            ellipsizeMode="tail"
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
           >
-            {expense.merchant_name}
+            {currency}
+            {expense.amount.toFixed(2)}
           </Text>
-        </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-          <Text
-            style={{
-              color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              fontWeight: typography.fontWeights.medium,
-              flexShrink: 1,
-              minWidth: 0,
-            }}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {catName}
-          </Text>
           <Text
             style={{
               color: theme.colors.textMuted,
               fontSize: typography.fontSizes.xs,
-              flexShrink: 0,
-            }}
-          >
-            •
-          </Text>
-          <Text
-            style={{
-              color: theme.colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              fontWeight: typography.fontWeights.medium,
-              flexShrink: 0,
-            }}
-          >
-            {formattedDate}
-          </Text>
-        </View>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
-          <View
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: 3,
-              backgroundColor: member?.color_code || theme.colors.brand,
-              flexShrink: 0,
-            }}
-          />
-          <Text
-            style={{
-              color: theme.colors.textMuted,
-              fontSize: 11,
-              fontWeight: typography.fontWeights.medium,
-              flexShrink: 1,
-              minWidth: 0,
+              fontWeight: typography.fontWeights.semibold,
+              marginTop: 2,
             }}
             numberOfLines={1}
-            ellipsizeMode="tail"
           >
-            {memberName}
+            {expense.payment_method || 'Standard'}
           </Text>
         </View>
-      </View>
+      </TouchableOpacity>
+    );
+  },
+);
 
-      {/* Amount */}
-      <View
-        style={{
-          alignItems: 'flex-end',
-          justifyContent: 'center',
-          flexShrink: 0,
-          marginLeft: spacing.xs,
-        }}
-      >
-        <Text
-          style={{
-            color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.lg,
-            fontWeight: typography.fontWeights.heavy,
-          }}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.75}
-        >
-          {currency}
-          {expense.amount.toFixed(2)}
-        </Text>
-
-        <Text
-          style={{
-            color: theme.colors.textMuted,
-            fontSize: typography.fontSizes.xs,
-            fontWeight: typography.fontWeights.semibold,
-            marginTop: 2,
-          }}
-          numberOfLines={1}
-        >
-          {expense.payment_method || 'Standard'}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-};
+ExpenseItem.displayName = 'ExpenseItem';

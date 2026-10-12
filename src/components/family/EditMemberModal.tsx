@@ -7,6 +7,7 @@ import { FamilyMember, UserRole, Expense } from '@/types';
 import { Input } from '@/components/common/Input';
 import { FormModal } from '@/components/common/FormModal';
 import { Button } from '@/components/common/Button';
+import { hexToRgba } from '@/utils/color';
 
 interface EditMemberModalProps {
   visible: boolean;
@@ -158,6 +159,9 @@ const EditMemberContent: React.FC<EditMemberContentProps> = ({
                 key={opt.role}
                 onPress={() => setRole(opt.role)}
                 activeOpacity={0.7}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={`${opt.title}, ${opt.desc}`}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -176,7 +180,9 @@ const EditMemberContent: React.FC<EditMemberContentProps> = ({
                     width: 32,
                     height: 32,
                     borderRadius: radius.full,
-                    backgroundColor: isSelected ? `${theme.colors.brand}20` : theme.colors.surface,
+                    backgroundColor: isSelected
+                      ? hexToRgba(theme.colors.brand, 0.15)
+                      : theme.colors.surface,
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
@@ -241,6 +247,10 @@ const EditMemberContent: React.FC<EditMemberContentProps> = ({
               <TouchableOpacity
                 key={mc.name}
                 onPress={() => setColorCode(mc.bg)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={mc.name}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={{
                   width: 36,
                   height: 36,

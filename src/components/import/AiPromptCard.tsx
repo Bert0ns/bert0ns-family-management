@@ -313,6 +313,7 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
           onPress={onOpenPasteModal}
           activeOpacity={0.7}
           accessibilityRole="button"
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={{
             marginTop: spacing.sm,
             flexDirection: 'row',
@@ -400,6 +401,7 @@ export const AiPromptCard: React.FC<AiPromptCardProps> = ({
                 onPress={() => setModalVisible(false)}
                 accessibilityRole="button"
                 accessibilityLabel={t.common.close}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={{
                   width: 36,
                   height: 36,

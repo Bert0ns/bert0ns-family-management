@@ -42,14 +42,12 @@ export default function SettingsScreen() {
 
   const { t, locale, setLocale } = useI18n();
 
-  const {
-    family,
-    notificationPreferences,
-    updateNotificationPreferences,
-    updateFamilySettings,
-    resetToSampleData,
-    clearAllExpenses,
-  } = useAppStore();
+  const family = useAppStore((s) => s.family);
+  const notificationPreferences = useAppStore((s) => s.notificationPreferences);
+  const updateNotificationPreferences = useAppStore((s) => s.updateNotificationPreferences);
+  const updateFamilySettings = useAppStore((s) => s.updateFamilySettings);
+  const resetToSampleData = useAppStore((s) => s.resetToSampleData);
+  const clearAllExpenses = useAppStore((s) => s.clearAllExpenses);
 
   const [isEditingFamilyName, setIsEditingFamilyName] = useState(false);
   const [familyNameInput, setFamilyNameInput] = useState(family.name);
