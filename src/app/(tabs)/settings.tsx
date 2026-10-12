@@ -31,7 +31,6 @@ import { exportAndShareFile } from '@/services/fileExporter';
 import { authService } from '@/services/authService';
 import { syncEngine } from '@/services/syncEngine';
 import { realtimeSync } from '@/services/realtimeSync';
-import { migrationService } from '@/services/migrationService';
 import { pushNotificationService } from '@/services/pushNotificationService';
 import { AuthModal } from '@/components/sync/AuthModal';
 import { FamilyPairingModal } from '@/components/sync/FamilyPairingModal';
@@ -56,35 +55,34 @@ export default function SettingsScreen() {
   const [showPairingModal, setShowPairingModal] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
+  const pushEnabled = notificationPreferences.push_enabled;
+
   useEffect(() => {
+    let isMounted = true;
+
     authService.getUser().then((user) => {
-      setUserEmail(user?.email || null);
-      if (user && family?.id) {
-        realtimeSync.startRealtimeSync(family.id);
-        if (Platform.OS !== 'web' && notificationPreferences.push_enabled) {
+      if (isMounted) {
+        setUserEmail(user?.email || null);
+        if (user && Platform.OS !== 'web' && pushEnabled) {
           pushNotificationService.registerForPushNotificationsAsync(user.id);
         }
       }
     });
 
-    const sub = authService.onAuthStateChange(async (session, user) => {
-      setUserEmail(user?.email || null);
-      if (user && family?.id) {
-        setShowAuthModal(false);
-        if (session) {
-          await migrationService.migrateLocalDataToSupabase(family.id, user.id);
+    const sub = authService.onAuthStateChange((_session, user) => {
+      if (isMounted) {
+        setUserEmail(user?.email || null);
+        if (user) {
+          setShowAuthModal(false);
         }
-        realtimeSync.startRealtimeSync(family.id);
-        if (Platform.OS !== 'web' && notificationPreferences.push_enabled) {
-          pushNotificationService.registerForPushNotificationsAsync(user.id);
-        }
-      } else {
-        realtimeSync.stopRealtimeSync();
       }
     });
 
-    return () => sub.unsubscribe();
-  }, [family?.id, notificationPreferences.push_enabled]);
+    return () => {
+      isMounted = false;
+      sub.unsubscribe();
+    };
+  }, [pushEnabled]);
 
   const handleManualSync = async () => {
     await syncEngine.flushOutbox();
