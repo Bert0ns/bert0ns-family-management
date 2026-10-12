@@ -110,7 +110,9 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = React.memo(
               </View>
               <TouchableOpacity
                 onPress={onClose}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityRole="button"
+                accessibilityLabel={t.common.close}
                 style={{ flexShrink: 0 }}
               >
                 <X size={24} color={theme.colors.textSecondary} />

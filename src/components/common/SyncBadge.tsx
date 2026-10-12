@@ -81,7 +81,9 @@ export const SyncBadge: React.FC<SyncBadgeProps> = ({ onPress, showLabel = true 
     <TouchableOpacity
       activeOpacity={0.75}
       onPress={handlePress}
+      accessibilityRole="button"
       accessibilityLabel={`Sync: ${label}`}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       style={{
         flexDirection: 'row',
         alignItems: 'center',

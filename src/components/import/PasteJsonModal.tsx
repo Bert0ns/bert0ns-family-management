@@ -143,6 +143,7 @@ export const PasteJsonModal: React.FC<PasteJsonModalProps> = ({
               onPress={onClose}
               accessibilityRole="button"
               accessibilityLabel={t.common.close}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               style={{
                 width: 36,
                 height: 36,
@@ -176,6 +177,7 @@ export const PasteJsonModal: React.FC<PasteJsonModalProps> = ({
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={t.import.pasteFromClipboard}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -204,6 +206,7 @@ export const PasteJsonModal: React.FC<PasteJsonModalProps> = ({
                   activeOpacity={0.7}
                   accessibilityRole="button"
                   accessibilityLabel="Clear"
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -246,6 +249,7 @@ export const PasteJsonModal: React.FC<PasteJsonModalProps> = ({
                 }}
                 placeholder={t.import.pasteJsonPlaceholder}
                 placeholderTextColor={theme.colors.textSecondary}
+                accessibilityLabel={t.import.pasteJsonPlaceholder}
                 style={{
                   color: theme.colors.textPrimary,
                   fontSize: typography.fontSizes.sm,
