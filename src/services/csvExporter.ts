@@ -4,7 +4,11 @@ function escapeCell(val: string | number | boolean | undefined): string {
   if (val === undefined || val === null) return '""';
   let str = String(val);
   // Neutralize CSV Formula Injection (CWE-1236)
-  if (/^[=+\-@\t\r]/.test(str)) {
+  // Formula execution characters: =, +, -, @, \t, \r, |, %
+  // Strip leading whitespace, tabs, and BOMs before testing
+  const formulaChars = /^[=+\-@\t\r|%]/;
+  const stripped = str.replace(/^[\s\uFEFF]+/, '');
+  if (formulaChars.test(str) || formulaChars.test(stripped)) {
     str = `'${str}`;
   }
   str = str.replace(/"/g, '""');
@@ -56,27 +60,6 @@ export class CsvExporter {
     });
 
     return [headers.join(','), ...rows].join('\n');
-  }
-
-  downloadCsv(csvContent: string, fileName: string): void {
-    if (typeof document !== 'undefined' && document?.body) {
-      // Prepend UTF-8 BOM so spreadsheet applications (Excel, Numbers) open UTF-8 chars (e.g. €) correctly
-      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        if (typeof document !== 'undefined' && document?.body && document.body.contains(link)) {
-          document.body.removeChild(link);
-        }
-        if (typeof URL.revokeObjectURL === 'function') {
-          URL.revokeObjectURL(url);
-        }
-      }, 100);
-    }
   }
 }
 

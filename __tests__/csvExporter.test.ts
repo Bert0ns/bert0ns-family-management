@@ -1,4 +1,4 @@
-import { CsvExporter, csvExporter } from '@/services/csvExporter';
+import { CsvExporter } from '@/services/csvExporter';
 import { Expense, Category, FamilyMember } from '@/types';
 
 describe('CsvExporter (Unit Tests & Edge Cases)', () => {
@@ -109,6 +109,19 @@ describe('CsvExporter (Unit Tests & Edge Cases)', () => {
         is_recurring: false,
         created_at: '2026-08-08T00:00:00Z',
       },
+      {
+        id: 'e5',
+        family_id: 'fam_1',
+        paid_by_member_id: 'mem_1',
+        category_id: 'cat_1',
+        transaction_date: '2026-08-09',
+        merchant_name: '|pipecommand',
+        amount: 30.0,
+        notes: '%SystemRoot%\\notepad.exe',
+        payment_method: 'Standard',
+        is_recurring: false,
+        created_at: '2026-08-09T00:00:00Z',
+      },
     ];
 
     const csv = exporter.generateCsv(injectionExpenses, mockCategories, mockMembers, '€');
@@ -118,6 +131,70 @@ describe('CsvExporter (Unit Tests & Edge Cases)', () => {
     expect(csv).toContain('"\'@admin"');
     expect(csv).toContain('"\'\ttabbed"');
     expect(csv).toContain('"\'\rcarriage"');
+    expect(csv).toContain('"\'|pipecommand"');
+    expect(csv).toContain('"\'%SystemRoot%\\notepad.exe"');
+  });
+
+  it('neutralizes formula injection characters disguised with leading whitespace, tabs, and BOMs', () => {
+    const hiddenInjections: Expense[] = [
+      {
+        id: 'h1',
+        family_id: 'fam_1',
+        paid_by_member_id: 'mem_1',
+        category_id: 'cat_1',
+        transaction_date: '2026-08-10',
+        merchant_name: '   =cmd|calc!A0',
+        amount: 15.0,
+        notes: '\t+formula',
+        payment_method: '  -dangerous',
+        is_recurring: false,
+        created_at: '2026-08-10T00:00:00Z',
+      },
+      {
+        id: 'h2',
+        family_id: 'fam_1',
+        paid_by_member_id: 'mem_1',
+        category_id: 'cat_1',
+        transaction_date: '2026-08-11',
+        merchant_name: '\uFEFF=1+1',
+        amount: 25.0,
+        notes: '   |malicious_pipe',
+        payment_method: '   %TEMP%',
+        is_recurring: false,
+        created_at: '2026-08-11T00:00:00Z',
+      },
+      {
+        id: 'h3',
+        family_id: 'fam_1',
+        paid_by_member_id: 'mem_1',
+        category_id: 'cat_1',
+        transaction_date: '2026-08-12',
+        merchant_name: '  @SUM(A1:A5)',
+        amount: 35.0,
+        notes: '  Regular note with leading spaces',
+        payment_method: 'Standard',
+        is_recurring: false,
+        created_at: '2026-08-12T00:00:00Z',
+      },
+    ];
+
+    const csv = exporter.generateCsv(hiddenInjections, mockCategories, mockMembers, '€');
+    // Leading spaces before =
+    expect(csv).toContain('"\'   =cmd|calc!A0"');
+    // Leading tab before +
+    expect(csv).toContain('"\'\t+formula"');
+    // Leading spaces before -
+    expect(csv).toContain('"\'  -dangerous"');
+    // Leading BOM before =
+    expect(csv).toContain('"\'\uFEFF=1+1"');
+    // Leading spaces before |
+    expect(csv).toContain('"\'   |malicious_pipe"');
+    // Leading spaces before %
+    expect(csv).toContain('"\'   %TEMP%"');
+    // Leading spaces before @
+    expect(csv).toContain('"\'  @SUM(A1:A5)"');
+    // Harmless text with leading spaces should NOT be prepended with a quote
+    expect(csv).toContain('"  Regular note with leading spaces"');
   });
 
   it('handles empty expense list returning only header row', () => {
@@ -127,69 +204,5 @@ describe('CsvExporter (Unit Tests & Edge Cases)', () => {
     expect(lines[0]).toBe(
       'Transaction ID,Date,Merchant,Amount (€),Category,Paid By,Payment Method,Is Recurring,Notes',
     );
-  });
-
-  it('handles downloadCsv safely when document is undefined', () => {
-    const originalDocument = (globalThis as any).document;
-    try {
-      (globalThis as any).document = undefined;
-      expect(() => {
-        csvExporter.downloadCsv('sample', 'test.csv');
-      }).not.toThrow();
-    } finally {
-      (globalThis as any).document = originalDocument;
-    }
-  });
-
-  it('executes downloadCsv and runs cleanup timeout in simulated DOM environment', async () => {
-    const originalDocument = (globalThis as any).document;
-    const originalUrl = (globalThis as any).URL;
-    const originalBlob = (globalThis as any).Blob;
-
-    const clickMock = jest.fn();
-    const appendMock = jest.fn();
-    const removeMock = jest.fn();
-    const containsMock = jest.fn().mockReturnValue(true);
-    const revokeMock = jest.fn();
-
-    const mockLink = {
-      href: '',
-      setAttribute: jest.fn(),
-      click: clickMock,
-    };
-
-    (globalThis as any).document = {
-      createElement: jest.fn(() => mockLink),
-      body: {
-        appendChild: appendMock,
-        removeChild: removeMock,
-        contains: containsMock,
-      },
-    };
-
-    (globalThis as any).URL = {
-      createObjectURL: jest.fn(() => 'blob://test-url'),
-      revokeObjectURL: revokeMock,
-    };
-
-    (globalThis as any).Blob = jest.fn((content, options) => ({ content, options }));
-
-    try {
-      csvExporter.downloadCsv('sample,csv,data', 'export.csv');
-
-      expect(appendMock).toHaveBeenCalledWith(mockLink);
-      expect(mockLink.setAttribute).toHaveBeenCalledWith('download', 'export.csv');
-      expect(clickMock).toHaveBeenCalled();
-
-      // Wait for cleanup timeout to trigger
-      await new Promise((resolve) => setTimeout(resolve, 150));
-
-      expect(removeMock).toHaveBeenCalledWith(mockLink);
-      expect(revokeMock).toHaveBeenCalledWith('blob://test-url');
-    } finally {
-      (globalThis as any).document = originalDocument;
-      (globalThis as any).URL = originalUrl;
-      (globalThis as any).Blob = originalBlob;
-    }
   });
 });

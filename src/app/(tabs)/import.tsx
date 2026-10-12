@@ -81,6 +81,12 @@ export default function ImportScreen() {
   };
 
   const handleExportJson = async () => {
+    const safeFamilyName =
+      family.name
+        .trim()
+        .replace(/[/\\?%*:|"<>]/g, '')
+        .replace(/\s+/g, '-')
+        .toLowerCase() || 'family';
     const exportData = {
       family: family.name,
       currency: family.currency,
@@ -89,13 +95,19 @@ export default function ImportScreen() {
     };
 
     const jsonString = JSON.stringify(exportData, null, 2);
-    const fileName = `family-expenses-${family.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
+    const fileName = `family-expenses-${safeFamilyName}-${new Date().toISOString().split('T')[0]}.json`;
     await exportAndShareFile(jsonString, fileName, 'application/json');
   };
 
   const handleExportCsv = async () => {
+    const safeFamilyName =
+      family.name
+        .trim()
+        .replace(/[/\\?%*:|"<>]/g, '')
+        .replace(/\s+/g, '-')
+        .toLowerCase() || 'family';
     const csvContent = csvExporter.generateCsv(expenses, categories, members, family.currency);
-    const fileName = `family-expenses-${family.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.csv`;
+    const fileName = `family-expenses-${safeFamilyName}-${new Date().toISOString().split('T')[0]}.csv`;
     await exportAndShareFile(csvContent, fileName, 'text/csv');
   };
 
