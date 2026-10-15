@@ -24,7 +24,7 @@ export interface VerifyAndMigrateResult {
 export const authWorkflowService = {
   /**
    * Queries Supabase to see if the user's auth.uid() is already registered in family_members.
-   * SELECT family_id, id FROM public.family_members WHERE user_id = auth.uid() LIMIT 1
+   * SELECT family_id, id FROM public.family_members WHERE user_id = auth.uid() AND deleted_at IS NULL LIMIT 1
    */
   async checkExistingFamilyMembership(
     userId: string,
@@ -37,6 +37,7 @@ export const authWorkflowService = {
         .from('family_members')
         .select('family_id, id')
         .eq('user_id', userId)
+        .is('deleted_at', null)
         .limit(1)
         .maybeSingle();
 
@@ -48,10 +49,11 @@ export const authWorkflowService = {
         return null;
       }
       return data || null;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       authLogger.warn('Exception querying family membership for user', {
         userId,
-        error: err?.message,
+        error: message,
       });
       return null;
     }
@@ -155,10 +157,11 @@ export const authWorkflowService = {
           user,
           actionTaken: 'hydrated_existing',
         };
-      } catch (hydrateErr: any) {
+      } catch (hydrateErr: unknown) {
+        const message = hydrateErr instanceof Error ? hydrateErr.message : String(hydrateErr);
         authLogger.error('Failed to hydrate store from existing cloud family delta, rolling back', {
           familyId: existingFamilyId,
-          error: hydrateErr?.message,
+          error: message,
         });
 
         useAppStore.setState(snapshot);
@@ -166,7 +169,7 @@ export const authWorkflowService = {
 
         return {
           success: false,
-          error: hydrateErr?.message || 'Failed to sync existing cloud data',
+          error: message || 'Failed to sync existing cloud data',
         };
       }
     }
@@ -217,9 +220,10 @@ export const authWorkflowService = {
         user,
         actionTaken: 'migrated',
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       authLogger.error('Unexpected exception during auth workflow migration, rolling back', {
-        error: err?.message,
+        error: message,
       });
 
       // Rollback store state
@@ -230,7 +234,7 @@ export const authWorkflowService = {
 
       return {
         success: false,
-        error: err?.message || 'Unexpected migration failure',
+        error: message || 'Unexpected migration failure',
       };
     }
   },

@@ -1,3 +1,4 @@
+import { User, Session } from '@supabase/supabase-js';
 import { authWorkflowService } from '@/services/authWorkflowService';
 import { authService } from '@/services/authService';
 import { migrationService } from '@/services/migrationService';
@@ -47,13 +48,15 @@ jest.mock('@/services/syncEngine', () => ({
 describe('authWorkflowService', () => {
   const mockMembershipQuery = (
     data: { family_id: string; id: string } | null,
-    error: any = null,
+    error: { message: string } | null = null,
   ) => {
     (supabase.from as jest.Mock).mockReturnValue({
       select: jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
-          limit: jest.fn().mockReturnValue({
-            maybeSingle: jest.fn().mockResolvedValue({ data, error }),
+          is: jest.fn().mockReturnValue({
+            limit: jest.fn().mockReturnValue({
+              maybeSingle: jest.fn().mockResolvedValue({ data, error }),
+            }),
           }),
         }),
       }),
@@ -101,6 +104,24 @@ describe('authWorkflowService', () => {
       const res = await authWorkflowService.checkExistingFamilyMembership('user-123');
       expect(res).toEqual(existing);
     });
+
+    it('filters out soft-deleted memberships by checking deleted_at is null', async () => {
+      const isMock = jest.fn().mockReturnValue({
+        limit: jest.fn().mockReturnValue({
+          maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      });
+      const eqMock = jest.fn().mockReturnValue({ is: isMock });
+      const selectMock = jest.fn().mockReturnValue({ eq: eqMock });
+      (supabase.from as jest.Mock).mockReturnValue({ select: selectMock });
+
+      const res = await authWorkflowService.checkExistingFamilyMembership('user-123');
+      expect(res).toBeNull();
+      expect(supabase.from).toHaveBeenCalledWith('family_members');
+      expect(selectMock).toHaveBeenCalledWith('family_id, id');
+      expect(eqMock).toHaveBeenCalledWith('user_id', 'user-123');
+      expect(isMock).toHaveBeenCalledWith('deleted_at', null);
+    });
   });
 
   describe('sendOtp', () => {
@@ -142,8 +163,8 @@ describe('authWorkflowService', () => {
 
     it('returns error if session user ID is missing after verification', async () => {
       (authService.verifyOtp as jest.Mock).mockResolvedValue({
-        session: { user: {} },
-        user: {},
+        session: { user: {} as User } as Session,
+        user: {} as User,
         error: null,
       });
 
@@ -158,8 +179,8 @@ describe('authWorkflowService', () => {
     });
 
     it('resolves existing cloud family on multi-device login without creating duplicate family', async () => {
-      const mockUser = { id: 'user-cloud-123', email: 'partner@example.com' } as any;
-      const mockSession = { user: mockUser } as any;
+      const mockUser = { id: 'user-cloud-123', email: 'partner@example.com' } as unknown as User;
+      const mockSession = { user: mockUser } as unknown as Session;
       const existingMembership = { family_id: 'fam-cloud-existing', id: 'member-existing-id' };
 
       (authService.verifyOtp as jest.Mock).mockResolvedValue({
@@ -199,8 +220,8 @@ describe('authWorkflowService', () => {
 
     it('rolls back store state and signs out if existing cloud family delta hydration throws', async () => {
       const initialFamilyId = useAppStore.getState().family.id;
-      const mockUser = { id: 'user-cloud-123', email: 'partner@example.com' } as any;
-      const mockSession = { user: mockUser } as any;
+      const mockUser = { id: 'user-cloud-123', email: 'partner@example.com' } as unknown as User;
+      const mockSession = { user: mockUser } as unknown as Session;
       const existingMembership = { family_id: 'fam-cloud-existing', id: 'member-existing-id' };
 
       (authService.verifyOtp as jest.Mock).mockResolvedValue({
@@ -227,8 +248,8 @@ describe('authWorkflowService', () => {
     });
 
     it('skips migration when user signs in with intent to join via invite code', async () => {
-      const mockUser = { id: 'user-new-joiner', email: 'invitee@example.com' } as any;
-      const mockSession = { user: mockUser } as any;
+      const mockUser = { id: 'user-new-joiner', email: 'invitee@example.com' } as unknown as User;
+      const mockSession = { user: mockUser } as unknown as Session;
 
       (authService.verifyOtp as jest.Mock).mockResolvedValue({
         session: mockSession,
@@ -258,8 +279,11 @@ describe('authWorkflowService', () => {
     });
 
     it('supports string argument for intent option', async () => {
-      const mockUser = { id: 'user-new-joiner-2', email: 'invitee2@example.com' } as any;
-      const mockSession = { user: mockUser } as any;
+      const mockUser = {
+        id: 'user-new-joiner-2',
+        email: 'invitee2@example.com',
+      } as unknown as User;
+      const mockSession = { user: mockUser } as unknown as Session;
 
       (authService.verifyOtp as jest.Mock).mockResolvedValue({
         session: mockSession,
@@ -282,8 +306,8 @@ describe('authWorkflowService', () => {
     });
 
     it('successfully migrates data and starts realtime sync on valid verification for first-time cloud setup', async () => {
-      const mockUser = { id: 'u1', email: 'test@example.com' } as any;
-      const mockSession = { user: mockUser } as any;
+      const mockUser = { id: 'u1', email: 'test@example.com' } as unknown as User;
+      const mockSession = { user: mockUser } as unknown as Session;
 
       (authService.verifyOtp as jest.Mock).mockResolvedValue({
         session: mockSession,
@@ -317,8 +341,8 @@ describe('authWorkflowService', () => {
 
     it('rolls back store state and signs out if migration fails', async () => {
       const initialFamilyName = useAppStore.getState().family.name;
-      const mockUser = { id: 'u1', email: 'test@example.com' } as any;
-      const mockSession = { user: mockUser } as any;
+      const mockUser = { id: 'u1', email: 'test@example.com' } as unknown as User;
+      const mockSession = { user: mockUser } as unknown as Session;
 
       (authService.verifyOtp as jest.Mock).mockResolvedValue({
         session: mockSession,
@@ -346,8 +370,8 @@ describe('authWorkflowService', () => {
     });
 
     it('rolls back store state and signs out if migration throws an exception', async () => {
-      const mockUser = { id: 'u1', email: 'test@example.com' } as any;
-      const mockSession = { user: mockUser } as any;
+      const mockUser = { id: 'u1', email: 'test@example.com' } as unknown as User;
+      const mockSession = { user: mockUser } as unknown as Session;
 
       (authService.verifyOtp as jest.Mock).mockResolvedValue({
         session: mockSession,
