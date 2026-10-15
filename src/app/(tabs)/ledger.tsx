@@ -396,7 +396,7 @@ export default function LedgerScreen() {
                   style={{
                     paddingHorizontal: spacing.md,
                     paddingVertical: spacing.xs + 3,
-                    borderRadius: radius.full,
+                    borderRadius: radius.sm,
                     backgroundColor: isSelected
                       ? theme.colors.brand
                       : theme.isDark
@@ -442,7 +442,7 @@ export default function LedgerScreen() {
                     gap: 6,
                     paddingVertical: 6,
                     paddingHorizontal: spacing.sm,
-                    borderRadius: radius.full,
+                    borderRadius: radius.sm,
                     backgroundColor: theme.colors.surfaceSubtle,
                     borderWidth: 1.5,
                     borderColor: selectedMember.color_code,
@@ -475,7 +475,7 @@ export default function LedgerScreen() {
                     gap: 6,
                     paddingVertical: 6,
                     paddingHorizontal: spacing.sm,
-                    borderRadius: radius.full,
+                    borderRadius: radius.sm,
                     backgroundColor: theme.colors.surfaceSubtle,
                     borderWidth: 1.5,
                     borderColor: selectedCategory.color,
@@ -508,7 +508,7 @@ export default function LedgerScreen() {
                     gap: 6,
                     paddingVertical: 6,
                     paddingHorizontal: spacing.sm,
-                    borderRadius: radius.full,
+                    borderRadius: radius.sm,
                     backgroundColor: theme.colors.surfaceSubtle,
                     borderWidth: 1.5,
                     borderColor: theme.colors.brand,
@@ -537,7 +537,7 @@ export default function LedgerScreen() {
                   gap: 4,
                   paddingVertical: 6,
                   paddingHorizontal: spacing.sm,
-                  borderRadius: radius.full,
+                  borderRadius: radius.sm,
                   backgroundColor: theme.colors.dangerBg,
                   borderWidth: 1,
                   borderColor: theme.colors.danger,

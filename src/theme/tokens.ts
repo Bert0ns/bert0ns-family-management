@@ -66,32 +66,20 @@ export const Palette = {
     500: '#D946EF',
     600: '#C026D3',
   },
-  nordic: {
-    spruce: '#1C4436', // Deep Forest Spruce
-    spruceLight: '#2D5A4C',
-    sage: '#52B788', // Pine Sage
-    terracotta: '#C87A3E', // Warm Ochre
-    terracottaLight: '#E09453',
-    terracottaBg: '#FBF0E6',
-    sand: '#F8F6F1', // Warm Linen Canvas
-    sandSubtle: '#F1EFEA',
-    carbon: '#121715', // Deep Warm Carbon
-    carbonSurface: '#1A211E',
-  },
   zen: {
     sumi: '#101114',
     charcoal: '#18191E',
-    slate: '#121418', // Kanso mineral slate ground
-    slateSurface: '#1A1D23', // Kanso surface
-    slateElevated: '#22262E', // Kanso elevated
-    slateBorder: '#2C323D', // Kanso border
+    slate: '#121418',
+    slateSurface: '#1A1D23',
+    slateElevated: '#22262E',
+    slateBorder: '#2C323D',
     hankoRed: '#E63946',
     hankoRedDark: '#D63929',
     hankoRedLight: 'rgba(230, 57, 70, 0.12)',
-    bambooSage: '#52B788', // Bamboo shoot sage
+    bambooSage: '#52B788',
     bambooSageDark: '#2E6B4F',
     bambooSageLight: 'rgba(82, 183, 136, 0.14)',
-    bonePaper: '#F4F5F2', // Kanso light ground
+    bonePaper: '#F4F5F2',
     bonePaperSubtle: '#E8EBE4',
     borderSubtle: '#2C323D',
   },
@@ -136,7 +124,7 @@ export const LightTheme = {
     accentWarm: Palette.zen.bambooSageDark,
     accentWarmBg: '#E6EFEA',
     canvasWarm: Palette.zen.bonePaper,
-    background: Palette.zen.bonePaper, // Kanso light ground
+    background: Palette.zen.bonePaper,
     surface: '#FFFFFF',
     surfaceElevated: '#FAFBF9',
     surfaceSubtle: '#E8EBE4',
@@ -180,7 +168,7 @@ export const LightTheme = {
 export const DarkTheme = {
   isDark: true,
   colors: {
-    brand: Palette.zen.bambooSage, // Bamboo Sage #52B788
+    brand: Palette.zen.bambooSage,
     brandSecondary: Palette.indigo[400],
     brandLight: Palette.zen.bambooSageLight,
     brandSecondaryLight: 'rgba(99, 102, 241, 0.18)',
@@ -188,19 +176,19 @@ export const DarkTheme = {
     accentWarm: Palette.zen.bambooSage,
     accentWarmBg: Palette.zen.bambooSageLight,
     canvasWarm: Palette.zen.slate,
-    background: Palette.zen.slate, // Kanso slate ground #121418
-    surface: Palette.zen.slateSurface, // Kanso surface #1A1D23
-    surfaceElevated: Palette.zen.slateElevated, // Kanso elevated #22262E
+    background: Palette.zen.slate,
+    surface: Palette.zen.slateSurface,
+    surfaceElevated: Palette.zen.slateElevated,
     surfaceSubtle: '#15181E',
     surfaceContainer: Palette.zen.slateSurface,
     surfaceContainerHigh: Palette.zen.slateElevated,
     surfaceContainerHighest: Palette.zen.slateBorder,
-    border: Palette.zen.slateBorder, // Kanso subtle border #2C323D
+    border: Palette.zen.slateBorder,
     borderSubtle: 'rgba(255, 255, 255, 0.08)',
     borderTactile: '#38414F',
     textPrimary: '#F0F2F5',
     textSecondary: '#969EAB',
-    textMuted: Palette.neutral[400], // #94A3B8 (WCAG AA compliant)
+    textMuted: Palette.neutral[400],
     textInverse: '#121418',
     success: Palette.zen.bambooSage,
     successBg: Palette.zen.bambooSageLight,
@@ -252,8 +240,8 @@ export const Radius = {
   xxl: 4,
   pill: 4,
   full: 9999,
-  dock: 4, // 4px harmonized with components
-  dockInner: 3, // Inset active tab indicator
+  dock: 4,
+  dockInner: 3,
 };
 
 export const TouchTargets = {

@@ -30,22 +30,28 @@ export const Card: React.FC<CardProps> = ({
   const isElevated = variant === 'elevated' || variant === 'glass';
   const isWeb = Platform.OS === 'web';
 
-  const shadowStyles = isWeb
+  type WebStyle = ViewStyle & {
+    backdropFilter?: string;
+    WebkitBackdropFilter?: string;
+    boxShadow?: string;
+  };
+
+  const shadowStyles: ViewStyle = isWeb
     ? isElevated
-      ? ({
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          boxShadow: theme.isDark
-            ? '0 10px 32px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
-            : '0 8px 28px -2px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-        } as any)
-      : ({
+      ? {
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           boxShadow: theme.isDark
-            ? '0 4px 16px -2px rgba(0, 0, 0, 0.4)'
-            : '0 2px 8px rgba(15, 23, 42, 0.04)',
-        } as any)
+            ? '0 4px 14px rgba(0, 0, 0, 0.35)'
+            : '0 2px 8px rgba(27, 33, 30, 0.04)',
+        }
+      : ({
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          boxShadow: theme.isDark
+            ? '0 2px 8px rgba(0, 0, 0, 0.25)'
+            : '0 1px 4px rgba(27, 33, 30, 0.03)',
+        } as WebStyle)
     : {
         shadowColor: theme.colors.shadow,
         shadowOffset: { width: 0, height: isElevated ? 6 : 2 },

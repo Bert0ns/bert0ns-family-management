@@ -28,7 +28,7 @@ export default function TabsLayout() {
   const { width: windowWidth } = useWindowDimensions();
   const family = useAppStore((s) => s.family);
 
-  // Responsive floating dock dimensions
+  // Floating dock dimensions
   const isWideScreen = windowWidth >= 768;
   const barWidth = isWideScreen ? Math.min(windowWidth - 48, 520) : windowWidth - 28;
   const barLeft = Math.max(14, (windowWidth - barWidth) / 2);
@@ -91,7 +91,7 @@ export default function TabsLayout() {
         style={{
           width: 42,
           height: 36,
-          borderRadius: Radius.dockInner, // Harmonized with component geometry
+          borderRadius: Radius.dockInner,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: focused
@@ -109,17 +109,6 @@ export default function TabsLayout() {
           strokeWidth={focused ? 2.5 : 2}
         />
       </View>
-      {focused && (
-        <View
-          style={{
-            width: 4,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: theme.colors.brand,
-            marginTop: 2,
-          }}
-        />
-      )}
     </View>
   );
 
@@ -141,7 +130,7 @@ export default function TabsLayout() {
             style={[
               StyleSheet.absoluteFill,
               {
-                borderRadius: Radius.dock, // Harmonized with component corner radius
+                borderRadius: Radius.dock,
                 overflow: 'hidden',
                 backgroundColor: theme.colors.dockBg ?? theme.colors.bottomBarBg,
               },
@@ -155,7 +144,7 @@ export default function TabsLayout() {
           width: barWidth,
           height: 60,
           backgroundColor: 'transparent',
-          borderRadius: Radius.dock, // Harmonized with component corner radius
+          borderRadius: Radius.dock,
           borderWidth: 1.5,
           borderColor: theme.colors.dockBorder ?? theme.colors.bottomBarBorder,
           shadowColor: '#000',

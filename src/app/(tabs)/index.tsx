@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, ArrowRight, FileJson, Wallet, Receipt } from 'lucide-react-native';
+import { Plus, FileJson, Wallet, Receipt } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -128,9 +128,7 @@ export default function DashboardScreen() {
             style={{
               color: theme.colors.textSecondary,
               fontSize: typography.fontSizes.sm,
-              fontWeight: typography.fontWeights.bold,
-              textTransform: 'uppercase',
-              letterSpacing: 1,
+              fontWeight: typography.fontWeights.medium,
             }}
             numberOfLines={1}
             ellipsizeMode="tail"
@@ -167,7 +165,7 @@ export default function DashboardScreen() {
             borderColor: theme.colors.borderTactile,
             paddingHorizontal: spacing.md,
             paddingVertical: spacing.xs + 2,
-            borderRadius: radius.full,
+            borderRadius: radius.sm,
             marginTop: spacing.xs,
             gap: 6,
           }}
@@ -214,8 +212,8 @@ export default function DashboardScreen() {
             style={{
               width: 36,
               height: 36,
-              borderRadius: radius.full,
-              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              borderRadius: radius.sm,
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
@@ -386,7 +384,7 @@ export default function DashboardScreen() {
           </Text>
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/ledger')}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 }}
+            style={{ paddingVertical: 4 }}
             accessibilityLabel={t.dashboard.viewAll}
           >
             <Text
@@ -398,7 +396,6 @@ export default function DashboardScreen() {
             >
               {t.dashboard.viewAll}
             </Text>
-            <ArrowRight size={16} color={theme.colors.brand} strokeWidth={2.5} />
           </TouchableOpacity>
         </View>
 
