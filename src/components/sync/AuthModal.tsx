@@ -3,18 +3,29 @@ import { View, Text, ActivityIndicator, TouchableOpacity, Platform } from 'react
 import { Cloud, Mail, KeyRound, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react-native';
 import { FormModal } from '@/components/common/FormModal';
 import { Input } from '@/components/common/Input';
+import { OptionSelector } from '@/components/common/OptionSelector';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
-import { authWorkflowService } from '@/services/authWorkflowService';
+import {
+  authWorkflowService,
+  VerifyAndMigrateResult,
+  AuthIntent,
+} from '@/services/authWorkflowService';
 
-interface AuthModalProps {
+export interface AuthModalProps {
   visible: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (result?: VerifyAndMigrateResult) => void;
+  intent?: AuthIntent;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSuccess }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({
+  visible,
+  onClose,
+  onSuccess,
+  intent = 'create',
+}) => {
   const { theme, spacing, typography, radius } = useTheme();
   const { t } = useI18n();
   const family = useAppStore((s) => s.family);
@@ -22,6 +33,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
+  const [selectedIntent, setSelectedIntent] = useState<AuthIntent | null>(null);
+  const authIntent = selectedIntent ?? intent;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -43,6 +56,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
     setStep('email');
     setEmail('');
     setOtp('');
+    setSelectedIntent(null);
     setIsLoading(false);
     setError(null);
     setSuccess(null);
@@ -85,7 +99,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
     setIsLoading(true);
     setError(null);
 
-    const res = await authWorkflowService.verifyOtpAndMigrate(email, trimmedOtp, family.id);
+    const res = await authWorkflowService.verifyOtpAndMigrate(email, trimmedOtp, family.id, {
+      intent: authIntent,
+    });
     setIsLoading(false);
 
     if (!res.success) {
@@ -93,11 +109,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
       return;
     }
 
-    setSuccess(t.sync.migrateSuccess);
+    const successMsg =
+      res.actionTaken === 'ready_to_join' || authIntent === 'join'
+        ? t.sync.connectedAs
+          ? `${t.sync.connectedAs} ${email}`
+          : t.sync.migrateSuccess
+        : t.sync.migrateSuccess;
+
+    setSuccess(successMsg);
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     closeTimerRef.current = setTimeout(() => {
       handleClose();
-      onSuccess?.();
+      onSuccess?.(res);
     }, 1200);
   };
 
@@ -114,6 +137,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
       cancelTitle={t.common.cancel}
     >
       <View style={{ gap: spacing.md }}>
+        {step === 'email' && (
+          <OptionSelector
+            options={[
+              { label: t.sync.createHouseholdOption, value: 'create' as const },
+              { label: t.sync.joinHouseholdOption, value: 'join' as const },
+            ]}
+            selectedValue={authIntent}
+            onSelect={(val) => setSelectedIntent(val)}
+          />
+        )}
+
         <Text
           style={{
             color: theme.colors.textSecondary,
@@ -121,7 +155,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
             lineHeight: 20,
           }}
         >
-          {step === 'email' ? t.sync.signInSubtitle : `${t.sync.signInSubtitle} (${email})`}
+          {step === 'email'
+            ? authIntent === 'join'
+              ? t.sync.signInJoinSubtitle
+              : t.sync.signInSubtitle
+            : `${authIntent === 'join' ? t.sync.signInJoinSubtitle : t.sync.signInSubtitle} (${email})`}
         </Text>
 
         {error && (

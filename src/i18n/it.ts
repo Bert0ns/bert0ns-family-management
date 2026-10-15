@@ -368,6 +368,10 @@ export const it: TranslationSchema = {
     authRequiredToJoin:
       'Accedi prima con la tua email in Sincronizzazione Cloud prima di unirti a una famiglia.',
     joinedHouseholdTitle: 'Nucleo Familiare Associato',
+    createHouseholdOption: 'Crea / Salva Nucleo',
+    joinHouseholdOption: 'Unisciti a Famiglia Esistente',
+    signInJoinSubtitle: 'Accedi con la tua email per unirti a una famiglia con un codice invito.',
+    signInToJoinPrompt: 'Accedi per Unirti',
   },
   notifications: {
     title: 'Notifiche e Avvisi',

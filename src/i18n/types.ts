@@ -350,6 +350,10 @@ export interface TranslationSchema {
     changeEmailOrResend: string;
     joinedHouseholdTitle: string;
     authRequiredToJoin: string;
+    createHouseholdOption: string;
+    joinHouseholdOption: string;
+    signInJoinSubtitle: string;
+    signInToJoinPrompt: string;
   };
   notifications: {
     title: string;
