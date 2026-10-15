@@ -340,6 +340,16 @@ export const en: TranslationSchema = {
       'Enter the 6-digit verification code from your email, or click the sign-in link.',
     verifyButton: 'Verify & Connect',
     signOutButton: 'Disconnect Cloud',
+    disconnectConfirmTitle: 'Disconnect Cloud Sync',
+    disconnectConfirmMessage:
+      'Disconnecting stops cloud sync. Your local expenses, categories, and settings will remain safe on this device.',
+    disconnectKeepData: 'Disconnect (Keep Data)',
+    disconnectWipeData: 'Wipe Device & Sign Out',
+    disconnectHelperText: 'Disconnecting preserves your offline expenses on this device.',
+    wipeAndSignOutButton: 'Wipe Device Data & Sign Out',
+    wipeAndSignOutConfirmTitle: 'Wipe Device Data & Sign Out?',
+    wipeAndSignOutConfirmMessage:
+      'This will permanently erase all local expenses, categories, and settings from this device and sign out from cloud sync. This cannot be undone.',
     syncNowButton: 'Sync Now',
     statusSynced: 'Synced with Cloud',
     statusSyncing: 'Syncing Changes...',
@@ -367,6 +377,10 @@ export const en: TranslationSchema = {
     changeEmailOrResend: 'Change Email / Resend',
     authRequiredToJoin: 'Please sign in with your email in Cloud Sync before joining a household.',
     joinedHouseholdTitle: 'Joined Household',
+    createHouseholdOption: 'Create / Backup Household',
+    joinHouseholdOption: 'Join Existing Household',
+    signInJoinSubtitle: 'Sign in to join an existing household with an invite code.',
+    signInToJoinPrompt: 'Sign In to Join',
   },
   notifications: {
     title: 'Notifications & Alerts',

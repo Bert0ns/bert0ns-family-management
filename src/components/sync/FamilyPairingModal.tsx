@@ -15,9 +15,14 @@ import { pairingService } from '@/services/pairingService';
 interface FamilyPairingModalProps {
   visible: boolean;
   onClose: () => void;
+  onOpenAuth?: (intent: 'join') => void;
 }
 
-export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible, onClose }) => {
+export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({
+  visible,
+  onClose,
+  onOpenAuth,
+}) => {
   const { theme, spacing, typography, radius } = useTheme();
   const { t } = useI18n();
   const family = useAppStore((s) => s.family);
@@ -28,6 +33,7 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthRequired, setIsAuthRequired] = useState(false);
 
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const regenerateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -73,6 +79,7 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
     uiLogger.info('User triggered regenerate household invite code');
     setIsRegenerating(true);
     setError(null);
+    setIsAuthRequired(false);
 
     const res = await pairingService.regenerateInviteCode(family.id);
     setIsRegenerating(false);
@@ -97,20 +104,24 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
     const code = joinCode.trim().toUpperCase();
     if (code.length < 4) {
       setError(t.sync.invalidCodeError);
+      setIsAuthRequired(false);
       return;
     }
 
     uiLogger.info('User attempting to join household via invite code', { codeLength: code.length });
     setIsJoining(true);
     setError(null);
+    setIsAuthRequired(false);
 
     const res = await pairingService.joinFamilyByInviteCode(code);
     setIsJoining(false);
 
     if (!res.success) {
       if (res.error === 'AUTH_REQUIRED') {
+        setIsAuthRequired(true);
         setError(t.sync.authRequiredToJoin);
       } else {
+        setIsAuthRequired(false);
         setError(res.error || t.sync.invalidCodeError);
       }
       return;
@@ -242,8 +253,6 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
           {error && (
             <View
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
                 gap: spacing.xs,
                 backgroundColor: theme.isDark ? '#451A1A' : '#FEE2E2',
                 padding: spacing.sm,
@@ -251,19 +260,37 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({ visible,
                 marginBottom: spacing.xs,
               }}
             >
-              <AlertCircle size={16} color={theme.colors.danger} />
-              <Text
-                style={{ color: theme.colors.danger, fontSize: typography.fontSizes.xs, flex: 1 }}
-              >
-                {error}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                <AlertCircle size={16} color={theme.colors.danger} />
+                <Text
+                  style={{ color: theme.colors.danger, fontSize: typography.fontSizes.xs, flex: 1 }}
+                >
+                  {error}
+                </Text>
+              </View>
+              {isAuthRequired && onOpenAuth && (
+                <Button
+                  title={t.sync.signInToJoinPrompt}
+                  variant="primary"
+                  size="sm"
+                  onPress={() => {
+                    onClose();
+                    onOpenAuth('join');
+                  }}
+                  style={{ marginTop: spacing.xs }}
+                />
+              )}
             </View>
           )}
 
           <Input
             placeholder={t.sync.joinCodePlaceholder}
             value={joinCode}
-            onChangeText={setJoinCode}
+            onChangeText={(text) => {
+              setJoinCode(text);
+              setError(null);
+              setIsAuthRequired(false);
+            }}
             autoCapitalize="characters"
             maxLength={10}
             leftIcon={<LogIn size={16} color={theme.colors.textMuted} />}

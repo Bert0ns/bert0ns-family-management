@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { supabaseLogger, syncLogger, transactionLogger } from './logger';
 import { useAppStore, registerStoreMutationListener } from './store';
-import { OutboxMutation, SyncStatus, Expense, Category, FamilyMember } from '@/types';
+import { OutboxMutation, SyncStatus, Expense, Category, FamilyMember, ImportBatch } from '@/types';
 import { generateUUID } from '@/utils/uuid';
 
 export const OUTBOX_STORAGE_KEY = '@bert0ns_sync_outbox';
@@ -173,6 +173,18 @@ interface RawMemberRow extends Record<string, unknown> {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
+}
+
+interface RawImportBatchRow extends Record<string, unknown> {
+  id: string;
+  family_id: string;
+  imported_by_member_id: string;
+  file_name: string;
+  total_records: number | string;
+  total_amount: number | string;
+  raw_payload?: unknown;
+  created_at: string;
+  updated_at?: string;
 }
 
 interface SelectableQuery {
@@ -622,6 +634,37 @@ export const syncEngine = {
         return true;
       }
 
+      case 'import_batch': {
+        if (operation === 'INSERT' || operation === 'UPDATE') {
+          const query = supabase.from('import_batches').upsert({
+            id: payload.id,
+            family_id: payload.family_id,
+            imported_by_member_id: payload.imported_by_member_id,
+            file_name: payload.file_name,
+            total_records: payload.total_records,
+            total_amount: payload.total_amount,
+            raw_payload: payload.raw_payload ?? null,
+            created_at: payload.created_at || new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+          const result = await executeWithServerTimestamp<ImportBatch>(query);
+          if (result.error) throw result.error;
+
+          if (result.data?.updated_at) {
+            useAppStore.setState((state) => ({
+              importBatches: state.importBatches.map((b) =>
+                b.id === entity_id ? { ...b, updated_at: result.data!.updated_at } : b,
+              ),
+            }));
+          }
+        } else if (operation === 'DELETE') {
+          const query = supabase.from('import_batches').delete().eq('id', entity_id);
+          const result = await executeWithServerTimestamp(query);
+          if (result.error) throw result.error;
+        }
+        return true;
+      }
+
       default:
         return true;
     }
@@ -749,7 +792,33 @@ export const syncEngine = {
         count += mappedMembers.length;
       }
 
-      // 4. Fetch notification preferences for current member
+      // 4. Fetch updated import batches
+      let batchQuery = supabase.from('import_batches').select('*').eq('family_id', familyId);
+      if (lastSync) {
+        batchQuery = batchQuery.or(`updated_at.gt.${lastSync},created_at.gt.${lastSync}`);
+      }
+      const { data: remoteBatches, error: batchErr } = await batchQuery;
+      if (batchErr) throw batchErr;
+
+      if (remoteBatches && remoteBatches.length > 0) {
+        const mappedBatches: ImportBatch[] = (remoteBatches as RawImportBatchRow[]).map(
+          (rb: RawImportBatchRow) => ({
+            id: rb.id,
+            family_id: rb.family_id,
+            imported_by_member_id: rb.imported_by_member_id,
+            file_name: rb.file_name,
+            total_records: Number(rb.total_records),
+            total_amount: Number(rb.total_amount),
+            raw_payload: rb.raw_payload ?? null,
+            created_at: rb.created_at,
+            updated_at: rb.updated_at,
+          }),
+        );
+        this.mergeImportBatchesLWW(mappedBatches);
+        count += mappedBatches.length;
+      }
+
+      // 5. Fetch notification preferences for current member
       try {
         const currentMemberId = useAppStore.getState().currentMemberId;
         if (currentMemberId) {
@@ -788,6 +857,10 @@ export const syncEngine = {
         const t = new Date(rm.updated_at || rm.created_at || '').getTime();
         if (t > latestRemoteTime) latestRemoteTime = t;
       });
+      (remoteBatches as RawImportBatchRow[])?.forEach((rb: RawImportBatchRow) => {
+        const t = new Date(rb.updated_at || rb.created_at || '').getTime();
+        if (t > latestRemoteTime) latestRemoteTime = t;
+      });
 
       const syncTimestamp =
         latestRemoteTime > 0 ? new Date(latestRemoteTime).toISOString() : new Date().toISOString();
@@ -812,6 +885,10 @@ export const syncEngine = {
 
   mergeMembersLWW(remoteList: FamilyMember[]) {
     useAppStore.getState().reconcileRemoteMembers(remoteList);
+  },
+
+  mergeImportBatchesLWW(remoteList: ImportBatch[]) {
+    useAppStore.getState().reconcileRemoteImportBatches(remoteList);
   },
 };
 
