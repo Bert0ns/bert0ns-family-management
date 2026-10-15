@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { supabaseLogger, syncLogger, transactionLogger } from './logger';
 import { useAppStore, registerStoreMutationListener } from './store';
-import { OutboxMutation, SyncStatus, Expense, Category, FamilyMember } from '@/types';
+import { OutboxMutation, SyncStatus, Expense, Category, FamilyMember, ImportBatch } from '@/types';
 import { generateUUID } from '@/utils/uuid';
 
 export const OUTBOX_STORAGE_KEY = '@bert0ns_sync_outbox';
@@ -394,6 +394,27 @@ export const syncEngine = {
         return true;
       }
 
+      case 'import_batch': {
+        if (operation === 'INSERT' || operation === 'UPDATE') {
+          const { error } = await supabase.from('import_batches').upsert({
+            id: payload.id,
+            family_id: payload.family_id,
+            imported_by_member_id: payload.imported_by_member_id,
+            file_name: payload.file_name,
+            total_records: payload.total_records,
+            total_amount: payload.total_amount,
+            raw_payload: payload.raw_payload ?? null,
+            created_at: payload.created_at || new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+          if (error) throw error;
+        } else if (operation === 'DELETE') {
+          const { error } = await supabase.from('import_batches').delete().eq('id', entity_id);
+          if (error) throw error;
+        }
+        return true;
+      }
+
       default:
         return true;
     }
@@ -515,7 +536,31 @@ export const syncEngine = {
         count += mappedMembers.length;
       }
 
-      // 4. Fetch notification preferences for current member
+      // 4. Fetch updated import batches
+      let batchQuery = supabase.from('import_batches').select('*').eq('family_id', familyId);
+      if (lastSync) {
+        batchQuery = batchQuery.or(`updated_at.gt.${lastSync},created_at.gt.${lastSync}`);
+      }
+      const { data: remoteBatches, error: batchErr } = await batchQuery;
+      if (batchErr) throw batchErr;
+
+      if (remoteBatches && remoteBatches.length > 0) {
+        const mappedBatches: ImportBatch[] = remoteBatches.map((rb: any) => ({
+          id: rb.id,
+          family_id: rb.family_id,
+          imported_by_member_id: rb.imported_by_member_id,
+          file_name: rb.file_name,
+          total_records: Number(rb.total_records),
+          total_amount: Number(rb.total_amount),
+          raw_payload: rb.raw_payload ?? null,
+          created_at: rb.created_at,
+          updated_at: rb.updated_at,
+        }));
+        this.mergeImportBatchesLWW(mappedBatches);
+        count += mappedBatches.length;
+      }
+
+      // 5. Fetch notification preferences for current member
       try {
         const currentMemberId = useAppStore.getState().currentMemberId;
         if (currentMemberId) {
@@ -563,6 +608,10 @@ export const syncEngine = {
 
   mergeMembersLWW(remoteList: FamilyMember[]) {
     useAppStore.getState().reconcileRemoteMembers(remoteList);
+  },
+
+  mergeImportBatchesLWW(remoteList: ImportBatch[]) {
+    useAppStore.getState().reconcileRemoteImportBatches(remoteList);
   },
 };
 

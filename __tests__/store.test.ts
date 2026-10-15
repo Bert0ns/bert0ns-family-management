@@ -467,6 +467,36 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
       state.removeRemoteMember('mem_remote_1');
       expect(useAppStore.getState().members.find((m) => m.id === 'mem_remote_1')).toBeUndefined();
     });
+
+    it('reconciles remote import batches correctly using LWW', () => {
+      const state = useAppStore.getState();
+      const remoteBatch = {
+        id: 'batch_remote_1',
+        family_id: 'fam_1',
+        imported_by_member_id: 'mem_1',
+        file_name: 'remote.csv',
+        total_records: 10,
+        total_amount: 250,
+        created_at: '2026-09-01T12:00:00Z',
+        updated_at: '2026-09-01T12:00:00Z',
+      };
+
+      state.reconcileRemoteImportBatches([remoteBatch]);
+      expect(
+        useAppStore.getState().importBatches.find((b) => b.id === 'batch_remote_1'),
+      ).toBeDefined();
+
+      // Older batch update should not overwrite newer
+      const olderBatch = {
+        ...remoteBatch,
+        file_name: 'older_remote.csv',
+        updated_at: '2025-01-01T12:00:00Z',
+      };
+      state.reconcileRemoteImportBatches([olderBatch]);
+      expect(
+        useAppStore.getState().importBatches.find((b) => b.id === 'batch_remote_1')?.file_name,
+      ).toBe('remote.csv');
+    });
   });
 
   describe('Mutation Subscribers', () => {
@@ -509,6 +539,64 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
           color: '#000000',
         });
       }).not.toThrow();
+
+      unsubscribe();
+    });
+
+    it('emits import_batch INSERT before expense INSERT mutations when importing report', () => {
+      const capturedMutations: any[] = [];
+      const unsubscribe = registerStoreMutationListener((mutation) => {
+        capturedMutations.push(mutation);
+      });
+
+      const result = useAppStore
+        .getState()
+        .importExpenseReport(SAMPLE_IMPORT_REPORT, 'batch_test.json');
+
+      expect(capturedMutations.length).toBeGreaterThan(1);
+      // First mutation MUST be the import_batch to satisfy foreign keys in remote Supabase
+      expect(capturedMutations[0]).toEqual({
+        entity: 'import_batch',
+        operation: 'INSERT',
+        entity_id: result.batchId,
+        payload: expect.objectContaining({
+          id: result.batchId,
+          file_name: 'batch_test.json',
+          total_records: SAMPLE_IMPORT_REPORT.expenses.length,
+        }),
+      });
+
+      // Subsequent mutations are the individual expenses referencing the batch
+      const expenseMutations = capturedMutations.slice(1);
+      expect(expenseMutations.length).toBe(SAMPLE_IMPORT_REPORT.expenses.length);
+      expenseMutations.forEach((m) => {
+        expect(m.entity).toBe('expense');
+        expect(m.operation).toBe('INSERT');
+        expect(m.payload.import_batch_id).toBe(result.batchId);
+      });
+
+      unsubscribe();
+    });
+
+    it('emits import_batch and expense DELETE mutations on clearAllExpenses', () => {
+      useAppStore.getState().importExpenseReport(SAMPLE_IMPORT_REPORT, 'clear_test.json');
+
+      const capturedMutations: any[] = [];
+      const unsubscribe = registerStoreMutationListener((mutation) => {
+        capturedMutations.push(mutation);
+      });
+
+      useAppStore.getState().clearAllExpenses();
+
+      const batchDeletes = capturedMutations.filter(
+        (m) => m.entity === 'import_batch' && m.operation === 'DELETE',
+      );
+      const expenseDeletes = capturedMutations.filter(
+        (m) => m.entity === 'expense' && m.operation === 'DELETE',
+      );
+
+      expect(batchDeletes.length).toBeGreaterThan(0);
+      expect(expenseDeletes.length).toBeGreaterThan(0);
 
       unsubscribe();
     });

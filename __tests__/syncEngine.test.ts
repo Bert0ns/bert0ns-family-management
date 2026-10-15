@@ -345,6 +345,67 @@ describe('syncEngine', () => {
       );
     });
 
+    it('executes import_batch INSERT/UPDATE with mapped payload', async () => {
+      const upsertMock = jest.fn().mockResolvedValue({ error: null });
+      (supabase.from as jest.Mock).mockReturnValue({ upsert: upsertMock });
+
+      const success = await syncEngine.executeMutation({
+        id: 'mut_batch_1',
+        created_at: new Date().toISOString(),
+        retry_count: 0,
+        entity: 'import_batch',
+        operation: 'INSERT',
+        entity_id: 'batch_uuid_1',
+        payload: {
+          id: 'batch_uuid_1',
+          family_id: 'fam_uuid_1',
+          imported_by_member_id: 'mem_uuid_1',
+          file_name: 'august_report.csv',
+          total_records: 15,
+          total_amount: 450.75,
+          raw_payload: { report: 'test' },
+          created_at: '2026-08-01T12:00:00.000Z',
+        },
+      });
+
+      expect(success).toBe(true);
+      expect(supabase.from).toHaveBeenCalledWith('import_batches');
+      expect(upsertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'batch_uuid_1',
+          family_id: 'fam_uuid_1',
+          imported_by_member_id: 'mem_uuid_1',
+          file_name: 'august_report.csv',
+          total_records: 15,
+          total_amount: 450.75,
+          raw_payload: { report: 'test' },
+          created_at: '2026-08-01T12:00:00.000Z',
+          updated_at: expect.any(String),
+        }),
+      );
+    });
+
+    it('executes import_batch DELETE', async () => {
+      const eqMock = jest.fn().mockResolvedValue({ error: null });
+      const deleteMock = jest.fn().mockReturnValue({ eq: eqMock });
+      (supabase.from as jest.Mock).mockReturnValue({ delete: deleteMock });
+
+      const success = await syncEngine.executeMutation({
+        id: 'mut_batch_2',
+        created_at: new Date().toISOString(),
+        retry_count: 0,
+        entity: 'import_batch',
+        operation: 'DELETE',
+        entity_id: 'batch_uuid_1',
+        payload: { id: 'batch_uuid_1' },
+      });
+
+      expect(success).toBe(true);
+      expect(supabase.from).toHaveBeenCalledWith('import_batches');
+      expect(deleteMock).toHaveBeenCalled();
+      expect(eqMock).toHaveBeenCalledWith('id', 'batch_uuid_1');
+    });
+
     it('returns true for unknown entity types', async () => {
       const success = await syncEngine.executeMutation({
         id: 'mut_10',
@@ -471,6 +532,33 @@ describe('syncEngine', () => {
         useAppStore.getState().expenses.find((e) => e.id === existingExp.id)?.merchant_name,
       ).not.toBe('Old Shop Name');
     });
+
+    it('merges import batches using LWW: brand new is added and older is ignored', () => {
+      const brandNewBatch = {
+        id: 'batch-brand-new',
+        family_id: 'fam_1',
+        imported_by_member_id: 'mem_1',
+        file_name: 'statement_new.csv',
+        total_records: 15,
+        total_amount: 500,
+        created_at: '2026-09-01T00:00:00Z',
+        updated_at: '2026-09-01T00:00:00Z',
+      };
+      syncEngine.mergeImportBatchesLWW([brandNewBatch]);
+      expect(
+        useAppStore.getState().importBatches.find((b) => b.id === 'batch-brand-new'),
+      ).toBeDefined();
+
+      const olderBatch = {
+        ...brandNewBatch,
+        file_name: 'statement_old.csv',
+        updated_at: '2024-01-01T00:00:00Z',
+      };
+      syncEngine.mergeImportBatchesLWW([olderBatch]);
+      expect(
+        useAppStore.getState().importBatches.find((b) => b.id === brandNewBatch.id)?.file_name,
+      ).toBe('statement_new.csv');
+    });
   });
 
   describe('fetchDelta', () => {
@@ -562,6 +650,20 @@ describe('syncEngine', () => {
             },
           ]);
         }
+        if (table === 'import_batches') {
+          return mockQueryBuilder([
+            {
+              id: 'delta-batch-1',
+              family_id: 'fam_1',
+              imported_by_member_id: 'mem_1',
+              file_name: 'reconcile_delta.csv',
+              total_records: 5,
+              total_amount: 150.0,
+              created_at: '2026-09-04T10:00:00Z',
+              updated_at: '2026-09-04T10:00:00Z',
+            },
+          ]);
+        }
         if (table === 'notification_preferences') {
           return mockQueryBuilder({
             member_id: 'mem_1',
@@ -580,6 +682,7 @@ describe('syncEngine', () => {
       expect(store.expenses.find((e) => e.id === existingExpenseToTombstone.id)).toBeUndefined();
       expect(store.categories.find((c) => c.id === 'delta-cat-1')).toBeDefined();
       expect(store.members.find((m) => m.id === 'delta-mem-1')).toBeDefined();
+      expect(store.importBatches.find((b) => b.id === 'delta-batch-1')).toBeDefined();
     });
 
     it('sets status to error when delta fetch query fails', async () => {

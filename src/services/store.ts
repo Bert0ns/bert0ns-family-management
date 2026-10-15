@@ -10,6 +10,7 @@ import {
   ImportBatch,
   RawExpenseReport,
   MutationOperation,
+  MutationEntity,
   NotificationPreferences,
   AppNotification,
 } from '@/types';
@@ -96,13 +97,14 @@ export interface AppState {
   reconcileRemoteExpenses: (expenses: Expense[]) => void;
   reconcileRemoteCategories: (categories: Category[]) => void;
   reconcileRemoteMembers: (members: FamilyMember[]) => void;
+  reconcileRemoteImportBatches: (batches: ImportBatch[]) => void;
   removeRemoteExpense: (id: string) => void;
   removeRemoteCategory: (id: string) => void;
   removeRemoteMember: (id: string) => void;
 }
 
 export type StoreMutationEvent = {
-  entity: 'expense' | 'category' | 'member' | 'family' | 'notification_preference';
+  entity: MutationEntity;
   operation: MutationOperation;
   entity_id: string;
   payload: any;
@@ -299,9 +301,10 @@ export const useAppStore = create<AppState>()(
       clearAllExpenses: () => {
         const state = get();
         const expensesToClear = [...state.expenses];
+        const batchesToClear = [...state.importBatches];
         transactionLogger.warn('All expenses cleared from store', {
           count: expensesToClear.length,
-          batchCount: state.importBatches.length,
+          batchCount: batchesToClear.length,
         });
         set({ expenses: [], importBatches: [] });
 
@@ -312,6 +315,15 @@ export const useAppStore = create<AppState>()(
             operation: 'DELETE',
             entity_id: exp.id,
             payload: { id: exp.id },
+          });
+        }
+
+        for (const batch of batchesToClear) {
+          notifyStoreMutation({
+            entity: 'import_batch',
+            operation: 'DELETE',
+            entity_id: batch.id,
+            payload: { id: batch.id },
           });
         }
       },
@@ -665,6 +677,7 @@ export const useAppStore = create<AppState>()(
           };
         });
 
+        const batchCreatedAt = new Date().toISOString();
         const newBatch: ImportBatch = {
           id: batchId,
           family_id: state.family.id,
@@ -672,7 +685,8 @@ export const useAppStore = create<AppState>()(
           file_name: fileName,
           total_records: newExpenses.length,
           total_amount: totalAmount,
-          created_at: new Date().toISOString(),
+          created_at: batchCreatedAt,
+          updated_at: batchCreatedAt,
           raw_payload: report,
         };
 
@@ -680,6 +694,14 @@ export const useAppStore = create<AppState>()(
           expenses: [...newExpenses, ...state.expenses],
           importBatches: [newBatch, ...state.importBatches],
         }));
+
+        // Notify outbox of the import_batch creation BEFORE expenses to satisfy foreign key constraints
+        notifyStoreMutation({
+          entity: 'import_batch',
+          operation: 'INSERT',
+          entity_id: newBatch.id,
+          payload: newBatch,
+        });
 
         newExpenses.forEach((exp) => {
           notifyStoreMutation({
@@ -824,6 +846,35 @@ export const useAppStore = create<AppState>()(
             }
           });
           return { members: Array.from(map.values()) };
+        });
+      },
+
+      reconcileRemoteImportBatches: (remoteList) => {
+        storeLogger.info('Reconciling remote import batches', { count: remoteList.length });
+        set((state) => {
+          const map = new Map(state.importBatches.map((b) => [b.id, b]));
+          remoteList.forEach((remote) => {
+            const local = map.get(remote.id);
+            const remoteTime = remote.updated_at
+              ? new Date(remote.updated_at).getTime()
+              : new Date(remote.created_at).getTime();
+            const localTime = local?.updated_at
+              ? new Date(local.updated_at).getTime()
+              : local?.created_at
+                ? new Date(local.created_at).getTime()
+                : 0;
+
+            if (!local) {
+              map.set(remote.id, remote);
+            } else if (remoteTime >= localTime) {
+              map.set(remote.id, remote);
+            }
+          });
+
+          const sorted = Array.from(map.values()).sort((a, b) =>
+            b.created_at.localeCompare(a.created_at),
+          );
+          return { importBatches: sorted };
         });
       },
 

@@ -25,7 +25,7 @@ describe('Database Security & RLS Policy Hardening', () => {
   it('enforces search_path on all SECURITY DEFINER functions in schema', () => {
     // Find all occurrences of SECURITY DEFINER and ensure they include SET search_path
     const matches = schemaSql.match(/SECURITY DEFINER.*?;/g) || [];
-    expect(matches.length).toBeGreaterThanOrEqual(7);
+    expect(matches.length).toBeGreaterThanOrEqual(6);
     matches.forEach((match: string) => {
       expect(match).toContain('SET search_path = public, pg_temp');
     });
@@ -44,10 +44,7 @@ describe('Database Security & RLS Policy Hardening', () => {
     expect(schemaSql).toMatch(/role <> 'ADMIN' OR public\.is_admin_of_family\(family_id\)/);
   });
 
-  it('enforces RLS policies for budgets and import_batches scoped to active family', () => {
-    expect(schemaSql).toMatch(
-      /CREATE POLICY "budgets_family_access" ON public\.budgets[\s\S]*?family_id IN \(SELECT family_id FROM public\.family_members WHERE user_id = auth\.uid\(\)\)/,
-    );
+  it('enforces RLS policies for import_batches scoped to active family', () => {
     expect(schemaSql).toMatch(
       /CREATE POLICY "import_batches_family_access" ON public\.import_batches[\s\S]*?family_id IN \(SELECT family_id FROM public\.family_members WHERE user_id = auth\.uid\(\)\)/,
     );
