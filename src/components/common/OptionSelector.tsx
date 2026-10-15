@@ -59,8 +59,8 @@ export function OptionSelector<T extends string | number>({
           borderRadius: radius.sm,
           borderWidth: 1,
           borderColor: theme.colors.borderTactile,
-          padding: 3,
-          gap: 4,
+          padding: spacing.xxs + 1,
+          gap: spacing.xs,
         }}
       >
         {options.map((opt) => {
@@ -82,7 +82,7 @@ export function OptionSelector<T extends string | number>({
                 paddingHorizontal: spacing.xs,
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: radius.dockInner,
+                borderRadius: radius.sm,
                 backgroundColor: isSelected
                   ? (theme.colors.dockActivePill ?? theme.colors.card)
                   : 'transparent',

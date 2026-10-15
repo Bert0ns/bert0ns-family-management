@@ -192,7 +192,7 @@ export default function DashboardScreen() {
           accessibilityLabel={t.dashboard.quickAddButton}
           style={{
             minHeight: 60,
-            borderRadius: radius.xl,
+            borderRadius: radius.sm,
             backgroundColor: theme.colors.brand,
             flexDirection: 'row',
             alignItems: 'center',
@@ -200,12 +200,12 @@ export default function DashboardScreen() {
             paddingHorizontal: spacing.md,
             gap: spacing.md,
             borderWidth: 1,
-            borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)',
-            shadowColor: theme.colors.brand,
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.35,
-            shadowRadius: 16,
-            elevation: 6,
+            borderColor: theme.colors.borderSubtle,
+            shadowColor: theme.colors.shadow,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.08,
+            shadowRadius: 2,
+            elevation: 2,
           }}
         >
           <View

@@ -321,7 +321,7 @@ export default function LedgerScreen() {
                     top: -4,
                     right: -4,
                     backgroundColor: theme.colors.danger,
-                    borderRadius: radius.full,
+                    borderRadius: radius.sm,
                     width: 20,
                     height: 20,
                     alignItems: 'center',

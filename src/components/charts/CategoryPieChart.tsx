@@ -304,7 +304,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                     height: '100%',
                     width: `${pct}%`,
                     backgroundColor: item.category.color,
-                    borderRadius: radius.full,
+                    borderRadius: radius.xs,
                   }}
                 />
               </View>

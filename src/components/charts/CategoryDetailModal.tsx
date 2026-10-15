@@ -56,7 +56,7 @@ export const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
       <View
         style={{
           flex: 1,
-          backgroundColor: theme.isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(18, 20, 24, 0.4)',
+          backgroundColor: theme.colors.backdrop,
           justifyContent: isDesktop ? 'center' : 'flex-end',
           alignItems: isDesktop ? 'center' : 'stretch',
           padding: isDesktop ? spacing.lg : 0,

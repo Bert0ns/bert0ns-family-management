@@ -249,7 +249,7 @@ export const DayOfWeekChart: React.FC<DayOfWeekChartProps> = ({ data, currency =
             height: 10,
             width: '100%',
             backgroundColor: theme.colors.surfaceSubtle,
-            borderRadius: radius.full,
+            borderRadius: radius.xs,
             flexDirection: 'row',
             overflow: 'hidden',
           }}

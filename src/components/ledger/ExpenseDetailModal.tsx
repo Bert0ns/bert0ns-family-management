@@ -9,6 +9,7 @@ import {
   Platform,
   Alert,
   useWindowDimensions,
+  ViewStyle,
 } from 'react-native';
 import { Calendar, User, CreditCard, Trash2, X, Pencil } from 'lucide-react-native';
 import { useTheme } from '@/theme';
@@ -101,7 +102,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
       <View
         style={{
           flex: 1,
-          backgroundColor: theme.isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(18, 20, 24, 0.4)',
+          backgroundColor: theme.colors.backdrop,
           justifyContent: isDesktop ? 'center' : 'flex-end',
           alignItems: isDesktop ? 'center' : 'stretch',
           padding: isDesktop ? spacing.lg : 0,
@@ -137,7 +138,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   : theme.isDark
                     ? '0 -4px 16px rgba(0, 0, 0, 0.35)'
                     : '0 -4px 16px rgba(27, 33, 30, 0.06)',
-              } as any),
+              } as unknown as ViewStyle),
           ]}
         >
           {/* Apple Sheet Grabber Handle (Mobile only) */}

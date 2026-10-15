@@ -89,7 +89,7 @@ export const PaymentMethodChart: React.FC<PaymentMethodChartProps> = ({ data, cu
           height: 12,
           width: '100%',
           backgroundColor: theme.colors.surfaceSubtle,
-          borderRadius: radius.full,
+          borderRadius: radius.xs,
           flexDirection: 'row',
           overflow: 'hidden',
           marginBottom: spacing.md,

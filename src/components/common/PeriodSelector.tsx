@@ -71,7 +71,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
         style={{
           width: 48,
           height: 48,
-          borderRadius: radius.dockInner,
+          borderRadius: radius.sm,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: theme.colors.surfaceSubtle,
@@ -98,7 +98,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
           style={{
             width: 32,
             height: 32,
-            borderRadius: radius.dockInner,
+            borderRadius: radius.sm,
             backgroundColor: theme.colors.brandLight,
             alignItems: 'center',
             justifyContent: 'center',
@@ -131,7 +131,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
         style={{
           width: 48,
           height: 48,
-          borderRadius: radius.dockInner,
+          borderRadius: radius.sm,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: theme.colors.surfaceSubtle,

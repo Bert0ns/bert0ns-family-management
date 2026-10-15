@@ -125,7 +125,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
           style={{
             width: 60,
             height: 60,
-            borderRadius: radius.full,
+            borderRadius: radius.sm,
             backgroundColor: theme.colors.brandLight,
             alignItems: 'center',
             justifyContent: 'center',
