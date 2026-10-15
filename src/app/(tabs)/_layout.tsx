@@ -12,6 +12,7 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, PieChart, ReceiptText, Users, Settings } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { Radius } from '@/theme/tokens';
 import { useI18n } from '@/i18n';
 import { SyncBadge } from '@/components/common/SyncBadge';
 import { useAppStore } from '@/services/store';
@@ -27,10 +28,11 @@ export default function TabsLayout() {
   const { width: windowWidth } = useWindowDimensions();
   const family = useAppStore((s) => s.family);
 
-  // Responsive floating pill dimensions
+  // Responsive floating dock dimensions
   const isWideScreen = windowWidth >= 768;
   const barWidth = isWideScreen ? Math.min(windowWidth - 48, 520) : windowWidth - 28;
   const barLeft = Math.max(14, (windowWidth - barWidth) / 2);
+  const floatingBottom = Math.max(insets.bottom, 12) + (Platform.OS === 'ios' ? 4 : 8);
 
   // Global Sync & Auth Lifecycle Bootstrap
   useEffect(() => {
@@ -70,8 +72,6 @@ export default function TabsLayout() {
     };
   }, [family?.id]);
 
-  const floatingBottom = Math.max(insets.bottom, 12) + (Platform.OS === 'ios' ? 4 : 8);
-
   const renderTabIcon = (
     IconComponent: ComponentType<{ size: number; color: string; strokeWidth?: number }>,
     focused: boolean,
@@ -91,7 +91,7 @@ export default function TabsLayout() {
         style={{
           width: 42,
           height: 36,
-          borderRadius: 18,
+          borderRadius: Radius.dockInner, // Harmonized with component geometry
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: focused
@@ -141,7 +141,7 @@ export default function TabsLayout() {
             style={[
               StyleSheet.absoluteFill,
               {
-                borderRadius: 30,
+                borderRadius: Radius.dock, // Harmonized with component corner radius
                 overflow: 'hidden',
                 backgroundColor: theme.colors.dockBg ?? theme.colors.bottomBarBg,
               },
@@ -155,7 +155,7 @@ export default function TabsLayout() {
           width: barWidth,
           height: 60,
           backgroundColor: 'transparent',
-          borderRadius: 30,
+          borderRadius: Radius.dock, // Harmonized with component corner radius
           borderWidth: 1.5,
           borderColor: theme.colors.dockBorder ?? theme.colors.bottomBarBorder,
           shadowColor: '#000',

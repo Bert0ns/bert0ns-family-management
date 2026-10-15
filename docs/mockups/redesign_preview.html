@@ -1,0 +1,1719 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bert0n's Family Expense Management — Visual Redesign Concepts</title>
+    <style>
+      :root {
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --border-subtle: rgba(255, 255, 255, 0.08);
+        --font-sans:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        --radius-sm: 8px;
+        --radius-md: 14px;
+        --radius-lg: 20px;
+        --radius-full: 9999px;
+      }
+
+      /* CONCEPT 1: Nordic Atelier (Default / Recommended) */
+      .theme-nordic-light {
+        --app-canvas: #f8f6f1;
+        --app-surface: #ffffff;
+        --app-surface-elevated: #fdfdfc;
+        --app-surface-subtle: #f1efea;
+        --app-border: #e4dfd6;
+        --app-border-subtle: rgba(0, 0, 0, 0.06);
+        --app-ink: #1b2320;
+        --app-ink-secondary: #515f5a;
+        --app-ink-muted: #7d8c86;
+        --app-primary: #1b4332; /* Spruce */
+        --app-primary-light: #e7f3ed;
+        --app-accent: #c87a3e; /* Warm Ochre Terracotta */
+        --app-accent-light: #fbf0e6;
+        --app-danger: #b83a3a;
+        --app-shadow: 0 4px 18px -2px rgba(27, 35, 32, 0.06);
+        --app-card-radius: 18px;
+      }
+
+      .theme-nordic-dark {
+        --app-canvas: #121715;
+        --app-surface: #1a211e;
+        --app-surface-elevated: #222b27;
+        --app-surface-subtle: #161d1a;
+        --app-border: #2d3833;
+        --app-border-subtle: rgba(255, 255, 255, 0.07);
+        --app-ink: #f0f4f2;
+        --app-ink-secondary: #a3b3ac;
+        --app-ink-muted: #6b7c75;
+        --app-primary: #52b788; /* Sage Pine */
+        --app-primary-light: rgba(82, 183, 136, 0.15);
+        --app-accent: #e09453; /* Warm Ochre */
+        --app-accent-light: rgba(224, 148, 83, 0.16);
+        --app-danger: #e05252;
+        --app-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        --app-card-radius: 18px;
+      }
+
+      /* CONCEPT 2: Zen Minimalist */
+      .theme-zen-light {
+        --app-canvas: #f6f5f2;
+        --app-surface: #ffffff;
+        --app-surface-elevated: #ffffff;
+        --app-surface-subtle: #eceae3;
+        --app-border: #d8d4ca;
+        --app-border-subtle: rgba(0, 0, 0, 0.05);
+        --app-ink: #161617;
+        --app-ink-secondary: #58595c;
+        --app-ink-muted: #8d8e92;
+        --app-primary: #1f2228;
+        --app-primary-light: #eaebed;
+        --app-accent: #d63929; /* Vermilion Hanko Stamp */
+        --app-accent-light: #fdeeed;
+        --app-danger: #d63929;
+        --app-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        --app-card-radius: 6px;
+      }
+
+      .theme-zen-dark {
+        --app-canvas: #0f1012;
+        --app-surface: #18191c;
+        --app-surface-elevated: #202226;
+        --app-surface-subtle: #141517;
+        --app-border: #2c2e34;
+        --app-border-subtle: rgba(255, 255, 255, 0.06);
+        --app-ink: #f4f4f6;
+        --app-ink-secondary: #9da0a8;
+        --app-ink-muted: #666973;
+        --app-primary: #e5e7eb;
+        --app-primary-light: rgba(229, 231, 235, 0.12);
+        --app-accent: #f25749;
+        --app-accent-light: rgba(242, 87, 73, 0.18);
+        --app-danger: #f25749;
+        --app-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+        --app-card-radius: 6px;
+      }
+
+      /* CONCEPT 3: FinTech Neo-Craft */
+      .theme-fintech-light {
+        --app-canvas: #f0f4f8;
+        --app-surface: #ffffff;
+        --app-surface-elevated: #ffffff;
+        --app-surface-subtle: #e2e8f0;
+        --app-border: #cbd5e1;
+        --app-border-subtle: rgba(0, 0, 0, 0.05);
+        --app-ink: #0f172a;
+        --app-ink-secondary: #475569;
+        --app-ink-muted: #64748b;
+        --app-primary: #0f766e;
+        --app-primary-light: #ccfbf1;
+        --app-accent: #6366f1;
+        --app-accent-light: #eef2ff;
+        --app-danger: #e11d48;
+        --app-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+        --app-card-radius: 22px;
+      }
+
+      .theme-fintech-dark {
+        --app-canvas: #090d16;
+        --app-surface: #111827;
+        --app-surface-elevated: #1f2937;
+        --app-surface-subtle: #131e32;
+        --app-border: #24324d;
+        --app-border-subtle: rgba(255, 255, 255, 0.08);
+        --app-ink: #f9fafb;
+        --app-ink-secondary: #9ca3af;
+        --app-ink-muted: #6b7280;
+        --app-primary: #14b8a6;
+        --app-primary-light: rgba(20, 184, 166, 0.18);
+        --app-accent: #818cf8;
+        --app-accent-light: rgba(129, 140, 248, 0.18);
+        --app-danger: #fb7185;
+        --app-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+        --app-card-radius: 22px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: var(--font-sans);
+        color: var(--text-primary);
+        background: #0b0f19;
+        padding: 16px;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Studio Control Header */
+      .studio-bar {
+        max-width: 900px;
+        margin: 0 auto 20px;
+        background: rgba(18, 24, 38, 0.95);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 14px 18px;
+        backdrop-filter: blur(14px);
+      }
+      .studio-row-1 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .studio-row-2 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .pill-group {
+        display: inline-flex;
+        background: rgba(10, 14, 23, 0.65);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        padding: 2px;
+        gap: 2px;
+      }
+      .pill-btn {
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 11px;
+        font-weight: 500;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+      }
+      .pill-btn:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .pill-btn.active {
+        background: #2563eb;
+        color: #ffffff;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+      }
+
+      /* Mockup Canvas */
+      .mockup-stage {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .device-shell {
+        width: 384px;
+        max-width: 100%;
+        border-radius: 42px;
+        background: #000000;
+        padding: 10px;
+        box-shadow:
+          0 25px 60px -15px rgba(0, 0, 0, 0.7),
+          0 0 0 1px rgba(255, 255, 255, 0.12);
+        position: relative;
+        transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .device-shell.wide-view {
+        width: 760px;
+        border-radius: 26px;
+        padding: 12px;
+      }
+      .device-screen {
+        background: var(--app-canvas);
+        border-radius: 34px;
+        overflow: hidden;
+        position: relative;
+        min-height: 740px;
+        display: flex;
+        flex-direction: column;
+        color: var(--app-ink);
+        transition:
+          background 0.2s ease,
+          color 0.2s ease;
+      }
+      .device-shell.wide-view .device-screen {
+        border-radius: 16px;
+        min-height: 660px;
+      }
+
+      .status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 22px 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--app-ink);
+      }
+      .island-notch {
+        width: 80px;
+        height: 22px;
+        background: #000000;
+        border-radius: 11px;
+      }
+
+      .app-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 18px 8px;
+      }
+      .family-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--app-surface-subtle);
+        border: 1px solid var(--app-border-subtle);
+        padding: 5px 10px;
+        border-radius: var(--radius-full);
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .family-avatar-stack {
+        display: flex;
+      }
+      .mini-avatar {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 1.5px solid var(--app-surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        font-weight: 700;
+        color: #ffffff;
+        margin-left: -5px;
+      }
+      .mini-avatar:first-child {
+        margin-left: 0;
+      }
+      .sync-badge {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--app-primary);
+      }
+      .sync-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 6px #10b981;
+      }
+
+      .screen-content {
+        flex: 1;
+        padding: 8px 16px 86px;
+        overflow-y: auto;
+      }
+
+      .month-stepper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--app-card-radius);
+        padding: 8px 12px;
+        margin-bottom: 14px;
+        box-shadow: var(--app-shadow);
+      }
+      .stepper-btn {
+        background: var(--app-surface-subtle);
+        border: 1px solid var(--app-border-subtle);
+        color: var(--app-ink);
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .stepper-month {
+        font-weight: 700;
+        font-size: 14px;
+      }
+
+      /* HERO: The Household Burn Pace Gauge */
+      .hero-pace-card {
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--app-card-radius);
+        padding: 16px 18px;
+        margin-bottom: 14px;
+        box-shadow: var(--app-shadow);
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-pace-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3.5px;
+        background: linear-gradient(90deg, var(--app-primary), var(--app-accent));
+      }
+      .pace-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+      }
+      .pace-label {
+        font-size: 12px;
+        color: var(--app-ink-secondary);
+        font-weight: 500;
+      }
+      .pace-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 8px;
+        border-radius: var(--radius-full);
+        font-size: 10px;
+        font-weight: 700;
+        background: var(--app-primary-light);
+        color: var(--app-primary);
+      }
+      .pace-amount {
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: -0.8px;
+        line-height: 1.1;
+        margin-bottom: 3px;
+        font-variant-numeric: tabular-nums;
+      }
+      .pace-amount span {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--app-ink-muted);
+        margin-right: 2px;
+      }
+      .pace-budget-note {
+        font-size: 12px;
+        color: var(--app-ink-secondary);
+        margin-bottom: 12px;
+      }
+      .pace-budget-note b {
+        color: var(--app-ink);
+      }
+
+      .pace-bar-track {
+        height: 7px;
+        background: var(--app-surface-subtle);
+        border-radius: var(--radius-full);
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 8px;
+      }
+      .pace-bar-fill {
+        height: 100%;
+        width: 60%;
+        background: var(--app-primary);
+        border-radius: var(--radius-full);
+        transition: width 0.3s ease;
+      }
+      .pace-bar-target-marker {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 48%;
+        width: 2px;
+        background: var(--app-accent);
+      }
+      .pace-meta-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10.5px;
+        color: var(--app-ink-muted);
+        font-weight: 500;
+      }
+
+      /* Settlement Instant Insight */
+      .settlement-card {
+        background: var(--app-accent-light);
+        border: 1px solid rgba(200, 122, 62, 0.25);
+        border-radius: var(--app-card-radius);
+        padding: 12px 14px;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .settlement-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .settlement-icon-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--app-accent);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .settlement-title {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--app-ink);
+        margin-bottom: 1px;
+      }
+      .settlement-sub {
+        font-size: 11px;
+        color: var(--app-ink-secondary);
+      }
+      .settlement-btn {
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        color: var(--app-ink);
+        font-size: 11px;
+        font-weight: 700;
+        padding: 5px 10px;
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      /* Action Buttons */
+      .action-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 11px 12px;
+        border-radius: var(--app-card-radius);
+        font-size: 12.5px;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1px solid transparent;
+      }
+      .action-btn-primary {
+        background: var(--app-primary);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(27, 67, 50, 0.25);
+      }
+      .action-btn-secondary {
+        background: var(--app-surface);
+        border-color: var(--app-border);
+        color: var(--app-ink);
+        box-shadow: var(--app-shadow);
+      }
+
+      /* Member Contributions Row */
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .section-title {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: -0.2px;
+        color: var(--app-ink);
+      }
+      .section-link {
+        font-size: 11px;
+        color: var(--app-primary);
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .members-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .member-mini-card {
+        flex: 1;
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--app-card-radius);
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--app-shadow);
+      }
+      .member-card-top {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+      .member-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+      .member-name {
+        font-size: 11.5px;
+        font-weight: 600;
+      }
+      .member-spent {
+        font-size: 15px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+      .member-share {
+        font-size: 10.5px;
+        color: var(--app-ink-muted);
+      }
+
+      /* Transactions */
+      .tx-list {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .tx-row {
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--app-card-radius);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        box-shadow: var(--app-shadow);
+      }
+      .tx-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+      }
+      .tx-icon-box {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        flex-shrink: 0;
+      }
+      .tx-info {
+        min-width: 0;
+        flex: 1;
+      }
+      .tx-merchant {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--app-ink);
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tx-meta {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 10.5px;
+        color: var(--app-ink-secondary);
+      }
+      .tx-split-pill {
+        background: var(--app-surface-subtle);
+        border: 1px solid var(--app-border-subtle);
+        border-radius: 4px;
+        padding: 1px 4px;
+        font-size: 9.5px;
+        font-weight: 600;
+      }
+      .tx-right {
+        text-align: right;
+        margin-left: 8px;
+      }
+      .tx-amount {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--app-ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .tx-who {
+        font-size: 10.5px;
+        color: var(--app-ink-muted);
+      }
+
+      /* Floating Dock */
+      .dock-container {
+        position: absolute;
+        bottom: 12px;
+        left: 14px;
+        right: 14px;
+        height: 58px;
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding: 0 8px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(18px);
+        z-index: 100;
+      }
+      .dock-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        color: var(--app-ink-muted);
+        border: none;
+        background: transparent;
+        transition: all 0.15s ease;
+      }
+      .dock-item.active {
+        color: var(--app-primary);
+        background: var(--app-primary-light);
+      }
+      .dock-icon {
+        font-size: 17px;
+        margin-bottom: 1px;
+      }
+      .dock-label {
+        font-size: 9px;
+        font-weight: 700;
+      }
+
+      /* Ledger Screen Elements */
+      .filter-search-box {
+        display: flex;
+        align-items: center;
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--app-card-radius);
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        gap: 8px;
+        box-shadow: var(--app-shadow);
+      }
+      .filter-search-input {
+        border: none;
+        background: transparent;
+        outline: none;
+        color: var(--app-ink);
+        font-size: 12.5px;
+        flex: 1;
+        font-family: inherit;
+      }
+      .category-chips {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        margin-bottom: 12px;
+      }
+      .chip {
+        padding: 4px 10px;
+        border-radius: var(--radius-full);
+        font-size: 11px;
+        font-weight: 600;
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        color: var(--app-ink-secondary);
+        white-space: nowrap;
+        cursor: pointer;
+      }
+      .chip.active {
+        background: var(--app-primary);
+        color: #ffffff;
+        border-color: var(--app-primary);
+      }
+
+      /* Interactive Split Card */
+      .split-inspector-card {
+        background: var(--app-surface-elevated);
+        border: 1.5px solid var(--app-primary);
+        border-radius: var(--app-card-radius);
+        padding: 14px 16px;
+        margin-bottom: 14px;
+        box-shadow: var(--app-shadow);
+      }
+      .split-badge-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .split-tag {
+        background: var(--app-primary-light);
+        color: var(--app-primary);
+        font-size: 10.5px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: var(--radius-full);
+      }
+      .split-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      .split-member-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 7px 10px;
+        background: var(--app-surface-subtle);
+        border-radius: 8px;
+      }
+      .split-slider-box {
+        margin-bottom: 12px;
+      }
+      .split-slider-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10.5px;
+        color: var(--app-ink-secondary);
+        margin-bottom: 4px;
+        font-weight: 600;
+      }
+      .split-slider {
+        width: 100%;
+        accent-color: var(--app-primary);
+        cursor: pointer;
+      }
+      .split-penny-alert {
+        background: rgba(224, 148, 83, 0.12);
+        border: 1px dashed var(--app-accent);
+        border-radius: 8px;
+        padding: 7px 10px;
+        font-size: 10.5px;
+        color: var(--app-accent);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* Analytics elements */
+      .analytics-curve-box {
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--app-card-radius);
+        padding: 14px;
+        margin-bottom: 14px;
+        box-shadow: var(--app-shadow);
+      }
+      .svg-chart {
+        width: 100%;
+        height: 160px;
+        display: block;
+      }
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .comp-item {
+        background: var(--app-surface-subtle);
+        padding: 8px 10px;
+        border-radius: 8px;
+      }
+      .comp-title {
+        font-size: 10.5px;
+        color: var(--app-ink-muted);
+        margin-bottom: 2px;
+      }
+      .comp-val {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--app-ink);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Redesign Summary Panel */
+      .design-summary {
+        max-width: 900px;
+        margin: 20px auto 0;
+        background: rgba(18, 24, 38, 0.85);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 16px 20px;
+      }
+      .summary-heading {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #f8fafc;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .summary-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        font-size: 11.5px;
+        color: var(--text-secondary);
+      }
+      .summary-card {
+        background: rgba(10, 14, 23, 0.6);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        padding: 10px 12px;
+      }
+      .summary-card-title {
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 3px;
+        font-size: 11.5px;
+      }
+    </style>
+  </head>
+  <body class="theme-nordic-dark">
+    <!-- Studio Control Header -->
+    <div class="studio-bar">
+      <div class="studio-row-1">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span
+            style="
+              background: rgba(16, 185, 129, 0.15);
+              border: 1px solid rgba(16, 185, 129, 0.3);
+              color: #34d399;
+              font-size: 10px;
+              font-weight: 700;
+              padding: 2px 7px;
+              border-radius: var(--radius-full);
+            "
+            >PROPOSED REDESIGN</span
+          >
+          <strong style="font-size: 14px">Family Expense UI/UX Interactive Mockups</strong>
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center">
+          <div class="pill-group">
+            <button id="theme-btn-light" class="pill-btn" onclick="setMode('light')">
+              ☀️ Light
+            </button>
+            <button id="theme-btn-dark" class="pill-btn active" onclick="setMode('dark')">
+              🌙 Dark
+            </button>
+          </div>
+          <div class="pill-group">
+            <button id="view-btn-mobile" class="pill-btn active" onclick="setViewMode('mobile')">
+              📱 Mobile
+            </button>
+            <button id="view-btn-wide" class="pill-btn" onclick="setViewMode('wide')">
+              💻 Tablet/Desktop
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="studio-row-2">
+        <div class="pill-group">
+          <button id="btn-concept-a" class="pill-btn active" onclick="setConcept('nordic')">
+            🌲 1. Nordic Atelier (Selected)
+          </button>
+          <button id="btn-concept-b" class="pill-btn" onclick="setConcept('zen')">
+            ⛩️ 2. Zen Minimal (Ink &amp; Vermilion)
+          </button>
+          <button id="btn-concept-c" class="pill-btn" onclick="setConcept('fintech')">
+            ⚡ 3. FinTech Neo-Craft (High-Velocity)
+          </button>
+        </div>
+
+        <div class="pill-group">
+          <button
+            id="screen-btn-dashboard"
+            class="pill-btn active"
+            onclick="showScreen('dashboard')"
+          >
+            Pulse Dashboard
+          </button>
+          <button id="screen-btn-ledger" class="pill-btn" onclick="showScreen('ledger')">
+            Shared Ledger &amp; Split
+          </button>
+          <button id="screen-btn-analytics" class="pill-btn" onclick="showScreen('analytics')">
+            Velocity &amp; Insights
+          </button>
+          <button id="screen-btn-budgets" class="pill-btn" onclick="showScreen('budgets')">
+            Envelopes &amp; Family
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup-stage">
+      <!-- Device Outer Shell -->
+      <div id="deviceShell" class="device-shell">
+        <div class="device-screen">
+          <!-- Status Bar -->
+          <div class="status-bar">
+            <span>09:41</span>
+            <div class="island-notch"></div>
+            <span>5G · 100%</span>
+          </div>
+
+          <!-- App Header -->
+          <div class="app-header">
+            <div class="family-pill">
+              <div class="family-avatar-stack">
+                <div class="mini-avatar" style="background: #10b981">B</div>
+                <div class="mini-avatar" style="background: #6366f1">E</div>
+                <div class="mini-avatar" style="background: #f59e0b">L</div>
+              </div>
+              <span>Bert0n Family</span>
+              <span style="font-size: 10px; color: var(--app-ink-muted)">▾</span>
+            </div>
+            <div class="sync-badge">
+              <div class="sync-dot"></div>
+              <span>Local &amp; Synced</span>
+            </div>
+          </div>
+
+          <!-- SCREEN 1: DASHBOARD -->
+          <div id="screen-dashboard" class="screen-content">
+            <!-- Month Stepper -->
+            <div class="month-stepper">
+              <button class="stepper-btn">‹</button>
+              <div style="text-align: center">
+                <div class="stepper-month">August 2026</div>
+                <div style="font-size: 10.5px; color: var(--app-ink-muted)">
+                  Day 15 of 31 · 16 days remaining
+                </div>
+              </div>
+              <button class="stepper-btn">›</button>
+            </div>
+
+            <!-- HERO: Household Burn Pace Gauge -->
+            <div class="hero-pace-card">
+              <div class="pace-top-row">
+                <div>
+                  <div class="pace-label">Monthly Household Spend</div>
+                  <div class="pace-amount"><span>€</span>1,438.50</div>
+                  <div class="pace-budget-note">Budget ceiling: <b>€2,400.00</b> (60% spent)</div>
+                </div>
+                <div class="pace-status-pill"><span>●</span> Steady (-€82 vs Pace)</div>
+              </div>
+
+              <div class="pace-bar-track">
+                <div class="pace-bar-fill"></div>
+                <div class="pace-bar-target-marker" title="Mid-month expected pace (48%)"></div>
+              </div>
+              <div class="pace-meta-row">
+                <span>€961.50 remaining</span>
+                <span>€60.10 / day allowable burn</span>
+              </div>
+            </div>
+
+            <!-- Settlement Instant Insight -->
+            <div class="settlement-card">
+              <div class="settlement-left">
+                <div class="settlement-icon-circle">⚖️</div>
+                <div>
+                  <div class="settlement-title">Household Balance: Elena +€262</div>
+                  <div class="settlement-sub">To balance 50/50, Berto sends Elena €131.00</div>
+                </div>
+              </div>
+              <button class="settlement-btn" onclick="alert('Settlement balance details opened')">
+                Settle Up
+              </button>
+            </div>
+
+            <!-- Primary Action Grid -->
+            <div class="action-grid">
+              <button class="action-btn action-btn-primary" onclick="showScreen('ledger')">
+                <span>＋</span> Log Expense
+              </button>
+              <button
+                class="action-btn action-btn-secondary"
+                onclick="alert('JSON Statement Ingest Dropzone ready')"
+              >
+                <span>📥</span> Import JSON
+              </button>
+            </div>
+
+            <!-- Household Members Contribution -->
+            <div class="section-header">
+              <span class="section-title">Member Contributions</span>
+              <span class="section-link" onclick="showScreen('budgets')">Family breakdown</span>
+            </div>
+            <div class="members-row">
+              <div class="member-mini-card">
+                <div class="member-card-top">
+                  <div class="member-avatar" style="background: #10b981">B</div>
+                  <div>
+                    <div class="member-name">Berto</div>
+                    <div class="member-share">41% of total</div>
+                  </div>
+                </div>
+                <div class="member-spent">€588.25</div>
+              </div>
+
+              <div class="member-mini-card">
+                <div class="member-card-top">
+                  <div class="member-avatar" style="background: #6366f1">E</div>
+                  <div>
+                    <div class="member-name">Elena</div>
+                    <div class="member-share">59% of total</div>
+                  </div>
+                </div>
+                <div class="member-spent">€850.25</div>
+              </div>
+            </div>
+
+            <!-- Recent Household Expenses -->
+            <div class="section-header">
+              <span class="section-title">Recent Household Expenses</span>
+              <span class="section-link" onclick="showScreen('ledger')">View all (32)</span>
+            </div>
+
+            <div class="tx-list">
+              <div class="tx-row" onclick="showScreen('ledger')">
+                <div class="tx-left">
+                  <div
+                    class="tx-icon-box"
+                    style="background: rgba(16, 185, 129, 0.12); color: #10b981"
+                  >
+                    🛒
+                  </div>
+                  <div class="tx-info">
+                    <div class="tx-merchant">Supermarket Esselunga</div>
+                    <div class="tx-meta">
+                      <span>Today, 14:20</span>
+                      <span>·</span>
+                      <span class="tx-split-pill">Split 50/50</span>
+                      <span>·</span>
+                      <span>Groceries</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tx-right">
+                  <div class="tx-amount">€142.80</div>
+                  <div class="tx-who">Paid by Berto</div>
+                </div>
+              </div>
+
+              <div class="tx-row" onclick="showScreen('ledger')">
+                <div class="tx-left">
+                  <div
+                    class="tx-icon-box"
+                    style="background: rgba(245, 158, 11, 0.12); color: #f59e0b"
+                  >
+                    🍕
+                  </div>
+                  <div class="tx-info">
+                    <div class="tx-merchant">Trattoria Da Mario</div>
+                    <div class="tx-meta">
+                      <span>Yesterday</span>
+                      <span>·</span>
+                      <span class="tx-split-pill">Split 50/50</span>
+                      <span>·</span>
+                      <span>Dining</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tx-right">
+                  <div class="tx-amount">€65.00</div>
+                  <div class="tx-who">Paid by Elena</div>
+                </div>
+              </div>
+
+              <div class="tx-row" onclick="showScreen('ledger')">
+                <div class="tx-left">
+                  <div
+                    class="tx-icon-box"
+                    style="background: rgba(14, 165, 233, 0.12); color: #0ea5e9"
+                  >
+                    ⚡
+                  </div>
+                  <div class="tx-info">
+                    <div class="tx-merchant">Enel Energia Luce &amp; Gas</div>
+                    <div class="tx-meta">
+                      <span>10 Aug</span>
+                      <span>·</span>
+                      <span>Shared Household</span>
+                      <span>·</span>
+                      <span>Utilities</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tx-right">
+                  <div class="tx-amount">€89.50</div>
+                  <div class="tx-who">Paid by Berto</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SCREEN 2: LEDGER & SPLIT INSPECTOR -->
+          <div id="screen-ledger" class="screen-content" style="display: none">
+            <div class="filter-search-box">
+              <span style="color: var(--app-ink-muted)">🔍</span>
+              <input
+                type="text"
+                class="filter-search-input"
+                placeholder="Search merchant, tag, or note..."
+                value="Esselunga"
+              />
+              <button
+                style="
+                  border: none;
+                  background: transparent;
+                  color: var(--app-primary);
+                  font-size: 11px;
+                  font-weight: 700;
+                  cursor: pointer;
+                "
+              >
+                Filters (2)
+              </button>
+            </div>
+
+            <div class="category-chips">
+              <div class="chip active">All Categories</div>
+              <div class="chip">🛒 Groceries</div>
+              <div class="chip">🍕 Dining</div>
+              <div class="chip">⚡ Utilities</div>
+              <div class="chip">👶 Kids</div>
+              <div class="chip">🚗 Transport</div>
+            </div>
+
+            <!-- Cent-Exact Split Inspector Feature Highlight -->
+            <div class="split-inspector-card">
+              <div class="split-badge-header">
+                <div>
+                  <div style="font-size: 14px; font-weight: 800; color: var(--app-ink)">
+                    Esselunga Cent-Exact Split
+                  </div>
+                  <div style="font-size: 11px; color: var(--app-ink-secondary)">
+                    Transaction on 2026-08-15 · Total: €142.80
+                  </div>
+                </div>
+                <span class="split-tag">Interactive Inspector</span>
+              </div>
+
+              <!-- Interactive Split Ratio Slider -->
+              <div class="split-slider-box">
+                <div class="split-slider-labels">
+                  <span>Berto: <strong id="berto-percent">50%</strong></span>
+                  <span>Elena: <strong id="elena-percent">50%</strong></span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value="50"
+                  step="5"
+                  class="split-slider"
+                  id="splitSlider"
+                  oninput="updateSplit(this.value)"
+                />
+              </div>
+
+              <div class="split-rows">
+                <div class="split-member-row">
+                  <div style="display: flex; align-items: center; gap: 8px">
+                    <div class="mini-avatar" style="background: #10b981">B</div>
+                    <span style="font-size: 12px; font-weight: 600">Berto's Allocation</span>
+                  </div>
+                  <span
+                    id="berto-amount"
+                    style="font-size: 13.5px; font-weight: 800; font-variant-numeric: tabular-nums"
+                    >€71.40</span
+                  >
+                </div>
+                <div class="split-member-row">
+                  <div style="display: flex; align-items: center; gap: 8px">
+                    <div class="mini-avatar" style="background: #6366f1">E</div>
+                    <span style="font-size: 12px; font-weight: 600">Elena's Allocation</span>
+                  </div>
+                  <span
+                    id="elena-amount"
+                    style="font-size: 13.5px; font-weight: 800; font-variant-numeric: tabular-nums"
+                    >€71.40</span
+                  >
+                </div>
+              </div>
+
+              <div class="split-penny-alert">
+                <span>🛡️</span>
+                <span
+                  >Zero Rounding Drift: 100% cent-exact allocation with no remainder pennies
+                  lost.</span
+                >
+              </div>
+            </div>
+
+            <div class="section-title" style="margin-bottom: 8px">Matching Transactions (1)</div>
+            <div class="tx-list">
+              <div class="tx-row" style="border-color: var(--app-primary)">
+                <div class="tx-left">
+                  <div
+                    class="tx-icon-box"
+                    style="background: rgba(16, 185, 129, 0.12); color: #10b981"
+                  >
+                    🛒
+                  </div>
+                  <div class="tx-info">
+                    <div class="tx-merchant">Supermarket Esselunga</div>
+                    <div class="tx-meta">
+                      <span>15 Aug 2026</span>
+                      <span>·</span>
+                      <span class="tx-split-pill">Split</span>
+                      <span>·</span>
+                      <span>Groceries</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tx-right">
+                  <div class="tx-amount">€142.80</div>
+                  <div class="tx-who">Paid by Berto</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SCREEN 3: ANALYTICS & VELOCITY -->
+          <div id="screen-analytics" class="screen-content" style="display: none">
+            <div class="section-header">
+              <div>
+                <div class="section-title">Spending Velocity Curve</div>
+                <div style="font-size: 11px; color: var(--app-ink-secondary)">
+                  Cumulative monthly burn vs budget ceiling
+                </div>
+              </div>
+              <span class="pace-status-pill">Day 15</span>
+            </div>
+
+            <!-- SVG Velocity Curve Chart -->
+            <div class="analytics-curve-box">
+              <svg class="svg-chart" viewBox="0 0 320 180">
+                <line
+                  x1="20"
+                  y1="20"
+                  x2="300"
+                  y2="20"
+                  stroke="var(--app-border-subtle)"
+                  stroke-dasharray="3 3"
+                />
+                <line
+                  x1="20"
+                  y1="70"
+                  x2="300"
+                  y2="70"
+                  stroke="var(--app-border-subtle)"
+                  stroke-dasharray="3 3"
+                />
+                <line
+                  x1="20"
+                  y1="120"
+                  x2="300"
+                  y2="120"
+                  stroke="var(--app-border-subtle)"
+                  stroke-dasharray="3 3"
+                />
+                <line x1="20" y1="150" x2="300" y2="150" stroke="var(--app-border)" />
+
+                <line
+                  x1="20"
+                  y1="30"
+                  x2="300"
+                  y2="30"
+                  stroke="var(--app-danger)"
+                  stroke-width="1.5"
+                  stroke-dasharray="4 4"
+                />
+                <text x="235" y="25" fill="var(--app-danger)" font-size="9" font-weight="700">
+                  Ceiling: €2,400
+                </text>
+
+                <path
+                  d="M 20 150 Q 80 135 150 90 T 300 45"
+                  fill="none"
+                  stroke="var(--app-ink-muted)"
+                  stroke-width="1.5"
+                  stroke-dasharray="3 3"
+                />
+
+                <path
+                  d="M 20 150 C 60 145, 90 120, 150 90 L 150 150 L 20 150 Z"
+                  fill="var(--app-primary-light)"
+                  opacity="0.6"
+                />
+                <path
+                  d="M 20 150 C 60 145, 90 120, 150 90"
+                  fill="none"
+                  stroke="var(--app-primary)"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                />
+
+                <circle
+                  cx="150"
+                  cy="90"
+                  r="5"
+                  fill="var(--app-primary)"
+                  stroke="var(--app-surface)"
+                  stroke-width="2"
+                />
+                <text x="135" y="80" fill="var(--app-primary)" font-size="10" font-weight="800">
+                  €1,438.50
+                </text>
+
+                <text x="20" y="166" fill="var(--app-ink-muted)" font-size="9">1 Aug</text>
+                <text x="135" y="166" fill="var(--app-primary)" font-weight="700" font-size="9">
+                  15 Aug (Today)
+                </text>
+                <text x="275" y="166" fill="var(--app-ink-muted)" font-size="9">31 Aug</text>
+              </svg>
+
+              <div class="comparison-grid">
+                <div class="comp-item">
+                  <div class="comp-title">Projected EOM Spend</div>
+                  <div class="comp-val">€2,318.00</div>
+                </div>
+                <div class="comp-item">
+                  <div class="comp-title">Burn Pace vs July</div>
+                  <div class="comp-val" style="color: var(--app-primary)">-5.4% Lower</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-title" style="margin-bottom: 8px">Category Allocations</div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div
+                style="
+                  background: var(--app-surface);
+                  border: 1px solid var(--app-border);
+                  padding: 10px 12px;
+                  border-radius: 12px;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 12px;
+                    font-weight: 700;
+                    margin-bottom: 5px;
+                  "
+                >
+                  <span>🛒 Groceries &amp; Market</span>
+                  <span>€540.00 / €750</span>
+                </div>
+                <div
+                  style="
+                    height: 6px;
+                    background: var(--app-surface-subtle);
+                    border-radius: 3px;
+                    overflow: hidden;
+                  "
+                >
+                  <div
+                    style="height: 100%; width: 72%; background: #10b981; border-radius: 3px"
+                  ></div>
+                </div>
+              </div>
+
+              <div
+                style="
+                  background: var(--app-surface);
+                  border: 1px solid var(--app-border);
+                  padding: 10px 12px;
+                  border-radius: 12px;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 12px;
+                    font-weight: 700;
+                    margin-bottom: 5px;
+                  "
+                >
+                  <span>⚡ Utilities &amp; Home</span>
+                  <span>€280.00 / €350</span>
+                </div>
+                <div
+                  style="
+                    height: 6px;
+                    background: var(--app-surface-subtle);
+                    border-radius: 3px;
+                    overflow: hidden;
+                  "
+                >
+                  <div
+                    style="height: 100%; width: 80%; background: #0ea5e9; border-radius: 3px"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SCREEN 4: ENVELOPES & FAMILY HUB -->
+          <div id="screen-budgets" class="screen-content" style="display: none">
+            <div class="section-header">
+              <div class="section-title">Household Members &amp; Roles</div>
+              <span class="section-link">+ Invite Member</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px">
+              <div
+                style="
+                  background: var(--app-surface);
+                  border: 1px solid var(--app-border);
+                  padding: 10px 12px;
+                  border-radius: 12px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                "
+              >
+                <div style="display: flex; align-items: center; gap: 10px">
+                  <div
+                    class="mini-avatar"
+                    style="width: 28px; height: 28px; font-size: 12px; background: #10b981"
+                  >
+                    B
+                  </div>
+                  <div>
+                    <div style="font-size: 12.5px; font-weight: 700">Berto</div>
+                    <div style="font-size: 10.5px; color: var(--app-ink-secondary)">
+                      Primary Household Admin · You
+                    </div>
+                  </div>
+                </div>
+                <span
+                  style="
+                    font-size: 10px;
+                    font-weight: 700;
+                    background: var(--app-surface-subtle);
+                    padding: 2px 7px;
+                    border-radius: 5px;
+                  "
+                  >ADMIN</span
+                >
+              </div>
+
+              <div
+                style="
+                  background: var(--app-surface);
+                  border: 1px solid var(--app-border);
+                  padding: 10px 12px;
+                  border-radius: 12px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                "
+              >
+                <div style="display: flex; align-items: center; gap: 10px">
+                  <div
+                    class="mini-avatar"
+                    style="width: 28px; height: 28px; font-size: 12px; background: #6366f1"
+                  >
+                    E
+                  </div>
+                  <div>
+                    <div style="font-size: 12.5px; font-weight: 700">Elena</div>
+                    <div style="font-size: 10.5px; color: var(--app-ink-secondary)">
+                      Co-Owner · Partner
+                    </div>
+                  </div>
+                </div>
+                <span
+                  style="
+                    font-size: 10px;
+                    font-weight: 700;
+                    background: var(--app-surface-subtle);
+                    padding: 2px 7px;
+                    border-radius: 5px;
+                  "
+                  >MEMBER</span
+                >
+              </div>
+            </div>
+
+            <div class="section-title" style="margin-bottom: 6px">Budget Envelope Policy</div>
+            <div
+              style="
+                background: var(--app-surface);
+                border: 1px solid var(--app-border);
+                border-radius: 12px;
+                padding: 12px;
+                font-size: 11.5px;
+                color: var(--app-ink-secondary);
+                line-height: 1.5;
+              "
+            >
+              🛡️ <b>Privacy-First Local Sync:</b> All records remain stored locally on your device.
+              Sync converges only authorized family changes without exposing transaction data to
+              third parties.
+            </div>
+          </div>
+
+          <!-- FLOATING BOTTOM DOCK -->
+          <div class="dock-container">
+            <button id="dock-dashboard" class="dock-item active" onclick="showScreen('dashboard')">
+              <span class="dock-icon">🏠</span>
+              <span class="dock-label">Pulse</span>
+            </button>
+            <button id="dock-ledger" class="dock-item" onclick="showScreen('ledger')">
+              <span class="dock-icon">🧾</span>
+              <span class="dock-label">Ledger</span>
+            </button>
+            <button id="dock-analytics" class="dock-item" onclick="showScreen('analytics')">
+              <span class="dock-icon">📈</span>
+              <span class="dock-label">Velocity</span>
+            </button>
+            <button id="dock-budgets" class="dock-item" onclick="showScreen('budgets')">
+              <span class="dock-icon">👨‍👩‍👦</span>
+              <span class="dock-label">Family</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison & Design System Notes -->
+    <div class="design-summary">
+      <div class="summary-heading"><span>🎨</span> Architectural UI/UX Redesign Blueprint</div>
+      <div class="summary-list">
+        <div class="summary-card">
+          <div class="summary-card-title">1. The "Family Pulse" Burn Gauge</div>
+          <div>
+            Replaced the raw static expense box with a contextual burn-rate meter. Immediately
+            answers if the family is overspending based on current day-of-month pace.
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-title">2. Cent-Exact Settlement Pill</div>
+          <div>
+            Explicitly calculates member balance (e.g. "Elena is ahead +€262. Berto sends €131 to
+            balance") removing family financial friction.
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-title">3. Unslop &amp; Anti-AI Aesthetics</div>
+          <div>
+            Eliminated generic uppercase tracked headers, identical card boxes, and cookie-cutter
+            shadows. Introduced tactile materials, warm organic tones, and tabular typography.
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-title">4. Tactile Floating Pill Dock</div>
+          <div>
+            Optimized thumb-reach navigation with haptic micro-interactions and clean tab switching.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentConcept = 'nordic';
+      let currentMode = 'dark';
+
+      function updateThemeClass() {
+        document.body.className = 'theme-' + currentConcept + '-' + currentMode;
+      }
+
+      function setConcept(concept) {
+        currentConcept = concept;
+        ['a', 'b', 'c'].forEach((id) => {
+          document.getElementById('btn-concept-' + id).classList.remove('active');
+        });
+        document
+          .getElementById(
+            'btn-concept-' + (concept === 'nordic' ? 'a' : concept === 'zen' ? 'b' : 'c'),
+          )
+          .classList.add('active');
+        updateThemeClass();
+      }
+
+      function setMode(mode) {
+        currentMode = mode;
+        document.getElementById('theme-btn-light').classList.toggle('active', mode === 'light');
+        document.getElementById('theme-btn-dark').classList.toggle('active', mode === 'dark');
+        updateThemeClass();
+      }
+
+      function setViewMode(view) {
+        const shell = document.getElementById('deviceShell');
+        document.getElementById('view-btn-mobile').classList.toggle('active', view === 'mobile');
+        document.getElementById('view-btn-wide').classList.toggle('active', view === 'wide');
+        if (view === 'wide') {
+          shell.classList.add('wide-view');
+        } else {
+          shell.classList.remove('wide-view');
+        }
+      }
+
+      function showScreen(screenId) {
+        const screens = ['dashboard', 'ledger', 'analytics', 'budgets'];
+        screens.forEach((s) => {
+          const el = document.getElementById('screen-' + s);
+          const dock = document.getElementById('dock-' + s);
+          const topBtn = document.getElementById('screen-btn-' + s);
+          if (s === screenId) {
+            if (el) el.style.display = 'block';
+            if (dock) dock.classList.add('active');
+            if (topBtn) topBtn.classList.add('active');
+          } else {
+            if (el) el.style.display = 'none';
+            if (dock) dock.classList.remove('active');
+            if (topBtn) topBtn.classList.remove('active');
+          }
+        });
+      }
+
+      function updateSplit(val) {
+        const bertoPct = parseInt(val, 10);
+        const elenaPct = 100 - bertoPct;
+        const total = 142.8;
+        const bertoAmt = (total * (bertoPct / 100)).toFixed(2);
+        const elenaAmt = (total - parseFloat(bertoAmt)).toFixed(2);
+
+        document.getElementById('berto-percent').innerText = bertoPct + '%';
+        document.getElementById('elena-percent').innerText = elenaPct + '%';
+        document.getElementById('berto-amount').innerText = '€' + bertoAmt;
+        document.getElementById('elena-amount').innerText = '€' + elenaAmt;
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1422 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zen Minimalist Design System — Unified Geometry &amp; Variations</title>
+    <style>
+      :root {
+        --text-primary: #f4f4f6;
+        --text-secondary: #9da0a8;
+        --text-muted: #666973;
+        --border-subtle: rgba(255, 255, 255, 0.08);
+        --font-sans:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+        /* Dynamic Zen Geometry (Controlled via JS) */
+        --zen-radius: 8px;
+        --zen-inner-radius: 6px;
+        --zen-dock-radius: 8px;
+      }
+
+      /* VARIATION 1: Sumi & Cinnabar (Crisp 8px) */
+      .var-sumi-dark {
+        --app-canvas: #101114;
+        --app-surface: #18191e;
+        --app-surface-elevated: #202228;
+        --app-surface-subtle: #141518;
+        --app-border: #282b33;
+        --app-border-subtle: rgba(255, 255, 255, 0.06);
+        --app-ink: #f4f4f6;
+        --app-ink-secondary: #9da0a8;
+        --app-ink-muted: #666973;
+        --app-accent: #e63946; /* Cinnabar Red */
+        --app-accent-bg: rgba(230, 57, 70, 0.12);
+        --app-accent-border: rgba(230, 57, 70, 0.3);
+        --app-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        --app-dock-bg: rgba(24, 25, 30, 0.92);
+        --app-dock-border: #282b33;
+        --app-dock-active-bg: rgba(255, 255, 255, 0.07);
+        --app-dock-active-color: #f4f4f6;
+      }
+
+      .var-sumi-light {
+        --app-canvas: #f6f5f2;
+        --app-surface: #ffffff;
+        --app-surface-elevated: #fafaf8;
+        --app-surface-subtle: #edeae3;
+        --app-border: #d8d4ca;
+        --app-border-subtle: rgba(0, 0, 0, 0.06);
+        --app-ink: #161618;
+        --app-ink-secondary: #58595c;
+        --app-ink-muted: #8d8e92;
+        --app-accent: #d63929; /* Deep Vermilion Stamp */
+        --app-accent-bg: #fdeeed;
+        --app-accent-border: rgba(214, 57, 41, 0.25);
+        --app-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        --app-dock-bg: rgba(255, 255, 255, 0.94);
+        --app-dock-border: #d8d4ca;
+        --app-dock-active-bg: #edeae3;
+        --app-dock-active-color: #161618;
+      }
+
+      /* VARIATION 2: Kanso Slate & Bamboo (Gentle 12px) */
+      .var-kanso-dark {
+        --app-canvas: #121418;
+        --app-surface: #1a1d23;
+        --app-surface-elevated: #22262e;
+        --app-surface-subtle: #15181e;
+        --app-border: #2c323d;
+        --app-border-subtle: rgba(255, 255, 255, 0.06);
+        --app-ink: #f0f2f5;
+        --app-ink-secondary: #969eab;
+        --app-ink-muted: #646c7a;
+        --app-accent: #52b788; /* Bamboo Sage */
+        --app-accent-bg: rgba(82, 183, 136, 0.14);
+        --app-accent-border: rgba(82, 183, 136, 0.28);
+        --app-shadow: 0 6px 20px rgba(0, 0, 0, 0.38);
+        --app-dock-bg: rgba(26, 29, 35, 0.92);
+        --app-dock-border: #2c323d;
+        --app-dock-active-bg: rgba(82, 183, 136, 0.14);
+        --app-dock-active-color: #52b788;
+      }
+
+      .var-kanso-light {
+        --app-canvas: #f4f5f2;
+        --app-surface: #ffffff;
+        --app-surface-elevated: #fafbf9;
+        --app-surface-subtle: #e8ebe4;
+        --app-border: #d1d7cd;
+        --app-border-subtle: rgba(0, 0, 0, 0.05);
+        --app-ink: #1b211e;
+        --app-ink-secondary: #57615b;
+        --app-ink-muted: #85918a;
+        --app-accent: #2e6b4f; /* Deep Pine Sage */
+        --app-accent-bg: #e6efea;
+        --app-accent-border: rgba(46, 107, 79, 0.25);
+        --app-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+        --app-dock-bg: rgba(255, 255, 255, 0.94);
+        --app-dock-border: #d1d7cd;
+        --app-dock-active-bg: #e6efea;
+        --app-dock-active-color: #2e6b4f;
+      }
+
+      /* VARIATION 3: Monolithic Architectural (Precise 6px) */
+      .var-mono-dark {
+        --app-canvas: #0c0d0e;
+        --app-surface: #141517;
+        --app-surface-elevated: #1b1d20;
+        --app-surface-subtle: #101113;
+        --app-border: #24262b;
+        --app-border-subtle: rgba(255, 255, 255, 0.05);
+        --app-ink: #ffffff;
+        --app-ink-secondary: #a0a2a8;
+        --app-ink-muted: #5c5e64;
+        --app-accent: #e5a93c; /* Warm Brass Ochre */
+        --app-accent-bg: rgba(229, 169, 60, 0.12);
+        --app-accent-border: rgba(229, 169, 60, 0.28);
+        --app-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+        --app-dock-bg: rgba(20, 21, 23, 0.94);
+        --app-dock-border: #24262b;
+        --app-dock-active-bg: rgba(255, 255, 255, 0.1);
+        --app-dock-active-color: #ffffff;
+      }
+
+      .var-mono-light {
+        --app-canvas: #f8f8f7;
+        --app-surface: #ffffff;
+        --app-surface-elevated: #fdfdfd;
+        --app-surface-subtle: #efefef;
+        --app-border: #dcdcdc;
+        --app-border-subtle: rgba(0, 0, 0, 0.05);
+        --app-ink: #111111;
+        --app-ink-secondary: #555555;
+        --app-ink-muted: #888888;
+        --app-accent: #c28522;
+        --app-accent-bg: #fbf4e8;
+        --app-accent-border: rgba(194, 133, 34, 0.25);
+        --app-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        --app-dock-bg: rgba(255, 255, 255, 0.95);
+        --app-dock-border: #dcdcdc;
+        --app-dock-active-bg: #efefef;
+        --app-dock-active-color: #111111;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: var(--font-sans);
+        color: var(--text-primary);
+        background: transparent;
+        padding: 6px 0 24px;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Studio Control Header */
+      .studio-bar {
+        background: rgba(18, 22, 30, 0.85);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        backdrop-filter: blur(14px);
+      }
+      .studio-row-1 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .studio-row-2 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .pill-group {
+        display: inline-flex;
+        background: rgba(10, 13, 18, 0.7);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 2px;
+        gap: 2px;
+      }
+      .pill-btn {
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 11px;
+        font-weight: 500;
+        padding: 5px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+      }
+      .pill-btn:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .pill-btn.active {
+        background: #3b82f6;
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      .radius-dial-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(10, 13, 18, 0.7);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 4px 10px;
+        font-size: 11px;
+      }
+      .radius-dial-box input[type='range'] {
+        width: 90px;
+        accent-color: #3b82f6;
+        cursor: pointer;
+      }
+
+      /* Mockup Stage */
+      .mockup-stage {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .device-shell {
+        width: 384px;
+        max-width: 100%;
+        border-radius: 36px;
+        background: #000000;
+        padding: 10px;
+        box-shadow:
+          0 25px 60px -15px rgba(0, 0, 0, 0.7),
+          0 0 0 1px rgba(255, 255, 255, 0.12);
+        position: relative;
+        transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .device-shell.wide-view {
+        width: 720px;
+        border-radius: 22px;
+        padding: 12px;
+      }
+      .device-screen {
+        background: var(--app-canvas);
+        border-radius: 28px;
+        overflow: hidden;
+        position: relative;
+        min-height: 720px;
+        display: flex;
+        flex-direction: column;
+        color: var(--app-ink);
+        transition:
+          background 0.2s ease,
+          color 0.2s ease;
+      }
+      .device-shell.wide-view .device-screen {
+        border-radius: 14px;
+        min-height: 640px;
+      }
+
+      .status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--app-ink);
+      }
+      .island-notch {
+        width: 76px;
+        height: 20px;
+        background: #000000;
+        border-radius: 10px;
+      }
+
+      .app-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 18px 8px;
+      }
+      .family-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--app-surface-subtle);
+        border: 1px solid var(--app-border-subtle);
+        padding: 5px 10px;
+        border-radius: var(--zen-radius);
+        font-size: 12px;
+        font-weight: 600;
+        transition: border-radius 0.2s ease;
+      }
+      .family-avatar-stack {
+        display: flex;
+      }
+      .mini-avatar {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        border: 1px solid var(--app-surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        font-weight: 700;
+        color: #ffffff;
+        margin-left: -3px;
+      }
+      .mini-avatar:first-child {
+        margin-left: 0;
+      }
+      .sync-badge {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--app-ink-secondary);
+      }
+      .sync-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--app-accent);
+      }
+
+      .screen-content {
+        flex: 1;
+        padding: 8px 16px 86px;
+        overflow-y: auto;
+      }
+
+      /* Month Bar */
+      .month-stepper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--zen-radius);
+        padding: 8px 12px;
+        margin-bottom: 12px;
+        box-shadow: var(--app-shadow);
+        transition: border-radius 0.2s ease;
+      }
+      .stepper-btn {
+        background: var(--app-surface-subtle);
+        border: 1px solid var(--app-border-subtle);
+        color: var(--app-ink);
+        width: 26px;
+        height: 26px;
+        border-radius: calc(var(--zen-radius) - 2px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        cursor: pointer;
+        transition: border-radius 0.2s ease;
+      }
+      .stepper-month {
+        font-weight: 700;
+        font-size: 13.5px;
+        letter-spacing: -0.2px;
+      }
+
+      /* Hero Spend Meter */
+      .hero-zen-card {
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--zen-radius);
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: var(--app-shadow);
+        position: relative;
+        transition: border-radius 0.2s ease;
+      }
+      .hero-zen-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--app-accent);
+        border-top-left-radius: var(--zen-radius);
+        border-bottom-left-radius: var(--zen-radius);
+      }
+      .zen-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 6px;
+      }
+      .zen-label {
+        font-size: 11.5px;
+        color: var(--app-ink-secondary);
+        font-weight: 500;
+        letter-spacing: 0.2px;
+      }
+      .zen-stamp {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 7px;
+        border-radius: calc(var(--zen-radius) - 2px);
+        font-size: 10px;
+        font-weight: 700;
+        background: var(--app-accent-bg);
+        color: var(--app-accent);
+        border: 1px solid var(--app-accent-border);
+        transition: border-radius 0.2s ease;
+      }
+      .zen-amount {
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: -0.8px;
+        line-height: 1.1;
+        margin-bottom: 3px;
+        font-variant-numeric: tabular-nums;
+      }
+      .zen-amount span {
+        font-size: 20px;
+        font-weight: 500;
+        color: var(--app-ink-muted);
+        margin-right: 2px;
+      }
+      .zen-budget-sub {
+        font-size: 11.5px;
+        color: var(--app-ink-secondary);
+        margin-bottom: 12px;
+      }
+      .zen-budget-sub b {
+        color: var(--app-ink);
+        font-weight: 700;
+      }
+
+      .zen-bar-track {
+        height: 6px;
+        background: var(--app-surface-subtle);
+        border-radius: calc(var(--zen-radius) / 2);
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 8px;
+      }
+      .zen-bar-fill {
+        height: 100%;
+        width: 60%;
+        background: var(--app-ink);
+        border-radius: calc(var(--zen-radius) / 2);
+      }
+      .zen-bar-marker {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 48%;
+        width: 2px;
+        background: var(--app-accent);
+      }
+      .zen-meta-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--app-ink-muted);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Settlement Card */
+      .settlement-card {
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--zen-radius);
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        box-shadow: var(--app-shadow);
+        transition: border-radius 0.2s ease;
+      }
+      .settlement-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .settlement-icon-stamp {
+        width: 30px;
+        height: 30px;
+        border-radius: calc(var(--zen-radius) - 2px);
+        background: var(--app-accent-bg);
+        border: 1px solid var(--app-accent-border);
+        color: var(--app-accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 800;
+        flex-shrink: 0;
+        transition: border-radius 0.2s ease;
+      }
+      .settlement-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--app-ink);
+        margin-bottom: 1px;
+      }
+      .settlement-sub {
+        font-size: 10.5px;
+        color: var(--app-ink-secondary);
+      }
+      .settlement-btn {
+        background: var(--app-surface-subtle);
+        border: 1px solid var(--app-border);
+        color: var(--app-ink);
+        font-size: 11px;
+        font-weight: 700;
+        padding: 5px 10px;
+        border-radius: calc(var(--zen-radius) - 2px);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: border-radius 0.2s ease;
+      }
+
+      /* Action Grid */
+      .action-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 12px;
+        border-radius: var(--zen-radius);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1px solid var(--app-border);
+        background: var(--app-surface);
+        color: var(--app-ink);
+        box-shadow: var(--app-shadow);
+        transition: border-radius 0.2s ease;
+      }
+      .action-btn-primary {
+        background: var(--app-ink);
+        color: var(--app-canvas);
+        border-color: var(--app-ink);
+      }
+
+      /* Member Allocations */
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .section-title {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--app-ink);
+        letter-spacing: -0.2px;
+      }
+      .section-link {
+        font-size: 11px;
+        color: var(--app-accent);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .members-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .member-card {
+        flex: 1;
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--zen-radius);
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--app-shadow);
+        transition: border-radius 0.2s ease;
+      }
+      .member-top {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 4px;
+      }
+      .member-name {
+        font-size: 11.5px;
+        font-weight: 600;
+      }
+      .member-spent {
+        font-size: 15px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+      .member-share {
+        font-size: 10px;
+        color: var(--app-ink-muted);
+      }
+
+      /* Transactions */
+      .tx-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .tx-row {
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--zen-radius);
+        padding: 9px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        box-shadow: var(--app-shadow);
+        transition: border-radius 0.2s ease;
+      }
+      .tx-left {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        flex: 1;
+        min-width: 0;
+      }
+      .tx-icon-stamp {
+        width: 30px;
+        height: 30px;
+        border-radius: calc(var(--zen-radius) - 2px);
+        background: var(--app-surface-subtle);
+        border: 1px solid var(--app-border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        flex-shrink: 0;
+        transition: border-radius 0.2s ease;
+      }
+      .tx-info {
+        min-width: 0;
+        flex: 1;
+      }
+      .tx-merchant {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--app-ink);
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tx-meta {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 10px;
+        color: var(--app-ink-secondary);
+      }
+      .tx-split-tag {
+        background: var(--app-surface-subtle);
+        border-radius: 3px;
+        padding: 1px 4px;
+        font-size: 9px;
+        font-weight: 600;
+      }
+      .tx-right {
+        text-align: right;
+        margin-left: 8px;
+      }
+      .tx-amount {
+        font-size: 13.5px;
+        font-weight: 800;
+        color: var(--app-ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .tx-who {
+        font-size: 10px;
+        color: var(--app-ink-muted);
+      }
+
+      /* =======================================================
+     ZEN FLOATING DOCK — HARMONIZED RADIUS
+     Same corner radius as cards & components!
+     ======================================================= */
+      .zen-dock-container {
+        position: absolute;
+        bottom: 12px;
+        left: 14px;
+        right: 14px;
+        height: 56px;
+        background: var(--app-dock-bg);
+        border: 1.5px solid var(--app-dock-border);
+        border-radius: var(--zen-dock-radius);
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding: 0 6px;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(16px);
+        z-index: 100;
+        transition:
+          border-radius 0.2s ease,
+          border-color 0.2s ease;
+      }
+      .zen-dock-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 44px;
+        flex: 1;
+        max-width: 64px;
+        border-radius: var(--zen-inner-radius);
+        cursor: pointer;
+        color: var(--app-ink-muted);
+        border: 1px solid transparent;
+        background: transparent;
+        transition:
+          all 0.15s ease,
+          border-radius 0.2s ease;
+      }
+      .zen-dock-item:hover {
+        color: var(--app-ink);
+      }
+      .zen-dock-item.active {
+        color: var(--app-dock-active-color);
+        background: var(--app-dock-active-bg);
+        border-color: var(--app-border-subtle);
+      }
+      .zen-dock-icon {
+        font-size: 15px;
+        margin-bottom: 2px;
+      }
+      .zen-dock-label {
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.1px;
+      }
+
+      /* Ledger Screen Elements */
+      .filter-search-box {
+        display: flex;
+        align-items: center;
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--zen-radius);
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        gap: 8px;
+        box-shadow: var(--app-shadow);
+        transition: border-radius 0.2s ease;
+      }
+      .filter-search-input {
+        border: none;
+        background: transparent;
+        outline: none;
+        color: var(--app-ink);
+        font-size: 12px;
+        flex: 1;
+        font-family: inherit;
+      }
+      .category-chips {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        margin-bottom: 10px;
+      }
+      .chip {
+        padding: 4px 10px;
+        border-radius: var(--zen-radius);
+        font-size: 10.5px;
+        font-weight: 600;
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        color: var(--app-ink-secondary);
+        white-space: nowrap;
+        cursor: pointer;
+        transition: border-radius 0.2s ease;
+      }
+      .chip.active {
+        background: var(--app-ink);
+        color: var(--app-canvas);
+        border-color: var(--app-ink);
+      }
+
+      /* Cent-Exact Split Card */
+      .split-card {
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
+        border-radius: var(--zen-radius);
+        padding: 14px;
+        margin-bottom: 12px;
+        box-shadow: var(--app-shadow);
+        transition: border-radius 0.2s ease;
+      }
+      .split-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .split-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+      .split-row-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 7px 10px;
+        background: var(--app-surface-subtle);
+        border-radius: calc(var(--zen-radius) - 2px);
+        transition: border-radius 0.2s ease;
+      }
+      .split-slider {
+        width: 100%;
+        accent-color: var(--app-accent);
+        cursor: pointer;
+        margin: 6px 0 10px;
+      }
+
+      /* Variations Comparison Cards */
+      .variations-panel {
+        background: rgba(18, 22, 30, 0.85);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin-top: 16px;
+      }
+      .var-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .var-card {
+        background: rgba(10, 13, 18, 0.6);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .var-card:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+      .var-card.active-card {
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.08);
+      }
+      .var-card-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .var-card-desc {
+        font-size: 11px;
+        color: var(--text-secondary);
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+  <body class="var-sumi-dark">
+    <!-- Studio Control Header -->
+    <div class="studio-bar">
+      <div class="studio-row-1">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span
+            style="
+              background: rgba(230, 57, 70, 0.15);
+              border: 1px solid rgba(230, 57, 70, 0.35);
+              color: #f87171;
+              font-size: 10px;
+              font-weight: 700;
+              padding: 2px 7px;
+              border-radius: 4px;
+            "
+            >ZEN MINIMALIST</span
+          >
+          <strong style="font-size: 13.5px"
+            >Harmonized Geometry &amp; Nav Bar Radius Variations</strong
+          >
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center">
+          <!-- Corner Radius Live Dial -->
+          <div class="radius-dial-box">
+            <span style="color: var(--text-secondary)">Radius:</span>
+            <input
+              type="range"
+              min="4"
+              max="16"
+              value="8"
+              step="2"
+              id="radiusSlider"
+              oninput="setRadius(this.value)"
+            />
+            <strong
+              id="radiusValue"
+              style="color: #3b82f6; min-width: 32px; font-family: var(--font-mono)"
+              >8px</strong
+            >
+          </div>
+
+          <div class="pill-group">
+            <button id="theme-btn-light" class="pill-btn" onclick="setMode('light')">
+              ☀️ Light
+            </button>
+            <button id="theme-btn-dark" class="pill-btn active" onclick="setMode('dark')">
+              🌙 Dark
+            </button>
+          </div>
+          <div class="pill-group">
+            <button id="view-btn-mobile" class="pill-btn active" onclick="setViewMode('mobile')">
+              📱 Mobile
+            </button>
+            <button id="view-btn-wide" class="pill-btn" onclick="setViewMode('wide')">
+              💻 Wide
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="studio-row-2">
+        <div class="pill-group">
+          <button id="btn-var-sumi" class="pill-btn active" onclick="setVariation('sumi', 8)">
+            Option A: Sumi &amp; Cinnabar (8px)
+          </button>
+          <button id="btn-var-kanso" class="pill-btn" onclick="setVariation('kanso', 12)">
+            Option B: Kanso Slate &amp; Sage (12px)
+          </button>
+          <button id="btn-var-mono" class="pill-btn" onclick="setVariation('mono', 6)">
+            Option C: Architectural Monochrome (6px)
+          </button>
+        </div>
+
+        <div class="pill-group">
+          <button
+            id="screen-btn-dashboard"
+            class="pill-btn active"
+            onclick="showScreen('dashboard')"
+          >
+            Dashboard
+          </button>
+          <button id="screen-btn-ledger" class="pill-btn" onclick="showScreen('ledger')">
+            Ledger &amp; Split
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Mockup Stage -->
+    <div class="mockup-stage">
+      <div id="deviceShell" class="device-shell">
+        <div class="device-screen">
+          <!-- Status Bar -->
+          <div class="status-bar">
+            <span>09:41</span>
+            <div class="island-notch"></div>
+            <span>5G · 100%</span>
+          </div>
+
+          <!-- App Header -->
+          <div class="app-header">
+            <div class="family-pill">
+              <div class="family-avatar-stack">
+                <div class="mini-avatar" style="background: #e63946">B</div>
+                <div class="mini-avatar" style="background: #457b9d">E</div>
+                <div class="mini-avatar" style="background: #2a9d8f">L</div>
+              </div>
+              <span>Bert0n Household</span>
+            </div>
+            <div class="sync-badge">
+              <div class="sync-dot"></div>
+              <span>Synced</span>
+            </div>
+          </div>
+
+          <!-- SCREEN 1: DASHBOARD -->
+          <div id="screen-dashboard" class="screen-content">
+            <!-- Month Stepper -->
+            <div class="month-stepper">
+              <button class="stepper-btn">‹</button>
+              <div style="text-align: center">
+                <div class="stepper-month">August 2026</div>
+                <div style="font-size: 10px; color: var(--app-ink-muted)">
+                  15 of 31 days · On pace
+                </div>
+              </div>
+              <button class="stepper-btn">›</button>
+            </div>
+
+            <!-- HERO: Zen Burn Meter -->
+            <div class="hero-zen-card">
+              <div class="zen-top-row">
+                <div>
+                  <div class="zen-label">MONTHLY EXPENSES</div>
+                  <div class="zen-amount"><span>€</span>1,438.50</div>
+                  <div class="zen-budget-sub">Ceiling: <b>€2,400.00</b> (60%)</div>
+                </div>
+                <div class="zen-stamp">● -€82 vs Pace</div>
+              </div>
+
+              <div class="zen-bar-track">
+                <div class="zen-bar-fill"></div>
+                <div class="zen-bar-marker" title="Mid-month pace target"></div>
+              </div>
+              <div class="zen-meta-row">
+                <span>€961.50 remaining</span>
+                <span>€60.10 / day allowable</span>
+              </div>
+            </div>
+
+            <!-- Instant Settlement Strip -->
+            <div class="settlement-card">
+              <div class="settlement-left">
+                <div class="settlement-icon-stamp">⚖</div>
+                <div>
+                  <div class="settlement-title">Elena is ahead +€262.00</div>
+                  <div class="settlement-sub">Berto sends €131.00 to balance 50/50</div>
+                </div>
+              </div>
+              <button class="settlement-btn" onclick="alert('Settlement sheet opened')">
+                Settle
+              </button>
+            </div>
+
+            <!-- Action Grid -->
+            <div class="action-grid">
+              <button class="action-btn action-btn-primary" onclick="showScreen('ledger')">
+                ＋ Log Expense
+              </button>
+              <button class="action-btn" onclick="alert('JSON Import')">📥 Import</button>
+            </div>
+
+            <!-- Member Contributions -->
+            <div class="section-header">
+              <span class="section-title">Contributions</span>
+              <span class="section-link">Breakdown</span>
+            </div>
+            <div class="members-row">
+              <div class="member-card">
+                <div class="member-top">
+                  <div class="mini-avatar" style="background: #e63946">B</div>
+                  <span class="member-name">Berto (41%)</span>
+                </div>
+                <div class="member-spent">€588.25</div>
+              </div>
+
+              <div class="member-card">
+                <div class="member-top">
+                  <div class="mini-avatar" style="background: #457b9d">E</div>
+                  <span class="member-name">Elena (59%)</span>
+                </div>
+                <div class="member-spent">€850.25</div>
+              </div>
+            </div>
+
+            <!-- Transactions -->
+            <div class="section-header">
+              <span class="section-title">Recent Records</span>
+              <span class="section-link" onclick="showScreen('ledger')">All (32)</span>
+            </div>
+            <div class="tx-list">
+              <div class="tx-row" onclick="showScreen('ledger')">
+                <div class="tx-left">
+                  <div class="tx-icon-stamp">🛒</div>
+                  <div class="tx-info">
+                    <div class="tx-merchant">Esselunga Supermarket</div>
+                    <div class="tx-meta">
+                      <span>Today 14:20</span>
+                      <span>·</span>
+                      <span class="tx-split-tag">50/50</span>
+                      <span>·</span>
+                      <span>Groceries</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tx-right">
+                  <div class="tx-amount">€142.80</div>
+                  <div class="tx-who">Berto</div>
+                </div>
+              </div>
+
+              <div class="tx-row" onclick="showScreen('ledger')">
+                <div class="tx-left">
+                  <div class="tx-icon-stamp">🍕</div>
+                  <div class="tx-info">
+                    <div class="tx-merchant">Trattoria Da Mario</div>
+                    <div class="tx-meta">
+                      <span>Yesterday</span>
+                      <span>·</span>
+                      <span class="tx-split-tag">50/50</span>
+                      <span>·</span>
+                      <span>Dining</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tx-right">
+                  <div class="tx-amount">€65.00</div>
+                  <div class="tx-who">Elena</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SCREEN 2: LEDGER -->
+          <div id="screen-ledger" class="screen-content" style="display: none">
+            <div class="filter-search-box">
+              <span style="color: var(--app-ink-muted)">🔍</span>
+              <input
+                type="text"
+                class="filter-search-input"
+                placeholder="Search merchant, tag, or note..."
+                value="Esselunga"
+              />
+              <button
+                style="
+                  border: none;
+                  background: transparent;
+                  color: var(--app-accent);
+                  font-size: 11px;
+                  font-weight: 700;
+                  cursor: pointer;
+                "
+              >
+                Filters
+              </button>
+            </div>
+
+            <div class="category-chips">
+              <div class="chip active">All</div>
+              <div class="chip">🛒 Groceries</div>
+              <div class="chip">🍕 Dining</div>
+              <div class="chip">⚡ Utilities</div>
+              <div class="chip">👶 Kids</div>
+            </div>
+
+            <!-- Cent-Exact Split Inspector -->
+            <div class="split-card">
+              <div class="split-header">
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: var(--app-ink)">
+                    Esselunga Cent Split
+                  </div>
+                  <div style="font-size: 10.5px; color: var(--app-ink-secondary)">
+                    15 Aug 2026 · Total: €142.80
+                  </div>
+                </div>
+                <span class="zen-stamp">Cent-Exact</span>
+              </div>
+
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  font-size: 10.5px;
+                  color: var(--app-ink-secondary);
+                  margin-bottom: 2px;
+                "
+              >
+                <span>Berto: <b id="split-b-pct" style="color: var(--app-ink)">50%</b></span>
+                <span>Elena: <b id="split-e-pct" style="color: var(--app-ink)">50%</b></span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value="50"
+                step="5"
+                class="split-slider"
+                oninput="updateSplit(this.value)"
+              />
+
+              <div class="split-rows">
+                <div class="split-row-item">
+                  <span style="font-size: 11px; font-weight: 600">Berto Allocation</span>
+                  <strong
+                    id="split-b-amt"
+                    style="font-size: 13px; font-variant-numeric: tabular-nums"
+                    >€71.40</strong
+                  >
+                </div>
+                <div class="split-row-item">
+                  <span style="font-size: 11px; font-weight: 600">Elena Allocation</span>
+                  <strong
+                    id="split-e-amt"
+                    style="font-size: 13px; font-variant-numeric: tabular-nums"
+                    >€71.40</strong
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="tx-list">
+              <div class="tx-row" style="border-color: var(--app-accent)">
+                <div class="tx-left">
+                  <div class="tx-icon-stamp" style="color: var(--app-accent)">🛒</div>
+                  <div class="tx-info">
+                    <div class="tx-merchant">Esselunga Supermarket</div>
+                    <div class="tx-meta"><span>15 Aug</span> · <span>Groceries</span></div>
+                  </div>
+                </div>
+                <div class="tx-right">
+                  <div class="tx-amount">€142.80</div>
+                  <div class="tx-who">Paid by Berto</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- =======================================================
+           HARMONIZED BOTTOM NAV DOCK
+           Radius is dynamically bound to --zen-dock-radius!
+           ======================================================= -->
+          <div id="zenDock" class="zen-dock-container">
+            <button
+              id="dock-btn-dashboard"
+              class="zen-dock-item active"
+              onclick="showScreen('dashboard')"
+            >
+              <span class="zen-dock-icon">🏠</span>
+              <span class="zen-dock-label">Pulse</span>
+            </button>
+            <button id="dock-btn-ledger" class="zen-dock-item" onclick="showScreen('ledger')">
+              <span class="zen-dock-icon">🧾</span>
+              <span class="zen-dock-label">Ledger</span>
+            </button>
+            <button id="dock-btn-analytics" class="zen-dock-item" onclick="alert('Analytics view')">
+              <span class="zen-dock-icon">📈</span>
+              <span class="zen-dock-label">Velocity</span>
+            </button>
+            <button id="dock-btn-family" class="zen-dock-item" onclick="alert('Family Hub view')">
+              <span class="zen-dock-icon">👥</span>
+              <span class="zen-dock-label">Family</span>
+            </button>
+            <button id="dock-btn-settings" class="zen-dock-item" onclick="alert('Settings view')">
+              <span class="zen-dock-icon">⚙️</span>
+              <span class="zen-dock-label">Config</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variation Selection & Comparison Deck -->
+    <div class="variations-panel">
+      <div style="font-size: 13px; font-weight: 700; color: #ffffff; margin-bottom: 2px">
+        Proposed Zen Minimalist Architectural Variations
+      </div>
+      <div style="font-size: 11px; color: var(--text-secondary)">
+        Each option applies a cohesive corner radius across all cards, containers, action buttons,
+        chips, and the bottom navigation bar.
+      </div>
+
+      <div class="var-grid">
+        <div id="card-sumi" class="var-card active-card" onclick="setVariation('sumi', 8)">
+          <div class="var-card-title">
+            <span>Option A: Sumi &amp; Cinnabar</span>
+            <span
+              style="
+                font-size: 10px;
+                background: rgba(230, 57, 70, 0.2);
+                color: #f87171;
+                padding: 1px 5px;
+                border-radius: 4px;
+              "
+              >8px</span
+            >
+          </div>
+          <div class="var-card-desc">
+            Crisp 8px structural geometry on all cards and bottom dock. Deep charcoal ink background
+            with vermilion Hanko stamp accents.
+          </div>
+        </div>
+
+        <div id="card-kanso" class="var-card" onclick="setVariation('kanso', 12)">
+          <div class="var-card-title">
+            <span>Option B: Kanso Slate &amp; Sage</span>
+            <span
+              style="
+                font-size: 10px;
+                background: rgba(82, 183, 136, 0.2);
+                color: #6ee7b7;
+                padding: 1px 5px;
+                border-radius: 4px;
+              "
+              >12px</span
+            >
+          </div>
+          <div class="var-card-desc">
+            Soft modular 12px slab radius on cards and dock. Serene stone slate canvas with
+            bamboo/sage natural accents.
+          </div>
+        </div>
+
+        <div id="card-mono" class="var-card" onclick="setVariation('mono', 6)">
+          <div class="var-card-title">
+            <span>Option C: Architectural Precision</span>
+            <span
+              style="
+                font-size: 10px;
+                background: rgba(229, 169, 60, 0.2);
+                color: #fcd34d;
+                padding: 1px 5px;
+                border-radius: 4px;
+              "
+              >6px</span
+            >
+          </div>
+          <div class="var-card-desc">
+            Bauhaus-Zen 6px micro-radius. Sharp borders, high-contrast monochrome ink, and warm
+            brass ochre accents.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentVar = 'sumi';
+      let currentMode = 'dark';
+
+      function applyTheme() {
+        document.body.className = 'var-' + currentVar + '-' + currentMode;
+      }
+
+      function setVariation(varName, radius) {
+        currentVar = varName;
+        ['sumi', 'kanso', 'mono'].forEach((v) => {
+          const btn = document.getElementById('btn-var-' + v);
+          const card = document.getElementById('card-' + v);
+          if (btn) btn.classList.toggle('active', v === varName);
+          if (card) card.classList.toggle('active-card', v === varName);
+        });
+        setRadius(radius);
+        applyTheme();
+      }
+
+      function setRadius(val) {
+        val = parseInt(val, 10);
+        document.documentElement.style.setProperty('--zen-radius', val + 'px');
+        document.documentElement.style.setProperty('--zen-dock-radius', val + 'px');
+        document.documentElement.style.setProperty(
+          '--zen-inner-radius',
+          Math.max(4, val - 2) + 'px',
+        );
+
+        document.getElementById('radiusSlider').value = val;
+        document.getElementById('radiusValue').innerText = val + 'px';
+      }
+
+      function setMode(mode) {
+        currentMode = mode;
+        document.getElementById('theme-btn-light').classList.toggle('active', mode === 'light');
+        document.getElementById('theme-btn-dark').classList.toggle('active', mode === 'dark');
+        applyTheme();
+      }
+
+      function setViewMode(view) {
+        const shell = document.getElementById('deviceShell');
+        document.getElementById('view-btn-mobile').classList.toggle('active', view === 'mobile');
+        document.getElementById('view-btn-wide').classList.toggle('active', view === 'wide');
+        if (view === 'wide') {
+          shell.classList.add('wide-view');
+        } else {
+          shell.classList.remove('wide-view');
+        }
+      }
+
+      function showScreen(screenId) {
+        const isDash = screenId === 'dashboard';
+        document.getElementById('screen-dashboard').style.display = isDash ? 'block' : 'none';
+        document.getElementById('screen-ledger').style.display = isDash ? 'none' : 'block';
+
+        document.getElementById('screen-btn-dashboard').classList.toggle('active', isDash);
+        document.getElementById('screen-btn-ledger').classList.toggle('active', !isDash);
+
+        document.getElementById('dock-btn-dashboard').classList.toggle('active', isDash);
+        document.getElementById('dock-btn-ledger').classList.toggle('active', !isDash);
+      }
+
+      function updateSplit(val) {
+        const bPct = parseInt(val, 10);
+        const ePct = 100 - bPct;
+        const total = 142.8;
+        const bAmt = (total * (bPct / 100)).toFixed(2);
+        const eAmt = (total - parseFloat(bAmt)).toFixed(2);
+
+        document.getElementById('split-b-pct').innerText = bPct + '%';
+        document.getElementById('split-e-pct').innerText = ePct + '%';
+        document.getElementById('split-b-amt').innerText = '€' + bAmt;
+        document.getElementById('split-e-amt').innerText = '€' + eAmt;
+      }
+    </script>
+  </body>
+</html>

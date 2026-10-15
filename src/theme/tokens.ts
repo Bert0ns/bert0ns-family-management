@@ -78,6 +78,19 @@ export const Palette = {
     carbon: '#121715', // Deep Warm Carbon
     carbonSurface: '#1A211E',
   },
+  zen: {
+    sumi: '#101114', // Deep Charcoal Sumi Ink Canvas
+    charcoal: '#18191E', // Quiet Surface
+    charcoalElevated: '#202228',
+    hankoRed: '#E63946', // Vermilion Seal Stamp
+    hankoRedDark: '#D63929',
+    hankoRedLight: 'rgba(230, 57, 70, 0.12)',
+    bambooSage: '#52B788', // Bamboo Shoot Sage
+    bambooSageLight: 'rgba(82, 183, 136, 0.14)',
+    bonePaper: '#F6F5F2', // Washi Linen Canvas
+    bonePaperSubtle: '#EDEAE3',
+    borderSubtle: '#282B33',
+  },
   neutral: {
     0: '#FFFFFF',
     50: '#F8FAFC',
@@ -235,6 +248,8 @@ export const Radius = {
   xxl: 24,
   pill: 32,
   full: 9999,
+  dock: 12, // Harmonized with component corner radius (Radius.md)
+  dockInner: 8, // Inset active tab indicator
 };
 
 export const TouchTargets = {
