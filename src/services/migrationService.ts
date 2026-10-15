@@ -229,9 +229,16 @@ export const migrationService = {
         membersCount: mappedMembers.length,
         batchesCount: mappedBatches.length,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'object' && err !== null && 'message' in err
+            ? String((err as { message: unknown }).message)
+            : String(err);
+
       supabaseLogger.error('Failed to migrate local data to Supabase', {
-        error: err?.message || err,
+        error: errorMessage,
       });
 
       // Compensation rollback: if migration failed mid-way, attempt to clean up the partially created target family
@@ -258,7 +265,7 @@ export const migrationService = {
         categoriesCount: 0,
         membersCount: 0,
         batchesCount: 0,
-        error: err?.message || 'Unknown migration failure',
+        error: errorMessage || 'Unknown migration failure',
       };
     }
   },

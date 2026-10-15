@@ -209,6 +209,57 @@ describe('pairingService', () => {
       expect(store.family.name).toBe('New Household');
       expect(store.currentMemberId).toBe(targetMemberId);
     });
+
+    it('successfully handles enriched RPC response with root compatibility fields', async () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+      const targetFamilyId = '123e4567-e89b-12d3-a456-426614174001';
+      const targetMemberId = '123e4567-e89b-12d3-a456-426614174002';
+
+      (supabase.auth.getSession as jest.Mock).mockResolvedValue({
+        data: {
+          session: {
+            user: { id: 'u1', email: 'user@example.com' },
+          },
+        },
+      });
+
+      (supabase.rpc as jest.Mock).mockResolvedValue({
+        data: {
+          success: true,
+          status: 'already_joined',
+          family_id: targetFamilyId,
+          member_id: targetMemberId,
+          already_member: true,
+          family: { id: targetFamilyId, name: 'Enriched Household', currency: 'EUR' },
+          member: { id: targetMemberId, display_name: 'Enriched Member', role: 'MEMBER' },
+        },
+        error: null,
+      });
+
+      (supabase.from as jest.Mock).mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: {
+                id: targetFamilyId,
+                name: 'Enriched Household',
+                currency: 'EUR',
+                invite_code: 'ENRICHED-1',
+                created_at: new Date().toISOString(),
+              },
+              error: null,
+            }),
+          }),
+        }),
+      });
+
+      const res = await pairingService.joinFamilyByInviteCode('ENRICHED-1');
+
+      expect(res.success).toBe(true);
+      expect(res.familyId).toBe(targetFamilyId);
+      expect(useAppStore.getState().family.id).toBe(targetFamilyId);
+      expect(useAppStore.getState().currentMemberId).toBe(targetMemberId);
+    });
   });
 
   describe('createFamily', () => {

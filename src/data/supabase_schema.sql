@@ -13,7 +13,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public, pg_temp;
 
 -- 3. Families Table
 CREATE TABLE IF NOT EXISTS public.families (
@@ -359,7 +359,11 @@ BEGIN
   LIMIT 1;
 
   IF NOT FOUND THEN
-    RETURN jsonb_build_object('success', false, 'error', 'Invalid invite code');
+    RETURN jsonb_build_object(
+      'success', false,
+      'status', 'error',
+      'error', 'Invalid invite code'
+    );
   END IF;
 
   -- 2. Check if auth user is already a member of this family
@@ -371,6 +375,9 @@ BEGIN
   IF FOUND THEN
     RETURN jsonb_build_object(
       'success', true,
+      'status', 'already_joined',
+      'family_id', v_family.id,
+      'member_id', v_existing_member.id,
       'already_member', true,
       'family', jsonb_build_object('id', v_family.id, 'name', v_family.name, 'currency', v_family.currency),
       'member', jsonb_build_object('id', v_existing_member.id, 'display_name', v_existing_member.display_name, 'role', v_existing_member.role)
@@ -402,6 +409,9 @@ BEGIN
 
   RETURN jsonb_build_object(
     'success', true,
+    'status', 'success',
+    'family_id', v_family.id,
+    'member_id', v_new_member.id,
     'already_member', false,
     'family', jsonb_build_object('id', v_family.id, 'name', v_family.name, 'currency', v_family.currency),
     'member', jsonb_build_object('id', v_new_member.id, 'display_name', v_new_member.display_name, 'role', v_new_member.role)

@@ -532,6 +532,33 @@ describe('syncEngine', () => {
         useAppStore.getState().expenses.find((e) => e.id === existingExp.id)?.merchant_name,
       ).not.toBe('Old Shop Name');
     });
+
+    it('merges import batches using LWW: brand new is added and older is ignored', () => {
+      const brandNewBatch = {
+        id: 'batch-brand-new',
+        family_id: 'fam_1',
+        imported_by_member_id: 'mem_1',
+        file_name: 'statement_new.csv',
+        total_records: 15,
+        total_amount: 500,
+        created_at: '2026-09-01T00:00:00Z',
+        updated_at: '2026-09-01T00:00:00Z',
+      };
+      syncEngine.mergeImportBatchesLWW([brandNewBatch]);
+      expect(
+        useAppStore.getState().importBatches.find((b) => b.id === 'batch-brand-new'),
+      ).toBeDefined();
+
+      const olderBatch = {
+        ...brandNewBatch,
+        file_name: 'statement_old.csv',
+        updated_at: '2024-01-01T00:00:00Z',
+      };
+      syncEngine.mergeImportBatchesLWW([olderBatch]);
+      expect(
+        useAppStore.getState().importBatches.find((b) => b.id === brandNewBatch.id)?.file_name,
+      ).toBe('statement_new.csv');
+    });
   });
 
   describe('fetchDelta', () => {
@@ -623,6 +650,20 @@ describe('syncEngine', () => {
             },
           ]);
         }
+        if (table === 'import_batches') {
+          return mockQueryBuilder([
+            {
+              id: 'delta-batch-1',
+              family_id: 'fam_1',
+              imported_by_member_id: 'mem_1',
+              file_name: 'reconcile_delta.csv',
+              total_records: 5,
+              total_amount: 150.0,
+              created_at: '2026-09-04T10:00:00Z',
+              updated_at: '2026-09-04T10:00:00Z',
+            },
+          ]);
+        }
         if (table === 'notification_preferences') {
           return mockQueryBuilder({
             member_id: 'mem_1',
@@ -641,6 +682,7 @@ describe('syncEngine', () => {
       expect(store.expenses.find((e) => e.id === existingExpenseToTombstone.id)).toBeUndefined();
       expect(store.categories.find((c) => c.id === 'delta-cat-1')).toBeDefined();
       expect(store.members.find((m) => m.id === 'delta-mem-1')).toBeDefined();
+      expect(store.importBatches.find((b) => b.id === 'delta-batch-1')).toBeDefined();
     });
 
     it('sets status to error when delta fetch query fails', async () => {

@@ -467,6 +467,36 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
       state.removeRemoteMember('mem_remote_1');
       expect(useAppStore.getState().members.find((m) => m.id === 'mem_remote_1')).toBeUndefined();
     });
+
+    it('reconciles remote import batches correctly using LWW', () => {
+      const state = useAppStore.getState();
+      const remoteBatch = {
+        id: 'batch_remote_1',
+        family_id: 'fam_1',
+        imported_by_member_id: 'mem_1',
+        file_name: 'remote.csv',
+        total_records: 10,
+        total_amount: 250,
+        created_at: '2026-09-01T12:00:00Z',
+        updated_at: '2026-09-01T12:00:00Z',
+      };
+
+      state.reconcileRemoteImportBatches([remoteBatch]);
+      expect(
+        useAppStore.getState().importBatches.find((b) => b.id === 'batch_remote_1'),
+      ).toBeDefined();
+
+      // Older batch update should not overwrite newer
+      const olderBatch = {
+        ...remoteBatch,
+        file_name: 'older_remote.csv',
+        updated_at: '2025-01-01T12:00:00Z',
+      };
+      state.reconcileRemoteImportBatches([olderBatch]);
+      expect(
+        useAppStore.getState().importBatches.find((b) => b.id === 'batch_remote_1')?.file_name,
+      ).toBe('remote.csv');
+    });
   });
 
   describe('Mutation Subscribers', () => {
