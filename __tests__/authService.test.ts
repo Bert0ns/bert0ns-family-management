@@ -1,6 +1,7 @@
 import { authService } from '@/services/authService';
 import { supabase, isSupabaseConfigured } from '@/services/supabase';
 import { realtimeSync } from '@/services/realtimeSync';
+import { pushNotificationService } from '@/services/pushNotificationService';
 import { useAppStore, STORE_STORAGE_KEY } from '@/services/store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -24,31 +25,39 @@ jest.mock('@/services/realtimeSync', () => ({
   },
 }));
 
+jest.mock('@/services/pushNotificationService', () => ({
+  pushNotificationService: {
+    getActiveDeviceToken: jest.fn().mockReturnValue('mock-token-abc'),
+    unregisterPushTokenAsync: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 describe('authService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('isConfigured', () => {
-    it('returns false when Supabase is not configured', () => {
-      (isSupabaseConfigured as jest.Mock).mockReturnValue(false);
-      expect(authService.isConfigured()).toBe(false);
-    });
-
-    it('returns true when Supabase is configured', () => {
+    it('returns true when supabase is configured', () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
       expect(authService.isConfigured()).toBe(true);
+    });
+
+    it('returns false when supabase is not configured', () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(false);
+      expect(authService.isConfigured()).toBe(false);
     });
   });
 
   describe('sendOtp', () => {
-    it('returns error on sendOtp when Supabase is not configured', async () => {
+    it('returns error when not configured', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(false);
       const res = await authService.sendOtp('test@example.com');
-      expect(res.error).toContain('not configured');
+      expect(res.error).toContain('Supabase is not configured');
+      expect(supabase.auth.signInWithOtp).not.toHaveBeenCalled();
     });
 
-    it('sends OTP successfully when configured without redirectTo', async () => {
+    it('sends OTP with valid email when configured', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
       (supabase.auth.signInWithOtp as jest.Mock).mockResolvedValue({ error: null });
 
@@ -60,19 +69,19 @@ describe('authService', () => {
       });
     });
 
-    it('sends OTP with redirectTo parameter when provided', async () => {
+    it('passes emailRedirectTo option when provided', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
       (supabase.auth.signInWithOtp as jest.Mock).mockResolvedValue({ error: null });
 
-      const res = await authService.sendOtp('test@example.com', 'exp://myapp/auth-callback');
+      const res = await authService.sendOtp('test@example.com', 'https://myapp.com/auth');
       expect(res.error).toBeNull();
       expect(supabase.auth.signInWithOtp).toHaveBeenCalledWith({
         email: 'test@example.com',
-        options: { shouldCreateUser: true, emailRedirectTo: 'exp://myapp/auth-callback' },
+        options: { shouldCreateUser: true, emailRedirectTo: 'https://myapp.com/auth' },
       });
     });
 
-    it('handles error when signInWithOtp fails', async () => {
+    it('handles Supabase signInWithOtp error', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
       (supabase.auth.signInWithOtp as jest.Mock).mockResolvedValue({
         error: { message: 'Rate limit exceeded' },
@@ -82,26 +91,26 @@ describe('authService', () => {
       expect(res.error).toBe('Rate limit exceeded');
     });
 
-    it('handles unexpected thrown exceptions during sendOtp', async () => {
+    it('catches unexpected thrown error during sendOtp', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
-      (supabase.auth.signInWithOtp as jest.Mock).mockRejectedValue(new Error('Network error'));
+      (supabase.auth.signInWithOtp as jest.Mock).mockRejectedValue(new Error('Network failure'));
 
       const res = await authService.sendOtp('test@example.com');
-      expect(res.error).toBe('Network error');
+      expect(res.error).toBe('Network failure');
     });
   });
 
   describe('verifyOtp', () => {
-    it('returns error when Supabase is not configured', async () => {
+    it('returns error when not configured', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(false);
       const res = await authService.verifyOtp('test@example.com', '123456');
+      expect(res.error).toContain('Supabase is not configured');
       expect(res.session).toBeNull();
-      expect(res.error).toContain('not configured');
     });
 
-    it('verifies OTP successfully', async () => {
+    it('verifies OTP successfully and returns session', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
-      const mockSession = { access_token: 'token123', user: { id: 'u1' } };
+      const mockSession = { user: { id: 'usr-123', email: 'test@example.com' } };
       (supabase.auth.verifyOtp as jest.Mock).mockResolvedValue({
         data: { session: mockSession },
         error: null,
@@ -110,27 +119,32 @@ describe('authService', () => {
       const res = await authService.verifyOtp('test@example.com', '123456');
       expect(res.error).toBeNull();
       expect(res.session).toEqual(mockSession);
+      expect(supabase.auth.verifyOtp).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        token: '123456',
+        type: 'email',
+      });
     });
 
-    it('returns error when verifyOtp returns an error from Supabase', async () => {
+    it('handles verification error from Supabase', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
       (supabase.auth.verifyOtp as jest.Mock).mockResolvedValue({
         data: { session: null },
-        error: { message: 'Token expired' },
+        error: { message: 'Token has expired or is invalid' },
       });
 
       const res = await authService.verifyOtp('test@example.com', '000000');
       expect(res.session).toBeNull();
-      expect(res.error).toBe('Token expired');
+      expect(res.error).toBe('Token has expired or is invalid');
     });
 
-    it('handles unexpected exceptions during verifyOtp', async () => {
+    it('catches unexpected thrown error during verifyOtp', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
-      (supabase.auth.verifyOtp as jest.Mock).mockRejectedValue(new Error('Timeout'));
+      (supabase.auth.verifyOtp as jest.Mock).mockRejectedValue(new Error('Server unavailable'));
 
-      const res = await authService.verifyOtp('test@example.com', '000000');
+      const res = await authService.verifyOtp('test@example.com', '123456');
       expect(res.session).toBeNull();
-      expect(res.error).toBe('Timeout');
+      expect(res.error).toBe('Server unavailable');
     });
   });
 
@@ -142,14 +156,112 @@ describe('authService', () => {
       expect(supabase.auth.signOut).not.toHaveBeenCalled();
     });
 
-    it('signs out smoothly and stops realtime sync', async () => {
+    it('signs out smoothly, stops realtime sync, and unregisters push token', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+      (supabase.auth.getUser as jest.Mock).mockResolvedValue({
+        data: { user: { id: 'usr-456' } },
+      });
       (supabase.auth.signOut as jest.Mock).mockResolvedValue({ error: null });
 
       const res = await authService.signOut();
       expect(res.error).toBeNull();
-      expect(realtimeSync.stopRealtimeSync).toHaveBeenCalled();
-      expect(supabase.auth.signOut).toHaveBeenCalled();
+      expect(realtimeSync.stopRealtimeSync).toHaveBeenCalledTimes(1);
+      expect(pushNotificationService.unregisterPushTokenAsync).toHaveBeenCalledWith(
+        'usr-456',
+        'mock-token-abc',
+      );
+      expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
+    });
+
+    it('preserves Zustand state and AsyncStorage by default (safe cloud disconnect)', async () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+      (supabase.auth.getUser as jest.Mock).mockResolvedValue({
+        data: { user: { id: 'usr-preserve' } },
+      });
+      (supabase.auth.signOut as jest.Mock).mockResolvedValue({ error: null });
+
+      // Seed state with sample data
+      useAppStore.getState().resetToSampleData();
+      const initialExpenseCount = useAppStore.getState().expenses.length;
+      const initialMemberCount = useAppStore.getState().members.length;
+      const initialFamilyId = useAppStore.getState().family.id;
+      expect(initialExpenseCount).toBeGreaterThan(0);
+      expect(initialMemberCount).toBeGreaterThan(0);
+
+      // Perform default sign out
+      const res = await authService.signOut();
+      expect(res.error).toBeNull();
+
+      // State is preserved!
+      expect(useAppStore.getState().expenses.length).toBe(initialExpenseCount);
+      expect(useAppStore.getState().members.length).toBe(initialMemberCount);
+      expect(useAppStore.getState().family.id).toBe(initialFamilyId);
+
+      // AsyncStorage is NOT wiped
+      expect(AsyncStorage.removeItem).not.toHaveBeenCalledWith(STORE_STORAGE_KEY);
+      expect(AsyncStorage.multiRemove).not.toHaveBeenCalled();
+    });
+
+    it('preserves Zustand state and AsyncStorage when disconnectCloud is called', async () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+      (supabase.auth.getUser as jest.Mock).mockResolvedValue({
+        data: { user: { id: 'usr-preserve-cloud' } },
+      });
+      (supabase.auth.signOut as jest.Mock).mockResolvedValue({ error: null });
+
+      useAppStore.getState().resetToSampleData();
+      const initialExpenseCount = useAppStore.getState().expenses.length;
+
+      const res = await authService.disconnectCloud();
+      expect(res.error).toBeNull();
+
+      expect(useAppStore.getState().expenses.length).toBe(initialExpenseCount);
+      expect(AsyncStorage.removeItem).not.toHaveBeenCalledWith(STORE_STORAGE_KEY);
+      expect(AsyncStorage.multiRemove).not.toHaveBeenCalled();
+    });
+
+    it('tears down Zustand state and purges AsyncStorage when wipeLocalData is true', async () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+      (supabase.auth.getUser as jest.Mock).mockResolvedValue({
+        data: { user: { id: 'usr-wipe' } },
+      });
+      (supabase.auth.signOut as jest.Mock).mockResolvedValue({ error: null });
+
+      useAppStore.getState().resetToSampleData();
+      expect(useAppStore.getState().expenses.length).toBeGreaterThan(0);
+      expect(useAppStore.getState().members.length).toBeGreaterThan(0);
+
+      const res = await authService.signOut({ wipeLocalData: true });
+      expect(res.error).toBeNull();
+
+      // State is completely reset
+      expect(useAppStore.getState().expenses).toEqual([]);
+      expect(useAppStore.getState().members).toEqual([]);
+      expect(useAppStore.getState().currentMemberId).toBe('');
+      expect(useAppStore.getState().family.id).toBe('');
+
+      // AsyncStorage is purged of previous family data and sync queues
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith(STORE_STORAGE_KEY);
+      expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(
+        expect.arrayContaining(['@bert0ns_sync_outbox', '@bert0ns_last_sync_timestamp']),
+      );
+    });
+
+    it('tears down Zustand state and purges AsyncStorage when signOutAndWipeDevice is called', async () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+      (supabase.auth.getUser as jest.Mock).mockResolvedValue({
+        data: { user: { id: 'usr-wipe-device' } },
+      });
+      (supabase.auth.signOut as jest.Mock).mockResolvedValue({ error: null });
+
+      useAppStore.getState().resetToSampleData();
+      expect(useAppStore.getState().expenses.length).toBeGreaterThan(0);
+
+      const res = await authService.signOutAndWipeDevice();
+      expect(res.error).toBeNull();
+
+      expect(useAppStore.getState().expenses).toEqual([]);
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith(STORE_STORAGE_KEY);
     });
 
     it('handles Supabase signOut error', async () => {
@@ -168,31 +280,6 @@ describe('authService', () => {
 
       const res = await authService.signOut();
       expect(res.error).toBe('Sign out crashed');
-    });
-
-    it('tears down Zustand state and purges AsyncStorage on signOut', async () => {
-      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
-      (supabase.auth.signOut as jest.Mock).mockResolvedValue({ error: null });
-
-      // Seed state with sample data
-      useAppStore.getState().resetToSampleData();
-      expect(useAppStore.getState().expenses.length).toBeGreaterThan(0);
-      expect(useAppStore.getState().members.length).toBeGreaterThan(0);
-
-      const res = await authService.signOut();
-      expect(res.error).toBeNull();
-
-      // State is completely reset
-      expect(useAppStore.getState().expenses).toEqual([]);
-      expect(useAppStore.getState().members).toEqual([]);
-      expect(useAppStore.getState().currentMemberId).toBe('');
-      expect(useAppStore.getState().family.id).toBe('');
-
-      // AsyncStorage is purged of previous family data and sync queues
-      expect(AsyncStorage.removeItem).toHaveBeenCalledWith(STORE_STORAGE_KEY);
-      expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(
-        expect.arrayContaining(['@bert0ns_sync_outbox', '@bert0ns_last_sync_timestamp']),
-      );
     });
   });
 

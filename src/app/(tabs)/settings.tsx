@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Platform, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Platform, Switch, Alert } from 'react-native';
 import {
   Sun,
   RotateCcw,
@@ -94,15 +94,59 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleSignOut = async () => {
+  const executeSignOut = async (wipeLocalData: boolean = false) => {
     const user = await authService.getUser();
     if (user && Platform.OS !== 'web') {
       const activeToken = pushNotificationService.getActiveDeviceToken();
       await pushNotificationService.unregisterPushTokenAsync(user.id, activeToken ?? undefined);
     }
-    await authService.signOut();
+    await authService.signOut({ wipeLocalData });
     realtimeSync.stopRealtimeSync();
     setUserEmail(null);
+  };
+
+  const handleSignOut = () => {
+    const title = t.sync.disconnectConfirmTitle;
+    const message = t.sync.disconnectConfirmMessage;
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`${title}\n\n${message}`)) {
+        executeSignOut(false);
+      }
+    } else {
+      Alert.alert(title, message, [
+        { text: t.common.cancel, style: 'cancel' },
+        {
+          text: t.sync.disconnectKeepData,
+          onPress: () => executeSignOut(false),
+        },
+        {
+          text: t.sync.disconnectWipeData,
+          style: 'destructive',
+          onPress: () => handleConfirmWipeDevice(),
+        },
+      ]);
+    }
+  };
+
+  const handleConfirmWipeDevice = () => {
+    const title = t.sync.wipeAndSignOutConfirmTitle;
+    const message = t.sync.wipeAndSignOutConfirmMessage;
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`${title}\n\n${message}`)) {
+        executeSignOut(true);
+      }
+    } else {
+      Alert.alert(title, message, [
+        { text: t.common.cancel, style: 'cancel' },
+        {
+          text: t.sync.disconnectWipeData,
+          style: 'destructive',
+          onPress: () => executeSignOut(true),
+        },
+      ]);
+    }
   };
 
   const handleTogglePushMaster = async (enabled: boolean) => {
@@ -152,20 +196,14 @@ export default function SettingsScreen() {
       }
     } else {
       // Mobile Alert
-      import('react-native').then(({ Alert: NativeAlert }) => {
-        NativeAlert.alert(
-          t.settings.clearLedgerConfirmTitle,
-          t.settings.clearLedgerConfirmMessage,
-          [
-            { text: t.common.cancel, style: 'cancel' },
-            {
-              text: t.common.delete,
-              style: 'destructive',
-              onPress: () => clearAllExpenses(),
-            },
-          ],
-        );
-      });
+      Alert.alert(t.settings.clearLedgerConfirmTitle, t.settings.clearLedgerConfirmMessage, [
+        { text: t.common.cancel, style: 'cancel' },
+        {
+          text: t.common.delete,
+          style: 'destructive',
+          onPress: () => clearAllExpenses(),
+        },
+      ]);
     }
   };
 
@@ -477,6 +515,16 @@ export default function SettingsScreen() {
               onPress={handleSignOut}
               fullWidth
             />
+            <Text
+              style={{
+                color: theme.colors.textSecondary,
+                fontSize: typography.fontSizes.xs,
+                textAlign: 'center',
+                marginTop: 2,
+              }}
+            >
+              {t.sync.disconnectHelperText}
+            </Text>
           </View>
         ) : (
           <View style={{ gap: spacing.sm }}>
@@ -873,7 +921,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Clear Ledger (Danger Zone) */}
-        <View>
+        <View style={{ marginBottom: userEmail ? spacing.md : 0 }}>
           <Button
             title={t.settings.clearLedgerButton}
             variant="danger"
@@ -883,6 +931,20 @@ export default function SettingsScreen() {
             fullWidth
           />
         </View>
+
+        {/* Wipe Device & Sign Out (when cloud connected) */}
+        {userEmail && (
+          <View>
+            <Button
+              title={t.sync.wipeAndSignOutButton}
+              variant="danger"
+              size="md"
+              icon={<LogOut size={18} color="#FFFFFF" strokeWidth={2.5} />}
+              onPress={handleConfirmWipeDevice}
+              fullWidth
+            />
+          </View>
+        )}
       </Card>
 
       {/* 6. About & Privacy Guarantee Card */}
