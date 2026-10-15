@@ -144,12 +144,12 @@ const EditExpenseContent: React.FC<{
                   gap: 6,
                   paddingHorizontal: spacing.sm,
                   paddingVertical: 8,
-                  borderRadius: radius.full,
+                  borderRadius: radius.sm,
                   backgroundColor: isSelected
                     ? theme.colors.brandLight
                     : theme.colors.surfaceSubtle,
-                  borderWidth: 1.5,
-                  borderColor: isSelected ? theme.colors.brand : theme.colors.border,
+                  borderWidth: 1,
+                  borderColor: isSelected ? theme.colors.brand : theme.colors.borderTactile,
                 }}
               >
                 <IconHelper name={cat.icon} size={16} color={cat.color} />
@@ -199,12 +199,12 @@ const EditExpenseContent: React.FC<{
                   gap: 8,
                   paddingHorizontal: spacing.sm,
                   paddingVertical: 6,
-                  borderRadius: radius.full,
+                  borderRadius: radius.sm,
                   backgroundColor: isSelected
                     ? theme.colors.brandLight
                     : theme.colors.surfaceSubtle,
-                  borderWidth: 1.5,
-                  borderColor: isSelected ? theme.colors.brand : theme.colors.border,
+                  borderWidth: 1,
+                  borderColor: isSelected ? theme.colors.brand : theme.colors.borderTactile,
                 }}
               >
                 <Avatar
@@ -268,10 +268,10 @@ const EditExpenseContent: React.FC<{
                 style={{
                   paddingHorizontal: spacing.sm,
                   paddingVertical: 6,
-                  borderRadius: radius.md,
+                  borderRadius: radius.sm,
                   backgroundColor: isSelected ? theme.colors.brand : theme.colors.surfaceSubtle,
                   borderWidth: 1,
-                  borderColor: isSelected ? theme.colors.brand : theme.colors.border,
+                  borderColor: isSelected ? theme.colors.brand : theme.colors.borderTactile,
                 }}
               >
                 <Text
