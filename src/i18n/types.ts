@@ -323,6 +323,14 @@ export interface TranslationSchema {
     otpCodeHelper?: string;
     verifyButton: string;
     signOutButton: string;
+    disconnectConfirmTitle: string;
+    disconnectConfirmMessage: string;
+    disconnectKeepData: string;
+    disconnectWipeData: string;
+    disconnectHelperText: string;
+    wipeAndSignOutButton: string;
+    wipeAndSignOutConfirmTitle: string;
+    wipeAndSignOutConfirmMessage: string;
     syncNowButton: string;
     statusSynced: string;
     statusSyncing: string;
@@ -350,6 +358,10 @@ export interface TranslationSchema {
     changeEmailOrResend: string;
     joinedHouseholdTitle: string;
     authRequiredToJoin: string;
+    createHouseholdOption: string;
+    joinHouseholdOption: string;
+    signInJoinSubtitle: string;
+    signInToJoinPrompt: string;
   };
   notifications: {
     title: string;

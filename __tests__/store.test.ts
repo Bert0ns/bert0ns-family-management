@@ -7,6 +7,8 @@ import {
   selectMembers,
   selectCategories,
   selectFamily,
+  shouldRemoteEntityPrevail,
+  shouldRemoteTombstonePrevail,
 } from '@/services/store';
 import { SAMPLE_IMPORT_REPORT } from '@/data/mockData';
 import { RawExpenseReport, Expense, Category, FamilyMember, AppNotification } from '@/types';
@@ -345,6 +347,83 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     expect(updated.categories.find((c) => c.id === 'cat_other')).toBeUndefined();
   });
 
+  it('does not throw when deleting category and no fallback category exists or only one category remains', () => {
+    const singleCat: Category = {
+      id: 'cat_lonely',
+      family_id: 'fam_1',
+      name: 'Single',
+      icon: 'Tag',
+      color: '#fff',
+    };
+    useAppStore.setState({
+      categories: [singleCat],
+      expenses: [
+        {
+          id: 'exp_single',
+          family_id: 'fam_1',
+          paid_by_member_id: 'mem_1',
+          category_id: 'cat_lonely',
+          transaction_date: '2026-09-01',
+          merchant_name: 'Test',
+          amount: 10,
+          created_at: new Date().toISOString(),
+        },
+      ],
+    });
+
+    expect(() => {
+      useAppStore.getState().deleteCategory('cat_lonely');
+    }).not.toThrow();
+
+    expect(() => {
+      useAppStore.getState().deleteCategory('cat_lonely', 'nonexistent_fallback');
+    }).not.toThrow();
+  });
+
+  describe('shouldRemoteEntityPrevail & shouldRemoteTombstonePrevail (Remote without version)', () => {
+    it('gracefully handles remote.version === undefined by falling back to normalized timestamps', () => {
+      // Remote from Supabase has no version column, but newer timestamp
+      const remoteWithoutVersion = {
+        updated_at: '2026-09-02T10:00:00Z',
+      };
+      const localWithVersion = {
+        updated_at: '2026-09-01T10:00:00Z',
+        version: 5,
+      };
+
+      expect(shouldRemoteEntityPrevail(remoteWithoutVersion, localWithVersion)).toBe(true);
+
+      // Remote is older timestamp than local
+      const olderRemote = {
+        updated_at: '2026-08-30T10:00:00Z',
+      };
+      expect(shouldRemoteEntityPrevail(olderRemote, localWithVersion)).toBe(false);
+
+      // Identical timestamps prevail
+      const sameTimeRemote = {
+        updated_at: '2026-09-01T10:00:00Z',
+      };
+      expect(shouldRemoteEntityPrevail(sameTimeRemote, localWithVersion)).toBe(true);
+    });
+
+    it('gracefully handles remote tombstones without version', () => {
+      const remoteTombstoneWithoutVersion = {
+        deleted_at: '2026-09-02T10:00:00Z',
+      };
+      const local = {
+        updated_at: '2026-09-01T10:00:00Z',
+        version: 3,
+      };
+
+      expect(shouldRemoteTombstonePrevail(remoteTombstoneWithoutVersion, local)).toBe(true);
+
+      const olderTombstone = {
+        deleted_at: '2026-08-30T10:00:00Z',
+      };
+      expect(shouldRemoteTombstonePrevail(olderTombstone, local)).toBe(false);
+    });
+  });
+
   describe('In-app Notifications State', () => {
     it('adds, caps at 50, marks read, and clears notifications', () => {
       const state = useAppStore.getState();
@@ -467,6 +546,36 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
       state.removeRemoteMember('mem_remote_1');
       expect(useAppStore.getState().members.find((m) => m.id === 'mem_remote_1')).toBeUndefined();
     });
+
+    it('reconciles remote import batches correctly using LWW', () => {
+      const state = useAppStore.getState();
+      const remoteBatch = {
+        id: 'batch_remote_1',
+        family_id: 'fam_1',
+        imported_by_member_id: 'mem_1',
+        file_name: 'remote.csv',
+        total_records: 10,
+        total_amount: 250,
+        created_at: '2026-09-01T12:00:00Z',
+        updated_at: '2026-09-01T12:00:00Z',
+      };
+
+      state.reconcileRemoteImportBatches([remoteBatch]);
+      expect(
+        useAppStore.getState().importBatches.find((b) => b.id === 'batch_remote_1'),
+      ).toBeDefined();
+
+      // Older batch update should not overwrite newer
+      const olderBatch = {
+        ...remoteBatch,
+        file_name: 'older_remote.csv',
+        updated_at: '2025-01-01T12:00:00Z',
+      };
+      state.reconcileRemoteImportBatches([olderBatch]);
+      expect(
+        useAppStore.getState().importBatches.find((b) => b.id === 'batch_remote_1')?.file_name,
+      ).toBe('remote.csv');
+    });
   });
 
   describe('Mutation Subscribers', () => {
@@ -509,6 +618,64 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
           color: '#000000',
         });
       }).not.toThrow();
+
+      unsubscribe();
+    });
+
+    it('emits import_batch INSERT before expense INSERT mutations when importing report', () => {
+      const capturedMutations: any[] = [];
+      const unsubscribe = registerStoreMutationListener((mutation) => {
+        capturedMutations.push(mutation);
+      });
+
+      const result = useAppStore
+        .getState()
+        .importExpenseReport(SAMPLE_IMPORT_REPORT, 'batch_test.json');
+
+      expect(capturedMutations.length).toBeGreaterThan(1);
+      // First mutation MUST be the import_batch to satisfy foreign keys in remote Supabase
+      expect(capturedMutations[0]).toEqual({
+        entity: 'import_batch',
+        operation: 'INSERT',
+        entity_id: result.batchId,
+        payload: expect.objectContaining({
+          id: result.batchId,
+          file_name: 'batch_test.json',
+          total_records: SAMPLE_IMPORT_REPORT.expenses.length,
+        }),
+      });
+
+      // Subsequent mutations are the individual expenses referencing the batch
+      const expenseMutations = capturedMutations.slice(1);
+      expect(expenseMutations.length).toBe(SAMPLE_IMPORT_REPORT.expenses.length);
+      expenseMutations.forEach((m) => {
+        expect(m.entity).toBe('expense');
+        expect(m.operation).toBe('INSERT');
+        expect(m.payload.import_batch_id).toBe(result.batchId);
+      });
+
+      unsubscribe();
+    });
+
+    it('emits import_batch and expense DELETE mutations on clearAllExpenses', () => {
+      useAppStore.getState().importExpenseReport(SAMPLE_IMPORT_REPORT, 'clear_test.json');
+
+      const capturedMutations: any[] = [];
+      const unsubscribe = registerStoreMutationListener((mutation) => {
+        capturedMutations.push(mutation);
+      });
+
+      useAppStore.getState().clearAllExpenses();
+
+      const batchDeletes = capturedMutations.filter(
+        (m) => m.entity === 'import_batch' && m.operation === 'DELETE',
+      );
+      const expenseDeletes = capturedMutations.filter(
+        (m) => m.entity === 'expense' && m.operation === 'DELETE',
+      );
+
+      expect(batchDeletes.length).toBeGreaterThan(0);
+      expect(expenseDeletes.length).toBeGreaterThan(0);
 
       unsubscribe();
     });

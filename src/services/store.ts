@@ -10,6 +10,7 @@ import {
   ImportBatch,
   RawExpenseReport,
   MutationOperation,
+  MutationEntity,
   NotificationPreferences,
   AppNotification,
 } from '@/types';
@@ -96,13 +97,14 @@ export interface AppState {
   reconcileRemoteExpenses: (expenses: Expense[]) => void;
   reconcileRemoteCategories: (categories: Category[]) => void;
   reconcileRemoteMembers: (members: FamilyMember[]) => void;
+  reconcileRemoteImportBatches: (batches: ImportBatch[]) => void;
   removeRemoteExpense: (id: string) => void;
   removeRemoteCategory: (id: string) => void;
   removeRemoteMember: (id: string) => void;
 }
 
 export type StoreMutationEvent = {
-  entity: 'expense' | 'category' | 'member' | 'family' | 'notification_preference';
+  entity: MutationEntity;
   operation: MutationOperation;
   entity_id: string;
   payload: any;
@@ -139,6 +141,70 @@ const notifyStoreMutation = (event: StoreMutationEvent) => {
 const DEFAULT_FILTERS: FilterOptions = {
   searchQuery: '',
 };
+
+/**
+ * Evaluates whether a remote update should prevail over local state using guarded
+ * revision checking and normalized timestamp comparisons.
+ *
+ * Remote changes with identical or higher timestamps prevail over stale local state.
+ * Guarded revision check: if both items define a version/revision, remote changes
+ * with identical or higher version prevail regardless of client clock skew.
+ * When remote.version is undefined (e.g., Supabase table rows lacking a version column),
+ * the comparison gracefully falls back to normalized server timestamps reconciled via executeMutation.
+ */
+export function shouldRemoteEntityPrevail(
+  remote: { updated_at?: string | null; created_at?: string | null; version?: number },
+  local?: { updated_at?: string | null; created_at?: string | null; version?: number },
+): boolean {
+  if (!local) return true;
+
+  // 1. Guarded revision check: if both entities have versions, compare them
+  if (remote.version !== undefined && local.version !== undefined) {
+    return remote.version >= local.version;
+  }
+
+  // 2. Normalized timestamp comparisons
+  const remoteTime = remote.updated_at
+    ? new Date(remote.updated_at).getTime()
+    : remote.created_at
+      ? new Date(remote.created_at).getTime()
+      : 0;
+
+  const localTime = local.updated_at
+    ? new Date(local.updated_at).getTime()
+    : local.created_at
+      ? new Date(local.created_at).getTime()
+      : 0;
+
+  if (!localTime || isNaN(localTime)) return true;
+  if (!remoteTime || isNaN(remoteTime)) return false;
+
+  // Remote changes with identical or higher timestamps prevail over stale local state
+  return remoteTime >= localTime;
+}
+
+export function shouldRemoteTombstonePrevail(
+  remote: { deleted_at?: string | null; version?: number },
+  local?: { updated_at?: string | null; created_at?: string | null; version?: number },
+): boolean {
+  if (!local) return true;
+
+  if (remote.version !== undefined && local.version !== undefined) {
+    return remote.version >= local.version;
+  }
+
+  const deleteTime = remote.deleted_at ? new Date(remote.deleted_at).getTime() : 0;
+  const localTime = local.updated_at
+    ? new Date(local.updated_at).getTime()
+    : local.created_at
+      ? new Date(local.created_at).getTime()
+      : 0;
+
+  if (!localTime || isNaN(localTime)) return true;
+  if (!deleteTime || isNaN(deleteTime)) return false;
+
+  return deleteTime >= localTime;
+}
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -206,6 +272,7 @@ export const useAppStore = create<AppState>()(
           family_id: state.family.id,
           created_at: now,
           updated_at: now,
+          version: 1,
         };
         transactionLogger.info('Expense created', {
           id: newExpense.id,
@@ -254,6 +321,7 @@ export const useAppStore = create<AppState>()(
                 family_id: e.family_id,
                 amount: normalizedAmount ?? e.amount,
                 updated_at: now,
+                version: (e.version || 1) + 1,
               };
               updatedExpense = updated;
               return updated;
@@ -299,9 +367,10 @@ export const useAppStore = create<AppState>()(
       clearAllExpenses: () => {
         const state = get();
         const expensesToClear = [...state.expenses];
+        const batchesToClear = [...state.importBatches];
         transactionLogger.warn('All expenses cleared from store', {
           count: expensesToClear.length,
-          batchCount: state.importBatches.length,
+          batchCount: batchesToClear.length,
         });
         set({ expenses: [], importBatches: [] });
 
@@ -312,6 +381,15 @@ export const useAppStore = create<AppState>()(
             operation: 'DELETE',
             entity_id: exp.id,
             payload: { id: exp.id },
+          });
+        }
+
+        for (const batch of batchesToClear) {
+          notifyStoreMutation({
+            entity: 'import_batch',
+            operation: 'DELETE',
+            entity_id: batch.id,
+            payload: { id: batch.id },
           });
         }
       },
@@ -326,6 +404,7 @@ export const useAppStore = create<AppState>()(
           family_id: state.family.id,
           created_at: now,
           updated_at: now,
+          version: 1,
         };
         storeLogger.info('Member added', {
           id: newMember.id,
@@ -367,6 +446,7 @@ export const useAppStore = create<AppState>()(
                 id: m.id,
                 family_id: m.family_id,
                 updated_at: now,
+                version: (m.version || 1) + 1,
               };
               updatedMember = updated;
               return updated;
@@ -452,6 +532,7 @@ export const useAppStore = create<AppState>()(
           ...safeCatData,
           id: generateUUID(),
           family_id: state.family.id,
+          version: 1,
         };
         storeLogger.info('Category added', { id: newCategory.id, name: newCategory.name });
         set((state) => ({ categories: [...state.categories, newCategory] }));
@@ -483,6 +564,7 @@ export const useAppStore = create<AppState>()(
                 id: c.id,
                 family_id: c.family_id,
                 updated_at: now,
+                version: (c.version || 1) + 1,
               };
               updatedCategory = updated;
               return updated;
@@ -515,8 +597,16 @@ export const useAppStore = create<AppState>()(
 
         storeLogger.info('Category deleted', { id, fallbackId: fallbackCat?.id });
         const now = new Date().toISOString();
+        const affectedExpenses = state.expenses.filter((e) => e.category_id === id);
         const updatedExpenses = state.expenses.map((e) =>
-          e.category_id === id ? { ...e, category_id: fallbackCat?.id || '', updated_at: now } : e,
+          e.category_id === id
+            ? {
+                ...e,
+                category_id: fallbackCat?.id || '',
+                updated_at: now,
+                version: (e.version || 1) + 1,
+              }
+            : e,
         );
 
         set((state) => ({
@@ -525,16 +615,21 @@ export const useAppStore = create<AppState>()(
         }));
 
         // Enqueue expense updates BEFORE category DELETE to prevent 23503 foreign key violation
-        updatedExpenses
-          .filter((e) => e.category_id === fallbackCat?.id && e.updated_at === now)
-          .forEach((exp) => {
-            notifyStoreMutation({
-              entity: 'expense',
-              operation: 'UPDATE',
-              entity_id: exp.id,
-              payload: exp,
-            });
+        affectedExpenses.forEach((exp) => {
+          const updatedExp = {
+            ...exp,
+            category_id: fallbackCat?.id || '',
+            updated_at: now,
+            version: (exp.version || 1) + 1,
+            previous_category_id: id,
+          };
+          notifyStoreMutation({
+            entity: 'expense',
+            operation: 'UPDATE',
+            entity_id: exp.id,
+            payload: updatedExp,
           });
+        });
 
         notifyStoreMutation({
           entity: 'category',
@@ -665,6 +760,7 @@ export const useAppStore = create<AppState>()(
           };
         });
 
+        const batchCreatedAt = new Date().toISOString();
         const newBatch: ImportBatch = {
           id: batchId,
           family_id: state.family.id,
@@ -672,7 +768,8 @@ export const useAppStore = create<AppState>()(
           file_name: fileName,
           total_records: newExpenses.length,
           total_amount: totalAmount,
-          created_at: new Date().toISOString(),
+          created_at: batchCreatedAt,
+          updated_at: batchCreatedAt,
           raw_payload: report,
         };
 
@@ -680,6 +777,14 @@ export const useAppStore = create<AppState>()(
           expenses: [...newExpenses, ...state.expenses],
           importBatches: [newBatch, ...state.importBatches],
         }));
+
+        // Notify outbox of the import_batch creation BEFORE expenses to satisfy foreign key constraints
+        notifyStoreMutation({
+          entity: 'import_batch',
+          operation: 'INSERT',
+          entity_id: newBatch.id,
+          payload: newBatch,
+        });
 
         newExpenses.forEach((exp) => {
           notifyStoreMutation({
@@ -746,20 +851,15 @@ export const useAppStore = create<AppState>()(
 
           remoteList.forEach((remote) => {
             const local = map.get(remote.id);
-            const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
-            const localTime = local?.updated_at ? new Date(local.updated_at).getTime() : 0;
 
             if (remote.deleted_at) {
-              const deleteTime = new Date(remote.deleted_at).getTime();
-              if (!local || deleteTime >= localTime) {
+              if (shouldRemoteTombstonePrevail(remote, local)) {
                 map.delete(remote.id);
               }
               return;
             }
 
-            if (!local) {
-              map.set(remote.id, remote);
-            } else if (remoteTime >= localTime) {
+            if (shouldRemoteEntityPrevail(remote, local)) {
               map.set(remote.id, remote);
             }
           });
@@ -777,20 +877,15 @@ export const useAppStore = create<AppState>()(
           const map = new Map(state.categories.map((c) => [c.id, c]));
           remoteList.forEach((remote) => {
             const local = map.get(remote.id);
-            const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
-            const localTime = local?.updated_at ? new Date(local.updated_at).getTime() : 0;
 
             if (remote.deleted_at) {
-              const deleteTime = new Date(remote.deleted_at).getTime();
-              if (!local || deleteTime >= localTime) {
+              if (shouldRemoteTombstonePrevail(remote, local)) {
                 map.delete(remote.id);
               }
               return;
             }
 
-            if (!local) {
-              map.set(remote.id, remote);
-            } else if (remoteTime >= localTime) {
+            if (shouldRemoteEntityPrevail(remote, local)) {
               map.set(remote.id, remote);
             }
           });
@@ -806,24 +901,37 @@ export const useAppStore = create<AppState>()(
             const local = map.get(remote.id);
             const isCurrent =
               remote.id === state.currentMemberId || (local ? local.is_current_user : false);
-            const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
-            const localTime = local?.updated_at ? new Date(local.updated_at).getTime() : 0;
 
             if (remote.deleted_at) {
-              const deleteTime = new Date(remote.deleted_at).getTime();
-              if (!local || deleteTime >= localTime) {
+              if (shouldRemoteTombstonePrevail(remote, local)) {
                 map.delete(remote.id);
               }
               return;
             }
 
-            if (!local) {
-              map.set(remote.id, { ...remote, is_current_user: isCurrent });
-            } else if (remoteTime >= localTime) {
+            if (shouldRemoteEntityPrevail(remote, local)) {
               map.set(remote.id, { ...remote, is_current_user: isCurrent });
             }
           });
           return { members: Array.from(map.values()) };
+        });
+      },
+
+      reconcileRemoteImportBatches: (remoteList) => {
+        storeLogger.info('Reconciling remote import batches', { count: remoteList.length });
+        set((state) => {
+          const map = new Map(state.importBatches.map((b) => [b.id, b]));
+          remoteList.forEach((remote) => {
+            const local = map.get(remote.id);
+            if (shouldRemoteEntityPrevail(remote, local)) {
+              map.set(remote.id, remote);
+            }
+          });
+
+          const sorted = Array.from(map.values()).sort((a, b) =>
+            b.created_at.localeCompare(a.created_at),
+          );
+          return { importBatches: sorted };
         });
       },
 
