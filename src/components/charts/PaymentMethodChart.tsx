@@ -154,7 +154,7 @@ export const PaymentMethodChart: React.FC<PaymentMethodChartProps> = ({ data, cu
                     fontSize: 11,
                   }}
                 >
-                  {item.transactionCount} {t.dashboard.txs} • {t.analytics.avgTransaction}:{' '}
+                  {item.transactionCount} {t.dashboard.txs}, {t.analytics.avgTransaction}:{' '}
                   {currency}
                   {item.averageTransaction.toFixed(0)}
                 </Text>

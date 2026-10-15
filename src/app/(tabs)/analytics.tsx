@@ -154,12 +154,12 @@ export default function AnalyticsScreen() {
             >
               <TabIcon
                 size={18}
-                color={isActive ? '#FFFFFF' : theme.colors.textSecondary}
+                color={isActive ? theme.colors.textInverse : theme.colors.textSecondary}
                 strokeWidth={2.5}
               />
               <Text
                 style={{
-                  color: isActive ? '#FFFFFF' : theme.colors.textPrimary,
+                  color: isActive ? theme.colors.textInverse : theme.colors.textPrimary,
                   fontSize: typography.fontSizes.sm,
                   fontWeight: isActive
                     ? typography.fontWeights.bold

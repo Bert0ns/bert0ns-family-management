@@ -284,7 +284,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                     }}
                     numberOfLines={1}
                   >
-                    {item.percentage.toFixed(0)}% • {item.transactionCount}{' '}
+                    {item.percentage.toFixed(0)}%, {item.transactionCount}{' '}
                     {t.ledger.transactionsCount}
                   </Text>
                 </View>
@@ -295,7 +295,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                 style={{
                   height: 8,
                   backgroundColor: theme.colors.surfaceSubtle,
-                  borderRadius: radius.full,
+                  borderRadius: radius.xs,
                   overflow: 'hidden',
                 }}
               >

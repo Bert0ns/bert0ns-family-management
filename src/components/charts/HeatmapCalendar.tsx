@@ -72,7 +72,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   const dateLocale = locale === 'it' ? 'it-IT' : 'en-US';
   const dayHeaders = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(2024, 0, 1 + i);
-    return d.toLocaleDateString(dateLocale, { weekday: 'narrow' }).toUpperCase();
+    return d.toLocaleDateString(dateLocale, { weekday: 'narrow' });
   });
   const colWidth = `${100 / 7}%` as const;
 
@@ -144,7 +144,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
                   style={{
                     fontSize: 10,
                     fontWeight: typography.fontWeights.semibold,
-                    color: isHigh ? '#FFFFFF' : theme.colors.textPrimary,
+                    color: isHigh ? theme.colors.textInverse : theme.colors.textPrimary,
                   }}
                 >
                   {dayNum}
@@ -170,7 +170,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           style={{
             width: 12,
             height: 12,
-            borderRadius: 2,
+            borderRadius: radius.xs,
             backgroundColor: theme.colors.surfaceSubtle,
           }}
         />
@@ -178,7 +178,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           style={{
             width: 12,
             height: 12,
-            borderRadius: 2,
+            borderRadius: radius.xs,
             backgroundColor: hexToRgba(theme.colors.brand, 0.2),
           }}
         />
@@ -186,7 +186,7 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           style={{
             width: 12,
             height: 12,
-            borderRadius: 2,
+            borderRadius: radius.xs,
             backgroundColor: hexToRgba(theme.colors.brand, 0.45),
           }}
         />
@@ -194,12 +194,17 @@ export const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           style={{
             width: 12,
             height: 12,
-            borderRadius: 2,
+            borderRadius: radius.xs,
             backgroundColor: hexToRgba(theme.colors.brand, 0.7),
           }}
         />
         <View
-          style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: theme.colors.brand }}
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: radius.xs,
+            backgroundColor: theme.colors.brand,
+          }}
         />
         <Text style={{ color: theme.colors.textMuted, fontSize: 10 }}>{t.analytics.more}</Text>
       </View>

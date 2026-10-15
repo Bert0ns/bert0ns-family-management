@@ -56,7 +56,7 @@ export const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
       <View
         style={{
           flex: 1,
-          backgroundColor: theme.isDark ? 'rgba(0,0,0,0.65)' : 'rgba(15,23,42,0.35)',
+          backgroundColor: theme.isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(18, 20, 24, 0.4)',
           justifyContent: isDesktop ? 'center' : 'flex-end',
           alignItems: isDesktop ? 'center' : 'stretch',
           padding: isDesktop ? spacing.lg : 0,
@@ -66,11 +66,11 @@ export const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
           style={[
             {
               backgroundColor: theme.colors.surface,
-              borderRadius: isDesktop ? radius.xxl : undefined,
-              borderTopLeftRadius: radius.xxl,
-              borderTopRightRadius: radius.xxl,
-              borderBottomLeftRadius: isDesktop ? radius.xxl : 0,
-              borderBottomRightRadius: isDesktop ? radius.xxl : 0,
+              borderRadius: isDesktop ? radius.sm : undefined,
+              borderTopLeftRadius: radius.sm,
+              borderTopRightRadius: radius.sm,
+              borderBottomLeftRadius: isDesktop ? radius.sm : 0,
+              borderBottomRightRadius: isDesktop ? radius.sm : 0,
               paddingHorizontal: spacing.lg,
               paddingBottom: spacing.xl,
               paddingTop: isDesktop ? spacing.lg : spacing.sm,
@@ -78,7 +78,7 @@ export const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
               width: isDesktop ? '100%' : undefined,
               maxWidth: isDesktop ? 540 : undefined,
               borderWidth: 1,
-              borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.8)',
+              borderColor: theme.colors.cardBorder,
             },
             Platform.OS === 'web' &&
               ({
@@ -105,10 +105,8 @@ export const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
                 style={{
                   width: 36,
                   height: 4,
-                  borderRadius: 2,
-                  backgroundColor: theme.isDark
-                    ? 'rgba(255, 255, 255, 0.2)'
-                    : 'rgba(0, 0, 0, 0.15)',
+                  borderRadius: radius.xs,
+                  backgroundColor: theme.colors.borderTactile,
                 }}
               />
             </View>
@@ -325,7 +323,7 @@ export const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
                               style={{
                                 width: 6,
                                 height: 6,
-                                borderRadius: 3,
+                                borderRadius: radius.full,
                                 backgroundColor: member.color_code || theme.colors.brand,
                               }}
                             />

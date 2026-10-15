@@ -18,7 +18,7 @@ export const MemberBarChart: React.FC<MemberBarChartProps> = ({
   currency = '€',
   onSelectMember: _onSelectMember,
 }) => {
-  const { theme, spacing, typography } = useTheme();
+  const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
 
   const maxTotal = Math.max(...data.map((d) => d.total), 100);
@@ -72,8 +72,8 @@ export const MemberBarChart: React.FC<MemberBarChartProps> = ({
             data={barData}
             barWidth={32}
             spacing={24}
-            roundedTop
-            roundedBottom
+            barBorderTopLeftRadius={radius.sm}
+            barBorderTopRightRadius={radius.sm}
             hideRules
             xAxisThickness={1}
             yAxisThickness={0}
