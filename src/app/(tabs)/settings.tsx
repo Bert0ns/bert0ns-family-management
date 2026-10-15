@@ -30,7 +30,6 @@ import { OptionSelector } from '@/components/common/OptionSelector';
 import { exportAndShareFile } from '@/services/fileExporter';
 import { authService } from '@/services/authService';
 import { syncEngine } from '@/services/syncEngine';
-import { realtimeSync } from '@/services/realtimeSync';
 import { pushNotificationService } from '@/services/pushNotificationService';
 import { AuthModal } from '@/components/sync/AuthModal';
 import { FamilyPairingModal } from '@/components/sync/FamilyPairingModal';
@@ -95,13 +94,7 @@ export default function SettingsScreen() {
   };
 
   const executeSignOut = async (wipeLocalData: boolean = false) => {
-    const user = await authService.getUser();
-    if (user && Platform.OS !== 'web') {
-      const activeToken = pushNotificationService.getActiveDeviceToken();
-      await pushNotificationService.unregisterPushTokenAsync(user.id, activeToken ?? undefined);
-    }
     await authService.signOut({ wipeLocalData });
-    realtimeSync.stopRealtimeSync();
     setUserEmail(null);
   };
 

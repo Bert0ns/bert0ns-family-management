@@ -42,9 +42,10 @@ export const authService = {
         return { error: error.message };
       }
       return { error: null };
-    } catch (err: any) {
-      supabaseLogger.error('Exception during sendOtp', { error: err?.message });
-      return { error: err?.message || 'Unknown error sending OTP' };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      supabaseLogger.error('Exception during sendOtp', { error: message });
+      return { error: message || 'Unknown error sending OTP' };
     }
   },
 
@@ -68,9 +69,10 @@ export const authService = {
       }
       authLogger.info('OTP verified successfully', { userId: data.session?.user?.id });
       return { session: data.session, error: null };
-    } catch (err: any) {
-      supabaseLogger.error('Exception during verifyOtp', { error: err?.message });
-      return { session: null, error: err?.message || 'Unknown error verifying OTP' };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      supabaseLogger.error('Exception during verifyOtp', { error: message });
+      return { session: null, error: message || 'Unknown error verifying OTP' };
     }
   },
 
@@ -79,7 +81,10 @@ export const authService = {
    * By default, local expenses, categories, and settings in Zustand / AsyncStorage
    * are preserved so the user can continue using the offline ledger safely.
    *
-   * Local data is only purged if `options.wipeLocalData` is explicitly set to true.
+   * Regardless of whether local data is kept or wiped, pending sync outbox mutations
+   * and sync metadata are cleared to prevent leaking or replaying mutations into a different household.
+   *
+   * Local data (Zustand & store storage) is only purged if `options.wipeLocalData` is explicitly true.
    */
   async signOut(options?: SignOutOptions): Promise<{ error: string | null }> {
     const shouldWipe = options?.wipeLocalData === true;
@@ -93,23 +98,35 @@ export const authService = {
           const activeToken = pushNotificationService.getActiveDeviceToken();
           await pushNotificationService.unregisterPushTokenAsync(user.id, activeToken ?? undefined);
         }
-      } catch (err: any) {
-        authLogger.warn('Failed to unregister push token during sign out', { error: err?.message });
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        authLogger.warn('Failed to unregister push token during sign out', { error: message });
+      }
+
+      // Always clear sync outbox and metadata so prior household mutations don't replay
+      try {
+        await syncEngine.clearAllSyncData();
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        authLogger.warn('Failed to clear sync outbox data during sign out', {
+          error: message,
+        });
       }
 
       if (shouldWipe) {
         try {
           useAppStore.getState().resetToDefaults();
-        } catch (err: any) {
-          authLogger.warn('Failed to reset store state during sign out', { error: err?.message });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          authLogger.warn('Failed to reset store state during sign out', { error: message });
         }
 
         try {
-          await syncEngine.clearAllSyncData();
           await AsyncStorage.removeItem(STORE_STORAGE_KEY);
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
           authLogger.warn('Failed to clear persistent storage during sign out', {
-            error: err?.message,
+            error: message,
           });
         }
       }
@@ -124,8 +141,9 @@ export const authService = {
         return { error: error.message };
       }
       return { error: null };
-    } catch (err: any) {
-      return { error: err?.message || 'Unknown error signing out' };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { error: message || 'Unknown error signing out' };
     }
   },
 

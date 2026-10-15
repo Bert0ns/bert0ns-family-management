@@ -173,7 +173,7 @@ describe('authService', () => {
       expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
     });
 
-    it('preserves Zustand state and AsyncStorage by default (safe cloud disconnect)', async () => {
+    it('preserves Zustand state and AsyncStorage by default but purges sync outbox (safe cloud disconnect)', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
       (supabase.auth.getUser as jest.Mock).mockResolvedValue({
         data: { user: { id: 'usr-preserve' } },
@@ -197,12 +197,16 @@ describe('authService', () => {
       expect(useAppStore.getState().members.length).toBe(initialMemberCount);
       expect(useAppStore.getState().family.id).toBe(initialFamilyId);
 
-      // AsyncStorage is NOT wiped
+      // Local store is NOT wiped from AsyncStorage
       expect(AsyncStorage.removeItem).not.toHaveBeenCalledWith(STORE_STORAGE_KEY);
-      expect(AsyncStorage.multiRemove).not.toHaveBeenCalled();
+
+      // Sync outbox & metadata ARE purged to avoid replay into new households
+      expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(
+        expect.arrayContaining(['@bert0ns_sync_outbox', '@bert0ns_last_sync_timestamp']),
+      );
     });
 
-    it('preserves Zustand state and AsyncStorage when disconnectCloud is called', async () => {
+    it('preserves Zustand state and AsyncStorage when disconnectCloud is called but purges sync outbox', async () => {
       (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
       (supabase.auth.getUser as jest.Mock).mockResolvedValue({
         data: { user: { id: 'usr-preserve-cloud' } },
@@ -217,7 +221,9 @@ describe('authService', () => {
 
       expect(useAppStore.getState().expenses.length).toBe(initialExpenseCount);
       expect(AsyncStorage.removeItem).not.toHaveBeenCalledWith(STORE_STORAGE_KEY);
-      expect(AsyncStorage.multiRemove).not.toHaveBeenCalled();
+      expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(
+        expect.arrayContaining(['@bert0ns_sync_outbox', '@bert0ns_last_sync_timestamp']),
+      );
     });
 
     it('tears down Zustand state and purges AsyncStorage when wipeLocalData is true', async () => {
