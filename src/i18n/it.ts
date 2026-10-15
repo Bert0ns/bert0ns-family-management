@@ -340,6 +340,16 @@ export const it: TranslationSchema = {
       'Inserisci il codice di verifica a 6 cifre ricevuto via email, oppure clicca sul link di accesso.',
     verifyButton: 'Verifica & Connetti',
     signOutButton: 'Disconnetti Cloud',
+    disconnectConfirmTitle: 'Disconnetti Cloud Sync',
+    disconnectConfirmMessage:
+      'La disconnessione interrompe la sincronizzazione cloud. Le tue spese, categorie e impostazioni locali rimarranno al sicuro su questo dispositivo.',
+    disconnectKeepData: 'Disconnetti (Mantieni Dati)',
+    disconnectWipeData: 'Cancella Dati Dispositivo ed Esci',
+    disconnectHelperText: 'La disconnessione conserva le tue spese offline su questo dispositivo.',
+    wipeAndSignOutButton: 'Cancella Dati Dispositivo ed Esci',
+    wipeAndSignOutConfirmTitle: 'Cancellare i Dati del Dispositivo ed Uscire?',
+    wipeAndSignOutConfirmMessage:
+      'Tutte le spese, categorie e impostazioni locali verranno eliminate definitivamente da questo dispositivo e verrai disconnesso dal cloud. Questa operazione non può essere annullata.',
     syncNowButton: 'Sincronizza Ora',
     statusSynced: 'Sincronizzato con Cloud',
     statusSyncing: 'Sincronizzazione in corso...',
