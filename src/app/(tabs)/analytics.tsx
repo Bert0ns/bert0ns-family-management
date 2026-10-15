@@ -141,25 +141,25 @@ export default function AnalyticsScreen() {
                 paddingHorizontal: spacing.md,
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: radius.full,
+                borderRadius: radius.sm,
                 backgroundColor: isActive
                   ? theme.colors.brand
                   : theme.isDark
                     ? theme.colors.surfaceContainerHigh
                     : theme.colors.surfaceSubtle,
-                borderWidth: 1.5,
+                borderWidth: 1,
                 borderColor: isActive ? theme.colors.brand : theme.colors.borderTactile,
               }}
               accessibilityLabel={label}
             >
               <TabIcon
                 size={18}
-                color={isActive ? '#FFFFFF' : theme.colors.textSecondary}
+                color={isActive ? theme.colors.textInverse : theme.colors.textSecondary}
                 strokeWidth={2.5}
               />
               <Text
                 style={{
-                  color: isActive ? '#FFFFFF' : theme.colors.textPrimary,
+                  color: isActive ? theme.colors.textInverse : theme.colors.textPrimary,
                   fontSize: typography.fontSizes.sm,
                   fontWeight: isActive
                     ? typography.fontWeights.bold

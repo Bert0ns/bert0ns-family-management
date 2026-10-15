@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, ArrowRight, FileJson, Wallet, Receipt } from 'lucide-react-native';
+import { Plus, FileJson, Wallet, Receipt } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -128,9 +128,7 @@ export default function DashboardScreen() {
             style={{
               color: theme.colors.textSecondary,
               fontSize: typography.fontSizes.sm,
-              fontWeight: typography.fontWeights.bold,
-              textTransform: 'uppercase',
-              letterSpacing: 1,
+              fontWeight: typography.fontWeights.medium,
             }}
             numberOfLines={1}
             ellipsizeMode="tail"
@@ -167,7 +165,7 @@ export default function DashboardScreen() {
             borderColor: theme.colors.borderTactile,
             paddingHorizontal: spacing.md,
             paddingVertical: spacing.xs + 2,
-            borderRadius: radius.full,
+            borderRadius: radius.sm,
             marginTop: spacing.xs,
             gap: 6,
           }}
@@ -194,7 +192,7 @@ export default function DashboardScreen() {
           accessibilityLabel={t.dashboard.quickAddButton}
           style={{
             minHeight: 60,
-            borderRadius: radius.xl,
+            borderRadius: radius.sm,
             backgroundColor: theme.colors.brand,
             flexDirection: 'row',
             alignItems: 'center',
@@ -202,20 +200,20 @@ export default function DashboardScreen() {
             paddingHorizontal: spacing.md,
             gap: spacing.md,
             borderWidth: 1,
-            borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)',
-            shadowColor: theme.colors.brand,
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.35,
-            shadowRadius: 16,
-            elevation: 6,
+            borderColor: theme.colors.borderSubtle,
+            shadowColor: theme.colors.shadow,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.08,
+            shadowRadius: 2,
+            elevation: 2,
           }}
         >
           <View
             style={{
               width: 36,
               height: 36,
-              borderRadius: radius.full,
-              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              borderRadius: radius.sm,
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
@@ -386,7 +384,7 @@ export default function DashboardScreen() {
           </Text>
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/ledger')}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 }}
+            style={{ paddingVertical: 4 }}
             accessibilityLabel={t.dashboard.viewAll}
           >
             <Text
@@ -398,7 +396,6 @@ export default function DashboardScreen() {
             >
               {t.dashboard.viewAll}
             </Text>
-            <ArrowRight size={16} color={theme.colors.brand} strokeWidth={2.5} />
           </TouchableOpacity>
         </View>
 

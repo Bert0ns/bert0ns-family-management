@@ -153,8 +153,7 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({
             style={{
               color: theme.colors.textSecondary,
               fontSize: typography.fontSizes.xs,
-              textTransform: 'uppercase',
-              letterSpacing: 1,
+              letterSpacing: 0.1,
               fontWeight: typography.fontWeights.bold,
               marginBottom: spacing.xs,
             }}
@@ -171,7 +170,7 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({
                   : 'rgba(99, 102, 241, 0.1)',
                 paddingHorizontal: spacing.md,
                 paddingVertical: spacing.sm + 2,
-                borderRadius: radius.md,
+                borderRadius: radius.sm,
                 borderWidth: 1,
                 borderColor: theme.colors.brand,
                 alignItems: 'center',
@@ -254,9 +253,9 @@ export const FamilyPairingModal: React.FC<FamilyPairingModalProps> = ({
             <View
               style={{
                 gap: spacing.xs,
-                backgroundColor: theme.isDark ? '#451A1A' : '#FEE2E2',
+                backgroundColor: theme.colors.dangerBg,
                 padding: spacing.sm,
-                borderRadius: radius.md,
+                borderRadius: radius.sm,
                 marginBottom: spacing.xs,
               }}
             >

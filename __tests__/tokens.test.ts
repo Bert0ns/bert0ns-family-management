@@ -41,6 +41,11 @@ describe('Design Tokens & WCAG AA Contrast', () => {
       const ratio = getContrastRatio(LightTheme.colors.brand, '#FFFFFF');
       expect(ratio).toBeGreaterThanOrEqual(4.5);
     });
+
+    it('achieves at least 4.5:1 contrast ratio for textMuted in LightTheme against bone paper canvas (WCAG AA)', () => {
+      const ratio = getContrastRatio(LightTheme.colors.textMuted, LightTheme.colors.background);
+      expect(ratio).toBeGreaterThanOrEqual(4.5);
+    });
   });
 
   describe('Touch Targets', () => {

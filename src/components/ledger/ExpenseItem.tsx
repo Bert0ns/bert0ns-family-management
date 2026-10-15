@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, type ViewStyle } from 'react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName } from '@/i18n';
 import { Expense, Category, FamilyMember } from '@/types';
@@ -44,12 +44,12 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = React.memo(
       onPress?.(expense);
     }, [onPress, expense]);
 
-    const webGlassStyles =
+    const webGlassStyles: ViewStyle =
       Platform.OS === 'web'
         ? ({
             cursor: 'pointer',
             transition: 'all 0.15s ease',
-          } as any)
+          } as unknown as ViewStyle)
         : {};
 
     return (
@@ -110,7 +110,9 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = React.memo(
             </Text>
           </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 2 }}
+          >
             <Text
               style={{
                 color: theme.colors.textSecondary,
@@ -127,15 +129,6 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = React.memo(
             <Text
               style={{
                 color: theme.colors.textMuted,
-                fontSize: typography.fontSizes.xs,
-                flexShrink: 0,
-              }}
-            >
-              •
-            </Text>
-            <Text
-              style={{
-                color: theme.colors.textSecondary,
                 fontSize: typography.fontSizes.xs,
                 fontWeight: typography.fontWeights.medium,
                 flexShrink: 0,

@@ -168,9 +168,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               flexDirection: 'row',
               alignItems: 'center',
               gap: spacing.xs,
-              backgroundColor: theme.isDark ? '#451A1A' : '#FEE2E2',
+              backgroundColor: theme.colors.dangerBg,
               padding: spacing.sm,
-              borderRadius: radius.md,
+              borderRadius: radius.sm,
             }}
           >
             <AlertCircle size={16} color={theme.colors.danger} />
@@ -188,9 +188,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               flexDirection: 'row',
               alignItems: 'center',
               gap: spacing.xs,
-              backgroundColor: theme.isDark ? '#064E3B' : '#ECFDF5',
+              backgroundColor: theme.colors.successBg,
               padding: spacing.sm,
-              borderRadius: radius.md,
+              borderRadius: radius.sm,
             }}
           >
             <CheckCircle2 size={16} color={theme.colors.success} />

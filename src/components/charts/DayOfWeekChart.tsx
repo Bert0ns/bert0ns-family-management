@@ -93,17 +93,17 @@ export const DayOfWeekChart: React.FC<DayOfWeekChartProps> = ({ data, currency =
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              backgroundColor: 'rgba(245, 158, 11, 0.12)',
+              backgroundColor: theme.colors.warningBg,
               paddingHorizontal: spacing.sm,
               paddingVertical: spacing.xs,
               borderRadius: radius.md,
               gap: 4,
             }}
           >
-            <Sparkles size={12} color="#D97706" />
+            <Sparkles size={12} color={theme.colors.warning} />
             <Text
               style={{
-                color: '#D97706',
+                color: theme.colors.warning,
                 fontSize: 11,
                 fontWeight: typography.fontWeights.heavy,
               }}
@@ -135,9 +135,9 @@ export const DayOfWeekChart: React.FC<DayOfWeekChartProps> = ({ data, currency =
 
           let barBg = theme.colors.brandLight;
           if (isSelected) {
-            barBg = isPeak ? '#F59E0B' : theme.colors.brand;
+            barBg = isPeak ? theme.colors.warning : theme.colors.brand;
           } else if (isPeak) {
-            barBg = 'rgba(245, 158, 11, 0.35)';
+            barBg = theme.colors.warningBg;
           }
 
           return (
@@ -249,7 +249,7 @@ export const DayOfWeekChart: React.FC<DayOfWeekChartProps> = ({ data, currency =
             height: 10,
             width: '100%',
             backgroundColor: theme.colors.surfaceSubtle,
-            borderRadius: radius.full,
+            borderRadius: radius.xs,
             flexDirection: 'row',
             overflow: 'hidden',
           }}
@@ -263,7 +263,7 @@ export const DayOfWeekChart: React.FC<DayOfWeekChartProps> = ({ data, currency =
           <View
             style={{
               width: `${Math.max(data.weekendPercentage, 0)}%`,
-              backgroundColor: '#8B5CF6',
+              backgroundColor: theme.colors.brandSecondary,
             }}
           />
         </View>
@@ -279,7 +279,12 @@ export const DayOfWeekChart: React.FC<DayOfWeekChartProps> = ({ data, currency =
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <View
-              style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.brand }}
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: radius.xs,
+                backgroundColor: theme.colors.brand,
+              }}
             />
             <Text style={{ color: theme.colors.textSecondary, fontSize: 11 }}>
               {t.analytics.weekdays}: {currency}
@@ -287,7 +292,14 @@ export const DayOfWeekChart: React.FC<DayOfWeekChartProps> = ({ data, currency =
             </Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#8B5CF6' }} />
+            <View
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: radius.xs,
+                backgroundColor: theme.colors.brandSecondary,
+              }}
+            />
             <Text style={{ color: theme.colors.textSecondary, fontSize: 11 }}>
               {t.analytics.weekends}: {currency}
               {data.weekendTotal.toFixed(0)}

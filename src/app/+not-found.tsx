@@ -22,7 +22,7 @@ export default function NotFoundScreen() {
           style={{
             width: 72,
             height: 72,
-            borderRadius: radius.full,
+            borderRadius: radius.sm,
             backgroundColor: theme.colors.brandLight,
             alignItems: 'center',
             justifyContent: 'center',

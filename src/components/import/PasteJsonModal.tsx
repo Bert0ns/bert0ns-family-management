@@ -147,7 +147,7 @@ export const PasteJsonModal: React.FC<PasteJsonModalProps> = ({
               style={{
                 width: 36,
                 height: 36,
-                borderRadius: radius.full,
+                borderRadius: radius.sm,
                 backgroundColor: theme.colors.surfaceSubtle,
                 alignItems: 'center',
                 justifyContent: 'center',

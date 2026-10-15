@@ -30,28 +30,24 @@ export const Card: React.FC<CardProps> = ({
   const isElevated = variant === 'elevated' || variant === 'glass';
   const isWeb = Platform.OS === 'web';
 
-  const shadowStyles = isWeb
+  const shadowStyles: ViewStyle = isWeb
     ? isElevated
       ? ({
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
           boxShadow: theme.isDark
-            ? '0 10px 32px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
-            : '0 8px 28px -2px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-        } as any)
+            ? '0 2px 8px rgba(0, 0, 0, 0.35)'
+            : '0 1px 4px rgba(27, 33, 30, 0.04)',
+        } as unknown as ViewStyle)
       : ({
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
           boxShadow: theme.isDark
-            ? '0 4px 16px -2px rgba(0, 0, 0, 0.4)'
-            : '0 2px 8px rgba(15, 23, 42, 0.04)',
-        } as any)
+            ? '0 1px 3px rgba(0, 0, 0, 0.2)'
+            : '0 1px 2px rgba(27, 33, 30, 0.02)',
+        } as unknown as ViewStyle)
     : {
         shadowColor: theme.colors.shadow,
-        shadowOffset: { width: 0, height: isElevated ? 6 : 2 },
-        shadowOpacity: isElevated ? (theme.isDark ? 0.4 : 0.08) : 0.04,
-        shadowRadius: isElevated ? 18 : 6,
-        elevation: isElevated ? 5 : 2,
+        shadowOffset: { width: 0, height: isElevated ? 3 : 1 },
+        shadowOpacity: isElevated ? (theme.isDark ? 0.35 : 0.06) : 0.03,
+        shadowRadius: isElevated ? 8 : 3,
+        elevation: isElevated ? 3 : 1,
       };
 
   const getBackgroundColor = () => {
@@ -61,7 +57,7 @@ export const Card: React.FC<CardProps> = ({
       case 'glass':
         return theme.colors.glass;
       case 'outlined':
-        return theme.isDark ? 'rgba(19, 27, 46, 0.6)' : 'rgba(255, 255, 255, 0.7)';
+        return theme.colors.surfaceSubtle;
       case 'elevated':
       default:
         return theme.colors.card;
@@ -70,9 +66,9 @@ export const Card: React.FC<CardProps> = ({
 
   const cardStyle: ViewStyle = {
     backgroundColor: getBackgroundColor(),
-    borderRadius: radius.xl,
+    borderRadius: radius.sm,
     padding: paddingValues[padding] ?? spacing.md,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: variant === 'outlined' ? theme.colors.borderTactile : theme.colors.cardBorder,
     ...shadowStyles,
   };

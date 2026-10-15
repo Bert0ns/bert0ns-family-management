@@ -206,27 +206,26 @@ export default function AddExpenseScreen() {
       <View
         style={{
           backgroundColor: theme.colors.card,
-          borderRadius: radius.xxl,
+          borderRadius: radius.sm,
           paddingVertical: spacing.xl,
           paddingHorizontal: spacing.lg,
-          borderWidth: 1.5,
+          borderWidth: 1,
           borderColor: errors.amount ? theme.colors.danger : theme.colors.cardBorder,
           marginBottom: spacing.lg,
           alignItems: 'center',
           shadowColor: theme.colors.shadow,
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.12,
-          shadowRadius: 16,
-          elevation: 4,
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.04,
+          shadowRadius: 3,
+          elevation: 1,
         }}
       >
         <Text
           style={{
             fontSize: typography.fontSizes.sm,
-            fontWeight: typography.fontWeights.bold,
+            fontWeight: typography.fontWeights.medium,
             color: theme.colors.textSecondary,
-            textTransform: 'uppercase',
-            letterSpacing: 1,
+            letterSpacing: 0.1,
             marginBottom: spacing.xs,
           }}
         >
@@ -293,7 +292,7 @@ export default function AddExpenseScreen() {
               style={{
                 paddingHorizontal: spacing.md,
                 paddingVertical: 6,
-                borderRadius: radius.full,
+                borderRadius: radius.sm,
                 backgroundColor: theme.isDark
                   ? theme.colors.surfaceContainerHigh
                   : theme.colors.surfaceSubtle,
@@ -366,9 +365,9 @@ export default function AddExpenseScreen() {
                   alignItems: 'center',
                   paddingHorizontal: spacing.sm + 2,
                   paddingVertical: spacing.sm,
-                  borderRadius: radius.xl,
+                  borderRadius: radius.sm,
                   backgroundColor: isSelected ? `${c.color}20` : theme.colors.card,
-                  borderWidth: isSelected ? 2.5 : 1.5,
+                  borderWidth: 1,
                   borderColor: isSelected ? c.color : theme.colors.cardBorder,
                   gap: spacing.sm,
                 }}
@@ -377,7 +376,7 @@ export default function AddExpenseScreen() {
                   style={{
                     width: 38,
                     height: 38,
-                    borderRadius: radius.lg,
+                    borderRadius: radius.sm,
                     backgroundColor: `${c.color}25`,
                     justifyContent: 'center',
                     alignItems: 'center',
@@ -408,7 +407,7 @@ export default function AddExpenseScreen() {
                     style={{
                       width: 20,
                       height: 20,
-                      borderRadius: radius.full,
+                      borderRadius: radius.sm,
                       backgroundColor: c.color,
                       justifyContent: 'center',
                       alignItems: 'center',
@@ -459,9 +458,9 @@ export default function AddExpenseScreen() {
               minHeight: 52,
               justifyContent: 'center',
               alignItems: 'center',
-              borderRadius: radius.lg,
+              borderRadius: radius.sm,
               backgroundColor: dateMode === 'today' ? theme.colors.brand : theme.colors.card,
-              borderWidth: 1.5,
+              borderWidth: 1,
               borderColor: dateMode === 'today' ? theme.colors.brand : theme.colors.cardBorder,
             }}
           >
@@ -487,9 +486,9 @@ export default function AddExpenseScreen() {
               minHeight: 52,
               justifyContent: 'center',
               alignItems: 'center',
-              borderRadius: radius.lg,
+              borderRadius: radius.sm,
               backgroundColor: dateMode === 'yesterday' ? theme.colors.brand : theme.colors.card,
-              borderWidth: 1.5,
+              borderWidth: 1,
               borderColor: dateMode === 'yesterday' ? theme.colors.brand : theme.colors.cardBorder,
             }}
           >
@@ -515,9 +514,9 @@ export default function AddExpenseScreen() {
               minHeight: 52,
               justifyContent: 'center',
               alignItems: 'center',
-              borderRadius: radius.lg,
+              borderRadius: radius.sm,
               backgroundColor: dateMode === 'custom' ? theme.colors.brand : theme.colors.card,
-              borderWidth: 1.5,
+              borderWidth: 1,
               borderColor: dateMode === 'custom' ? theme.colors.brand : theme.colors.cardBorder,
             }}
           >
@@ -584,9 +583,9 @@ export default function AddExpenseScreen() {
                   alignItems: 'center',
                   minHeight: 52,
                   paddingHorizontal: spacing.md,
-                  borderRadius: radius.xl,
+                  borderRadius: radius.sm,
                   backgroundColor: isSelected ? theme.colors.brandLight : theme.colors.card,
-                  borderWidth: isSelected ? 2.5 : 1.5,
+                  borderWidth: 1,
                   borderColor: isSelected ? theme.colors.brand : theme.colors.cardBorder,
                   gap: spacing.sm,
                 }}
@@ -638,11 +637,11 @@ export default function AddExpenseScreen() {
             paddingVertical: spacing.md,
             paddingHorizontal: spacing.lg,
             minHeight: 56,
-            borderRadius: radius.xl,
+            borderRadius: radius.sm,
             backgroundColor: theme.isDark
               ? theme.colors.surfaceContainerHigh
               : theme.colors.surfaceSubtle,
-            borderWidth: 1.5,
+            borderWidth: 1,
             borderColor: theme.colors.borderTactile,
           }}
         >
@@ -667,9 +666,9 @@ export default function AddExpenseScreen() {
             style={{
               marginTop: spacing.md,
               padding: spacing.lg,
-              borderRadius: radius.xl,
+              borderRadius: radius.sm,
               backgroundColor: theme.colors.card,
-              borderWidth: 1.5,
+              borderWidth: 1,
               borderColor: theme.colors.cardBorder,
               gap: spacing.md,
             }}
@@ -706,19 +705,19 @@ export default function AddExpenseScreen() {
         accessibilityLabel={t.addExpense.saveExpense}
         style={{
           minHeight: 64,
-          borderRadius: radius.xl,
+          borderRadius: radius.sm,
           backgroundColor: theme.colors.brand,
           flexDirection: 'row',
           justifyContent: 'center',
           alignItems: 'center',
           gap: spacing.md,
-          shadowColor: theme.colors.brand,
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.35,
-          shadowRadius: 16,
-          elevation: 6,
+          shadowColor: theme.colors.shadow,
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.1,
+          shadowRadius: 2,
+          elevation: 2,
           borderWidth: 1,
-          borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)',
+          borderColor: theme.colors.borderSubtle,
         }}
       >
         <Check size={28} color="#FFFFFF" strokeWidth={3} />
@@ -741,11 +740,11 @@ export default function AddExpenseScreen() {
         style={{
           marginTop: spacing.md,
           minHeight: 56,
-          borderRadius: radius.xl,
+          borderRadius: radius.sm,
           backgroundColor: theme.isDark
             ? theme.colors.surfaceContainerHigh
             : theme.colors.surfaceSubtle,
-          borderWidth: 1.5,
+          borderWidth: 1,
           borderColor: theme.colors.borderTactile,
           flexDirection: 'row',
           justifyContent: 'center',

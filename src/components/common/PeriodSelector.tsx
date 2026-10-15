@@ -55,10 +55,10 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
         alignItems: 'center',
         justifyContent: 'space-between',
         backgroundColor: theme.colors.card,
-        borderRadius: radius.xl,
-        borderWidth: 1.5,
+        borderRadius: radius.sm,
+        borderWidth: 1,
         borderColor: theme.colors.cardBorder,
-        paddingHorizontal: spacing.sm,
+        paddingHorizontal: spacing.xs + 2,
         paddingVertical: spacing.xs,
         minHeight: 56,
         gap: spacing.xs,
@@ -69,9 +69,9 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
         activeOpacity={0.7}
         accessibilityLabel={t.common.previousMonth}
         style={{
-          width: 44,
-          height: 44,
-          borderRadius: radius.lg,
+          width: 48,
+          height: 48,
+          borderRadius: radius.sm,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: theme.colors.surfaceSubtle,
@@ -80,7 +80,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
           flexShrink: 0,
         }}
       >
-        <ChevronLeft size={22} color={theme.colors.textPrimary} strokeWidth={2.5} />
+        <ChevronLeft size={20} color={theme.colors.textPrimary} strokeWidth={2.5} />
       </TouchableOpacity>
 
       <View
@@ -98,7 +98,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
           style={{
             width: 32,
             height: 32,
-            borderRadius: radius.md,
+            borderRadius: radius.sm,
             backgroundColor: theme.colors.brandLight,
             alignItems: 'center',
             justifyContent: 'center',
@@ -111,7 +111,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
           style={{
             color: theme.colors.textPrimary,
             fontSize: typography.fontSizes.md,
-            fontWeight: typography.fontWeights.heavy,
+            fontWeight: typography.fontWeights.bold,
             textTransform: 'capitalize',
             flexShrink: 1,
             textAlign: 'center',
@@ -129,9 +129,9 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
         activeOpacity={0.7}
         accessibilityLabel={t.common.nextMonth}
         style={{
-          width: 44,
-          height: 44,
-          borderRadius: radius.lg,
+          width: 48,
+          height: 48,
+          borderRadius: radius.sm,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: theme.colors.surfaceSubtle,
@@ -140,7 +140,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
           flexShrink: 0,
         }}
       >
-        <ChevronRight size={22} color={theme.colors.textPrimary} strokeWidth={2.5} />
+        <ChevronRight size={20} color={theme.colors.textPrimary} strokeWidth={2.5} />
       </TouchableOpacity>
     </View>
   );

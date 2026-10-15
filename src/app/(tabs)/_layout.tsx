@@ -12,6 +12,7 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, PieChart, ReceiptText, Users, Settings } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { Radius } from '@/theme/tokens';
 import { useI18n } from '@/i18n';
 import { SyncBadge } from '@/components/common/SyncBadge';
 import { useAppStore } from '@/services/store';
@@ -27,10 +28,11 @@ export default function TabsLayout() {
   const { width: windowWidth } = useWindowDimensions();
   const family = useAppStore((s) => s.family);
 
-  // Responsive floating pill dimensions
+  // Floating dock dimensions
   const isWideScreen = windowWidth >= 768;
   const barWidth = isWideScreen ? Math.min(windowWidth - 48, 520) : windowWidth - 28;
   const barLeft = Math.max(14, (windowWidth - barWidth) / 2);
+  const floatingBottom = Math.max(insets.bottom, 12) + (Platform.OS === 'ios' ? 4 : 8);
 
   // Global Sync & Auth Lifecycle Bootstrap
   useEffect(() => {
@@ -70,8 +72,6 @@ export default function TabsLayout() {
     };
   }, [family?.id]);
 
-  const floatingBottom = Math.max(insets.bottom, 14);
-
   const renderTabIcon = (
     IconComponent: ComponentType<{ size: number; color: string; strokeWidth?: number }>,
     focused: boolean,
@@ -81,21 +81,34 @@ export default function TabsLayout() {
     <View
       accessibilityLabel={label}
       style={{
-        width: 44,
-        height: 44,
-        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: focused ? theme.colors.brandLight : 'transparent',
-        borderWidth: focused ? 1.5 : 0,
-        borderColor: focused ? `${theme.colors.brand}4D` : 'transparent',
+        width: 48,
+        height: 48,
       }}
     >
-      <IconComponent
-        size={22}
-        color={focused ? theme.colors.brand : (color as string)}
-        strokeWidth={focused ? 2.5 : 2}
-      />
+      <View
+        style={{
+          width: 42,
+          height: 36,
+          borderRadius: Radius.dockInner,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: focused
+            ? (theme.colors.dockActivePill ?? theme.colors.brandLight)
+            : 'transparent',
+          borderWidth: focused ? 1 : 0,
+          borderColor: focused
+            ? (theme.colors.dockActiveBorder ?? `${theme.colors.brand}4D`)
+            : 'transparent',
+        }}
+      >
+        <IconComponent
+          size={21}
+          color={focused ? theme.colors.brand : (color as string)}
+          strokeWidth={focused ? 2.5 : 2}
+        />
+      </View>
     </View>
   );
 
@@ -112,14 +125,14 @@ export default function TabsLayout() {
         tabBarShowLabel: false,
         tabBarBackground: () => (
           <BlurView
-            intensity={90}
+            intensity={85}
             tint={theme.isDark ? 'dark' : 'light'}
             style={[
               StyleSheet.absoluteFill,
               {
-                borderRadius: 31,
+                borderRadius: Radius.dock,
                 overflow: 'hidden',
-                backgroundColor: theme.colors.bottomBarBg,
+                backgroundColor: theme.colors.dockBg ?? theme.colors.bottomBarBg,
               },
             ]}
           />
@@ -129,16 +142,16 @@ export default function TabsLayout() {
           bottom: floatingBottom,
           left: barLeft,
           width: barWidth,
-          height: 62,
+          height: 60,
           backgroundColor: 'transparent',
-          borderRadius: 31,
+          borderRadius: Radius.dock,
           borderWidth: 1.5,
-          borderColor: theme.colors.bottomBarBorder,
+          borderColor: theme.colors.dockBorder ?? theme.colors.bottomBarBorder,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: theme.isDark ? 0.45 : 0.1,
-          shadowRadius: 20,
-          elevation: 10,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: theme.isDark ? 0.4 : 0.08,
+          shadowRadius: 16,
+          elevation: 8,
           paddingTop: 0,
           paddingBottom: 0,
           paddingHorizontal: 6,
@@ -171,8 +184,8 @@ export default function TabsLayout() {
           />
         ),
         tabBarIconStyle: {
-          width: 44,
-          height: 44,
+          width: 48,
+          height: 48,
           justifyContent: 'center',
           alignItems: 'center',
           margin: 0,
@@ -183,7 +196,7 @@ export default function TabsLayout() {
           minWidth: 0,
           justifyContent: 'center',
           alignItems: 'center',
-          height: 62,
+          height: 60,
           padding: 0,
           margin: 0,
         },

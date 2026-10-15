@@ -50,9 +50,9 @@ export const KPIStat: React.FC<KPIStatProps> = ({
           style={{
             color: theme.colors.textSecondary,
             fontSize: typography.fontSizes.xs,
-            fontWeight: typography.fontWeights.bold,
-            textTransform: 'uppercase',
-            letterSpacing: 0.5,
+            fontWeight: typography.fontWeights.medium,
+            textTransform: 'none',
+            letterSpacing: 0.1,
             flex: 1,
             minWidth: 0,
           }}
@@ -65,10 +65,10 @@ export const KPIStat: React.FC<KPIStatProps> = ({
           <View
             style={{
               padding: spacing.xs,
-              borderRadius: radius.md,
+              borderRadius: radius.sm,
               backgroundColor: bg,
               borderWidth: 1,
-              borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+              borderColor: theme.colors.borderSubtle,
               flexShrink: 0,
             }}
           >
@@ -110,9 +110,9 @@ export const KPIStat: React.FC<KPIStatProps> = ({
       {progress !== undefined && (
         <View
           style={{
-            height: 6,
+            height: 4,
             backgroundColor: theme.colors.surfaceSubtle,
-            borderRadius: radius.full,
+            borderRadius: radius.xs,
             marginTop: spacing.sm,
             overflow: 'hidden',
           }}
@@ -122,7 +122,7 @@ export const KPIStat: React.FC<KPIStatProps> = ({
               height: '100%',
               width: `${Math.min(Math.max(progress, 0), 100)}%`,
               backgroundColor: accent,
-              borderRadius: radius.full,
+              borderRadius: radius.xs,
             }}
           />
         </View>

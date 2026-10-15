@@ -9,6 +9,7 @@ import {
   Platform,
   Alert,
   useWindowDimensions,
+  ViewStyle,
 } from 'react-native';
 import { Calendar, User, CreditCard, Trash2, X, Pencil } from 'lucide-react-native';
 import { useTheme } from '@/theme';
@@ -101,7 +102,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
       <View
         style={{
           flex: 1,
-          backgroundColor: theme.isDark ? 'rgba(0, 0, 0, 0.65)' : 'rgba(15, 23, 42, 0.35)',
+          backgroundColor: theme.colors.backdrop,
           justifyContent: isDesktop ? 'center' : 'flex-end',
           alignItems: isDesktop ? 'center' : 'stretch',
           padding: isDesktop ? spacing.lg : 0,
@@ -111,20 +112,20 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
           style={[
             {
               backgroundColor: theme.colors.surface,
-              borderRadius: isDesktop ? radius.xxl : undefined,
-              borderTopLeftRadius: radius.xxl,
-              borderTopRightRadius: radius.xxl,
-              borderBottomLeftRadius: isDesktop ? radius.xxl : 0,
-              borderBottomRightRadius: isDesktop ? radius.xxl : 0,
+              borderRadius: radius.sm,
+              borderTopLeftRadius: radius.sm,
+              borderTopRightRadius: radius.sm,
+              borderBottomLeftRadius: isDesktop ? radius.sm : 0,
+              borderBottomRightRadius: isDesktop ? radius.sm : 0,
               paddingHorizontal: spacing.lg,
               paddingBottom: spacing.xl,
               paddingTop: isDesktop ? spacing.lg : spacing.sm,
               maxHeight: isDesktop ? '85%' : '88%',
               width: isDesktop ? '100%' : undefined,
               maxWidth: isDesktop ? 540 : undefined,
-              borderWidth: 1.5,
-              borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.8)',
-              borderBottomWidth: isDesktop ? 1.5 : 0,
+              borderWidth: 1,
+              borderColor: theme.colors.cardBorder,
+              borderBottomWidth: isDesktop ? 1 : 0,
             },
             Platform.OS === 'web' &&
               ({
@@ -132,12 +133,12 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                 WebkitBackdropFilter: 'blur(24px)',
                 boxShadow: isDesktop
                   ? theme.isDark
-                    ? '0 24px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)'
-                    : '0 24px 48px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05)'
+                    ? '0 16px 32px rgba(0, 0, 0, 0.45)'
+                    : '0 8px 24px rgba(27, 33, 30, 0.08)'
                   : theme.isDark
-                    ? '0 -8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
-                    : '0 -8px 32px rgba(148, 163, 184, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
-              } as any),
+                    ? '0 -4px 16px rgba(0, 0, 0, 0.35)'
+                    : '0 -4px 16px rgba(27, 33, 30, 0.06)',
+              } as unknown as ViewStyle),
           ]}
         >
           {/* Apple Sheet Grabber Handle (Mobile only) */}

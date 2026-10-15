@@ -183,9 +183,9 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
                       alignItems: 'center',
                       backgroundColor:
                         point.momGrowthPercentage > 0
-                          ? 'rgba(239, 68, 68, 0.12)'
+                          ? theme.colors.dangerBg
                           : point.momGrowthPercentage < 0
-                            ? 'rgba(16, 185, 129, 0.12)'
+                            ? theme.colors.successBg
                             : theme.colors.surfaceSubtle,
                       paddingHorizontal: 4,
                       paddingVertical: 1,
@@ -193,9 +193,9 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
                     }}
                   >
                     {point.momGrowthPercentage > 0 ? (
-                      <TrendingUp size={9} color="#EF4444" />
+                      <TrendingUp size={9} color={theme.colors.danger} />
                     ) : point.momGrowthPercentage < 0 ? (
-                      <TrendingDown size={9} color="#10B981" />
+                      <TrendingDown size={9} color={theme.colors.success} />
                     ) : (
                       <Minus size={9} color={theme.colors.textSecondary} />
                     )}

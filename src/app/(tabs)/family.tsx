@@ -79,7 +79,7 @@ export default function FamilyScreen() {
         style={{
           marginBottom: spacing.xl,
           padding: spacing.lg,
-          borderRadius: radius.xxl,
+          borderRadius: radius.sm,
           backgroundColor: theme.colors.surface,
           borderWidth: 1,
           borderColor: theme.colors.border,
@@ -106,7 +106,7 @@ export default function FamilyScreen() {
               style={{
                 width: 44,
                 height: 44,
-                borderRadius: radius.xl,
+                borderRadius: radius.sm,
                 backgroundColor: theme.colors.brandLight,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -120,8 +120,7 @@ export default function FamilyScreen() {
                   color: theme.colors.textSecondary,
                   fontSize: typography.fontSizes.xs,
                   fontWeight: typography.fontWeights.medium,
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.8,
+                  letterSpacing: 0.1,
                 }}
               >
                 {t.family.activeWorkspace}
@@ -294,7 +293,7 @@ export default function FamilyScreen() {
                       style={{
                         width: 40,
                         height: 40,
-                        borderRadius: radius.lg,
+                        borderRadius: radius.sm,
                         backgroundColor: `${category.color}22`,
                         borderWidth: 1.5,
                         borderColor: `${category.color}35`,

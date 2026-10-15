@@ -106,10 +106,10 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
   if (comparativeData && comparativeData.pacingPercentage !== null) {
     if (comparativeData.pacingPercentage > 5) {
       pacingNotice = t.analytics.pacingAheadNotice;
-      pacingBadgeColor = '#EF4444'; // Higher spending pacing
+      pacingBadgeColor = theme.colors.danger; // Higher spending pacing
     } else if (comparativeData.pacingPercentage < -5) {
       pacingNotice = t.analytics.pacingBehindNotice;
-      pacingBadgeColor = '#10B981'; // Lower spending pacing
+      pacingBadgeColor = theme.colors.success; // Lower spending pacing
     } else {
       pacingNotice = t.analytics.pacingEqualNotice;
     }
@@ -201,10 +201,10 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
               style={{
                 width: 12,
                 height: 2,
-                backgroundColor: '#94A3B8',
+                backgroundColor: theme.colors.borderTactile,
                 borderStyle: 'dashed',
                 borderWidth: 1,
-                borderColor: '#94A3B8',
+                borderColor: theme.colors.borderTactile,
               }}
             />
             <Text
@@ -246,7 +246,7 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
             <Path
               d={previousGenerated.linePath}
               fill="none"
-              stroke="#94A3B8"
+              stroke={theme.colors.borderTactile}
               strokeWidth={2}
               strokeDasharray="5, 5"
               strokeLinecap="round"
@@ -311,7 +311,7 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
                   fontWeight: isSelected
                     ? typography.fontWeights.bold
                     : typography.fontWeights.medium,
-                  color: isSelected ? '#FFFFFF' : theme.colors.textSecondary,
+                  color: isSelected ? theme.colors.textInverse : theme.colors.textSecondary,
                 }}
               >
                 {t.analytics.inspectDay} {day}

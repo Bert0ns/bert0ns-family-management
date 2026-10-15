@@ -185,7 +185,7 @@ const EditCategoryContent: React.FC<{
                 style={{
                   width: 44,
                   height: 44,
-                  borderRadius: radius.md,
+                  borderRadius: radius.sm,
                   backgroundColor: isSelected
                     ? theme.colors.brandLight
                     : theme.colors.surfaceSubtle,
