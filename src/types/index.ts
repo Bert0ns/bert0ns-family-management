@@ -28,6 +28,7 @@ export interface Family {
   created_at: string;
   updated_at?: string;
   deleted_at?: string | null;
+  version?: number;
 }
 
 export interface FamilyMember {
@@ -42,6 +43,7 @@ export interface FamilyMember {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
+  version?: number;
 }
 
 export interface Category {
@@ -54,6 +56,7 @@ export interface Category {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
+  version?: number;
 }
 
 export interface Expense {
@@ -72,6 +75,7 @@ export interface Expense {
   created_at: string;
   updated_at?: string;
   deleted_at?: string | null;
+  version?: number;
 }
 
 export interface ImportBatch {
@@ -84,6 +88,7 @@ export interface ImportBatch {
   created_at: string;
   updated_at?: string;
   raw_payload?: any;
+  version?: number;
 }
 
 // Zod validation schemas for structured JSON imports

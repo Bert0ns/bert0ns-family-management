@@ -7,6 +7,8 @@ import {
   selectMembers,
   selectCategories,
   selectFamily,
+  shouldRemoteEntityPrevail,
+  shouldRemoteTombstonePrevail,
 } from '@/services/store';
 import { SAMPLE_IMPORT_REPORT } from '@/data/mockData';
 import { RawExpenseReport, Expense, Category, FamilyMember, AppNotification } from '@/types';
@@ -343,6 +345,83 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
     const updated = useAppStore.getState();
     expect(updated.categories).toHaveLength(initialCategoryCount - 1);
     expect(updated.categories.find((c) => c.id === 'cat_other')).toBeUndefined();
+  });
+
+  it('does not throw when deleting category and no fallback category exists or only one category remains', () => {
+    const singleCat: Category = {
+      id: 'cat_lonely',
+      family_id: 'fam_1',
+      name: 'Single',
+      icon: 'Tag',
+      color: '#fff',
+    };
+    useAppStore.setState({
+      categories: [singleCat],
+      expenses: [
+        {
+          id: 'exp_single',
+          family_id: 'fam_1',
+          paid_by_member_id: 'mem_1',
+          category_id: 'cat_lonely',
+          transaction_date: '2026-09-01',
+          merchant_name: 'Test',
+          amount: 10,
+          created_at: new Date().toISOString(),
+        },
+      ],
+    });
+
+    expect(() => {
+      useAppStore.getState().deleteCategory('cat_lonely');
+    }).not.toThrow();
+
+    expect(() => {
+      useAppStore.getState().deleteCategory('cat_lonely', 'nonexistent_fallback');
+    }).not.toThrow();
+  });
+
+  describe('shouldRemoteEntityPrevail & shouldRemoteTombstonePrevail (Remote without version)', () => {
+    it('gracefully handles remote.version === undefined by falling back to normalized timestamps', () => {
+      // Remote from Supabase has no version column, but newer timestamp
+      const remoteWithoutVersion = {
+        updated_at: '2026-09-02T10:00:00Z',
+      };
+      const localWithVersion = {
+        updated_at: '2026-09-01T10:00:00Z',
+        version: 5,
+      };
+
+      expect(shouldRemoteEntityPrevail(remoteWithoutVersion, localWithVersion)).toBe(true);
+
+      // Remote is older timestamp than local
+      const olderRemote = {
+        updated_at: '2026-08-30T10:00:00Z',
+      };
+      expect(shouldRemoteEntityPrevail(olderRemote, localWithVersion)).toBe(false);
+
+      // Identical timestamps prevail
+      const sameTimeRemote = {
+        updated_at: '2026-09-01T10:00:00Z',
+      };
+      expect(shouldRemoteEntityPrevail(sameTimeRemote, localWithVersion)).toBe(true);
+    });
+
+    it('gracefully handles remote tombstones without version', () => {
+      const remoteTombstoneWithoutVersion = {
+        deleted_at: '2026-09-02T10:00:00Z',
+      };
+      const local = {
+        updated_at: '2026-09-01T10:00:00Z',
+        version: 3,
+      };
+
+      expect(shouldRemoteTombstonePrevail(remoteTombstoneWithoutVersion, local)).toBe(true);
+
+      const olderTombstone = {
+        deleted_at: '2026-08-30T10:00:00Z',
+      };
+      expect(shouldRemoteTombstonePrevail(olderTombstone, local)).toBe(false);
+    });
   });
 
   describe('In-app Notifications State', () => {
