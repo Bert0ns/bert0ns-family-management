@@ -377,6 +377,10 @@ export const en: TranslationSchema = {
     changeEmailOrResend: 'Change Email / Resend',
     authRequiredToJoin: 'Please sign in with your email in Cloud Sync before joining a household.',
     joinedHouseholdTitle: 'Joined Household',
+    createHouseholdOption: 'Create / Backup Household',
+    joinHouseholdOption: 'Join Existing Household',
+    signInJoinSubtitle: 'Sign in to join an existing household with an invite code.',
+    signInToJoinPrompt: 'Sign In to Join',
   },
   notifications: {
     title: 'Notifications & Alerts',

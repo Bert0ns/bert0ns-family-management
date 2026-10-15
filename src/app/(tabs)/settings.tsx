@@ -32,6 +32,7 @@ import { authService } from '@/services/authService';
 import { syncEngine } from '@/services/syncEngine';
 import { pushNotificationService } from '@/services/pushNotificationService';
 import { AuthModal } from '@/components/sync/AuthModal';
+import { AuthIntent } from '@/services/authWorkflowService';
 import { FamilyPairingModal } from '@/components/sync/FamilyPairingModal';
 import { SyncBadge } from '@/components/common/SyncBadge';
 
@@ -52,6 +53,7 @@ export default function SettingsScreen() {
   const [familyNameInput, setFamilyNameInput] = useState(family.name);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPairingModal, setShowPairingModal] = useState(false);
+  const [authIntent, setAuthIntent] = useState<AuthIntent>('create');
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const pushEnabled = notificationPreferences.push_enabled;
@@ -564,7 +566,10 @@ export default function SettingsScreen() {
                   variant="primary"
                   size="md"
                   icon={<Cloud size={16} color="#FFFFFF" strokeWidth={2.5} />}
-                  onPress={() => setShowAuthModal(true)}
+                  onPress={() => {
+                    setAuthIntent('create');
+                    setShowAuthModal(true);
+                  }}
                   fullWidth
                 />
               </View>
@@ -977,10 +982,26 @@ export default function SettingsScreen() {
       </Card>
 
       {/* Auth Modal */}
-      <AuthModal visible={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <AuthModal
+        visible={showAuthModal}
+        intent={authIntent}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={(result) => {
+          if (result?.actionTaken === 'ready_to_join' || authIntent === 'join') {
+            setShowPairingModal(true);
+          }
+        }}
+      />
 
       {/* Pairing Modal */}
-      <FamilyPairingModal visible={showPairingModal} onClose={() => setShowPairingModal(false)} />
+      <FamilyPairingModal
+        visible={showPairingModal}
+        onClose={() => setShowPairingModal(false)}
+        onOpenAuth={(intent) => {
+          setAuthIntent(intent);
+          setShowAuthModal(true);
+        }}
+      />
     </ScrollView>
   );
 }
