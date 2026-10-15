@@ -41,6 +41,97 @@ export function calculateBackoffDelay(
   return Math.round(exponential + jitter);
 }
 
+/**
+ * Evaluates whether an outbox mutation has preceding unresolved dependencies in the queue
+ * that must succeed before this mutation can safely execute against Supabase.
+ * Specifically prevents PostgreSQL 23503 foreign key constraint errors during partial network flushes.
+ */
+export function hasUnresolvedDependencies(
+  item: OutboxMutation,
+  outbox: OutboxMutation[],
+  succeededIds: Set<string>,
+): boolean {
+  const itemIndex = outbox.findIndex((m) => m.id === item.id);
+  if (itemIndex < 0) return false;
+
+  // 1. Category DELETE depends on ALL uncompleted expense updates in the outbox
+  // that reassign from this category (or preceding expense mutations)
+  if (item.entity === 'category' && item.operation === 'DELETE') {
+    const hasPendingExpense = outbox.some((other, idx) => {
+      if (other.id === item.id || succeededIds.has(other.id)) return false;
+      if (other.entity === 'expense') {
+        if (
+          other.payload?.previous_category_id === item.entity_id ||
+          (idx < itemIndex && (other.operation === 'UPDATE' || other.operation === 'DELETE'))
+        ) {
+          return true;
+        }
+      }
+      return false;
+    });
+    if (hasPendingExpense) return true;
+  }
+
+  // 2. Member DELETE depends on uncompleted expense deletions for that member
+  if (item.entity === 'member' && item.operation === 'DELETE') {
+    const hasPendingExpense = outbox.some((other, idx) => {
+      if (other.id === item.id || succeededIds.has(other.id)) return false;
+      if (other.entity === 'expense' && other.operation === 'DELETE' && idx < itemIndex) {
+        return true;
+      }
+      return false;
+    });
+    if (hasPendingExpense) return true;
+  }
+
+  // 3. Expense INSERT depends on preceding category INSERT for its category
+  if (item.entity === 'expense' && item.operation === 'INSERT') {
+    const catId = item.payload?.category_id;
+    if (catId) {
+      const hasPendingCat = outbox.some((other, idx) => {
+        if (other.id === item.id || succeededIds.has(other.id)) return false;
+        return (
+          other.entity === 'category' &&
+          other.operation === 'INSERT' &&
+          other.entity_id === catId &&
+          idx < itemIndex
+        );
+      });
+      if (hasPendingCat) return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Ensures mutations maintain strict dependency order: expense updates reassigning category_id
+ * execute before category delete mutations execute against Supabase.
+ */
+export function sortMutationsByDependency(mutations: OutboxMutation[]): OutboxMutation[] {
+  const sorted = [...mutations];
+  sorted.sort((a, b) => {
+    if (
+      a.entity === 'category' &&
+      a.operation === 'DELETE' &&
+      b.entity === 'expense' &&
+      (b.payload?.previous_category_id === a.entity_id || b.operation === 'UPDATE')
+    ) {
+      return 1;
+    }
+    if (
+      b.entity === 'category' &&
+      b.operation === 'DELETE' &&
+      a.entity === 'expense' &&
+      (a.payload?.previous_category_id === b.entity_id || a.operation === 'UPDATE')
+    ) {
+      return -1;
+    }
+    return 0;
+  });
+  return sorted;
+}
+
 let currentSyncStatus: SyncStatus = 'offline';
 let activeFlushPromise: Promise<{ processed: number; errors: number }> | null = null;
 const statusListeners = new Set<(status: SyncStatus) => void>();
@@ -204,9 +295,11 @@ export const syncEngine = {
         }
 
         const now = Date.now();
-        // Filter items ready for attempt (respecting exponential backoff)
-        const itemsToAttempt = outbox.filter(
-          (item) => !item.next_retry_at || new Date(item.next_retry_at).getTime() <= now,
+        // Filter items ready for attempt (respecting exponential backoff) and topologically sort
+        const itemsToAttempt = sortMutationsByDependency(
+          outbox.filter(
+            (item) => !item.next_retry_at || new Date(item.next_retry_at).getTime() <= now,
+          ),
         );
 
         if (itemsToAttempt.length === 0) {
@@ -226,6 +319,16 @@ export const syncEngine = {
         const deadLetterItems: OutboxMutation[] = [];
 
         for (const item of itemsToAttempt) {
+          if (hasUnresolvedDependencies(item, outbox, succeededIds)) {
+            syncLogger.info('Mutation deferred due to pending preceding dependency', {
+              id: item.id,
+              entity: item.entity,
+              operation: item.operation,
+              entity_id: item.entity_id,
+            });
+            continue;
+          }
+
           try {
             const success = await this.executeMutation(item);
             if (success) {
@@ -310,36 +413,93 @@ export const syncEngine = {
     switch (entity) {
       case 'expense': {
         if (operation === 'INSERT' || operation === 'UPDATE') {
-          const { error: expError } = await supabase.from('expenses').upsert({
-            ...payload,
-            updated_at: new Date().toISOString(),
+          const { previous_category_id: _prevCatId, ...sanitizedPayload } = payload;
+          const query = supabase.from('expenses').upsert({
+            ...sanitizedPayload,
+            updated_at: sanitizedPayload.updated_at || new Date().toISOString(),
           });
-          if (expError) throw expError;
+          let result: any;
+          if (typeof (query as any)?.select === 'function') {
+            const selectQuery = (query as any).select();
+            result =
+              typeof selectQuery?.maybeSingle === 'function'
+                ? await selectQuery.maybeSingle()
+                : await selectQuery;
+          } else {
+            result = await query;
+          }
+          if (result?.error) throw result.error;
+
+          if (result?.data?.updated_at) {
+            useAppStore.setState((state) => ({
+              expenses: state.expenses.map((e) =>
+                e.id === entity_id ? { ...e, updated_at: result.data.updated_at } : e,
+              ),
+            }));
+          }
         } else if (operation === 'DELETE') {
           const now = new Date().toISOString();
-          const { error } = await supabase
+          const query = supabase
             .from('expenses')
             .update({ deleted_at: now, updated_at: now })
             .eq('id', entity_id);
-          if (error) throw error;
+          let result: any;
+          if (typeof (query as any)?.select === 'function') {
+            const selectQuery = (query as any).select();
+            result =
+              typeof selectQuery?.maybeSingle === 'function'
+                ? await selectQuery.maybeSingle()
+                : await selectQuery;
+          } else {
+            result = await query;
+          }
+          if (result?.error) throw result.error;
         }
         return true;
       }
 
       case 'category': {
         if (operation === 'INSERT' || operation === 'UPDATE') {
-          const { error } = await supabase.from('categories').upsert({
+          const query = supabase.from('categories').upsert({
             ...payload,
-            updated_at: new Date().toISOString(),
+            updated_at: payload.updated_at || new Date().toISOString(),
           });
-          if (error) throw error;
+          let result: any;
+          if (typeof (query as any)?.select === 'function') {
+            const selectQuery = (query as any).select();
+            result =
+              typeof selectQuery?.maybeSingle === 'function'
+                ? await selectQuery.maybeSingle()
+                : await selectQuery;
+          } else {
+            result = await query;
+          }
+          if (result?.error) throw result.error;
+
+          if (result?.data?.updated_at) {
+            useAppStore.setState((state) => ({
+              categories: state.categories.map((c) =>
+                c.id === entity_id ? { ...c, updated_at: result.data.updated_at } : c,
+              ),
+            }));
+          }
         } else if (operation === 'DELETE') {
           const now = new Date().toISOString();
-          const { error } = await supabase
+          const query = supabase
             .from('categories')
             .update({ deleted_at: now, updated_at: now })
             .eq('id', entity_id);
-          if (error) throw error;
+          let result: any;
+          if (typeof (query as any)?.select === 'function') {
+            const selectQuery = (query as any).select();
+            result =
+              typeof selectQuery?.maybeSingle === 'function'
+                ? await selectQuery.maybeSingle()
+                : await selectQuery;
+          } else {
+            result = await query;
+          }
+          if (result?.error) throw result.error;
         }
         return true;
       }
@@ -347,18 +507,46 @@ export const syncEngine = {
       case 'member': {
         if (operation === 'INSERT' || operation === 'UPDATE') {
           const { is_current_user, ...memberData } = payload;
-          const { error } = await supabase.from('family_members').upsert({
+          const query = supabase.from('family_members').upsert({
             ...memberData,
-            updated_at: new Date().toISOString(),
+            updated_at: memberData.updated_at || new Date().toISOString(),
           });
-          if (error) throw error;
+          let result: any;
+          if (typeof (query as any)?.select === 'function') {
+            const selectQuery = (query as any).select();
+            result =
+              typeof selectQuery?.maybeSingle === 'function'
+                ? await selectQuery.maybeSingle()
+                : await selectQuery;
+          } else {
+            result = await query;
+          }
+          if (result?.error) throw result.error;
+
+          if (result?.data?.updated_at) {
+            useAppStore.setState((state) => ({
+              members: state.members.map((m) =>
+                m.id === entity_id ? { ...m, updated_at: result.data.updated_at } : m,
+              ),
+            }));
+          }
         } else if (operation === 'DELETE') {
           const now = new Date().toISOString();
-          const { error } = await supabase
+          const query = supabase
             .from('family_members')
             .update({ deleted_at: now, updated_at: now })
             .eq('id', entity_id);
-          if (error) throw error;
+          let result: any;
+          if (typeof (query as any)?.select === 'function') {
+            const selectQuery = (query as any).select();
+            result =
+              typeof selectQuery?.maybeSingle === 'function'
+                ? await selectQuery.maybeSingle()
+                : await selectQuery;
+          } else {
+            result = await query;
+          }
+          if (result?.error) throw result.error;
         }
         return true;
       }
@@ -541,7 +729,22 @@ export const syncEngine = {
         });
       }
 
-      const syncTimestamp = new Date().toISOString();
+      let latestRemoteTime = 0;
+      remoteExpenses?.forEach((re: any) => {
+        const t = new Date(re.updated_at || re.created_at).getTime();
+        if (t > latestRemoteTime) latestRemoteTime = t;
+      });
+      remoteCategories?.forEach((rc: any) => {
+        const t = new Date(rc.updated_at || rc.created_at).getTime();
+        if (t > latestRemoteTime) latestRemoteTime = t;
+      });
+      remoteMembers?.forEach((rm: any) => {
+        const t = new Date(rm.updated_at || rm.created_at).getTime();
+        if (t > latestRemoteTime) latestRemoteTime = t;
+      });
+
+      const syncTimestamp =
+        latestRemoteTime > 0 ? new Date(latestRemoteTime).toISOString() : new Date().toISOString();
       await this.setLastSyncTimestamp(syncTimestamp);
       syncLogger.info('Cloud delta sync completed', { familyId, updatedEntitiesCount: count });
       notifyStatus('synced');

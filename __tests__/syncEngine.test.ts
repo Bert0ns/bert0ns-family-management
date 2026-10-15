@@ -1,5 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { syncEngine } from '@/services/syncEngine';
+import {
+  syncEngine,
+  hasUnresolvedDependencies,
+  sortMutationsByDependency,
+} from '@/services/syncEngine';
 import { supabase, isSupabaseConfigured } from '@/services/supabase';
 import { useAppStore } from '@/services/store';
 import { Expense, Category, FamilyMember } from '@/types';
@@ -170,6 +174,151 @@ describe('syncEngine', () => {
       expect(dlq[0].entity_id).toBe('cat-fail-1');
       expect(dlq[0].retry_count).toBe(5);
       expect(dlq[0].last_error).toBe('Database error');
+    });
+
+    it('ensures expense updates reassigning category_id execute before category delete mutation', async () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(false);
+
+      const executionOrder: string[] = [];
+      const upsertMock = jest.fn().mockImplementation((payload) => {
+        executionOrder.push('expense_upsert_' + payload.id);
+        return Promise.resolve({ error: null });
+      });
+      const eqMock = jest.fn().mockImplementation((_col, val) => {
+        executionOrder.push('category_delete_' + val);
+        return Promise.resolve({ error: null });
+      });
+      const updateMock = jest.fn().mockReturnValue({ eq: eqMock });
+
+      (supabase.from as jest.Mock).mockImplementation((table: string) => {
+        if (table === 'expenses') return { upsert: upsertMock };
+        if (table === 'categories') return { update: updateMock };
+        return {};
+      });
+
+      // Enqueue Category DELETE and Expense UPDATE with previous_category_id
+      await syncEngine.enqueueMutation({
+        entity: 'category',
+        operation: 'DELETE',
+        entity_id: 'cat_to_remove',
+        payload: { id: 'cat_to_remove' },
+      });
+
+      await syncEngine.enqueueMutation({
+        entity: 'expense',
+        operation: 'UPDATE',
+        entity_id: 'exp_reassigned',
+        payload: {
+          id: 'exp_reassigned',
+          category_id: 'cat_fallback',
+          previous_category_id: 'cat_to_remove',
+        },
+      });
+
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+      const res = await syncEngine.flushOutbox();
+      expect(res.processed).toBe(2);
+      expect(res.errors).toBe(0);
+
+      // Verify that expense update executed BEFORE category delete
+      expect(executionOrder).toEqual([
+        'expense_upsert_exp_reassigned',
+        'category_delete_cat_to_remove',
+      ]);
+    });
+
+    it('defers category delete mutation when preceding expense update fails during partial flush (preventing 23503 foreign key violation)', async () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(false);
+
+      let expenseAttempted = false;
+      let categoryAttempted = false;
+
+      const upsertMock = jest.fn().mockImplementation(() => {
+        expenseAttempted = true;
+        return Promise.resolve({ error: { message: 'Temporary network disconnection' } });
+      });
+      const eqMock = jest.fn().mockImplementation(() => {
+        categoryAttempted = true;
+        return Promise.resolve({ error: null });
+      });
+      const updateMock = jest.fn().mockReturnValue({ eq: eqMock });
+
+      (supabase.from as jest.Mock).mockImplementation((table: string) => {
+        if (table === 'expenses') return { upsert: upsertMock };
+        if (table === 'categories') return { update: updateMock };
+        return {};
+      });
+
+      await syncEngine.enqueueMutation({
+        entity: 'expense',
+        operation: 'UPDATE',
+        entity_id: 'exp_failing',
+        payload: {
+          id: 'exp_failing',
+          category_id: 'cat_fallback',
+          previous_category_id: 'cat_target',
+        },
+      });
+
+      await syncEngine.enqueueMutation({
+        entity: 'category',
+        operation: 'DELETE',
+        entity_id: 'cat_target',
+        payload: { id: 'cat_target' },
+      });
+
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+      const res = await syncEngine.flushOutbox();
+      expect(expenseAttempted).toBe(true);
+      // Category DELETE must NOT be attempted when its preceding dependency failed
+      expect(categoryAttempted).toBe(false);
+      expect(res.errors).toBe(1);
+
+      // Category DELETE should still be in outbox ready for future retry
+      const remainingOutbox = await syncEngine.getOutbox();
+      expect(
+        remainingOutbox.some((m) => m.entity === 'category' && m.entity_id === 'cat_target'),
+      ).toBe(true);
+    });
+
+    it('defers category delete mutation when preceding expense update is in backoff delay', async () => {
+      (isSupabaseConfigured as jest.Mock).mockReturnValue(true);
+
+      let categoryAttempted = false;
+      const eqMock = jest.fn().mockImplementation(() => {
+        categoryAttempted = true;
+        return Promise.resolve({ error: null });
+      });
+      (supabase.from as jest.Mock).mockReturnValue({
+        update: jest.fn().mockReturnValue({ eq: eqMock }),
+      });
+
+      // Preceding expense is in backoff delay 10 minutes in the future
+      await syncEngine.enqueueMutation({
+        entity: 'expense',
+        operation: 'UPDATE',
+        entity_id: 'exp_in_backoff',
+        payload: {
+          id: 'exp_in_backoff',
+          category_id: 'cat_fallback',
+          previous_category_id: 'cat_target',
+        },
+      });
+      const outbox = await syncEngine.getOutbox();
+      outbox[0].next_retry_at = new Date(Date.now() + 600000).toISOString();
+      await AsyncStorage.setItem('@bert0ns_sync_outbox', JSON.stringify(outbox));
+
+      // Category delete is ready now
+      await syncEngine.enqueueMutation({
+        entity: 'category',
+        operation: 'DELETE',
+        entity_id: 'cat_target',
+        payload: { id: 'cat_target' },
+      });
+
+      const res = await syncEngine.flushOutbox();
+      expect(categoryAttempted).toBe(false);
+      expect(res.processed).toBe(0);
     });
   });
 
@@ -345,6 +494,64 @@ describe('syncEngine', () => {
       );
     });
 
+    it('reconciles server timestamp in local store when upsert returns canonical updated_at', async () => {
+      const serverTimestamp = '2026-10-15T20:00:00.000Z';
+      const maybeSingleMock = jest.fn().mockResolvedValue({
+        data: { id: 'exp_1', updated_at: serverTimestamp },
+        error: null,
+      });
+      const selectMock = jest.fn().mockReturnValue({ maybeSingle: maybeSingleMock });
+      const upsertMock = jest.fn().mockReturnValue({ select: selectMock });
+
+      (supabase.from as jest.Mock).mockImplementation((table: string) => {
+        if (table === 'expenses') return { upsert: upsertMock };
+        return {};
+      });
+
+      const success = await syncEngine.executeMutation({
+        id: 'mut_clock_skew',
+        created_at: new Date().toISOString(),
+        retry_count: 0,
+        entity: 'expense',
+        operation: 'UPDATE',
+        entity_id: 'exp_1',
+        payload: { id: 'exp_1', amount: 99 },
+      });
+
+      expect(success).toBe(true);
+      const updatedExpense = useAppStore.getState().expenses.find((e) => e.id === 'exp_1');
+      expect(updatedExpense?.updated_at).toBe(serverTimestamp);
+    });
+
+    it('sanitizes temporary properties like previous_category_id before sending to Supabase', async () => {
+      let passedPayload: any;
+      const upsertMock = jest.fn().mockImplementation((payload) => {
+        passedPayload = payload;
+        return Promise.resolve({ error: null });
+      });
+
+      (supabase.from as jest.Mock).mockReturnValue({ upsert: upsertMock });
+
+      await syncEngine.executeMutation({
+        id: 'mut_sanitize',
+        created_at: new Date().toISOString(),
+        retry_count: 0,
+        entity: 'expense',
+        operation: 'UPDATE',
+        entity_id: 'exp_sanitize',
+        payload: {
+          id: 'exp_sanitize',
+          category_id: 'cat_2',
+          previous_category_id: 'cat_1',
+          amount: 50,
+        },
+      });
+
+      expect(passedPayload).toBeDefined();
+      expect(passedPayload.previous_category_id).toBeUndefined();
+      expect(passedPayload.category_id).toBe('cat_2');
+    });
+
     it('returns true for unknown entity types', async () => {
       const success = await syncEngine.executeMutation({
         id: 'mut_10',
@@ -470,6 +677,115 @@ describe('syncEngine', () => {
       expect(
         useAppStore.getState().expenses.find((e) => e.id === existingExp.id)?.merchant_name,
       ).not.toBe('Old Shop Name');
+    });
+
+    it('resolves conflicts using version checking when local clock is artificially advanced into the future', () => {
+      // Local expense has client clock skewed far into the future (year 2035) but version = 1
+      const localSkewedExp: Expense = {
+        id: 'exp_skewed',
+        family_id: 'fam_1',
+        paid_by_member_id: 'mem_1',
+        category_id: 'cat_1',
+        transaction_date: '2026-09-01',
+        merchant_name: 'Stale Name on Fast Clock Device',
+        amount: 25,
+        created_at: '2026-09-01T00:00:00Z',
+        updated_at: '2035-01-01T00:00:00Z', // Clock skewed to 2035!
+        version: 1,
+      };
+      useAppStore.setState({ expenses: [localSkewedExp] });
+
+      // Remote server update has canonical 2026 timestamp but version = 2
+      const remoteExp: Expense = {
+        id: 'exp_skewed',
+        family_id: 'fam_1',
+        paid_by_member_id: 'mem_1',
+        category_id: 'cat_1',
+        transaction_date: '2026-09-01',
+        merchant_name: 'Canonical Server Name',
+        amount: 30,
+        created_at: '2026-09-01T00:00:00Z',
+        updated_at: '2026-09-15T00:00:00Z', // Real server timestamp
+        version: 2,
+      };
+
+      syncEngine.mergeExpensesLWW([remoteExp]);
+
+      // Guarded revision check allows remote with higher version to prevail despite local clock skew
+      const result = useAppStore.getState().expenses.find((e) => e.id === 'exp_skewed');
+      expect(result?.merchant_name).toBe('Canonical Server Name');
+      expect(result?.amount).toBe(30);
+    });
+
+    it('allows remote change with identical timestamp to prevail over stale local state', () => {
+      const existingExpenses = useAppStore.getState().expenses;
+      const targetExp = existingExpenses[0];
+
+      const remoteWithSameTime: Expense = {
+        ...targetExp,
+        merchant_name: 'Updated Merchant Same Timestamp',
+        updated_at: targetExp.updated_at,
+      };
+
+      syncEngine.mergeExpensesLWW([remoteWithSameTime]);
+      expect(
+        useAppStore.getState().expenses.find((e) => e.id === targetExp.id)?.merchant_name,
+      ).toBe('Updated Merchant Same Timestamp');
+    });
+
+    it('handles remote tombstone with higher version when local device clock is skewed', () => {
+      const localSkewedCat: Category = {
+        id: 'cat_skewed',
+        family_id: 'fam_1',
+        name: 'Category on Fast Clock Device',
+        icon: 'Tag',
+        color: '#ff0000',
+        updated_at: '2035-01-01T00:00:00Z',
+        version: 1,
+      };
+      useAppStore.setState({ categories: [localSkewedCat] });
+
+      const remoteTombstone: Category = {
+        ...localSkewedCat,
+        deleted_at: '2026-09-15T00:00:00Z',
+        version: 2,
+      };
+
+      syncEngine.mergeCategoriesLWW([remoteTombstone]);
+      expect(useAppStore.getState().categories.find((c) => c.id === 'cat_skewed')).toBeUndefined();
+    });
+  });
+
+  describe('Outbox Dependency Ordering & Helpers', () => {
+    it('hasUnresolvedDependencies returns true when category DELETE has prior uncompleted expense mutation', () => {
+      const outbox: any[] = [
+        {
+          id: 'mut_exp_1',
+          entity: 'expense',
+          operation: 'UPDATE',
+          payload: { previous_category_id: 'cat_1' },
+        },
+        { id: 'mut_cat_del', entity: 'category', operation: 'DELETE', entity_id: 'cat_1' },
+      ];
+
+      expect(hasUnresolvedDependencies(outbox[1], outbox, new Set())).toBe(true);
+      expect(hasUnresolvedDependencies(outbox[1], outbox, new Set(['mut_exp_1']))).toBe(false);
+    });
+
+    it('sortMutationsByDependency places expense updates before category deletions', () => {
+      const outbox: any[] = [
+        { id: 'mut_cat_del', entity: 'category', operation: 'DELETE', entity_id: 'cat_1' },
+        {
+          id: 'mut_exp_1',
+          entity: 'expense',
+          operation: 'UPDATE',
+          payload: { previous_category_id: 'cat_1' },
+        },
+      ];
+
+      const sorted = sortMutationsByDependency(outbox);
+      expect(sorted[0].id).toBe('mut_exp_1');
+      expect(sorted[1].id).toBe('mut_cat_del');
     });
   });
 
