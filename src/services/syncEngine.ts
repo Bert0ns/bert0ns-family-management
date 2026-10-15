@@ -132,6 +132,95 @@ export function sortMutationsByDependency(mutations: OutboxMutation[]): OutboxMu
   return sorted;
 }
 
+interface RawExpenseRow extends Record<string, unknown> {
+  id: string;
+  family_id: string;
+  paid_by_member_id: string;
+  category_id: string;
+  import_batch_id?: string | null;
+  transaction_date: string;
+  merchant_name: string;
+  amount: string | number;
+  notes?: string | null;
+  payment_method?: 'CASH' | 'DEBIT_CARD' | 'CREDIT_CARD' | 'BANK_TRANSFER' | 'OTHER' | null;
+  is_recurring?: boolean | null;
+  is_verified?: boolean | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+}
+
+interface RawCategoryRow extends Record<string, unknown> {
+  id: string;
+  family_id: string;
+  name: string;
+  icon: string;
+  color: string;
+  is_default?: boolean | null;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
+}
+
+interface RawMemberRow extends Record<string, unknown> {
+  id: string;
+  family_id: string;
+  user_id?: string | null;
+  display_name: string;
+  role: 'ADMIN' | 'MEMBER';
+  avatar_url?: string | null;
+  color_code?: string;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
+}
+
+interface SelectableQuery {
+  select: () => unknown;
+}
+
+interface SingleQuery {
+  maybeSingle: () => Promise<unknown>;
+}
+
+function isRecord(val: unknown): val is Record<string, unknown> {
+  return typeof val === 'object' && val !== null;
+}
+
+function isSelectableQuery(query: unknown): query is SelectableQuery {
+  return isRecord(query) && typeof (query as Record<string, unknown>).select === 'function';
+}
+
+function isSingleQuery(query: unknown): query is SingleQuery {
+  return isRecord(query) && typeof (query as Record<string, unknown>).maybeSingle === 'function';
+}
+
+export interface QueryResult<T> {
+  data?: T | null;
+  error?: { message?: string } | null;
+}
+
+/**
+ * Executes a Supabase mutation query and captures the canonical server timestamp
+ * without unsafe any typecasting (per AGENTS.md §5).
+ */
+export async function executeWithServerTimestamp<
+  T extends { updated_at?: string } = { updated_at?: string },
+>(query: unknown): Promise<QueryResult<T>> {
+  if (isSelectableQuery(query)) {
+    const selectQuery = query.select();
+    if (isSingleQuery(selectQuery)) {
+      const res = await selectQuery.maybeSingle();
+      return (res as QueryResult<T>) || {};
+    }
+    const res = await selectQuery;
+    return (res as QueryResult<T>) || {};
+  }
+
+  const res = await (query as Promise<QueryResult<T>>);
+  return res || {};
+}
+
 let currentSyncStatus: SyncStatus = 'offline';
 let activeFlushPromise: Promise<{ processed: number; errors: number }> | null = null;
 const statusListeners = new Set<(status: SyncStatus) => void>();
@@ -350,11 +439,16 @@ export const syncEngine = {
                 failedMap.set(item.id, updatedItem);
               }
             }
-          } catch (execErr: any) {
+          } catch (execErr: unknown) {
             errors++;
             const newRetryCount = (item.retry_count || 0) + 1;
             const backoffMs = calculateBackoffDelay(newRetryCount);
-            const errorMsg = execErr?.message || String(execErr);
+            const errorMsg =
+              execErr instanceof Error
+                ? execErr.message
+                : isRecord(execErr) && typeof execErr.message === 'string'
+                  ? execErr.message
+                  : String(execErr);
             const updatedItem: OutboxMutation = {
               ...item,
               retry_count: newRetryCount,
@@ -418,22 +512,13 @@ export const syncEngine = {
             ...sanitizedPayload,
             updated_at: sanitizedPayload.updated_at || new Date().toISOString(),
           });
-          let result: any;
-          if (typeof (query as any)?.select === 'function') {
-            const selectQuery = (query as any).select();
-            result =
-              typeof selectQuery?.maybeSingle === 'function'
-                ? await selectQuery.maybeSingle()
-                : await selectQuery;
-          } else {
-            result = await query;
-          }
-          if (result?.error) throw result.error;
+          const result = await executeWithServerTimestamp<Expense>(query);
+          if (result.error) throw result.error;
 
-          if (result?.data?.updated_at) {
+          if (result.data?.updated_at) {
             useAppStore.setState((state) => ({
               expenses: state.expenses.map((e) =>
-                e.id === entity_id ? { ...e, updated_at: result.data.updated_at } : e,
+                e.id === entity_id ? { ...e, updated_at: result.data!.updated_at } : e,
               ),
             }));
           }
@@ -443,17 +528,8 @@ export const syncEngine = {
             .from('expenses')
             .update({ deleted_at: now, updated_at: now })
             .eq('id', entity_id);
-          let result: any;
-          if (typeof (query as any)?.select === 'function') {
-            const selectQuery = (query as any).select();
-            result =
-              typeof selectQuery?.maybeSingle === 'function'
-                ? await selectQuery.maybeSingle()
-                : await selectQuery;
-          } else {
-            result = await query;
-          }
-          if (result?.error) throw result.error;
+          const result = await executeWithServerTimestamp(query);
+          if (result.error) throw result.error;
         }
         return true;
       }
@@ -464,22 +540,13 @@ export const syncEngine = {
             ...payload,
             updated_at: payload.updated_at || new Date().toISOString(),
           });
-          let result: any;
-          if (typeof (query as any)?.select === 'function') {
-            const selectQuery = (query as any).select();
-            result =
-              typeof selectQuery?.maybeSingle === 'function'
-                ? await selectQuery.maybeSingle()
-                : await selectQuery;
-          } else {
-            result = await query;
-          }
-          if (result?.error) throw result.error;
+          const result = await executeWithServerTimestamp<Category>(query);
+          if (result.error) throw result.error;
 
-          if (result?.data?.updated_at) {
+          if (result.data?.updated_at) {
             useAppStore.setState((state) => ({
               categories: state.categories.map((c) =>
-                c.id === entity_id ? { ...c, updated_at: result.data.updated_at } : c,
+                c.id === entity_id ? { ...c, updated_at: result.data!.updated_at } : c,
               ),
             }));
           }
@@ -489,17 +556,8 @@ export const syncEngine = {
             .from('categories')
             .update({ deleted_at: now, updated_at: now })
             .eq('id', entity_id);
-          let result: any;
-          if (typeof (query as any)?.select === 'function') {
-            const selectQuery = (query as any).select();
-            result =
-              typeof selectQuery?.maybeSingle === 'function'
-                ? await selectQuery.maybeSingle()
-                : await selectQuery;
-          } else {
-            result = await query;
-          }
-          if (result?.error) throw result.error;
+          const result = await executeWithServerTimestamp(query);
+          if (result.error) throw result.error;
         }
         return true;
       }
@@ -511,22 +569,13 @@ export const syncEngine = {
             ...memberData,
             updated_at: memberData.updated_at || new Date().toISOString(),
           });
-          let result: any;
-          if (typeof (query as any)?.select === 'function') {
-            const selectQuery = (query as any).select();
-            result =
-              typeof selectQuery?.maybeSingle === 'function'
-                ? await selectQuery.maybeSingle()
-                : await selectQuery;
-          } else {
-            result = await query;
-          }
-          if (result?.error) throw result.error;
+          const result = await executeWithServerTimestamp<FamilyMember>(query);
+          if (result.error) throw result.error;
 
-          if (result?.data?.updated_at) {
+          if (result.data?.updated_at) {
             useAppStore.setState((state) => ({
               members: state.members.map((m) =>
-                m.id === entity_id ? { ...m, updated_at: result.data.updated_at } : m,
+                m.id === entity_id ? { ...m, updated_at: result.data!.updated_at } : m,
               ),
             }));
           }
@@ -536,17 +585,8 @@ export const syncEngine = {
             .from('family_members')
             .update({ deleted_at: now, updated_at: now })
             .eq('id', entity_id);
-          let result: any;
-          if (typeof (query as any)?.select === 'function') {
-            const selectQuery = (query as any).select();
-            result =
-              typeof selectQuery?.maybeSingle === 'function'
-                ? await selectQuery.maybeSingle()
-                : await selectQuery;
-          } else {
-            result = await query;
-          }
-          if (result?.error) throw result.error;
+          const result = await executeWithServerTimestamp(query);
+          if (result.error) throw result.error;
         }
         return true;
       }
@@ -648,57 +688,63 @@ export const syncEngine = {
       let count = 0;
 
       if (remoteExpenses && remoteExpenses.length > 0) {
-        const mappedExpenses: Expense[] = remoteExpenses.map((re: any) => ({
-          id: re.id,
-          family_id: re.family_id,
-          paid_by_member_id: re.paid_by_member_id,
-          category_id: re.category_id,
-          import_batch_id: re.import_batch_id,
-          transaction_date: re.transaction_date,
-          merchant_name: re.merchant_name,
-          amount: Number(re.amount),
-          notes: re.notes,
-          payment_method: re.payment_method,
-          is_recurring: re.is_recurring,
-          is_verified: re.is_verified,
-          created_at: re.created_at,
-          updated_at: re.updated_at,
-          deleted_at: re.deleted_at || null,
-        }));
+        const mappedExpenses: Expense[] = (remoteExpenses as RawExpenseRow[]).map(
+          (re: RawExpenseRow) => ({
+            id: re.id,
+            family_id: re.family_id,
+            paid_by_member_id: re.paid_by_member_id,
+            category_id: re.category_id,
+            import_batch_id: re.import_batch_id || undefined,
+            transaction_date: re.transaction_date,
+            merchant_name: re.merchant_name,
+            amount: Number(re.amount),
+            notes: re.notes || undefined,
+            payment_method: re.payment_method || undefined,
+            is_recurring: re.is_recurring ?? undefined,
+            is_verified: re.is_verified ?? undefined,
+            created_at: re.created_at,
+            updated_at: re.updated_at,
+            deleted_at: re.deleted_at || null,
+          }),
+        );
 
         this.mergeExpensesLWW(mappedExpenses);
         count += mappedExpenses.length;
       }
 
       if (remoteCategories && remoteCategories.length > 0) {
-        const mappedCategories: Category[] = remoteCategories.map((rc: any) => ({
-          id: rc.id,
-          family_id: rc.family_id,
-          name: rc.name,
-          icon: rc.icon,
-          color: rc.color,
-          is_default: rc.is_default,
-          created_at: rc.created_at,
-          updated_at: rc.updated_at,
-          deleted_at: rc.deleted_at || null,
-        }));
+        const mappedCategories: Category[] = (remoteCategories as RawCategoryRow[]).map(
+          (rc: RawCategoryRow) => ({
+            id: rc.id,
+            family_id: rc.family_id,
+            name: rc.name,
+            icon: rc.icon,
+            color: rc.color,
+            is_default: rc.is_default ?? undefined,
+            created_at: rc.created_at,
+            updated_at: rc.updated_at,
+            deleted_at: rc.deleted_at || null,
+          }),
+        );
         this.mergeCategoriesLWW(mappedCategories);
         count += mappedCategories.length;
       }
 
       if (remoteMembers && remoteMembers.length > 0) {
-        const mappedMembers: FamilyMember[] = remoteMembers.map((rm: any) => ({
-          id: rm.id,
-          family_id: rm.family_id,
-          user_id: rm.user_id,
-          display_name: rm.display_name,
-          role: rm.role,
-          avatar_url: rm.avatar_url,
-          color_code: rm.color_code,
-          created_at: rm.created_at,
-          updated_at: rm.updated_at,
-          deleted_at: rm.deleted_at || null,
-        }));
+        const mappedMembers: FamilyMember[] = (remoteMembers as RawMemberRow[]).map(
+          (rm: RawMemberRow) => ({
+            id: rm.id,
+            family_id: rm.family_id,
+            user_id: rm.user_id || undefined,
+            display_name: rm.display_name,
+            role: rm.role,
+            avatar_url: rm.avatar_url || undefined,
+            color_code: rm.color_code || '#6366F1',
+            created_at: rm.created_at,
+            updated_at: rm.updated_at,
+            deleted_at: rm.deleted_at || null,
+          }),
+        );
         this.mergeMembersLWW(mappedMembers);
         count += mappedMembers.length;
       }
@@ -730,16 +776,16 @@ export const syncEngine = {
       }
 
       let latestRemoteTime = 0;
-      remoteExpenses?.forEach((re: any) => {
-        const t = new Date(re.updated_at || re.created_at).getTime();
+      (remoteExpenses as RawExpenseRow[])?.forEach((re: RawExpenseRow) => {
+        const t = new Date(re.updated_at || re.created_at || '').getTime();
         if (t > latestRemoteTime) latestRemoteTime = t;
       });
-      remoteCategories?.forEach((rc: any) => {
-        const t = new Date(rc.updated_at || rc.created_at).getTime();
+      (remoteCategories as RawCategoryRow[])?.forEach((rc: RawCategoryRow) => {
+        const t = new Date(rc.updated_at || rc.created_at || '').getTime();
         if (t > latestRemoteTime) latestRemoteTime = t;
       });
-      remoteMembers?.forEach((rm: any) => {
-        const t = new Date(rm.updated_at || rm.created_at).getTime();
+      (remoteMembers as RawMemberRow[])?.forEach((rm: RawMemberRow) => {
+        const t = new Date(rm.updated_at || rm.created_at || '').getTime();
         if (t > latestRemoteTime) latestRemoteTime = t;
       });
 

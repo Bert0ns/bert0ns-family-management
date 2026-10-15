@@ -147,6 +147,8 @@ const DEFAULT_FILTERS: FilterOptions = {
  * Remote changes with identical or higher timestamps prevail over stale local state.
  * Guarded revision check: if both items define a version/revision, remote changes
  * with identical or higher version prevail regardless of client clock skew.
+ * When remote.version is undefined (e.g., Supabase table rows lacking a version column),
+ * the comparison gracefully falls back to normalized server timestamps reconciled via executeMutation.
  */
 export function shouldRemoteEntityPrevail(
   remote: { updated_at?: string | null; created_at?: string | null; version?: number },
@@ -588,7 +590,7 @@ export const useAppStore = create<AppState>()(
           e.category_id === id
             ? {
                 ...e,
-                category_id: fallbackCat.id,
+                category_id: fallbackCat?.id || '',
                 updated_at: now,
                 version: (e.version || 1) + 1,
               }
@@ -604,7 +606,7 @@ export const useAppStore = create<AppState>()(
         affectedExpenses.forEach((exp) => {
           const updatedExp = {
             ...exp,
-            category_id: fallbackCat.id,
+            category_id: fallbackCat?.id || '',
             updated_at: now,
             version: (exp.version || 1) + 1,
             previous_category_id: id,

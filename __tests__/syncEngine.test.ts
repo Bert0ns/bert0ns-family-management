@@ -3,10 +3,11 @@ import {
   syncEngine,
   hasUnresolvedDependencies,
   sortMutationsByDependency,
+  executeWithServerTimestamp,
 } from '@/services/syncEngine';
 import { supabase, isSupabaseConfigured } from '@/services/supabase';
 import { useAppStore } from '@/services/store';
-import { Expense, Category, FamilyMember } from '@/types';
+import { Expense, Category, FamilyMember, OutboxMutation } from '@/types';
 
 jest.mock('@/services/supabase', () => {
   const fromMock = jest.fn();
@@ -524,7 +525,7 @@ describe('syncEngine', () => {
     });
 
     it('sanitizes temporary properties like previous_category_id before sending to Supabase', async () => {
-      let passedPayload: any;
+      let passedPayload: Record<string, unknown> | undefined;
       const upsertMock = jest.fn().mockImplementation((payload) => {
         passedPayload = payload;
         return Promise.resolve({ error: null });
@@ -548,8 +549,8 @@ describe('syncEngine', () => {
       });
 
       expect(passedPayload).toBeDefined();
-      expect(passedPayload.previous_category_id).toBeUndefined();
-      expect(passedPayload.category_id).toBe('cat_2');
+      expect(passedPayload?.previous_category_id).toBeUndefined();
+      expect(passedPayload?.category_id).toBe('cat_2');
     });
 
     it('returns true for unknown entity types', async () => {
@@ -756,16 +757,70 @@ describe('syncEngine', () => {
     });
   });
 
+  describe('executeWithServerTimestamp', () => {
+    it('handles query supporting .select().maybeSingle()', async () => {
+      const mockQuery = {
+        select: () => ({
+          maybeSingle: async () => ({
+            data: { id: 'test_1', updated_at: '2026-10-15T22:00:00Z' },
+            error: null,
+          }),
+        }),
+      };
+
+      const result = await executeWithServerTimestamp<{ id: string; updated_at: string }>(
+        mockQuery,
+      );
+      expect(result.data?.id).toBe('test_1');
+      expect(result.data?.updated_at).toBe('2026-10-15T22:00:00Z');
+      expect(result.error).toBeNull();
+    });
+
+    it('handles query supporting .select() directly resolving', async () => {
+      const mockQuery = {
+        select: async () => ({
+          data: [{ id: 'test_2', updated_at: '2026-10-15T22:01:00Z' }],
+          error: null,
+        }),
+      };
+
+      const result = await executeWithServerTimestamp(mockQuery);
+      expect(result.data).toBeDefined();
+      expect(result.error).toBeNull();
+    });
+
+    it('handles plain promise query without .select()', async () => {
+      const mockQuery = Promise.resolve({
+        data: null,
+        error: null,
+      });
+
+      const result = await executeWithServerTimestamp(mockQuery);
+      expect(result.error).toBeNull();
+    });
+  });
+
   describe('Outbox Dependency Ordering & Helpers', () => {
     it('hasUnresolvedDependencies returns true when category DELETE has prior uncompleted expense mutation', () => {
-      const outbox: any[] = [
+      const outbox: OutboxMutation[] = [
         {
+          created_at: new Date().toISOString(),
+          retry_count: 0,
           id: 'mut_exp_1',
+          entity_id: 'exp_1',
           entity: 'expense',
           operation: 'UPDATE',
           payload: { previous_category_id: 'cat_1' },
         },
-        { id: 'mut_cat_del', entity: 'category', operation: 'DELETE', entity_id: 'cat_1' },
+        {
+          id: 'mut_cat_del',
+          entity: 'category',
+          operation: 'DELETE',
+          entity_id: 'cat_1',
+          payload: { id: 'cat_1' },
+          created_at: new Date().toISOString(),
+          retry_count: 0,
+        },
       ];
 
       expect(hasUnresolvedDependencies(outbox[1], outbox, new Set())).toBe(true);
@@ -773,13 +828,24 @@ describe('syncEngine', () => {
     });
 
     it('sortMutationsByDependency places expense updates before category deletions', () => {
-      const outbox: any[] = [
-        { id: 'mut_cat_del', entity: 'category', operation: 'DELETE', entity_id: 'cat_1' },
+      const outbox: OutboxMutation[] = [
+        {
+          id: 'mut_cat_del',
+          entity: 'category',
+          operation: 'DELETE',
+          entity_id: 'cat_1',
+          payload: { id: 'cat_1' },
+          created_at: new Date().toISOString(),
+          retry_count: 0,
+        },
         {
           id: 'mut_exp_1',
+          entity_id: 'exp_1',
           entity: 'expense',
           operation: 'UPDATE',
           payload: { previous_category_id: 'cat_1' },
+          created_at: new Date().toISOString(),
+          retry_count: 0,
         },
       ];
 
