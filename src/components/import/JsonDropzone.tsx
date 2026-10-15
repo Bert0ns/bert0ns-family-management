@@ -113,7 +113,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
           borderWidth: 2,
           borderColor: errorMessage ? theme.colors.danger : theme.colors.brand,
           borderStyle: 'dashed',
-          borderRadius: radius.xl,
+          borderRadius: radius.sm,
           padding: spacing.xl,
           backgroundColor: theme.colors.surfaceSubtle,
           alignItems: 'center',
@@ -167,7 +167,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
             backgroundColor: theme.colors.brand,
             paddingVertical: spacing.sm,
             paddingHorizontal: spacing.lg,
-            borderRadius: radius.md,
+            borderRadius: radius.sm,
             gap: spacing.xs,
           }}
         >
@@ -201,7 +201,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
             gap: spacing.sm,
             paddingVertical: spacing.sm,
             backgroundColor: theme.colors.surface,
-            borderRadius: radius.md,
+            borderRadius: radius.sm,
             borderWidth: 1,
             borderColor: theme.colors.border,
           }}
@@ -228,7 +228,7 @@ export const JsonDropzone: React.FC<JsonDropzoneProps> = ({ onFileParsed, onOpen
             backgroundColor: theme.colors.dangerBg,
             borderColor: theme.colors.danger,
             borderWidth: 1,
-            borderRadius: radius.md,
+            borderRadius: radius.sm,
             padding: spacing.md,
             gap: spacing.sm,
           }}

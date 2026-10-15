@@ -171,7 +171,7 @@ export default function ImportScreen() {
             style={{
               width: 52,
               height: 52,
-              borderRadius: radius.lg,
+              borderRadius: radius.sm,
               backgroundColor: theme.colors.brandLight,
               borderWidth: 1.5,
               borderColor: `${theme.colors.brand}40`,

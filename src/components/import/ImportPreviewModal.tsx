@@ -64,11 +64,11 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = React.memo(
           <View
             style={{
               backgroundColor: theme.colors.surface,
-              borderRadius: isDesktop ? radius.xl : undefined,
-              borderTopLeftRadius: radius.xl,
-              borderTopRightRadius: radius.xl,
-              borderBottomLeftRadius: isDesktop ? radius.xl : 0,
-              borderBottomRightRadius: isDesktop ? radius.xl : 0,
+              borderRadius: isDesktop ? radius.sm : undefined,
+              borderTopLeftRadius: radius.sm,
+              borderTopRightRadius: radius.sm,
+              borderBottomLeftRadius: isDesktop ? radius.sm : 0,
+              borderBottomRightRadius: isDesktop ? radius.sm : 0,
               padding: spacing.xl,
               maxHeight: isDesktop ? '85%' : '85%',
               width: isDesktop ? '100%' : undefined,

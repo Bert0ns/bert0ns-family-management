@@ -75,7 +75,7 @@ export const SchemaViewer: React.FC<SchemaViewerProps> = ({ onLoadSample }) => {
 
       <View
         style={{
-          backgroundColor: theme.isDark ? '#020617' : '#1E293B',
+          backgroundColor: theme.colors.surfaceSubtle,
           padding: spacing.md,
           borderRadius: radius.md,
           overflow: 'hidden',

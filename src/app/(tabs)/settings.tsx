@@ -312,7 +312,7 @@ export default function SettingsScreen() {
                   ? theme.colors.surfaceContainerHigh
                   : theme.colors.surfaceSubtle,
                 padding: spacing.md,
-                borderRadius: radius.lg,
+                borderRadius: radius.sm,
                 borderWidth: 1.5,
                 borderColor: theme.colors.borderTactile,
               }}
@@ -341,7 +341,7 @@ export default function SettingsScreen() {
               ? theme.colors.surfaceContainerHigh
               : theme.colors.surfaceSubtle,
             padding: spacing.md,
-            borderRadius: radius.lg,
+            borderRadius: radius.sm,
             borderWidth: 1.5,
             borderColor: theme.colors.borderTactile,
             marginTop: spacing.sm,
@@ -453,7 +453,7 @@ export default function SettingsScreen() {
                   ? theme.colors.surfaceContainerHigh
                   : theme.colors.surfaceSubtle,
                 padding: spacing.md,
-                borderRadius: radius.lg,
+                borderRadius: radius.sm,
                 borderWidth: 1.5,
                 borderColor: theme.colors.borderTactile,
               }}
@@ -529,7 +529,7 @@ export default function SettingsScreen() {
                   ? theme.colors.surfaceContainerHigh
                   : theme.colors.surfaceSubtle,
                 padding: spacing.md,
-                borderRadius: radius.lg,
+                borderRadius: radius.sm,
                 borderWidth: 1.5,
                 borderColor: theme.colors.borderTactile,
               }}
@@ -620,7 +620,7 @@ export default function SettingsScreen() {
               ? theme.colors.surfaceContainerHigh
               : theme.colors.surfaceSubtle,
             padding: spacing.md,
-            borderRadius: radius.lg,
+            borderRadius: radius.sm,
             borderWidth: 1.5,
             borderColor: theme.colors.borderTactile,
             marginBottom: spacing.md,
@@ -675,8 +675,7 @@ export default function SettingsScreen() {
               color: theme.colors.textSecondary,
               fontSize: typography.fontSizes.xs,
               fontWeight: typography.fontWeights.bold,
-              textTransform: 'uppercase',
-              letterSpacing: 0.5,
+              letterSpacing: 0.1,
               marginTop: spacing.xs,
             }}
           >
@@ -693,7 +692,7 @@ export default function SettingsScreen() {
                 ? theme.colors.surfaceContainerHigh
                 : theme.colors.surfaceSubtle,
               padding: spacing.md,
-              borderRadius: radius.md,
+              borderRadius: radius.sm,
               borderWidth: 1,
               borderColor: theme.colors.borderTactile,
             }}
@@ -738,7 +737,7 @@ export default function SettingsScreen() {
                 ? theme.colors.surfaceContainerHigh
                 : theme.colors.surfaceSubtle,
               padding: spacing.md,
-              borderRadius: radius.md,
+              borderRadius: radius.sm,
               borderWidth: 1,
               borderColor: theme.colors.borderTactile,
             }}
@@ -781,8 +780,7 @@ export default function SettingsScreen() {
               color: theme.colors.textSecondary,
               fontSize: typography.fontSizes.xs,
               fontWeight: typography.fontWeights.bold,
-              textTransform: 'uppercase',
-              letterSpacing: 0.5,
+              letterSpacing: 0.1,
               marginTop: spacing.xs,
             }}
           >
@@ -799,7 +797,7 @@ export default function SettingsScreen() {
                 ? theme.colors.surfaceContainerHigh
                 : theme.colors.surfaceSubtle,
               padding: spacing.md,
-              borderRadius: radius.md,
+              borderRadius: radius.sm,
               borderWidth: 1,
               borderColor: theme.colors.borderTactile,
             }}
@@ -844,7 +842,7 @@ export default function SettingsScreen() {
                 ? theme.colors.surfaceContainerHigh
                 : theme.colors.surfaceSubtle,
               padding: spacing.md,
-              borderRadius: radius.md,
+              borderRadius: radius.sm,
               borderWidth: 1,
               borderColor: theme.colors.borderTactile,
             }}
@@ -949,7 +947,7 @@ export default function SettingsScreen() {
       <Card
         padding="lg"
         style={{
-          backgroundColor: theme.isDark ? '#064E3B' : '#ECFDF5',
+          backgroundColor: theme.colors.successBg,
           borderColor: theme.colors.success,
         }}
       >
