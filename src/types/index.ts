@@ -6,7 +6,7 @@ export type SupportedCurrency = '€' | 'EUR';
 export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error';
 export type MutationOperation = 'INSERT' | 'UPDATE' | 'DELETE';
 export type MutationEntity =
-  'expense' | 'category' | 'member' | 'family' | 'notification_preference';
+  'expense' | 'category' | 'member' | 'family' | 'notification_preference' | 'import_batch';
 
 export interface OutboxMutation {
   id: string;

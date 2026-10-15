@@ -345,6 +345,67 @@ describe('syncEngine', () => {
       );
     });
 
+    it('executes import_batch INSERT/UPDATE with mapped payload', async () => {
+      const upsertMock = jest.fn().mockResolvedValue({ error: null });
+      (supabase.from as jest.Mock).mockReturnValue({ upsert: upsertMock });
+
+      const success = await syncEngine.executeMutation({
+        id: 'mut_batch_1',
+        created_at: new Date().toISOString(),
+        retry_count: 0,
+        entity: 'import_batch',
+        operation: 'INSERT',
+        entity_id: 'batch_uuid_1',
+        payload: {
+          id: 'batch_uuid_1',
+          family_id: 'fam_uuid_1',
+          imported_by_member_id: 'mem_uuid_1',
+          file_name: 'august_report.csv',
+          total_records: 15,
+          total_amount: 450.75,
+          raw_payload: { report: 'test' },
+          created_at: '2026-08-01T12:00:00.000Z',
+        },
+      });
+
+      expect(success).toBe(true);
+      expect(supabase.from).toHaveBeenCalledWith('import_batches');
+      expect(upsertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'batch_uuid_1',
+          family_id: 'fam_uuid_1',
+          imported_by_member_id: 'mem_uuid_1',
+          file_name: 'august_report.csv',
+          total_records: 15,
+          total_amount: 450.75,
+          raw_payload: { report: 'test' },
+          created_at: '2026-08-01T12:00:00.000Z',
+          updated_at: expect.any(String),
+        }),
+      );
+    });
+
+    it('executes import_batch DELETE', async () => {
+      const eqMock = jest.fn().mockResolvedValue({ error: null });
+      const deleteMock = jest.fn().mockReturnValue({ eq: eqMock });
+      (supabase.from as jest.Mock).mockReturnValue({ delete: deleteMock });
+
+      const success = await syncEngine.executeMutation({
+        id: 'mut_batch_2',
+        created_at: new Date().toISOString(),
+        retry_count: 0,
+        entity: 'import_batch',
+        operation: 'DELETE',
+        entity_id: 'batch_uuid_1',
+        payload: { id: 'batch_uuid_1' },
+      });
+
+      expect(success).toBe(true);
+      expect(supabase.from).toHaveBeenCalledWith('import_batches');
+      expect(deleteMock).toHaveBeenCalled();
+      expect(eqMock).toHaveBeenCalledWith('id', 'batch_uuid_1');
+    });
+
     it('returns true for unknown entity types', async () => {
       const success = await syncEngine.executeMutation({
         id: 'mut_10',

@@ -512,6 +512,64 @@ describe('useAppStore (Comprehensive State & Mutation Tests)', () => {
 
       unsubscribe();
     });
+
+    it('emits import_batch INSERT before expense INSERT mutations when importing report', () => {
+      const capturedMutations: any[] = [];
+      const unsubscribe = registerStoreMutationListener((mutation) => {
+        capturedMutations.push(mutation);
+      });
+
+      const result = useAppStore
+        .getState()
+        .importExpenseReport(SAMPLE_IMPORT_REPORT, 'batch_test.json');
+
+      expect(capturedMutations.length).toBeGreaterThan(1);
+      // First mutation MUST be the import_batch to satisfy foreign keys in remote Supabase
+      expect(capturedMutations[0]).toEqual({
+        entity: 'import_batch',
+        operation: 'INSERT',
+        entity_id: result.batchId,
+        payload: expect.objectContaining({
+          id: result.batchId,
+          file_name: 'batch_test.json',
+          total_records: SAMPLE_IMPORT_REPORT.expenses.length,
+        }),
+      });
+
+      // Subsequent mutations are the individual expenses referencing the batch
+      const expenseMutations = capturedMutations.slice(1);
+      expect(expenseMutations.length).toBe(SAMPLE_IMPORT_REPORT.expenses.length);
+      expenseMutations.forEach((m) => {
+        expect(m.entity).toBe('expense');
+        expect(m.operation).toBe('INSERT');
+        expect(m.payload.import_batch_id).toBe(result.batchId);
+      });
+
+      unsubscribe();
+    });
+
+    it('emits import_batch and expense DELETE mutations on clearAllExpenses', () => {
+      useAppStore.getState().importExpenseReport(SAMPLE_IMPORT_REPORT, 'clear_test.json');
+
+      const capturedMutations: any[] = [];
+      const unsubscribe = registerStoreMutationListener((mutation) => {
+        capturedMutations.push(mutation);
+      });
+
+      useAppStore.getState().clearAllExpenses();
+
+      const batchDeletes = capturedMutations.filter(
+        (m) => m.entity === 'import_batch' && m.operation === 'DELETE',
+      );
+      const expenseDeletes = capturedMutations.filter(
+        (m) => m.entity === 'expense' && m.operation === 'DELETE',
+      );
+
+      expect(batchDeletes.length).toBeGreaterThan(0);
+      expect(expenseDeletes.length).toBeGreaterThan(0);
+
+      unsubscribe();
+    });
   });
 
   describe('resetToDefaults', () => {

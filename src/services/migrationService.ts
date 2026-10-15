@@ -3,7 +3,7 @@ import { supabaseLogger } from './logger';
 import { useAppStore } from './store';
 import { syncEngine } from './syncEngine';
 import { generateUUID, isValidUUID, generateInviteCode } from '@/utils/uuid';
-import { Expense, Category, FamilyMember } from '@/types';
+import { Expense, Category, FamilyMember, ImportBatch } from '@/types';
 
 export const migrationService = {
   async migrateLocalDataToSupabase(
@@ -15,6 +15,7 @@ export const migrationService = {
     expensesCount: number;
     categoriesCount: number;
     membersCount: number;
+    batchesCount?: number;
     error?: string;
   }> {
     if (!isSupabaseConfigured()) {
@@ -23,6 +24,7 @@ export const migrationService = {
         expensesCount: 0,
         categoriesCount: 0,
         membersCount: 0,
+        batchesCount: 0,
         error: 'Supabase is not configured',
       };
     }
@@ -38,6 +40,7 @@ export const migrationService = {
       const localMembers = store.members;
       const localCategories = store.categories;
       const localExpenses = store.expenses;
+      const localBatches = store.importBatches;
 
       // 1. Deterministic ID mapping for legacy non-UUID IDs (e.g. cat_groceries, mem_1, exp_...)
       const idMap = new Map<string, string>();
@@ -131,13 +134,41 @@ export const migrationService = {
       );
       if (catError) throw catError;
 
-      // 5. Prepare and upsert Expenses
+      // 5. Prepare and upsert Import Batches BEFORE expenses to satisfy foreign key constraints
+      const mappedBatches: ImportBatch[] = localBatches.map((b) => ({
+        ...b,
+        id: toUUID(b.id),
+        family_id: targetFamilyId!,
+        imported_by_member_id: toUUID(b.imported_by_member_id),
+        created_at: b.created_at || now,
+        updated_at: now,
+      }));
+
+      if (mappedBatches.length > 0) {
+        const { error: batchError } = await supabase.from('import_batches').upsert(
+          mappedBatches.map((b) => ({
+            id: b.id,
+            family_id: b.family_id,
+            imported_by_member_id: b.imported_by_member_id,
+            file_name: b.file_name,
+            total_records: b.total_records,
+            total_amount: b.total_amount,
+            raw_payload: b.raw_payload ?? null,
+            created_at: b.created_at,
+            updated_at: now,
+          })),
+        );
+        if (batchError) throw batchError;
+      }
+
+      // 6. Prepare and upsert Expenses
       const mappedExpenses: Expense[] = localExpenses.map((e) => ({
         ...e,
         id: toUUID(e.id),
         family_id: targetFamilyId!,
         paid_by_member_id: toUUID(e.paid_by_member_id),
         category_id: toUUID(e.category_id),
+        import_batch_id: e.import_batch_id ? toUUID(e.import_batch_id) : undefined,
         updated_at: now,
       }));
 
@@ -148,7 +179,7 @@ export const migrationService = {
             family_id: e.family_id,
             paid_by_member_id: e.paid_by_member_id,
             category_id: e.category_id,
-            import_batch_id: null,
+            import_batch_id: e.import_batch_id || null,
             transaction_date: e.transaction_date,
             merchant_name: e.merchant_name,
             amount: e.amount,
@@ -163,7 +194,7 @@ export const migrationService = {
         if (expError) throw expError;
       }
 
-      // 6. Update local store state with the mapped UUID entities
+      // 7. Update local store state with the mapped UUID entities
       const newCurrentMemberId = toUUID(store.currentMemberId);
       useAppStore.setState({
         family: {
@@ -175,6 +206,7 @@ export const migrationService = {
         members: mappedMembers,
         categories: mappedCategories,
         expenses: mappedExpenses,
+        importBatches: mappedBatches,
         currentMemberId: newCurrentMemberId,
       });
 
@@ -186,6 +218,7 @@ export const migrationService = {
         expensesCount: mappedExpenses.length,
         categoriesCount: mappedCategories.length,
         membersCount: mappedMembers.length,
+        batchesCount: mappedBatches.length,
       });
 
       return {
@@ -194,6 +227,7 @@ export const migrationService = {
         expensesCount: mappedExpenses.length,
         categoriesCount: mappedCategories.length,
         membersCount: mappedMembers.length,
+        batchesCount: mappedBatches.length,
       };
     } catch (err: any) {
       supabaseLogger.error('Failed to migrate local data to Supabase', {
@@ -223,7 +257,8 @@ export const migrationService = {
         expensesCount: 0,
         categoriesCount: 0,
         membersCount: 0,
-        error: err?.message || 'Migration failed',
+        batchesCount: 0,
+        error: err?.message || 'Unknown migration failure',
       };
     }
   },

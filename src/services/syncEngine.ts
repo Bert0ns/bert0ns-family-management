@@ -394,6 +394,27 @@ export const syncEngine = {
         return true;
       }
 
+      case 'import_batch': {
+        if (operation === 'INSERT' || operation === 'UPDATE') {
+          const { error } = await supabase.from('import_batches').upsert({
+            id: payload.id,
+            family_id: payload.family_id,
+            imported_by_member_id: payload.imported_by_member_id,
+            file_name: payload.file_name,
+            total_records: payload.total_records,
+            total_amount: payload.total_amount,
+            raw_payload: payload.raw_payload ?? null,
+            created_at: payload.created_at || new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+          if (error) throw error;
+        } else if (operation === 'DELETE') {
+          const { error } = await supabase.from('import_batches').delete().eq('id', entity_id);
+          if (error) throw error;
+        }
+        return true;
+      }
+
       default:
         return true;
     }
