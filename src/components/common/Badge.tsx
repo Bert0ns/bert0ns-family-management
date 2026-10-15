@@ -27,20 +27,20 @@ export const Badge: React.FC<BadgeProps> = ({
     (variant === 'solid'
       ? primaryColor
       : variant === 'subtle'
-        ? `${primaryColor}22`
+        ? theme.colors.brandLight
         : 'transparent');
 
   const textColor = variant === 'solid' ? '#FFFFFF' : primaryColor;
 
   const containerStyle: ViewStyle = {
     backgroundColor,
-    borderRadius: radius.full,
-    paddingVertical: size === 'sm' ? 4 : spacing.xs + 2,
-    paddingHorizontal: size === 'sm' ? spacing.sm + 2 : spacing.md,
+    borderRadius: radius.sm,
+    paddingVertical: size === 'sm' ? 3 : spacing.xs,
+    paddingHorizontal: size === 'sm' ? spacing.sm : spacing.sm + 4,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: variant === 'outline' ? primaryColor : `${primaryColor}33`,
+    borderColor: variant === 'outline' ? primaryColor : theme.colors.borderSubtle,
     gap: spacing.xs,
     alignSelf: 'flex-start',
     maxWidth: '100%',
@@ -49,7 +49,7 @@ export const Badge: React.FC<BadgeProps> = ({
   const textStyle: TextStyle = {
     color: textColor,
     fontSize: size === 'sm' ? typography.fontSizes.xs : typography.fontSizes.sm,
-    fontWeight: typography.fontWeights.bold,
+    fontWeight: typography.fontWeights.semibold,
     flexShrink: 1,
   };
 

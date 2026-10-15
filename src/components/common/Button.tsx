@@ -114,24 +114,22 @@ export const Button: React.FC<ButtonProps> = ({
   const isSecondary = variant === 'secondary';
 
   const isWeb = Platform.OS === 'web';
-  const webTactileStyle = isWeb
+  const webTactileStyle: ViewStyle = isWeb
     ? ({
         cursor: disabled ? 'not-allowed' : 'pointer',
         transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
         boxShadow:
           variant === 'primary' && !disabled
-            ? theme.isDark
-              ? '0 4px 16px rgba(16, 185, 129, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-              : '0 4px 16px rgba(5, 150, 105, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+            ? '0 1px 2px rgba(0, 0, 0, 0.1)'
             : variant === 'danger' && !disabled
-              ? '0 4px 16px rgba(244, 63, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+              ? '0 1px 2px rgba(225, 29, 72, 0.12)'
               : undefined,
-      } as any)
+      } as unknown as ViewStyle)
     : {};
 
   const buttonStyle: ViewStyle = {
     backgroundColor: bgColor,
-    borderRadius: radius.lg,
+    borderRadius: radius.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -142,15 +140,12 @@ export const Button: React.FC<ButtonProps> = ({
           height: iconOnlyDimensionMap[size],
         }
       : padding),
-    borderWidth:
-      isOutline || isSecondary ? 1.5 : variant === 'primary' || variant === 'danger' ? 1 : 0,
+    borderWidth: 1,
     borderColor:
       isOutline || isSecondary
         ? theme.colors.borderTactile
         : variant === 'primary' || variant === 'danger'
-          ? theme.isDark
-            ? 'rgba(255, 255, 255, 0.16)'
-            : 'rgba(0, 0, 0, 0.08)'
+          ? theme.colors.borderSubtle
           : 'transparent',
     alignSelf: fullWidth ? 'stretch' : 'auto',
     opacity: disabled ? 0.55 : 1,
@@ -162,7 +157,7 @@ export const Button: React.FC<ButtonProps> = ({
     color: textColor,
     fontSize: sizeFontMap[size] || typography.fontSizes.md,
     fontWeight: typography.fontWeights.bold,
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
     flexShrink: 1,
   };
 

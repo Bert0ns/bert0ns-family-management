@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   useWindowDimensions,
+  ViewStyle,
 } from 'react-native';
 import { X, Check } from 'lucide-react-native';
 import { useTheme } from '@/theme';
@@ -38,13 +39,26 @@ export const FormModal: React.FC<FormModalProps> = ({
   const { width: windowWidth } = useWindowDimensions();
   const isDesktop = windowWidth >= 768;
 
+  const isWeb = Platform.OS === 'web';
+  const webModalStyle: ViewStyle = isWeb
+    ? ({
+        boxShadow: isDesktop
+          ? theme.isDark
+            ? '0 16px 32px rgba(0, 0, 0, 0.45)'
+            : '0 8px 24px rgba(27, 33, 30, 0.08)'
+          : theme.isDark
+            ? '0 -4px 16px rgba(0, 0, 0, 0.35)'
+            : '0 -4px 16px rgba(27, 33, 30, 0.06)',
+      } as unknown as ViewStyle)
+    : {};
+
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{
           flex: 1,
-          backgroundColor: theme.isDark ? 'rgba(0,0,0,0.65)' : 'rgba(15,23,42,0.35)',
+          backgroundColor: theme.isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(18, 20, 24, 0.4)',
           justifyContent: isDesktop ? 'center' : 'flex-end',
           alignItems: isDesktop ? 'center' : 'stretch',
           padding: isDesktop ? spacing.lg : 0,
@@ -54,11 +68,11 @@ export const FormModal: React.FC<FormModalProps> = ({
           style={[
             {
               backgroundColor: theme.colors.surface,
-              borderRadius: isDesktop ? radius.xxl : undefined,
-              borderTopLeftRadius: radius.xxl,
-              borderTopRightRadius: radius.xxl,
-              borderBottomLeftRadius: isDesktop ? radius.xxl : 0,
-              borderBottomRightRadius: isDesktop ? radius.xxl : 0,
+              borderRadius: radius.sm,
+              borderTopLeftRadius: radius.sm,
+              borderTopRightRadius: radius.sm,
+              borderBottomLeftRadius: isDesktop ? radius.sm : 0,
+              borderBottomRightRadius: isDesktop ? radius.sm : 0,
               paddingHorizontal: spacing.lg,
               paddingBottom: spacing.xl,
               paddingTop: isDesktop ? spacing.lg : spacing.sm,
@@ -66,24 +80,12 @@ export const FormModal: React.FC<FormModalProps> = ({
               width: isDesktop ? '100%' : undefined,
               maxWidth: isDesktop ? 540 : undefined,
               borderWidth: 1,
-              borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.8)',
+              borderColor: theme.colors.cardBorder,
               borderBottomWidth: isDesktop ? 1 : 0,
             },
-            Platform.OS === 'web' &&
-              ({
-                backdropFilter: 'blur(24px)',
-                WebkitBackdropFilter: 'blur(24px)',
-                boxShadow: isDesktop
-                  ? theme.isDark
-                    ? '0 24px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)'
-                    : '0 24px 48px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05)'
-                  : theme.isDark
-                    ? '0 -8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
-                    : '0 -8px 32px rgba(148, 163, 184, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
-              } as any),
+            webModalStyle,
           ]}
         >
-          {/* Apple Sheet Grabber Handle (Mobile only) */}
           {!isDesktop && (
             <View
               style={{
@@ -96,16 +98,13 @@ export const FormModal: React.FC<FormModalProps> = ({
                 style={{
                   width: 36,
                   height: 4,
-                  borderRadius: 2,
-                  backgroundColor: theme.isDark
-                    ? 'rgba(255, 255, 255, 0.2)'
-                    : 'rgba(0, 0, 0, 0.15)',
+                  borderRadius: radius.xs,
+                  backgroundColor: theme.colors.borderTactile,
                 }}
               />
             </View>
           )}
 
-          {/* Header */}
           <View
             style={{
               flexDirection: 'row',
@@ -150,7 +149,6 @@ export const FormModal: React.FC<FormModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Form Content */}
           <ScrollView
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
@@ -159,7 +157,6 @@ export const FormModal: React.FC<FormModalProps> = ({
             {children}
           </ScrollView>
 
-          {/* Footer Actions */}
           <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg }}>
             <Button title={cancelTitle} variant="outline" onPress={onClose} style={{ flex: 1 }} />
             <Button

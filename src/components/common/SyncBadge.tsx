@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { CloudOff, Check, AlertCircle } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
@@ -49,7 +49,7 @@ export const SyncBadge: React.FC<SyncBadgeProps> = ({ onPress, showLabel = true 
       return {
         label: t.sync.statusSyncing,
         color: theme.colors.brand,
-        icon: <ActivityIndicator size={14} color={theme.colors.brand} />,
+        icon: <ActivityIndicator size={12} color={theme.colors.brand} />,
       };
     }
     switch (status) {
@@ -57,20 +57,20 @@ export const SyncBadge: React.FC<SyncBadgeProps> = ({ onPress, showLabel = true 
         return {
           label: t.sync.statusSynced,
           color: theme.colors.success,
-          icon: <Check size={14} color={theme.colors.success} strokeWidth={2.5} />,
+          icon: <Check size={12} color={theme.colors.success} strokeWidth={2.5} />,
         };
       case 'error':
         return {
           label: t.sync.statusError,
           color: theme.colors.danger,
-          icon: <AlertCircle size={14} color={theme.colors.danger} strokeWidth={2.5} />,
+          icon: <AlertCircle size={12} color={theme.colors.danger} strokeWidth={2.5} />,
         };
       case 'offline':
       default:
         return {
           label: t.sync.statusOffline,
           color: theme.colors.textMuted,
-          icon: <CloudOff size={14} color={theme.colors.textMuted} strokeWidth={2.5} />,
+          icon: <CloudOff size={12} color={theme.colors.textMuted} strokeWidth={2.5} />,
         };
     }
   };
@@ -89,22 +89,30 @@ export const SyncBadge: React.FC<SyncBadgeProps> = ({ onPress, showLabel = true 
         alignItems: 'center',
         gap: 6,
         paddingHorizontal: spacing.sm + 2,
-        paddingVertical: 6,
-        minHeight: 36,
-        borderRadius: radius.full,
-        backgroundColor: theme.isDark ? 'rgba(34, 42, 61, 0.8)' : 'rgba(241, 245, 249, 0.9)',
-        borderWidth: 1.5,
+        paddingVertical: 5,
+        minHeight: 32,
+        borderRadius: radius.sm,
+        backgroundColor: theme.colors.surfaceSubtle,
+        borderWidth: 1,
         borderColor: theme.colors.borderTactile,
       }}
     >
+      <View
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: radius.full,
+          backgroundColor: color,
+        }}
+      />
       {icon}
       {showLabel && (
         <Text
           style={{
             fontSize: typography.fontSizes.xs,
-            fontWeight: typography.fontWeights.bold,
-            color,
-            letterSpacing: 0.2,
+            fontWeight: typography.fontWeights.semibold,
+            color: theme.colors.textSecondary,
+            letterSpacing: 0.1,
             flexShrink: 1,
           }}
           numberOfLines={1}

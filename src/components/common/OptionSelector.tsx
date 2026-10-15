@@ -33,9 +33,9 @@ export function OptionSelector<T extends string | number>({
           style={{
             color: theme.colors.textPrimary,
             fontSize: typography.fontSizes.sm,
-            fontWeight: typography.fontWeights.bold,
+            fontWeight: typography.fontWeights.semibold,
             marginBottom: spacing.xs,
-            letterSpacing: 0.2,
+            letterSpacing: 0.1,
           }}
         >
           {label}
@@ -52,14 +52,24 @@ export function OptionSelector<T extends string | number>({
           {sublabel}
         </Text>
       )}
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          backgroundColor: theme.colors.surfaceSubtle,
+          borderRadius: radius.sm,
+          borderWidth: 1,
+          borderColor: theme.colors.borderTactile,
+          padding: 3,
+          gap: 4,
+        }}
+      >
         {options.map((opt) => {
           const isSelected = selectedValue === opt.value;
           const a11yLabel = opt.sublabel ? `${opt.label}, ${opt.sublabel}` : opt.label;
           return (
             <TouchableOpacity
               key={String(opt.value)}
-              activeOpacity={0.75}
+              activeOpacity={0.8}
               onPress={() => onSelect(opt.value)}
               accessibilityRole="radio"
               accessibilityState={{ selected: isSelected }}
@@ -67,26 +77,28 @@ export function OptionSelector<T extends string | number>({
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               style={{
                 flex: 1,
-                minHeight: 52,
-                paddingVertical: spacing.sm,
+                minHeight: 48,
+                paddingVertical: spacing.xs + 2,
                 paddingHorizontal: spacing.xs,
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: radius.lg,
+                borderRadius: radius.dockInner,
                 backgroundColor: isSelected
-                  ? theme.colors.brand
-                  : theme.isDark
-                    ? theme.colors.surfaceContainerHigh
-                    : theme.colors.surfaceSubtle,
-                borderWidth: 1.5,
-                borderColor: isSelected ? theme.colors.brand : theme.colors.borderTactile,
+                  ? (theme.colors.dockActivePill ?? theme.colors.card)
+                  : 'transparent',
+                borderWidth: isSelected ? 1 : 0,
+                borderColor: isSelected
+                  ? (theme.colors.dockActiveBorder ?? theme.colors.borderTactile)
+                  : 'transparent',
               }}
             >
               <Text
                 style={{
-                  color: isSelected ? '#FFFFFF' : theme.colors.textPrimary,
-                  fontSize: typography.fontSizes.md,
-                  fontWeight: typography.fontWeights.bold,
+                  color: isSelected ? theme.colors.brand : theme.colors.textPrimary,
+                  fontSize: typography.fontSizes.sm,
+                  fontWeight: isSelected
+                    ? typography.fontWeights.bold
+                    : typography.fontWeights.medium,
                   textAlign: 'center',
                 }}
                 numberOfLines={1}
@@ -98,9 +110,9 @@ export function OptionSelector<T extends string | number>({
               {opt.sublabel && (
                 <Text
                   style={{
-                    color: isSelected ? 'rgba(255, 255, 255, 0.9)' : theme.colors.textSecondary,
+                    color: isSelected ? theme.colors.brandDark : theme.colors.textSecondary,
                     fontSize: typography.fontSizes.xs,
-                    marginTop: 2,
+                    marginTop: 1,
                     fontWeight: typography.fontWeights.medium,
                     textAlign: 'center',
                   }}
