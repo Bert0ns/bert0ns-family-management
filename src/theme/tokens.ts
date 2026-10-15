@@ -66,6 +66,18 @@ export const Palette = {
     500: '#D946EF',
     600: '#C026D3',
   },
+  nordic: {
+    spruce: '#1C4436', // Deep Forest Spruce
+    spruceLight: '#2D5A4C',
+    sage: '#52B788', // Pine Sage
+    terracotta: '#C87A3E', // Warm Ochre
+    terracottaLight: '#E09453',
+    terracottaBg: '#FBF0E6',
+    sand: '#F8F6F1', // Warm Linen Canvas
+    sandSubtle: '#F1EFEA',
+    carbon: '#121715', // Deep Warm Carbon
+    carbonSurface: '#1A211E',
+  },
   neutral: {
     0: '#FFFFFF',
     50: '#F8FAFC',
@@ -104,6 +116,9 @@ export const LightTheme = {
     brandLight: 'rgba(5, 150, 105, 0.12)',
     brandSecondaryLight: 'rgba(79, 70, 229, 0.12)',
     brandDark: Palette.emerald[900],
+    accentWarm: Palette.nordic.terracotta,
+    accentWarmBg: Palette.nordic.terracottaBg,
+    canvasWarm: Palette.nordic.sand,
     background: '#F8FAFC',
     surface: '#FFFFFF',
     surfaceElevated: '#FFFFFF',
@@ -137,6 +152,10 @@ export const LightTheme = {
     glassBorderSubtle: 'rgba(0, 0, 0, 0.05)',
     bottomBarBg: 'rgba(255, 255, 255, 0.92)',
     bottomBarBorder: 'rgba(226, 232, 240, 0.95)',
+    dockBg: 'rgba(255, 255, 255, 0.94)',
+    dockBorder: 'rgba(226, 232, 240, 0.95)',
+    dockActivePill: 'rgba(5, 150, 105, 0.12)',
+    dockActiveBorder: 'rgba(5, 150, 105, 0.25)',
     shadow: 'rgba(15, 23, 42, 0.08)',
   },
 };
@@ -149,6 +168,9 @@ export const DarkTheme = {
     brandLight: 'rgba(16, 185, 129, 0.18)',
     brandSecondaryLight: 'rgba(99, 102, 241, 0.18)',
     brandDark: Palette.emerald[200],
+    accentWarm: Palette.nordic.terracottaLight,
+    accentWarmBg: 'rgba(224, 148, 83, 0.16)',
+    canvasWarm: Palette.nordic.carbon,
     background: '#0B1326', // Deep ink slate canvas
     surface: '#131B2E',
     surfaceElevated: '#1E293B',
@@ -182,6 +204,10 @@ export const DarkTheme = {
     glassBorderSubtle: 'rgba(255, 255, 255, 0.06)',
     bottomBarBg: 'rgba(15, 23, 42, 0.88)',
     bottomBarBorder: 'rgba(255, 255, 255, 0.15)',
+    dockBg: 'rgba(18, 24, 21, 0.92)',
+    dockBorder: 'rgba(255, 255, 255, 0.14)',
+    dockActivePill: 'rgba(82, 183, 136, 0.18)',
+    dockActiveBorder: 'rgba(82, 183, 136, 0.32)',
     shadow: 'rgba(0, 0, 0, 0.45)',
   },
 };
@@ -237,6 +263,13 @@ export const Typography = {
     semibold: '600' as const,
     bold: '700' as const,
     heavy: '800' as const,
+  },
+  lineHeights: {
+    tight: 1.15,
+    snug: 1.25,
+    normal: 1.4,
+    relaxed: 1.5,
+    loose: 1.7,
   },
 };
 

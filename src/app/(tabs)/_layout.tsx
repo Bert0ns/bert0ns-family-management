@@ -70,7 +70,7 @@ export default function TabsLayout() {
     };
   }, [family?.id]);
 
-  const floatingBottom = Math.max(insets.bottom, 14);
+  const floatingBottom = Math.max(insets.bottom, 12) + (Platform.OS === 'ios' ? 4 : 8);
 
   const renderTabIcon = (
     IconComponent: ComponentType<{ size: number; color: string; strokeWidth?: number }>,
@@ -81,21 +81,45 @@ export default function TabsLayout() {
     <View
       accessibilityLabel={label}
       style={{
-        width: 44,
-        height: 44,
-        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: focused ? theme.colors.brandLight : 'transparent',
-        borderWidth: focused ? 1.5 : 0,
-        borderColor: focused ? `${theme.colors.brand}4D` : 'transparent',
+        width: 48,
+        height: 48,
       }}
     >
-      <IconComponent
-        size={22}
-        color={focused ? theme.colors.brand : (color as string)}
-        strokeWidth={focused ? 2.5 : 2}
-      />
+      <View
+        style={{
+          width: 42,
+          height: 36,
+          borderRadius: 18,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: focused
+            ? (theme.colors.dockActivePill ?? theme.colors.brandLight)
+            : 'transparent',
+          borderWidth: focused ? 1 : 0,
+          borderColor: focused
+            ? (theme.colors.dockActiveBorder ?? `${theme.colors.brand}4D`)
+            : 'transparent',
+        }}
+      >
+        <IconComponent
+          size={21}
+          color={focused ? theme.colors.brand : (color as string)}
+          strokeWidth={focused ? 2.5 : 2}
+        />
+      </View>
+      {focused && (
+        <View
+          style={{
+            width: 4,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: theme.colors.brand,
+            marginTop: 2,
+          }}
+        />
+      )}
     </View>
   );
 
@@ -112,14 +136,14 @@ export default function TabsLayout() {
         tabBarShowLabel: false,
         tabBarBackground: () => (
           <BlurView
-            intensity={90}
+            intensity={85}
             tint={theme.isDark ? 'dark' : 'light'}
             style={[
               StyleSheet.absoluteFill,
               {
-                borderRadius: 31,
+                borderRadius: 30,
                 overflow: 'hidden',
-                backgroundColor: theme.colors.bottomBarBg,
+                backgroundColor: theme.colors.dockBg ?? theme.colors.bottomBarBg,
               },
             ]}
           />
@@ -129,16 +153,16 @@ export default function TabsLayout() {
           bottom: floatingBottom,
           left: barLeft,
           width: barWidth,
-          height: 62,
+          height: 60,
           backgroundColor: 'transparent',
-          borderRadius: 31,
+          borderRadius: 30,
           borderWidth: 1.5,
-          borderColor: theme.colors.bottomBarBorder,
+          borderColor: theme.colors.dockBorder ?? theme.colors.bottomBarBorder,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: theme.isDark ? 0.45 : 0.1,
-          shadowRadius: 20,
-          elevation: 10,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: theme.isDark ? 0.4 : 0.08,
+          shadowRadius: 16,
+          elevation: 8,
           paddingTop: 0,
           paddingBottom: 0,
           paddingHorizontal: 6,
@@ -171,8 +195,8 @@ export default function TabsLayout() {
           />
         ),
         tabBarIconStyle: {
-          width: 44,
-          height: 44,
+          width: 48,
+          height: 48,
           justifyContent: 'center',
           alignItems: 'center',
           margin: 0,
@@ -183,7 +207,7 @@ export default function TabsLayout() {
           minWidth: 0,
           justifyContent: 'center',
           alignItems: 'center',
-          height: 62,
+          height: 60,
           padding: 0,
           margin: 0,
         },
