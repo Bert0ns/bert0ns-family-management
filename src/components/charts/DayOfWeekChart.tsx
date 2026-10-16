@@ -187,7 +187,7 @@ export const DayOfWeekChart: React.FC<DayOfWeekChartProps> = ({ data, currency =
                   borderTopLeftRadius: radius.sm,
                   borderTopRightRadius: radius.sm,
                   borderWidth: isSelected ? 1.5 : 0,
-                  borderColor: isPeak ? '#D97706' : theme.colors.brand,
+                  borderColor: isPeak ? theme.colors.warning : theme.colors.brand,
                 }}
               />
 
@@ -201,7 +201,7 @@ export const DayOfWeekChart: React.FC<DayOfWeekChartProps> = ({ data, currency =
                     : typography.fontWeights.medium,
                   color: isSelected
                     ? isPeak
-                      ? '#D97706'
+                      ? theme.colors.warning
                       : theme.colors.brand
                     : theme.colors.textSecondary,
                   textAlign: 'center',

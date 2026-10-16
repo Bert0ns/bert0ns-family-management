@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import Svg, { Path, Defs, LinearGradient, Stop, Line } from 'react-native-svg';
+import Svg, { Path, Line } from 'react-native-svg';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
 import { DailySpendPoint, ComparativeVelocityData } from '@/services/interfaces';
@@ -229,18 +229,6 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
         style={{ height: chartHeight, width: '100%', overflow: 'hidden' }}
       >
         <Svg width={chartWidth} height={chartHeight}>
-          <Defs>
-            <LinearGradient id="gradientArea" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0%" stopColor={theme.colors.brand} stopOpacity={0.35} />
-              <Stop offset="100%" stopColor={theme.colors.brand} stopOpacity={0.0} />
-            </LinearGradient>
-          </Defs>
-
-          {/* Area Fill for current month */}
-          {currentGenerated.areaPath ? (
-            <Path d={currentGenerated.areaPath} fill="url(#gradientArea)" />
-          ) : null}
-
           {/* Previous Month Dashed Line */}
           {previousGenerated.linePath ? (
             <Path
@@ -356,9 +344,9 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
           <View style={{ alignItems: 'flex-end' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
               {dayDelta > 0 ? (
-                <TrendingUp size={12} color="#EF4444" />
+                <TrendingUp size={12} color={theme.colors.danger} />
               ) : dayDelta < 0 ? (
-                <TrendingDown size={12} color="#10B981" />
+                <TrendingDown size={12} color={theme.colors.success} />
               ) : (
                 <Minus size={12} color={theme.colors.textSecondary} />
               )}
@@ -368,9 +356,9 @@ export const SpendingVelocityChart: React.FC<SpendingVelocityChartProps> = ({
                   fontWeight: typography.fontWeights.heavy,
                   color:
                     dayDelta > 0
-                      ? '#EF4444'
+                      ? theme.colors.danger
                       : dayDelta < 0
-                        ? '#10B981'
+                        ? theme.colors.success
                         : theme.colors.textSecondary,
                 }}
               >
