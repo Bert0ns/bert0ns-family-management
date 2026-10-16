@@ -5,8 +5,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^react-native$': 'react-native-web',
-    '^@react-native-async-storage/async-storage$':
-      '@react-native-async-storage/async-storage/jest/async-storage-mock',
+    '^@react-native-async-storage/async-storage$': '<rootDir>/__mocks__/async-storage.ts',
     '^expo-secure-store$': '<rootDir>/__mocks__/expo-secure-store.ts',
     '^expo-crypto$': '<rootDir>/__mocks__/expo-crypto.ts',
     '^expo-constants$': '<rootDir>/__mocks__/expo-constants.ts',

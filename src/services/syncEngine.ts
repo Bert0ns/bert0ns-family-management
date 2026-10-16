@@ -323,7 +323,7 @@ export const syncEngine = {
   async clearAllSyncData(): Promise<void> {
     return outboxMutex.runExclusive(async () => {
       try {
-        await AsyncStorage.multiRemove([
+        await AsyncStorage.removeMany([
           OUTBOX_STORAGE_KEY,
           LAST_SYNC_STORAGE_KEY,
           DEAD_LETTER_QUEUE_STORAGE_KEY,
