@@ -119,7 +119,7 @@ The application includes a built-in import engine for bulk transaction ingestion
 ## 🛠️ Project Architecture
 
 ```
-bert0ns-family-management/
+family-management/
 ├── .github/workflows/          # Automated GitHub Actions
 │   ├── ci.yml                  # PR & merge quality checks (tsc, lint, prettier, jest)
 │   ├── build-android-apk.yml   # Native GitHub Actions APK compilation & artifact upload
@@ -186,8 +186,8 @@ bert0ns-family-management/
 
 ```bash
 # Clone the repository
-git clone https://github.com/Bert0ns/bert0ns-family-management.git
-cd bert0ns-family-management
+git clone https://github.com/Bert0ns/family-management.git
+cd family-management
 
 # Install dependencies with pnpm
 pnpm install
@@ -240,7 +240,7 @@ pnpm build:apk:local
 
 - **Zero Cloud AI**: No financial records leave the device for external machine learning or LLM processing.
 - **Local-First**: Works 100% offline out-of-the-box.
-- **Optional Supabase Cloud Sync**: Pre-configured with PostgreSQL Row-Level Security (`RLS`) schema in [`src/data/supabase_schema.sql`](file:///home/berto/bert0ns-family-management/src/data/supabase_schema.sql), guaranteeing tenant isolation between families if cloud sync is activated.
+- **Optional Supabase Cloud Sync**: Pre-configured with PostgreSQL Row-Level Security (`RLS`) schema in [`src/data/supabase_schema.sql`](src/data/supabase_schema.sql), guaranteeing tenant isolation between families if cloud sync is activated.
 
 ---
 
@@ -288,4 +288,4 @@ You can compile standalone `.apk` packages locally inside WSL using the Linux An
 
 ## 📄 License
 
-This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](file:///home/berto/bert0ns-family-management/LICENSE).
+This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE).

@@ -16,9 +16,9 @@ An architectural review of the logging implementation in `../trenord-infotainmen
 
 ---
 
-## 2. Adaptation for `bert0ns-family-management`
+## 2. Adaptation for `family-management`
 
-In `bert0ns-family-management` (Expo SDK 57, React Native 0.83, Zustand persistence, offline-first SQLite/AsyncStorage), introducing this logging pattern will replace ad-hoc `console.error` calls and silent failure paths with structured, queryable telemetry.
+In `family-management` (Expo SDK 57, React Native 0.83, Zustand persistence, offline-first SQLite/AsyncStorage), introducing this logging pattern will replace ad-hoc `console.error` calls and silent failure paths with structured, queryable telemetry.
 
 ### Domain Extensions & Color Palette
 

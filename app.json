@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "Family Expense Manager",
-    "slug": "bert0ns-family-management",
+    "slug": "family-management",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "bert0ns-family-management",
+    "scheme": "family-management",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true

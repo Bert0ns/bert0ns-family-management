@@ -94,7 +94,7 @@ function extractPersonaPrompts(referencesDir) {
  * Extracts high-level project context from package.json and workspace structure
  */
 function extractProjectContext(rootDir) {
-  let pkgName = 'bert0ns-family-management';
+  let pkgName = 'family-management';
   let techDetails = [];
 
   const pkgPath = path.join(rootDir, 'package.json');
