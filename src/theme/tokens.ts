@@ -235,15 +235,15 @@ export const Spacing = {
 
 export const Radius = {
   xs: 4,
-  sm: 6,
-  md: 8,
-  lg: 10,
-  xl: 12,
-  xxl: 16,
-  pill: 999,
-  full: 9999,
-  dock: 14,
-  dockInner: 10,
+  sm: 4,
+  md: 4,
+  lg: 4,
+  xl: 4,
+  xxl: 4,
+  pill: 4,
+  full: 4,
+  dock: 4,
+  dockInner: 4,
 };
 
 export const TouchTargets = {
