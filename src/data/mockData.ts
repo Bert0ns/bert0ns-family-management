@@ -14,7 +14,7 @@ export const INITIAL_MEMBERS: FamilyMember[] = [
     display_name: 'Berto',
     role: 'ADMIN',
     avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-    color_code: '#4F46E5', // Indigo
+    color_code: '#3E5C76', // Slate Steel
     is_current_user: true,
   },
   {
@@ -23,7 +23,7 @@ export const INITIAL_MEMBERS: FamilyMember[] = [
     display_name: 'Elena',
     role: 'ADMIN',
     avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-    color_code: '#10B981', // Emerald
+    color_code: '#2D6A4F', // Forest Pine
     is_current_user: false,
   },
   {
@@ -32,7 +32,7 @@ export const INITIAL_MEMBERS: FamilyMember[] = [
     display_name: 'Leo',
     role: 'MEMBER',
     avatar_url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150',
-    color_code: '#F59E0B', // Amber
+    color_code: '#9A6A38', // Warm Ochre
     is_current_user: false,
   },
   {
@@ -41,7 +41,7 @@ export const INITIAL_MEMBERS: FamilyMember[] = [
     display_name: 'Sofia',
     role: 'MEMBER',
     avatar_url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
-    color_code: '#8B5CF6', // Violet
+    color_code: '#6E4D6E', // Dusty Plum
     is_current_user: false,
   },
 ];
@@ -52,7 +52,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     family_id: 'fam_1',
     name: 'Groceries',
     icon: 'ShoppingCart',
-    color: '#10B981',
+    color: '#2D6A4F',
     is_default: true,
   },
   {
@@ -60,7 +60,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     family_id: 'fam_1',
     name: 'Dining & Cafes',
     icon: 'Utensils',
-    color: '#F59E0B',
+    color: '#9A6A38',
     is_default: true,
   },
   {
@@ -68,7 +68,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     family_id: 'fam_1',
     name: 'Utilities & Bills',
     icon: 'Zap',
-    color: '#6366F1',
+    color: '#415A77',
     is_default: true,
   },
   {
@@ -76,7 +76,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     family_id: 'fam_1',
     name: 'Transportation',
     icon: 'Car',
-    color: '#0EA5E9',
+    color: '#366873',
     is_default: true,
   },
   {
@@ -84,7 +84,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     family_id: 'fam_1',
     name: 'Housing & Rent',
     icon: 'Home',
-    color: '#3B82F6',
+    color: '#2B3A4A',
     is_default: true,
   },
   {
@@ -92,7 +92,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     family_id: 'fam_1',
     name: 'Health & Pharmacy',
     icon: 'HeartPulse',
-    color: '#EF4444',
+    color: '#9E4747',
     is_default: true,
   },
   {
@@ -100,7 +100,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     family_id: 'fam_1',
     name: 'Entertainment',
     icon: 'Film',
-    color: '#EC4899',
+    color: '#6E4D6E',
     is_default: true,
   },
   {
@@ -108,7 +108,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     family_id: 'fam_1',
     name: 'Shopping & Gear',
     icon: 'ShoppingBag',
-    color: '#8B5CF6',
+    color: '#7D5A44',
     is_default: true,
   },
   {
@@ -116,7 +116,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     family_id: 'fam_1',
     name: 'Education & Kids',
     icon: 'GraduationCap',
-    color: '#14B8A6',
+    color: '#476E54',
     is_default: true,
   },
   {
@@ -124,7 +124,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     family_id: 'fam_1',
     name: 'Bank related',
     icon: 'Building',
-    color: '#0D9488',
+    color: '#52606D',
     is_default: true,
   },
   {
@@ -132,7 +132,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     family_id: 'fam_1',
     name: 'General & Other',
     icon: 'Tag',
-    color: '#64748B',
+    color: '#636B69',
     is_default: true,
   },
 ];

@@ -22,7 +22,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <meta name="theme-color" content="#1E1B4B" />
+        <meta name="theme-color" content="#121418" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -42,11 +42,11 @@ export default function Root({ children }: { children: React.ReactNode }) {
                 height: 100%;
                 margin: 0;
                 padding: 0;
-                background-color: #0B1326;
+                background-color: #121418;
               }
               @media (prefers-color-scheme: light) {
                 html, body, #root {
-                  background-color: #F8FAFC;
+                  background-color: #F4F5F2;
                 }
               }
 
@@ -59,27 +59,27 @@ export default function Root({ children }: { children: React.ReactNode }) {
                 background: transparent;
               }
               ::-webkit-scrollbar-thumb {
-                background: rgba(255, 255, 255, 0.2);
-                border-radius: 9999px;
+                background: rgba(255, 255, 255, 0.18);
+                border-radius: 4px;
               }
               ::-webkit-scrollbar-thumb:hover {
-                background: rgba(255, 255, 255, 0.35);
+                background: rgba(255, 255, 255, 0.3);
               }
               @media (prefers-color-scheme: light) {
                 ::-webkit-scrollbar-thumb {
-                  background: rgba(0, 0, 0, 0.2);
+                  background: rgba(0, 0, 0, 0.18);
                 }
                 ::-webkit-scrollbar-thumb:hover {
-                  background: rgba(0, 0, 0, 0.35);
+                  background: rgba(0, 0, 0, 0.3);
                 }
               }
               * {
                 scrollbar-width: thin;
-                scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+                scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
               }
               @media (prefers-color-scheme: light) {
                 * {
-                  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+                  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
                 }
               }
             `,
@@ -92,8 +92,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
             __html: `
               if (typeof window !== 'undefined' && 'serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
-                    console.warn('[SW] Registration failed: ', err);
+                  navigator.serviceWorker.register('/sw.js').catch(function(err) {\n                    console.warn('[SW] Registration failed: ', err);
                   });
                 });
               }

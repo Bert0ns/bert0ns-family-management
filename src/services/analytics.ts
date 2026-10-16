@@ -504,11 +504,11 @@ export class AnalyticsCalculator implements IAnalyticsCalculator {
     const totalCents = sumBy(filtered, (e) => toCents(e.amount));
 
     const methodColorMap: Record<string, string> = {
-      CREDIT_CARD: '#6366F1',
-      DEBIT_CARD: '#0EA5E9',
-      CASH: '#10B981',
-      BANK_TRANSFER: '#8B5CF6',
-      OTHER: '#94A3B8',
+      CREDIT_CARD: '#415A77',
+      DEBIT_CARD: '#366873',
+      CASH: '#2D6A4F',
+      BANK_TRANSFER: '#52606D',
+      OTHER: '#636B69',
     };
 
     const methodLabelMap: Record<string, string> = {

@@ -205,9 +205,9 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
                         fontWeight: typography.fontWeights.bold,
                         color:
                           point.momGrowthPercentage > 0
-                            ? '#EF4444'
+                            ? theme.colors.danger
                             : point.momGrowthPercentage < 0
-                              ? '#10B981'
+                              ? theme.colors.success
                               : theme.colors.textSecondary,
                         marginLeft: 1,
                       }}

@@ -29,15 +29,17 @@ const AVAILABLE_ICONS = [
 ];
 
 const AVAILABLE_COLORS = [
-  '#10B981', // Emerald
-  '#F59E0B', // Amber
-  '#6366F1', // Indigo
-  '#0EA5E9', // Sky
-  '#EC4899', // Pink
-  '#8B5CF6', // Violet
-  '#EF4444', // Red
-  '#14B8A6', // Teal
-  '#64748B', // Slate
+  '#2D6A4F', // Forest Pine
+  '#9A6A38', // Warm Ochre
+  '#415A77', // Slate Blue
+  '#366873', // Muted Teal
+  '#2B3A4A', // Deep Navy
+  '#9E4747', // Muted Hanko Red
+  '#6E4D6E', // Dusty Plum
+  '#7D5A44', // Muted Cedar
+  '#476E54', // Lichen Moss
+  '#52606D', // Muted Graphite
+  '#636B69', // Warm Stone
 ];
 
 export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ visible, onClose, onSave }) => {
