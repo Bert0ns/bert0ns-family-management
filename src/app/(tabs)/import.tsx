@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Platform, type TextStyle } from 'react-native';
 import { UploadCloud, CheckCircle2, History, FileSpreadsheet, FileJson } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
@@ -17,6 +17,11 @@ import { SAMPLE_IMPORT_REPORT } from '@/data/mockData';
 import { csvExporter } from '@/services/csvExporter';
 import { exportAndShareFile } from '@/services/fileExporter';
 import { importLogger } from '@/services/logger';
+
+const TABULAR_NUMS: TextStyle =
+  Platform.OS === 'web'
+    ? ({ fontVariantNumeric: 'tabular-nums' } as unknown as TextStyle)
+    : { fontVariant: ['tabular-nums'] };
 
 export default function ImportScreen() {
   const { theme, spacing, radius, typography } = useTheme();
@@ -134,6 +139,7 @@ export default function ImportScreen() {
             flexDirection: 'row',
             alignItems: 'center',
             gap: spacing.sm,
+            borderRadius: radius.md,
           }}
         >
           <CheckCircle2 size={22} color={theme.colors.success} strokeWidth={2.5} />
@@ -157,6 +163,9 @@ export default function ImportScreen() {
           marginBottom: spacing.lg,
           borderWidth: 1.5,
           borderColor: theme.colors.cardBorder,
+          borderTopWidth: 3,
+          borderTopColor: theme.colors.brand,
+          borderRadius: radius.lg,
         }}
       >
         <View
@@ -171,7 +180,7 @@ export default function ImportScreen() {
             style={{
               width: 52,
               height: 52,
-              borderRadius: radius.sm,
+              borderRadius: radius.md,
               backgroundColor: theme.colors.brandLight,
               borderWidth: 1.5,
               borderColor: `${theme.colors.brand}40`,
@@ -240,7 +249,15 @@ export default function ImportScreen() {
       </View>
 
       {/* Export Section */}
-      <Card padding="lg" style={{ marginBottom: spacing.lg }}>
+      <Card
+        padding="lg"
+        style={{
+          marginBottom: spacing.lg,
+          borderRadius: radius.lg,
+          borderWidth: 1.5,
+          borderColor: theme.colors.borderTactile,
+        }}
+      >
         <Text
           style={{
             color: theme.colors.textPrimary,
@@ -322,6 +339,7 @@ export default function ImportScreen() {
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  borderRadius: radius.md,
                   borderWidth: 1.5,
                   borderColor: theme.colors.borderTactile,
                   gap: spacing.sm,
@@ -340,11 +358,14 @@ export default function ImportScreen() {
                     {batch.file_name}
                   </Text>
                   <Text
-                    style={{
-                      color: theme.colors.textSecondary,
-                      fontSize: typography.fontSizes.xs,
-                      marginTop: 2,
-                    }}
+                    style={[
+                      {
+                        color: theme.colors.textSecondary,
+                        fontSize: typography.fontSizes.xs,
+                        marginTop: 2,
+                      },
+                      TABULAR_NUMS,
+                    ]}
                     numberOfLines={1}
                   >
                     {new Date(batch.created_at).toLocaleDateString()}

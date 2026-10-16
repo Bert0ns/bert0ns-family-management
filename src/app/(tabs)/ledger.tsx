@@ -1,5 +1,13 @@
 import { useState, useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, FlatList, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  FlatList,
+  TouchableOpacity,
+  Platform,
+  type TextStyle,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   Search,
@@ -25,6 +33,11 @@ import { Avatar } from '@/components/common/Avatar';
 import { IconHelper } from '@/components/common/IconHelper';
 import { Expense, PeriodPreset, AmountBracket } from '@/types';
 import { sumBy } from '@/utils/numberParser';
+
+const TABULAR_NUMS: TextStyle =
+  Platform.OS === 'web'
+    ? ({ fontVariantNumeric: 'tabular-nums' } as unknown as TextStyle)
+    : { fontVariant: ['tabular-nums'] };
 
 // Hoisted helper date preset checker
 const matchesPeriod = (dateStr: string, preset: PeriodPreset): boolean => {
@@ -288,15 +301,18 @@ export default function LedgerScreen() {
               />
             </View>
 
-            {/* Filter Modal Button */}
+            {/* Filter Modal Button - 48x48px Accessible Touch Target */}
             <TouchableOpacity
               activeOpacity={0.75}
               onPress={() => setIsFilterModalVisible(true)}
+              accessibilityRole="button"
               accessibilityLabel={t.ledger.filtersTitle}
               style={{
-                width: 42,
-                height: 42,
-                borderRadius: radius.lg,
+                width: 48,
+                height: 48,
+                minWidth: 48,
+                minHeight: 48,
+                borderRadius: radius.md,
                 backgroundColor: hasActiveFilters
                   ? theme.colors.brand
                   : theme.isDark
@@ -321,7 +337,7 @@ export default function LedgerScreen() {
                     top: -4,
                     right: -4,
                     backgroundColor: theme.colors.danger,
-                    borderRadius: radius.sm,
+                    borderRadius: radius.pill,
                     width: 20,
                     height: 20,
                     alignItems: 'center',
@@ -337,15 +353,18 @@ export default function LedgerScreen() {
               )}
             </TouchableOpacity>
 
-            {/* Bulk Import JSON Button */}
+            {/* Bulk Import JSON Button - 48x48px Accessible Touch Target */}
             <TouchableOpacity
               activeOpacity={0.75}
               onPress={() => router.push('/(tabs)/import')}
+              accessibilityRole="button"
               accessibilityLabel={t.ledger.bulkImportButton}
               style={{
-                width: 42,
-                height: 42,
-                borderRadius: radius.lg,
+                width: 48,
+                height: 48,
+                minWidth: 48,
+                minHeight: 48,
+                borderRadius: radius.md,
                 backgroundColor: theme.isDark
                   ? theme.colors.surfaceContainerHigh
                   : theme.colors.surfaceSubtle,
@@ -359,15 +378,18 @@ export default function LedgerScreen() {
               <FileJson size={20} color={theme.colors.brand} strokeWidth={2.5} />
             </TouchableOpacity>
 
-            {/* Quick Add Expense Button */}
+            {/* Quick Add Expense Button - 48x48px Accessible Touch Target */}
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => router.push('/expense/add')}
+              accessibilityRole="button"
               accessibilityLabel={t.common.add}
               style={{
-                width: 42,
-                height: 42,
-                borderRadius: radius.lg,
+                width: 48,
+                height: 48,
+                minWidth: 48,
+                minHeight: 48,
+                borderRadius: radius.md,
                 backgroundColor: theme.colors.brand,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -393,10 +415,13 @@ export default function LedgerScreen() {
                   key={opt.key}
                   activeOpacity={0.75}
                   onPress={() => setFilters({ periodPreset: opt.key })}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
                   style={{
+                    minHeight: 40,
                     paddingHorizontal: spacing.md,
-                    paddingVertical: spacing.xs + 3,
-                    borderRadius: radius.sm,
+                    paddingVertical: 8,
+                    borderRadius: radius.pill,
                     backgroundColor: isSelected
                       ? theme.colors.brand
                       : theme.isDark
@@ -404,6 +429,8 @@ export default function LedgerScreen() {
                         : theme.colors.surfaceSubtle,
                     borderWidth: 1.5,
                     borderColor: isSelected ? theme.colors.brand : theme.colors.borderTactile,
+                    justifyContent: 'center',
+                    alignItems: 'center',
                   }}
                 >
                   <Text
@@ -436,13 +463,16 @@ export default function LedgerScreen() {
               {selectedMember && (
                 <TouchableOpacity
                   onPress={() => setFilters({ selectedMemberId: undefined })}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${selectedMember.display_name}, ${t.common.cancel}`}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
+                    minHeight: 36,
                     gap: 6,
-                    paddingVertical: 6,
-                    paddingHorizontal: spacing.sm,
-                    borderRadius: radius.sm,
+                    paddingVertical: 5,
+                    paddingHorizontal: spacing.sm + 2,
+                    borderRadius: radius.pill,
                     backgroundColor: theme.colors.surfaceSubtle,
                     borderWidth: 1.5,
                     borderColor: selectedMember.color_code,
@@ -469,13 +499,16 @@ export default function LedgerScreen() {
               {selectedCategory && (
                 <TouchableOpacity
                   onPress={() => setFilters({ selectedCategoryId: undefined })}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${getLocalizedCategoryName(selectedCategory, t)}, ${t.common.cancel}`}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
+                    minHeight: 36,
                     gap: 6,
-                    paddingVertical: 6,
-                    paddingHorizontal: spacing.sm,
-                    borderRadius: radius.sm,
+                    paddingVertical: 5,
+                    paddingHorizontal: spacing.sm + 2,
+                    borderRadius: radius.pill,
                     backgroundColor: theme.colors.surfaceSubtle,
                     borderWidth: 1.5,
                     borderColor: selectedCategory.color,
@@ -502,13 +535,15 @@ export default function LedgerScreen() {
               {activeAmountBracket !== 'all' && (
                 <TouchableOpacity
                   onPress={() => setFilters({ amountBracket: 'all' })}
+                  accessibilityRole="button"
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
+                    minHeight: 36,
                     gap: 6,
-                    paddingVertical: 6,
-                    paddingHorizontal: spacing.sm,
-                    borderRadius: radius.sm,
+                    paddingVertical: 5,
+                    paddingHorizontal: spacing.sm + 2,
+                    borderRadius: radius.pill,
                     backgroundColor: theme.colors.surfaceSubtle,
                     borderWidth: 1.5,
                     borderColor: theme.colors.brand,
@@ -531,13 +566,16 @@ export default function LedgerScreen() {
               {/* Clear All Chip */}
               <TouchableOpacity
                 onPress={handleResetFilters}
+                accessibilityRole="button"
+                accessibilityLabel={t.ledger.clearFilters}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
+                  minHeight: 36,
                   gap: 4,
-                  paddingVertical: 6,
-                  paddingHorizontal: spacing.sm,
-                  borderRadius: radius.sm,
+                  paddingVertical: 5,
+                  paddingHorizontal: spacing.sm + 2,
+                  borderRadius: radius.pill,
                   backgroundColor: theme.colors.dangerBg,
                   borderWidth: 1,
                   borderColor: theme.colors.danger,
@@ -572,7 +610,16 @@ export default function LedgerScreen() {
           <TouchableOpacity
             onPress={toggleSort}
             activeOpacity={0.75}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}
+            accessibilityRole="button"
+            accessibilityLabel={`${t.ledger.filtersTitle}: ${getSortLabel()}`}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              flex: 1,
+              minWidth: 0,
+              minHeight: 44,
+            }}
           >
             <ArrowDownUp
               size={16}
@@ -597,14 +644,17 @@ export default function LedgerScreen() {
           </TouchableOpacity>
 
           <Text
-            style={{
-              color: theme.colors.textPrimary,
-              fontSize: typography.fontSizes.sm,
-              fontWeight: typography.fontWeights.heavy,
-              flexShrink: 0,
-              maxWidth: '50%',
-              textAlign: 'right',
-            }}
+            style={[
+              {
+                color: theme.colors.textPrimary,
+                fontSize: typography.fontSizes.sm,
+                fontWeight: typography.fontWeights.heavy,
+                flexShrink: 0,
+                maxWidth: '50%',
+                textAlign: 'right',
+              },
+              TABULAR_NUMS,
+            ]}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.85}
@@ -723,10 +773,12 @@ export default function LedgerScreen() {
                       key={opt.key}
                       activeOpacity={0.75}
                       onPress={() => setFilters({ periodPreset: opt.key })}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isSelected }}
                       style={{
-                        minHeight: 46,
+                        minHeight: 48,
                         paddingHorizontal: spacing.md,
-                        borderRadius: radius.lg,
+                        borderRadius: radius.md,
                         backgroundColor: isSelected
                           ? theme.colors.brand
                           : theme.isDark
@@ -773,10 +825,12 @@ export default function LedgerScreen() {
                       key={opt.key}
                       activeOpacity={0.75}
                       onPress={() => setFilters({ amountBracket: opt.key })}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isSelected }}
                       style={{
-                        minHeight: 46,
+                        minHeight: 48,
                         paddingHorizontal: spacing.md,
-                        borderRadius: radius.lg,
+                        borderRadius: radius.md,
                         backgroundColor: isSelected
                           ? theme.colors.brand
                           : theme.isDark
@@ -819,10 +873,12 @@ export default function LedgerScreen() {
                 <TouchableOpacity
                   activeOpacity={0.75}
                   onPress={() => setFilters({ selectedMemberId: undefined })}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: !filters.selectedMemberId }}
                   style={{
                     minHeight: 50,
                     paddingHorizontal: spacing.md,
-                    borderRadius: radius.lg,
+                    borderRadius: radius.md,
                     backgroundColor: !filters.selectedMemberId
                       ? theme.colors.brand
                       : theme.isDark
@@ -854,13 +910,15 @@ export default function LedgerScreen() {
                       key={m.id}
                       activeOpacity={0.75}
                       onPress={() => setFilters({ selectedMemberId: m.id })}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isSelected }}
                       style={{
                         minHeight: 50,
                         flexDirection: 'row',
                         alignItems: 'center',
                         gap: spacing.sm,
                         paddingHorizontal: spacing.md,
-                        borderRadius: radius.lg,
+                        borderRadius: radius.md,
                         backgroundColor: isSelected
                           ? `${m.color_code}25`
                           : theme.isDark
@@ -909,10 +967,12 @@ export default function LedgerScreen() {
                 <TouchableOpacity
                   activeOpacity={0.75}
                   onPress={() => setFilters({ selectedCategoryId: undefined })}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: !filters.selectedCategoryId }}
                   style={{
                     minHeight: 50,
                     paddingHorizontal: spacing.md,
-                    borderRadius: radius.lg,
+                    borderRadius: radius.md,
                     backgroundColor: !filters.selectedCategoryId
                       ? theme.colors.brand
                       : theme.isDark
@@ -945,13 +1005,15 @@ export default function LedgerScreen() {
                       key={c.id}
                       activeOpacity={0.75}
                       onPress={() => setFilters({ selectedCategoryId: c.id })}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isSelected }}
                       style={{
                         minHeight: 50,
                         flexDirection: 'row',
                         alignItems: 'center',
                         gap: spacing.sm,
                         paddingHorizontal: spacing.md,
-                        borderRadius: radius.lg,
+                        borderRadius: radius.md,
                         backgroundColor: isSelected
                           ? `${c.color}25`
                           : theme.isDark
@@ -987,6 +1049,8 @@ export default function LedgerScreen() {
                   handleResetFilters();
                   setIsFilterModalVisible(false);
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={t.ledger.clearFilters}
                 style={{
                   minHeight: 50,
                   flexDirection: 'row',
@@ -994,7 +1058,7 @@ export default function LedgerScreen() {
                   justifyContent: 'center',
                   gap: spacing.sm,
                   backgroundColor: theme.colors.dangerBg,
-                  borderRadius: radius.lg,
+                  borderRadius: radius.md,
                   borderWidth: 1.5,
                   borderColor: theme.colors.danger,
                 }}

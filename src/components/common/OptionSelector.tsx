@@ -56,8 +56,8 @@ export function OptionSelector<T extends string | number>({
         style={{
           flexDirection: 'row',
           backgroundColor: theme.colors.surfaceSubtle,
-          borderRadius: radius.sm,
-          borderWidth: 1,
+          borderRadius: radius.md,
+          borderWidth: 1.5,
           borderColor: theme.colors.borderTactile,
           padding: spacing.xxs + 1,
           gap: spacing.xs,
@@ -86,7 +86,7 @@ export function OptionSelector<T extends string | number>({
                 backgroundColor: isSelected
                   ? (theme.colors.dockActivePill ?? theme.colors.card)
                   : 'transparent',
-                borderWidth: isSelected ? 1 : 0,
+                borderWidth: isSelected ? 1.5 : 0,
                 borderColor: isSelected
                   ? (theme.colors.dockActiveBorder ?? theme.colors.borderTactile)
                   : 'transparent',
@@ -118,7 +118,7 @@ export function OptionSelector<T extends string | number>({
                   }}
                   numberOfLines={1}
                   adjustsFontSizeToFit
-                  minimumFontScale={0.8}
+                  minimumFontScale={0.75}
                 >
                   {opt.sublabel}
                 </Text>

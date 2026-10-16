@@ -44,6 +44,12 @@ export interface TranslationSchema {
     thisMonthSpending: string;
     bulkImportButton: string;
     ofTotal: string;
+    payingAs: string;
+    whereMoneyWent: string;
+    whoPaidWhat: string;
+    vsLastMonth: string;
+    tapToFilter: string;
+    addFirstExpense: string;
   };
   analytics: {
     categoriesTab: string;

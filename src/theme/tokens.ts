@@ -132,10 +132,10 @@ export const LightTheme = {
     surfaceContainerHigh: '#FAFBF9',
     surfaceContainerHighest: '#E8EBE4',
     border: '#D1D7CD',
-    borderSubtle: 'rgba(0, 0, 0, 0.05)',
+    borderSubtle: 'rgba(0, 0, 0, 0.06)',
     borderTactile: '#C2C9BD',
     textPrimary: '#1B211E',
-    textSecondary: '#57615B',
+    textSecondary: '#4E5852',
     textMuted: '#576579',
     textInverse: '#FFFFFF',
     success: '#2D6A4F',
@@ -162,7 +162,7 @@ export const LightTheme = {
     dockBorder: '#D1D7CD',
     dockActivePill: '#EBF1ED',
     dockActiveBorder: 'rgba(45, 106, 79, 0.25)',
-    shadow: 'rgba(27, 33, 30, 0.04)',
+    shadow: 'rgba(27, 33, 30, 0.05)',
   },
 };
 
@@ -185,10 +185,10 @@ export const DarkTheme = {
     surfaceContainerHigh: Palette.zen.slateElevated,
     surfaceContainerHighest: Palette.zen.slateBorder,
     border: Palette.zen.slateBorder,
-    borderSubtle: 'rgba(255, 255, 255, 0.06)',
+    borderSubtle: 'rgba(255, 255, 255, 0.07)',
     borderTactile: '#38414F',
     textPrimary: '#F0F2F5',
-    textSecondary: '#969EAB',
+    textSecondary: '#A8B1BE',
     textMuted: Palette.neutral[400], // #94A3B8
     textInverse: '#121418',
     success: Palette.zen.bambooSage,
@@ -234,16 +234,16 @@ export const Spacing = {
 };
 
 export const Radius = {
-  xs: 2,
+  xs: 4,
   sm: 4,
   md: 4,
   lg: 4,
   xl: 4,
   xxl: 4,
   pill: 4,
-  full: 9999,
+  full: 4,
   dock: 4,
-  dockInner: 3,
+  dockInner: 4,
 };
 
 export const TouchTargets = {

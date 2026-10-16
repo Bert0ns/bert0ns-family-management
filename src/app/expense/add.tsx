@@ -1,6 +1,14 @@
 import { uiLogger } from '@/services/logger';
 import { useState, useRef, type ComponentRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Platform,
+  type TextStyle,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {
@@ -19,6 +27,11 @@ import { IconHelper } from '@/components/common/IconHelper';
 import { Avatar } from '@/components/common/Avatar';
 import { Input } from '@/components/common/Input';
 import { parseLocalizedNumber } from '@/utils/numberParser';
+
+const TABULAR_NUMS: TextStyle =
+  Platform.OS === 'web'
+    ? ({ fontVariantNumeric: 'tabular-nums' } as unknown as TextStyle)
+    : { fontVariant: ['tabular-nums'] };
 
 // Native-safe local ISO date string helper
 const getTodayLocalIso = (): string => {
@@ -202,17 +215,19 @@ export default function AddExpenseScreen() {
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      {/* Native Hero Amount Input with Tactile Glass Container */}
+      {/* Native Hero Amount Input with Tactile Statement Container */}
       <View
         style={{
           backgroundColor: theme.colors.card,
-          borderRadius: radius.sm,
+          borderRadius: radius.lg,
           paddingVertical: spacing.xl,
           paddingHorizontal: spacing.lg,
-          borderWidth: 1,
+          borderWidth: 1.5,
           borderColor: errors.amount ? theme.colors.danger : theme.colors.cardBorder,
           marginBottom: spacing.lg,
           alignItems: 'center',
+          borderTopWidth: 3,
+          borderTopColor: errors.amount ? theme.colors.danger : theme.colors.brand,
           shadowColor: theme.colors.shadow,
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.04,
@@ -222,10 +237,11 @@ export default function AddExpenseScreen() {
       >
         <Text
           style={{
-            fontSize: typography.fontSizes.sm,
-            fontWeight: typography.fontWeights.medium,
+            fontSize: typography.fontSizes.xs,
+            fontWeight: typography.fontWeights.heavy,
             color: theme.colors.textSecondary,
-            letterSpacing: 0.1,
+            letterSpacing: 0.8,
+            textTransform: 'uppercase',
             marginBottom: spacing.xs,
           }}
         >
@@ -241,12 +257,15 @@ export default function AddExpenseScreen() {
           }}
         >
           <Text
-            style={{
-              fontSize: typography.fontSizes.xxxl,
-              fontWeight: typography.fontWeights.heavy,
-              color: theme.colors.brand,
-              marginRight: spacing.xs,
-            }}
+            style={[
+              {
+                fontSize: typography.fontSizes.xxxl,
+                fontWeight: typography.fontWeights.heavy,
+                color: theme.colors.brand,
+                marginRight: spacing.xs,
+              },
+              TABULAR_NUMS,
+            ]}
           >
             {family.currency}
           </Text>
@@ -257,19 +276,22 @@ export default function AddExpenseScreen() {
               setAmount(val);
               if (errors.amount) setErrors((prev) => ({ ...prev, amount: undefined }));
             }}
-            placeholder="0,00"
+            placeholder="0.00"
             placeholderTextColor={theme.colors.textMuted}
             keyboardType="decimal-pad"
             returnKeyType="done"
             autoFocus={true}
-            style={{
-              fontSize: 48,
-              fontWeight: '900',
-              color: theme.colors.textPrimary,
-              minWidth: 160,
-              textAlign: 'center',
-              paddingVertical: 0,
-            }}
+            style={[
+              {
+                fontSize: 48,
+                fontWeight: '900',
+                color: theme.colors.textPrimary,
+                minWidth: 160,
+                textAlign: 'center',
+                paddingVertical: 0,
+              },
+              TABULAR_NUMS,
+            ]}
             selectTextOnFocus
           />
         </View>
@@ -289,23 +311,31 @@ export default function AddExpenseScreen() {
               key={amt}
               activeOpacity={0.75}
               onPress={() => handleQuickAdd(amt)}
+              accessibilityRole="button"
+              accessibilityLabel={`+${family.currency}${amt}`}
               style={{
+                minHeight: 40,
                 paddingHorizontal: spacing.md,
-                paddingVertical: 6,
-                borderRadius: radius.sm,
+                paddingVertical: 8,
+                borderRadius: radius.pill,
                 backgroundColor: theme.isDark
                   ? theme.colors.surfaceContainerHigh
                   : theme.colors.surfaceSubtle,
-                borderWidth: 1,
+                borderWidth: 1.5,
                 borderColor: theme.colors.borderTactile,
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
               <Text
-                style={{
-                  color: theme.colors.textPrimary,
-                  fontSize: typography.fontSizes.sm,
-                  fontWeight: typography.fontWeights.bold,
-                }}
+                style={[
+                  {
+                    color: theme.colors.textPrimary,
+                    fontSize: typography.fontSizes.sm,
+                    fontWeight: typography.fontWeights.bold,
+                  },
+                  TABULAR_NUMS,
+                ]}
               >
                 +{family.currency}
                 {amt}
@@ -357,6 +387,8 @@ export default function AddExpenseScreen() {
                 key={c.id}
                 activeOpacity={0.75}
                 onPress={() => handleSelectCategory(c.id)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
                 style={{
                   width: '48%',
                   flexGrow: 1,
@@ -365,17 +397,17 @@ export default function AddExpenseScreen() {
                   alignItems: 'center',
                   paddingHorizontal: spacing.sm + 2,
                   paddingVertical: spacing.sm,
-                  borderRadius: radius.sm,
+                  borderRadius: radius.md,
                   backgroundColor: isSelected ? `${c.color}20` : theme.colors.card,
-                  borderWidth: 1,
+                  borderWidth: 1.5,
                   borderColor: isSelected ? c.color : theme.colors.cardBorder,
                   gap: spacing.sm,
                 }}
               >
                 <View
                   style={{
-                    width: 38,
-                    height: 38,
+                    width: 40,
+                    height: 40,
                     borderRadius: radius.sm,
                     backgroundColor: `${c.color}25`,
                     justifyContent: 'center',
@@ -405,16 +437,16 @@ export default function AddExpenseScreen() {
                 {isSelected && (
                   <View
                     style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: radius.sm,
+                      width: 22,
+                      height: 22,
+                      borderRadius: radius.pill,
                       backgroundColor: c.color,
                       justifyContent: 'center',
                       alignItems: 'center',
                       flexShrink: 0,
                     }}
                   >
-                    <Check size={13} color="#FFFFFF" strokeWidth={3} />
+                    <Check size={14} color="#FFFFFF" strokeWidth={3} />
                   </View>
                 )}
               </TouchableOpacity>
@@ -453,14 +485,16 @@ export default function AddExpenseScreen() {
           <TouchableOpacity
             activeOpacity={0.75}
             onPress={() => handleDateModeChange('today')}
+            accessibilityRole="button"
+            accessibilityState={{ selected: dateMode === 'today' }}
             style={{
               flex: 1,
-              minHeight: 52,
+              minHeight: 48,
               justifyContent: 'center',
               alignItems: 'center',
-              borderRadius: radius.sm,
+              borderRadius: radius.pill,
               backgroundColor: dateMode === 'today' ? theme.colors.brand : theme.colors.card,
-              borderWidth: 1,
+              borderWidth: 1.5,
               borderColor: dateMode === 'today' ? theme.colors.brand : theme.colors.cardBorder,
             }}
           >
@@ -481,14 +515,16 @@ export default function AddExpenseScreen() {
           <TouchableOpacity
             activeOpacity={0.75}
             onPress={() => handleDateModeChange('yesterday')}
+            accessibilityRole="button"
+            accessibilityState={{ selected: dateMode === 'yesterday' }}
             style={{
               flex: 1,
-              minHeight: 52,
+              minHeight: 48,
               justifyContent: 'center',
               alignItems: 'center',
-              borderRadius: radius.sm,
+              borderRadius: radius.pill,
               backgroundColor: dateMode === 'yesterday' ? theme.colors.brand : theme.colors.card,
-              borderWidth: 1,
+              borderWidth: 1.5,
               borderColor: dateMode === 'yesterday' ? theme.colors.brand : theme.colors.cardBorder,
             }}
           >
@@ -509,14 +545,16 @@ export default function AddExpenseScreen() {
           <TouchableOpacity
             activeOpacity={0.75}
             onPress={() => handleDateModeChange('custom')}
+            accessibilityRole="button"
+            accessibilityState={{ selected: dateMode === 'custom' }}
             style={{
               flex: 1,
-              minHeight: 52,
+              minHeight: 48,
               justifyContent: 'center',
               alignItems: 'center',
-              borderRadius: radius.sm,
+              borderRadius: radius.pill,
               backgroundColor: dateMode === 'custom' ? theme.colors.brand : theme.colors.card,
-              borderWidth: 1,
+              borderWidth: 1.5,
               borderColor: dateMode === 'custom' ? theme.colors.brand : theme.colors.cardBorder,
             }}
           >
@@ -552,7 +590,7 @@ export default function AddExpenseScreen() {
         )}
       </View>
 
-      {/* Paid By Family Member */}
+      {/* Paid By Family Member - 1-Tap Active Payer Selector */}
       <View style={{ marginBottom: spacing.xl, width: '100%', overflow: 'hidden' }}>
         <Text
           style={{
@@ -578,15 +616,21 @@ export default function AddExpenseScreen() {
                 key={m.id}
                 activeOpacity={0.75}
                 onPress={() => handleSelectMember(m.id)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  minHeight: 52,
+                  minHeight: 48,
                   paddingHorizontal: spacing.md,
-                  borderRadius: radius.sm,
-                  backgroundColor: isSelected ? theme.colors.brandLight : theme.colors.card,
-                  borderWidth: 1,
-                  borderColor: isSelected ? theme.colors.brand : theme.colors.cardBorder,
+                  borderRadius: radius.pill,
+                  backgroundColor: isSelected
+                    ? `${m.color_code}22`
+                    : theme.isDark
+                      ? theme.colors.surfaceContainerHigh
+                      : theme.colors.surfaceSubtle,
+                  borderWidth: 1.5,
+                  borderColor: isSelected ? m.color_code : theme.colors.borderTactile,
                   gap: spacing.sm,
                 }}
               >
@@ -594,19 +638,33 @@ export default function AddExpenseScreen() {
                   name={m.display_name}
                   avatarUrl={m.avatar_url}
                   colorCode={m.color_code}
-                  size="md"
+                  size="sm"
                 />
                 <Text
                   style={{
-                    color: isSelected ? theme.colors.brand : theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.md,
+                    color: isSelected ? m.color_code : theme.colors.textPrimary,
+                    fontSize: typography.fontSizes.sm,
                     fontWeight: isSelected
                       ? typography.fontWeights.heavy
-                      : typography.fontWeights.bold,
+                      : typography.fontWeights.semibold,
                   }}
                 >
                   {m.display_name}
                 </Text>
+                {isSelected && (
+                  <View
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: radius.pill,
+                      backgroundColor: m.color_code,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Check size={11} color="#FFFFFF" strokeWidth={3} />
+                  </View>
+                )}
               </TouchableOpacity>
             );
           })}
@@ -630,18 +688,20 @@ export default function AddExpenseScreen() {
         <TouchableOpacity
           activeOpacity={0.75}
           onPress={() => setShowAdvanced((prev) => !prev)}
+          accessibilityRole="button"
+          accessibilityLabel={showAdvanced ? t.addExpense.fewerOptions : t.addExpense.moreOptions}
           style={{
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
             paddingVertical: spacing.md,
             paddingHorizontal: spacing.lg,
-            minHeight: 56,
-            borderRadius: radius.sm,
+            minHeight: 52,
+            borderRadius: radius.md,
             backgroundColor: theme.isDark
               ? theme.colors.surfaceContainerHigh
               : theme.colors.surfaceSubtle,
-            borderWidth: 1,
+            borderWidth: 1.5,
             borderColor: theme.colors.borderTactile,
           }}
         >
@@ -666,7 +726,7 @@ export default function AddExpenseScreen() {
             style={{
               marginTop: spacing.md,
               padding: spacing.lg,
-              borderRadius: radius.sm,
+              borderRadius: radius.md,
               backgroundColor: theme.colors.card,
               borderWidth: 1,
               borderColor: theme.colors.cardBorder,
@@ -702,10 +762,11 @@ export default function AddExpenseScreen() {
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={handleSave}
+        accessibilityRole="button"
         accessibilityLabel={t.addExpense.saveExpense}
         style={{
-          minHeight: 64,
-          borderRadius: radius.sm,
+          minHeight: 60,
+          borderRadius: radius.md,
           backgroundColor: theme.colors.brand,
           flexDirection: 'row',
           justifyContent: 'center',
@@ -720,11 +781,11 @@ export default function AddExpenseScreen() {
           borderColor: theme.colors.borderSubtle,
         }}
       >
-        <Check size={28} color="#FFFFFF" strokeWidth={3} />
+        <Check size={26} color="#FFFFFF" strokeWidth={3} />
         <Text
           style={{
             color: '#FFFFFF',
-            fontSize: typography.fontSizes.xl,
+            fontSize: typography.fontSizes.lg,
             fontWeight: typography.fontWeights.heavy,
           }}
         >
@@ -736,15 +797,16 @@ export default function AddExpenseScreen() {
       <TouchableOpacity
         activeOpacity={0.75}
         onPress={() => router.replace('/(tabs)/import')}
+        accessibilityRole="button"
         accessibilityLabel={t.addExpense.bulkImportButton}
         style={{
           marginTop: spacing.md,
-          minHeight: 56,
-          borderRadius: radius.sm,
+          minHeight: 52,
+          borderRadius: radius.md,
           backgroundColor: theme.isDark
             ? theme.colors.surfaceContainerHigh
             : theme.colors.surfaceSubtle,
-          borderWidth: 1,
+          borderWidth: 1.5,
           borderColor: theme.colors.borderTactile,
           flexDirection: 'row',
           justifyContent: 'center',
@@ -752,11 +814,11 @@ export default function AddExpenseScreen() {
           gap: spacing.sm,
         }}
       >
-        <FileJson size={20} color={theme.colors.brand} strokeWidth={2.5} />
+        <FileJson size={18} color={theme.colors.brand} strokeWidth={2.5} />
         <Text
           style={{
             color: theme.colors.textPrimary,
-            fontSize: typography.fontSizes.md,
+            fontSize: typography.fontSizes.sm,
             fontWeight: typography.fontWeights.bold,
           }}
         >

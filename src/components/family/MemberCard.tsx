@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, type TextStyle } from 'react-native';
 import { ShieldCheck, User, Eye, ChevronRight, ReceiptText } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
@@ -16,6 +16,11 @@ interface MemberCardProps {
   isCurrentUser?: boolean;
   onSelect?: ((member: FamilyMember) => void) | (() => void);
 }
+
+const TABULAR_NUMS: TextStyle =
+  Platform.OS === 'web'
+    ? ({ fontVariantNumeric: 'tabular-nums' } as unknown as TextStyle)
+    : { fontVariant: ['tabular-nums'] };
 
 export const MemberCard: React.FC<MemberCardProps> = React.memo(
   ({ member, totalSpent, transactionCount, currency = '€', isCurrentUser = false, onSelect }) => {
@@ -63,7 +68,7 @@ export const MemberCard: React.FC<MemberCardProps> = React.memo(
     };
 
     const content = (
-      <Card padding="md" style={{ marginBottom: spacing.sm }}>
+      <Card padding="md" style={{ marginBottom: spacing.sm, minHeight: 64 }}>
         <View
           style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
         >
@@ -130,7 +135,10 @@ export const MemberCard: React.FC<MemberCardProps> = React.memo(
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, flexShrink: 0 }}>
                   <ReceiptText size={11} color={theme.colors.textMuted} />
                   <Text
-                    style={{ color: theme.colors.textMuted, fontSize: typography.fontSizes.xs }}
+                    style={[
+                      { color: theme.colors.textMuted, fontSize: typography.fontSizes.xs },
+                      TABULAR_NUMS,
+                    ]}
                   >
                     {transactionCount}
                   </Text>
@@ -144,11 +152,14 @@ export const MemberCard: React.FC<MemberCardProps> = React.memo(
           >
             <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
               <Text
-                style={{
-                  color: theme.colors.textPrimary,
-                  fontSize: typography.fontSizes.lg,
-                  fontWeight: typography.fontWeights.bold,
-                }}
+                style={[
+                  {
+                    color: theme.colors.textPrimary,
+                    fontSize: typography.fontSizes.lg,
+                    fontWeight: typography.fontWeights.heavy,
+                  },
+                  TABULAR_NUMS,
+                ]}
                 numberOfLines={1}
               >
                 {currency}
