@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, Platform, type TextStyle } from 'react-native';
 import { Users, Plus, Tag, UserPlus } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName } from '@/i18n';
@@ -15,6 +15,11 @@ import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { FamilyMember, Category } from '@/types';
 import { sumBy, toCents, fromCents } from '@/utils/numberParser';
+
+const TABULAR_NUMS: TextStyle =
+  Platform.OS === 'web'
+    ? ({ fontVariantNumeric: 'tabular-nums' } as unknown as TextStyle)
+    : { fontVariant: ['tabular-nums'] };
 
 export default function FamilyScreen() {
   const { theme, spacing, radius, typography } = useTheme();
@@ -79,10 +84,12 @@ export default function FamilyScreen() {
         style={{
           marginBottom: spacing.xl,
           padding: spacing.lg,
-          borderRadius: radius.sm,
+          borderRadius: radius.lg,
           backgroundColor: theme.colors.surface,
           borderWidth: 1,
           borderColor: theme.colors.border,
+          borderTopWidth: 3,
+          borderTopColor: theme.colors.brand,
         }}
       >
         <View
@@ -106,7 +113,7 @@ export default function FamilyScreen() {
               style={{
                 width: 44,
                 height: 44,
-                borderRadius: radius.sm,
+                borderRadius: radius.md,
                 backgroundColor: theme.colors.brandLight,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -275,8 +282,9 @@ export default function FamilyScreen() {
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    minHeight: 64,
                     padding: spacing.md,
-                    borderRadius: radius.xl,
+                    borderRadius: radius.md,
                   }}
                 >
                   <View
@@ -291,9 +299,9 @@ export default function FamilyScreen() {
                   >
                     <View
                       style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: radius.sm,
+                        width: 44,
+                        height: 44,
+                        borderRadius: radius.md,
                         backgroundColor: `${category.color}22`,
                         borderWidth: 1.5,
                         borderColor: `${category.color}35`,
@@ -317,11 +325,14 @@ export default function FamilyScreen() {
                         {getLocalizedCategoryName(category, t)}
                       </Text>
                       <Text
-                        style={{
-                          color: theme.colors.textSecondary,
-                          fontSize: typography.fontSizes.xs,
-                          marginTop: 2,
-                        }}
+                        style={[
+                          {
+                            color: theme.colors.textSecondary,
+                            fontSize: typography.fontSizes.xs,
+                            marginTop: 2,
+                          },
+                          TABULAR_NUMS,
+                        ]}
                         numberOfLines={1}
                       >
                         {catTxs.length} {t.dashboard.txs}
@@ -331,11 +342,14 @@ export default function FamilyScreen() {
 
                   <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
                     <Text
-                      style={{
-                        color: theme.colors.textPrimary,
-                        fontSize: typography.fontSizes.md,
-                        fontWeight: typography.fontWeights.heavy,
-                      }}
+                      style={[
+                        {
+                          color: theme.colors.textPrimary,
+                          fontSize: typography.fontSizes.md,
+                          fontWeight: typography.fontWeights.heavy,
+                        },
+                        TABULAR_NUMS,
+                      ]}
                       numberOfLines={1}
                     >
                       {family.currency}

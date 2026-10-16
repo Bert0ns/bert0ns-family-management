@@ -1,5 +1,12 @@
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, Platform, type ViewStyle } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+  type ViewStyle,
+  type TextStyle,
+} from 'react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName } from '@/i18n';
 import { Expense, Category, FamilyMember } from '@/types';
@@ -12,6 +19,11 @@ interface ExpenseItemProps {
   currency?: string;
   onPress?: ((expense: Expense) => void) | (() => void);
 }
+
+const TABULAR_NUMS: TextStyle =
+  Platform.OS === 'web'
+    ? ({ fontVariantNumeric: 'tabular-nums' } as unknown as TextStyle)
+    : { fontVariant: ['tabular-nums'] };
 
 // Hoist date formatters to prevent allocating Intl instances per render
 const DATE_FORMATTERS: Record<string, Intl.DateTimeFormat> = {
@@ -66,7 +78,7 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = React.memo(
             paddingVertical: spacing.sm + 2,
             paddingHorizontal: spacing.sm + 4,
             backgroundColor: theme.colors.card,
-            borderRadius: radius.sm,
+            borderRadius: radius.md,
             borderWidth: 1,
             borderColor: theme.colors.cardBorder,
             marginBottom: spacing.sm,
@@ -174,11 +186,14 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = React.memo(
           }}
         >
           <Text
-            style={{
-              color: theme.colors.textPrimary,
-              fontSize: typography.fontSizes.lg,
-              fontWeight: typography.fontWeights.heavy,
-            }}
+            style={[
+              {
+                color: theme.colors.textPrimary,
+                fontSize: typography.fontSizes.lg,
+                fontWeight: typography.fontWeights.heavy,
+              },
+              TABULAR_NUMS,
+            ]}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.75}

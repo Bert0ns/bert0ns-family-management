@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Platform, type TextStyle } from 'react-native';
 import { PieChart, Users, TrendingUp, Activity, Calendar } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n } from '@/i18n';
@@ -24,6 +24,11 @@ import { MonthlyTrendChart } from '@/components/charts/MonthlyTrendChart';
 import { DayOfWeekChart } from '@/components/charts/DayOfWeekChart';
 import { PaymentMethodChart } from '@/components/charts/PaymentMethodChart';
 import { CategoryDetailModal } from '@/components/charts/CategoryDetailModal';
+
+const TABULAR_NUMS: TextStyle =
+  Platform.OS === 'web'
+    ? ({ fontVariantNumeric: 'tabular-nums' } as unknown as TextStyle)
+    : { fontVariant: ['tabular-nums'] };
 
 export default function AnalyticsScreen() {
   const { theme, spacing, radius, typography } = useTheme();
@@ -141,15 +146,17 @@ export default function AnalyticsScreen() {
                 paddingHorizontal: spacing.md,
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: radius.sm,
+                borderRadius: radius.pill,
                 backgroundColor: isActive
                   ? theme.colors.brand
                   : theme.isDark
                     ? theme.colors.surfaceContainerHigh
                     : theme.colors.surfaceSubtle,
-                borderWidth: 1,
+                borderWidth: 1.5,
                 borderColor: isActive ? theme.colors.brand : theme.colors.borderTactile,
               }}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isActive }}
               accessibilityLabel={label}
             >
               <TabIcon
@@ -215,7 +222,7 @@ export default function AnalyticsScreen() {
                 {t.analytics.noMerchantData}
               </Text>
             ) : (
-              <View style={{ gap: spacing.sm }}>
+              <View style={{ gap: spacing.xs }}>
                 {topMerchants.map((m, idx) => (
                   <View
                     key={m.name}
@@ -223,7 +230,9 @@ export default function AnalyticsScreen() {
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      paddingVertical: spacing.xs,
+                      paddingVertical: spacing.sm,
+                      borderBottomWidth: idx < topMerchants.length - 1 ? 1 : 0,
+                      borderBottomColor: theme.colors.borderSubtle,
                     }}
                   >
                     <View
@@ -236,17 +245,33 @@ export default function AnalyticsScreen() {
                         marginRight: spacing.sm,
                       }}
                     >
-                      <Text
+                      <View
                         style={{
-                          color: theme.colors.textMuted,
-                          fontSize: typography.fontSizes.sm,
-                          fontWeight: typography.fontWeights.bold,
-                          width: 24,
-                          flexShrink: 0,
+                          width: 26,
+                          height: 26,
+                          borderRadius: radius.pill,
+                          backgroundColor: theme.isDark
+                            ? theme.colors.surfaceContainerHigh
+                            : theme.colors.surfaceSubtle,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderWidth: 1,
+                          borderColor: theme.colors.borderTactile,
                         }}
                       >
-                        #{idx + 1}
-                      </Text>
+                        <Text
+                          style={[
+                            {
+                              color: theme.colors.textMuted,
+                              fontSize: typography.fontSizes.xs,
+                              fontWeight: typography.fontWeights.bold,
+                            },
+                            TABULAR_NUMS,
+                          ]}
+                        >
+                          {idx + 1}
+                        </Text>
+                      </View>
                       <Text
                         style={{
                           color: theme.colors.textPrimary,
@@ -261,12 +286,15 @@ export default function AnalyticsScreen() {
                       </Text>
                     </View>
                     <Text
-                      style={{
-                        color: theme.colors.textPrimary,
-                        fontSize: typography.fontSizes.sm,
-                        fontWeight: typography.fontWeights.bold,
-                        flexShrink: 0,
-                      }}
+                      style={[
+                        {
+                          color: theme.colors.textPrimary,
+                          fontSize: typography.fontSizes.sm,
+                          fontWeight: typography.fontWeights.heavy,
+                          flexShrink: 0,
+                        },
+                        TABULAR_NUMS,
+                      ]}
                       numberOfLines={1}
                     >
                       {family.currency}
