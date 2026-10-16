@@ -1,5 +1,5 @@
 import { uiLogger } from '@/services/logger';
-import { useState, useRef } from 'react';
+import { useState, useRef, type ComponentRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -66,7 +66,7 @@ export default function AddExpenseScreen() {
     category?: string;
   }>({});
 
-  const amountInputRef = useRef<TextInput>(null);
+  const amountInputRef = useRef<ComponentRef<typeof TextInput>>(null);
 
   // Derived state ensures robust default fallback even if store hydration finishes after initial mount
   const activeCategoryId = selectedCategoryId || categories[0]?.id || 'cat_groceries';

@@ -201,7 +201,7 @@ describe('authService', () => {
       expect(AsyncStorage.removeItem).not.toHaveBeenCalledWith(STORE_STORAGE_KEY);
 
       // Sync outbox & metadata ARE purged to avoid replay into new households
-      expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(
+      expect(AsyncStorage.removeMany).toHaveBeenCalledWith(
         expect.arrayContaining(['@bert0ns_sync_outbox', '@bert0ns_last_sync_timestamp']),
       );
     });
@@ -221,7 +221,7 @@ describe('authService', () => {
 
       expect(useAppStore.getState().expenses.length).toBe(initialExpenseCount);
       expect(AsyncStorage.removeItem).not.toHaveBeenCalledWith(STORE_STORAGE_KEY);
-      expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(
+      expect(AsyncStorage.removeMany).toHaveBeenCalledWith(
         expect.arrayContaining(['@bert0ns_sync_outbox', '@bert0ns_last_sync_timestamp']),
       );
     });
@@ -248,7 +248,7 @@ describe('authService', () => {
 
       // AsyncStorage is purged of previous family data and sync queues
       expect(AsyncStorage.removeItem).toHaveBeenCalledWith(STORE_STORAGE_KEY);
-      expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(
+      expect(AsyncStorage.removeMany).toHaveBeenCalledWith(
         expect.arrayContaining(['@bert0ns_sync_outbox', '@bert0ns_last_sync_timestamp']),
       );
     });
