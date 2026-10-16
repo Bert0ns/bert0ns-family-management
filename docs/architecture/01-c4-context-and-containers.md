@@ -144,25 +144,25 @@ flowchart TB
 
 ### 4.1 Presentation & Routing Layer
 
-- **Technology:** [Expo Router ^57.0.21](file:///home/berto/bert0ns-family-management/package.json#L21), React Native 0.86.3, React 19.2.3.
+- **Technology:** [Expo Router ^57.0.21](file:///home/berto/family-management/package.json#L21), React Native 0.86.3, React 19.2.3.
 - **Responsibilities:** Renders the responsive UI shell across mobile screens and desktop viewports. Mounts the tab hierarchy (`/(tabs)`) and modal stack routes (`/expense/add`).
-- **Communication Contract:** Consumes selectors from [`useAppStore`](file:///home/berto/bert0ns-family-management/src/services/store.ts#L152) and invokes pure functional calculation engines for chart visualizations.
+- **Communication Contract:** Consumes selectors from [`useAppStore`](file:///home/berto/family-management/src/services/store.ts#L152) and invokes pure functional calculation engines for chart visualizations.
 
 ### 4.2 Reactive State & Domain Logic Layer
 
-- **Technology:** [Zustand ^5.0.15](file:///home/berto/bert0ns-family-management/package.json#L31), TypeScript ~6.0.3.
+- **Technology:** [Zustand ^5.0.15](file:///home/berto/family-management/package.json#L31), TypeScript ~6.0.3.
 - **Responsibilities:** Maintains single-source-of-truth state for expenses, family members, categories, active filters, and outbox synchronization events.
-- **Communication Contract:** Dispatches immutable state transitions, executes listeners registered via [`registerStoreMutationListener`](file:///home/berto/bert0ns-family-management/src/services/store.ts#L112-L125), and persists changes through AsyncStorage.
+- **Communication Contract:** Dispatches immutable state transitions, executes listeners registered via [`registerStoreMutationListener`](file:///home/berto/family-management/src/services/store.ts#L112-L125), and persists changes through AsyncStorage.
 
 ### 4.3 Integration & Synchronization Layer
 
-- **Technology:** [`@supabase/supabase-js ^2.114.0`](file:///home/berto/bert0ns-family-management/package.json#L10).
-- **Responsibilities:** Manages the offline-first queue ([`syncEngine`](file:///home/berto/bert0ns-family-management/src/services/syncEngine.ts#L36)), executes conflict resolution using Last-Write-Wins timestamps, and maintains the active WebSocket channel ([`realtimeSync`](file:///home/berto/bert0ns-family-management/src/services/realtimeSync.ts#L10)).
+- **Technology:** [`@supabase/supabase-js ^2.114.0`](file:///home/berto/family-management/package.json#L10).
+- **Responsibilities:** Manages the offline-first queue ([`syncEngine`](file:///home/berto/family-management/src/services/syncEngine.ts#L36)), executes conflict resolution using Last-Write-Wins timestamps, and maintains the active WebSocket channel ([`realtimeSync`](file:///home/berto/family-management/src/services/realtimeSync.ts#L10)).
 - **Communication Contract:** Communicates with Supabase using HTTPS REST (PostgREST) and WebSocket WSS (Supabase Realtime).
 
 ### 4.4 Local Sandboxed Storage Container
 
-- **Technology:** [`@react-native-async-storage/async-storage 2.2.0`](file:///home/berto/bert0ns-family-management/package.json#L8), `expo-file-system`.
+- **Technology:** [`@react-native-async-storage/async-storage 2.2.0`](file:///home/berto/family-management/package.json#L8), `expo-file-system`.
 - **Responsibilities:** Persists local serialized state snapshots across app lifecycles, maintaining outbox mutation queues and temporary export files.
 - **Communication Contract:** Asynchronous key-value I/O via native Android SQLite/SharedPreferences and iOS SQLite/NSUserDefaults bridges.
 

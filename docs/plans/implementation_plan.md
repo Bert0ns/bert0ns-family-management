@@ -2,7 +2,7 @@
 
 ## 1. Overview & Context
 
-This implementation plan bridges the remaining feature gaps identified between [design.md](file:///home/berto/bert0ns-family-management/design.md) and the initial MVP scaffold. All implementations adhere strictly to **SOLID principles**, utilize typed React Native `StyleSheet` tokens without Tailwind, and include full Jest unit test coverage.
+This implementation plan bridges the remaining feature gaps identified between [design.md](file:///home/berto/family-management/design.md) and the initial MVP scaffold. All implementations adhere strictly to **SOLID principles**, utilize typed React Native `StyleSheet` tokens without Tailwind, and include full Jest unit test coverage.
 
 ---
 

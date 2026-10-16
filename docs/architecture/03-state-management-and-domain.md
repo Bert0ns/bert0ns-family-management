@@ -1,6 +1,6 @@
 ### 5.3 Historical Monthly Trends & Rolling Average Algorithm
 
-In [`AnalyticsCalculator.calculateHistoricalMonthlyTrends`](file:///home/berto/bert0ns-family-management/src/services/analytics.ts#L300-L360), cash flow trends are evaluated over a chronological multi-month sliding window (default 6 months):
+In [`AnalyticsCalculator.calculateHistoricalMonthlyTrends`](file:///home/berto/family-management/src/services/analytics.ts#L300-L360), cash flow trends are evaluated over a chronological multi-month sliding window (default 6 months):
 
 1. **Window Generation:** Computes $K$ chronological `YYYY-MM` periods terminating at the selected period $T$.
 2. **MoM Percentage Growth:** For month $i > 0$:

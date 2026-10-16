@@ -51,7 +51,7 @@ pnpm format:check
 
 #### 1.1 [Important] CSV Download on Mobile is a Silent No-Op
 
-- **File:** [`src/services/csvExporter.ts:52-64`](file:///home/berto/bert0ns-family-management/src/services/csvExporter.ts#L52-L64) & [`src/app/(tabs)/import.tsx:78-82`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/import.tsx#L78-L82>)
+- **File:** [`src/services/csvExporter.ts:52-64`](file:///home/berto/family-management/src/services/csvExporter.ts#L52-L64) & [`src/app/(tabs)/import.tsx:78-82`](<file:///home/berto/family-management/src/app/(tabs)/import.tsx#L78-L82>)
 - **Problem:** `downloadCsv` checks `if (typeof document !== 'undefined')`. In native React Native runtime (iOS/Android), `document` is `undefined`. Consequently, tapping "Export CSV" on mobile performs a silent no-op without exporting the file or notifying the user.
 - **Remediation:** Align with JSON export behavior or integrate `expo-file-system` / `expo-sharing` for true cross-platform file saving and native share sheets:
   ```typescript
@@ -70,9 +70,9 @@ pnpm format:check
 #### 1.2 [Important] Date Formatters Ignore Selected In-App Locale
 
 - **Files:**
-  - [`src/components/common/PeriodSelector.tsx:21`](file:///home/berto/bert0ns-family-management/src/components/common/PeriodSelector.tsx#L21)
-  - [`src/components/ledger/ExpenseItem.tsx:31`](file:///home/berto/bert0ns-family-management/src/components/ledger/ExpenseItem.tsx#L31)
-  - [`src/components/ledger/ExpenseDetailModal.tsx:216`](file:///home/berto/bert0ns-family-management/src/components/ledger/ExpenseDetailModal.tsx#L216)
+  - [`src/components/common/PeriodSelector.tsx:21`](file:///home/berto/family-management/src/components/common/PeriodSelector.tsx#L21)
+  - [`src/components/ledger/ExpenseItem.tsx:31`](file:///home/berto/family-management/src/components/ledger/ExpenseItem.tsx#L31)
+  - [`src/components/ledger/ExpenseDetailModal.tsx:216`](file:///home/berto/family-management/src/components/ledger/ExpenseDetailModal.tsx#L216)
 - **Problem:** Date formatting calls use `toLocaleDateString(undefined, ...)`, which falls back to device OS locale instead of the user's selected in-app language (`locale` from `useI18n()`). When a user switches to Italian (`it`), months and weekdays remain in English if the device OS is English.
 - **Remediation:** Pass the active locale code to `toLocaleDateString`:
   ```typescript
@@ -86,7 +86,7 @@ pnpm format:check
 
 #### 1.3 [Consider] False-Positive Duplicate Risk with Short Merchant Substrings
 
-- **File:** [`src/services/duplicateDetector.ts:27-30`](file:///home/berto/bert0ns-family-management/src/services/duplicateDetector.ts#L27-L30)
+- **File:** [`src/services/duplicateDetector.ts:27-30`](file:///home/berto/family-management/src/services/duplicateDetector.ts#L27-L30)
 - **Problem:** Substring matching (`expMerchantClean.includes(candidateMerchantClean) || candidateMerchantClean.includes(...)`) can trigger false duplicate flags if merchant names are short common words (e.g. "Bar", "Co", "Spa", "Eni") matching longer unrelated merchants on the same date with the same amount.
 - **Remediation:** Require a minimum length threshold for substring matching or calculate Levenshtein distance:
   ```typescript
@@ -100,15 +100,15 @@ pnpm format:check
 
 ### Axis 2: Readability & Simplicity
 
-- **Translation Dictionary Structure:** Both [`src/i18n/en.ts`](file:///home/berto/bert0ns-family-management/src/i18n/en.ts) and [`src/i18n/it.ts`](file:///home/berto/bert0ns-family-management/src/i18n/it.ts) implement the complete `TranslationSchema` with 100% key parity and zero untranslated fallbacks.
-- **Component Decomposition:** Modals ([`AddCategoryModal`](file:///home/berto/bert0ns-family-management/src/components/family/AddCategoryModal.tsx), [`AddMemberModal`](file:///home/berto/bert0ns-family-management/src/components/family/AddMemberModal.tsx), [`EditBudgetModal`](file:///home/berto/bert0ns-family-management/src/components/family/EditBudgetModal.tsx), [`SplitCalculator`](file:///home/berto/bert0ns-family-management/src/components/ledger/SplitCalculator.tsx)) are cleanly extracted and easily readable in under 200 lines each.
+- **Translation Dictionary Structure:** Both [`src/i18n/en.ts`](file:///home/berto/family-management/src/i18n/en.ts) and [`src/i18n/it.ts`](file:///home/berto/family-management/src/i18n/it.ts) implement the complete `TranslationSchema` with 100% key parity and zero untranslated fallbacks.
+- **Component Decomposition:** Modals ([`AddCategoryModal`](file:///home/berto/family-management/src/components/family/AddCategoryModal.tsx), [`AddMemberModal`](file:///home/berto/family-management/src/components/family/AddMemberModal.tsx), [`EditBudgetModal`](file:///home/berto/family-management/src/components/family/EditBudgetModal.tsx), [`SplitCalculator`](file:///home/berto/family-management/src/components/ledger/SplitCalculator.tsx)) are cleanly extracted and easily readable in under 200 lines each.
 - **No Dead Code:** No obsolete variables or orphan styles detected.
 
 ---
 
 ### Axis 3: Architecture & Design Patterns
 
-- **Context Hierarchy:** In [`src/app/_layout.tsx`](file:///home/berto/bert0ns-family-management/src/app/_layout.tsx), `<I18nProvider>` correctly wraps `<ThemeProvider>`, allowing theme labels and navigation options to consume translations reactively.
+- **Context Hierarchy:** In [`src/app/_layout.tsx`](file:///home/berto/family-management/src/app/_layout.tsx), `<I18nProvider>` correctly wraps `<ThemeProvider>`, allowing theme labels and navigation options to consume translations reactively.
 - **Single Responsibility Principle (SRP):** New business services (`csvExporter.ts` and `duplicateDetector.ts`) are encapsulated into standalone classes with dedicated unit test suites.
 - **Zustand Store Actions:** State transitions for adding members, custom categories, updating category budget envelopes, and applying multi-criteria sort options (`date_desc`, `date_asc`, `amount_desc`, `amount_asc`) are handled immutably.
 
@@ -132,12 +132,12 @@ pnpm format:check
 
 ## 4. Prioritized Action Plan
 
-| Priority      | Item                                                               | Location                                                                                                                                   | Effort |
-| :------------ | :----------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------- | :----: |
-| **Important** | Add mobile fallback for CSV export dialog                          | [`src/app/(tabs)/import.tsx:78`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/import.tsx#L78>)                             | 5 min  |
-| **Important** | Bind active `locale` to `toLocaleDateString` formatters            | [`src/components/common/PeriodSelector.tsx:21`](file:///home/berto/bert0ns-family-management/src/components/common/PeriodSelector.tsx#L21) | 10 min |
-| **Consider**  | Add minimum length guard for merchant duplicate substring matching | [`src/services/duplicateDetector.ts:27`](file:///home/berto/bert0ns-family-management/src/services/duplicateDetector.ts#L27)               | 5 min  |
-| **Nit**       | Add dedicated `__tests__/i18n.test.ts` to verify 1:1 key parity    | `__tests__/i18n.test.ts`                                                                                                                   | 10 min |
+| Priority      | Item                                                               | Location                                                                                                                           | Effort |
+| :------------ | :----------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------- | :----: |
+| **Important** | Add mobile fallback for CSV export dialog                          | [`src/app/(tabs)/import.tsx:78`](<file:///home/berto/family-management/src/app/(tabs)/import.tsx#L78>)                             | 5 min  |
+| **Important** | Bind active `locale` to `toLocaleDateString` formatters            | [`src/components/common/PeriodSelector.tsx:21`](file:///home/berto/family-management/src/components/common/PeriodSelector.tsx#L21) | 10 min |
+| **Consider**  | Add minimum length guard for merchant duplicate substring matching | [`src/services/duplicateDetector.ts:27`](file:///home/berto/family-management/src/services/duplicateDetector.ts#L27)               | 5 min  |
+| **Nit**       | Add dedicated `__tests__/i18n.test.ts` to verify 1:1 key parity    | `__tests__/i18n.test.ts`                                                                                                           | 10 min |
 
 ---
 

@@ -53,7 +53,7 @@ flowchart TB
 
 ## 2. Database Schema & Multi-Tenant RLS Policy Catalog
 
-The complete relational schema is declared in [`src/data/supabase_schema.sql`](file:///home/berto/bert0ns-family-management/src/data/supabase_schema.sql#L1-L220). Multi-tenancy is enforced strictly at the database engine level via PostgreSQL Row-Level Security (RLS).
+The complete relational schema is declared in [`src/data/supabase_schema.sql`](file:///home/berto/family-management/src/data/supabase_schema.sql#L1-L220). Multi-tenancy is enforced strictly at the database engine level via PostgreSQL Row-Level Security (RLS).
 
 ### 2.1 Entity Relationship Catalog
 
@@ -102,7 +102,7 @@ WITH CHECK (public.is_member_of_family(family_id));
 
 ## 3. Offline-First Synchronization Architecture
 
-The synchronization engine ([`src/services/syncEngine.ts`](file:///home/berto/bert0ns-family-management/src/services/syncEngine.ts#L1-L240)) implements an asynchronous outbox queue pattern backed by AsyncStorage.
+The synchronization engine ([`src/services/syncEngine.ts`](file:///home/berto/family-management/src/services/syncEngine.ts#L1-L240)) implements an asynchronous outbox queue pattern backed by AsyncStorage.
 
 ```mermaid
 flowchart TB
@@ -251,7 +251,7 @@ flowchart TB
 
 ## 7. Architectural Gaps & Technical Debt
 
-1. **Missing Exponential Retry Backoff:** When network requests fail in [`syncEngine.ts`](file:///home/berto/bert0ns-family-management/src/services/syncEngine.ts#L120-L160), failed mutations are retried immediately on the next trigger rather than utilizing randomized exponential backoff with jitter.
+1. **Missing Exponential Retry Backoff:** When network requests fail in [`syncEngine.ts`](file:///home/berto/family-management/src/services/syncEngine.ts#L120-L160), failed mutations are retried immediately on the next trigger rather than utilizing randomized exponential backoff with jitter.
 2. **WebSocket Heartbeat Reconnection:** If a client enters deep background execution on iOS, the WebSocket connection silently terminates; upon returning to foreground, reconnection depends on user interaction rather than automatic app lifecycle hooks.
 3. **Soft Delete Tombstones:** Expenses deleted remotely are removed immediately without retaining tombstone records, which can cause resurrected items if an offline device flushes an outdated update.
 

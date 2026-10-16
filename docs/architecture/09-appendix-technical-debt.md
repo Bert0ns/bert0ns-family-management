@@ -64,27 +64,27 @@ flowchart TB
 
 - **Target Deadline:** Immediate Sprint (Sprint 1)
 - **Primary Objectives:**
-  1. Add `deleted_at TIMESTAMPTZ NULL` column to `expenses` and `settlements` in `src/data/supabase_schema.sql`. Update [`syncEngine.ts`](file:///home/berto/bert0ns-family-management/src/services/syncEngine.ts) to push soft-deletes and filter out tombstones during query operations.
-  2. Implement an exponential backoff decorator in [`syncEngine.ts`](file:///home/berto/bert0ns-family-management/src/services/syncEngine.ts) calculating retry delays:
+  1. Add `deleted_at TIMESTAMPTZ NULL` column to `expenses` and `settlements` in `src/data/supabase_schema.sql`. Update [`syncEngine.ts`](file:///home/berto/family-management/src/services/syncEngine.ts) to push soft-deletes and filter out tombstones during query operations.
+  2. Implement an exponential backoff decorator in [`syncEngine.ts`](file:///home/berto/family-management/src/services/syncEngine.ts) calculating retry delays:
 
      $$\Delta t = \min(t_{\text{max}}, t_{\text{base}} \times 2^{\text{retry\_count}}) \pm \text{jitter}$$
 
-  3. Register an `AppState.addEventListener('change', ...)` handler in [`realtimeSync.ts`](file:///home/berto/bert0ns-family-management/src/services/realtimeSync.ts) to verify WebSocket channel health and reconnect upon transitioning from `background` to `active`.
+  3. Register an `AppState.addEventListener('change', ...)` handler in [`realtimeSync.ts`](file:///home/berto/family-management/src/services/realtimeSync.ts) to verify WebSocket channel health and reconnect upon transitioning from `background` to `active`.
 
 ### Milestone 2: Scalability & Performance Optimization
 
 - **Target Deadline:** Medium-Term Sprint (Sprint 2)
 - **Primary Objectives:**
-  1. Replace `FlatList` with `@shopify/flash-list` in [`src/app/(tabs)/ledger.tsx`](<file:///home/berto/bert0ns-family-management/src/app/(tabs)/ledger.tsx>) with estimated cell sizing (`estimatedItemSize={72}`).
-  2. Implement a temporal partitioner in [`useAppStore`](file:///home/berto/bert0ns-family-management/src/services/store.ts) allowing historical expenses ($> 1\text{ year}$) to be moved into a secondary local store or fetched on demand.
-  3. Replace currency formatting helpers with `new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' })` in [`src/theme/tokens.ts`](file:///home/berto/bert0ns-family-management/src/theme/tokens.ts).
-  4. Schedule a background sweep in [`src/services/fileExporter.ts`](file:///home/berto/bert0ns-family-management/src/services/fileExporter.ts) removing cached export files with creation dates exceeding 24 hours.
+  1. Replace `FlatList` with `@shopify/flash-list` in [`src/app/(tabs)/ledger.tsx`](<file:///home/berto/family-management/src/app/(tabs)/ledger.tsx>) with estimated cell sizing (`estimatedItemSize={72}`).
+  2. Implement a temporal partitioner in [`useAppStore`](file:///home/berto/family-management/src/services/store.ts) allowing historical expenses ($> 1\text{ year}$) to be moved into a secondary local store or fetched on demand.
+  3. Replace currency formatting helpers with `new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' })` in [`src/theme/tokens.ts`](file:///home/berto/family-management/src/theme/tokens.ts).
+  4. Schedule a background sweep in [`src/services/fileExporter.ts`](file:///home/berto/family-management/src/services/fileExporter.ts) removing cached export files with creation dates exceeding 24 hours.
 
 ### Milestone 3: Observability & Platform Expansion
 
 - **Target Deadline:** Long-Term Roadmap (Sprint 3)
 - **Primary Objectives:**
-  1. Add an optional remote error transport to [`src/services/logger.ts`](file:///home/berto/bert0ns-family-management/src/services/logger.ts) that reports warnings and errors when `process.env.EXPO_PUBLIC_SENTRY_DSN` is configured.
+  1. Add an optional remote error transport to [`src/services/logger.ts`](file:///home/berto/family-management/src/services/logger.ts) that reports warnings and errors when `process.env.EXPO_PUBLIC_SENTRY_DSN` is configured.
   2. Author and register an offline Service Worker (`public/sw.js`) with push and notificationclick listeners to support desktop web browser notifications.
   3. Configure a Maestro UI flow in `.github/workflows/ci.yml` executing simulated add expense and split calculation user flows.
 

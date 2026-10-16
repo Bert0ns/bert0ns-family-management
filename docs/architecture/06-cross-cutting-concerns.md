@@ -9,7 +9,7 @@
 
 ## 1. Scoped Telemetry & Structured Logging Architecture
 
-Application-wide diagnostics and auditing are unified under a zero-cost abstraction built on top of `react-native-logs` in [`src/services/logger.ts`](file:///home/berto/bert0ns-family-management/src/services/logger.ts#L1-L60).
+Application-wide diagnostics and auditing are unified under a zero-cost abstraction built on top of `react-native-logs` in [`src/services/logger.ts`](file:///home/berto/family-management/src/services/logger.ts#L1-L60).
 
 ```mermaid
 flowchart TB
@@ -56,7 +56,7 @@ flowchart TB
 
 ## 2. Theme System & Design Token Hierarchy
 
-Visual styling is driven by a comprehensive token system declared in [`src/theme/tokens.ts`](file:///home/berto/bert0ns-family-management/src/theme/tokens.ts#L1-L150) and provided to the component tree via [`ThemeContext.tsx`](file:///home/berto/bert0ns-family-management/src/theme/ThemeContext.tsx#L1-L80).
+Visual styling is driven by a comprehensive token system declared in [`src/theme/tokens.ts`](file:///home/berto/family-management/src/theme/tokens.ts#L1-L150) and provided to the component tree via [`ThemeContext.tsx`](file:///home/berto/family-management/src/theme/ThemeContext.tsx#L1-L80).
 
 ```mermaid
 flowchart TB
@@ -98,7 +98,7 @@ flowchart TB
 
 ## 3. Internationalization (i18n) Engine
 
-The application delivers complete bidirectional localization for English (`en`) and Italian (`it`) through [`src/i18n/`](file:///home/berto/bert0ns-family-management/src/i18n/index.ts#L1-L10).
+The application delivers complete bidirectional localization for English (`en`) and Italian (`it`) through [`src/i18n/`](file:///home/berto/family-management/src/i18n/index.ts#L1-L10).
 
 ```mermaid
 flowchart TB
@@ -129,7 +129,7 @@ flowchart TB
 
 ### Dynamic Category Localization
 
-Because categories can be custom-created by users or provided by system defaults, [`src/i18n/categories.ts`](file:///home/berto/bert0ns-family-management/src/i18n/categories.ts#L1-L45) provides a deterministic mapping function:
+Because categories can be custom-created by users or provided by system defaults, [`src/i18n/categories.ts`](file:///home/berto/family-management/src/i18n/categories.ts#L1-L45) provides a deterministic mapping function:
 
 ```typescript
 export function getCategoryTranslationKey(categoryName: string): TranslationKey | null {
@@ -144,7 +144,7 @@ If a category name matches a known system identifier, it resolves to the localiz
 
 ## 4. Schema Validation & Data Integrity
 
-Data integrity is guarded at the application boundary using **Zod** in [`src/services/validator.ts`](file:///home/berto/bert0ns-family-management/src/services/validator.ts#L1-L40) and heuristic token matching in [`src/services/duplicateDetector.ts`](file:///home/berto/bert0ns-family-management/src/services/duplicateDetector.ts#L1-L85).
+Data integrity is guarded at the application boundary using **Zod** in [`src/services/validator.ts`](file:///home/berto/family-management/src/services/validator.ts#L1-L40) and heuristic token matching in [`src/services/duplicateDetector.ts`](file:///home/berto/family-management/src/services/duplicateDetector.ts#L1-L85).
 
 ```mermaid
 flowchart TB
