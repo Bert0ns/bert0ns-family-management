@@ -46,6 +46,12 @@ export const en: TranslationSchema = {
     thisMonthSpending: 'This Month Spending',
     bulkImportButton: 'Bulk Import Expenses',
     ofTotal: 'of total',
+    payingAs: 'Paying as',
+    whereMoneyWent: 'Where the Money Went',
+    whoPaidWhat: 'Who Paid What',
+    vsLastMonth: 'vs. last month',
+    tapToFilter: 'Tap any item to filter ledger',
+    addFirstExpense: 'Log First Expense',
   },
   analytics: {
     categoriesTab: 'Categories',
