@@ -5,6 +5,13 @@ const expoConfig = require('eslint-config-expo/flat');
 module.exports = defineConfig([
   expoConfig,
   {
+    settings: {
+      react: {
+        version: '19.3',
+      },
+    },
+  },
+  {
     ignores: [
       'dist/**',
       '.expo/**',

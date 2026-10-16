@@ -47,7 +47,7 @@
     "prettier": "^3.9.10",
     "supabase": "^2.121.0",
     "ts-jest": "^29.4.15",
-    "typescript": "~7.0.2"
+    "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",

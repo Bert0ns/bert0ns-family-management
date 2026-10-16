@@ -18,9 +18,8 @@ module.exports = {
         tsconfig: {
           strict: true,
           ignoreDeprecations: '6.0',
-          baseUrl: '.',
           paths: {
-            '@/*': ['src/*'],
+            '@/*': ['./src/*'],
           },
         },
       },
