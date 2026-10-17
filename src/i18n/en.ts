@@ -36,6 +36,7 @@ export const en: TranslationSchema = {
     burnRatePerDay: 'Burn rate per day',
     monthForecast: 'Month Forecast',
     projectedSpend: 'Projected monthly spend',
+    topSpender: 'Top Spender',
     familyMembers: 'Family Members',
     recentExpenses: 'Recent Expenses',
     viewAll: 'View All',
