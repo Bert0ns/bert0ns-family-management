@@ -238,6 +238,10 @@ export interface TranslationSchema {
     themeLight: string;
     themeDark: string;
     themeSystem: string;
+    readabilityMode: string;
+    readabilityDescription: string;
+    readabilityStandard: string;
+    readabilitySenior: string;
     languageLabel: string;
     english: string;
     italian: string;

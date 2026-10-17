@@ -40,7 +40,14 @@ export const Badge: React.FC<BadgeProps> = ({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: variant === 'outline' ? primaryColor : theme.colors.borderSubtle,
+    borderColor:
+      variant === 'outline'
+        ? primaryColor
+        : variant === 'solid'
+          ? primaryColor
+          : color
+            ? `${primaryColor}40`
+            : theme.colors.borderTactile,
     gap: spacing.xs,
     alignSelf: 'flex-start',
     maxWidth: '100%',
@@ -48,8 +55,11 @@ export const Badge: React.FC<BadgeProps> = ({
 
   const textStyle: TextStyle = {
     color: textColor,
-    fontSize: size === 'sm' ? typography.fontSizes.xs : typography.fontSizes.sm,
-    fontWeight: typography.fontWeights.semibold,
+    fontSize: Math.max(
+      typography.fontSizes.xs,
+      size === 'sm' ? typography.fontSizes.xs : typography.fontSizes.sm,
+    ),
+    fontWeight: typography.fontWeights.bold,
     flexShrink: 1,
   };
 

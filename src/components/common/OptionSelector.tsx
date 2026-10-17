@@ -24,7 +24,7 @@ export function OptionSelector<T extends string | number>({
   onSelect,
   style,
 }: OptionSelectorProps<T>) {
-  const { theme, spacing, radius, typography } = useTheme();
+  const { theme, spacing, radius, typography, touchTargets } = useTheme();
 
   return (
     <View style={style}>
@@ -77,7 +77,7 @@ export function OptionSelector<T extends string | number>({
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               style={{
                 flex: 1,
-                minHeight: 48,
+                minHeight: Math.max(48, touchTargets.sm),
                 paddingVertical: spacing.xs + 2,
                 paddingHorizontal: spacing.xs,
                 alignItems: 'center',
@@ -86,7 +86,7 @@ export function OptionSelector<T extends string | number>({
                 backgroundColor: isSelected
                   ? (theme.colors.dockActivePill ?? theme.colors.card)
                   : 'transparent',
-                borderWidth: isSelected ? 1.5 : 0,
+                borderWidth: 1.5,
                 borderColor: isSelected
                   ? (theme.colors.dockActiveBorder ?? theme.colors.borderTactile)
                   : 'transparent',
@@ -101,7 +101,7 @@ export function OptionSelector<T extends string | number>({
                     : typography.fontWeights.medium,
                   textAlign: 'center',
                 }}
-                numberOfLines={1}
+                numberOfLines={2}
                 adjustsFontSizeToFit
                 minimumFontScale={0.75}
               >
@@ -116,7 +116,7 @@ export function OptionSelector<T extends string | number>({
                     fontWeight: typography.fontWeights.medium,
                     textAlign: 'center',
                   }}
-                  numberOfLines={1}
+                  numberOfLines={2}
                   adjustsFontSizeToFit
                   minimumFontScale={0.75}
                 >

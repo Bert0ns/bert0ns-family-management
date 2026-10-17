@@ -35,6 +35,7 @@ import { ExpenseItem } from '@/components/ledger/ExpenseItem';
 import { ExpenseDetailModal } from '@/components/ledger/ExpenseDetailModal';
 import { EditExpenseModal } from '@/components/ledger/EditExpenseModal';
 import { Expense } from '@/types';
+import { useTabScroll } from '@/context/TabScrollContext';
 
 const TABULAR_NUMS: TextStyle =
   Platform.OS === 'web'
@@ -71,6 +72,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { theme, spacing, radius, typography } = useTheme();
   const { t, locale } = useI18n();
+  const { handleTabScroll } = useTabScroll();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [selectedExpenseForEdit, setSelectedExpenseForEdit] = useState<Expense | null>(null);
@@ -225,6 +227,8 @@ export default function DashboardScreen() {
       }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       showsVerticalScrollIndicator={false}
+      onScroll={handleTabScroll}
+      scrollEventThrottle={16}
     >
       {/* 1. Household Masthead */}
       <View

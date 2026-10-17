@@ -135,8 +135,8 @@ export const LightTheme = {
     borderSubtle: 'rgba(0, 0, 0, 0.06)',
     borderTactile: '#C2C9BD',
     textPrimary: '#1B211E',
-    textSecondary: '#4E5852',
-    textMuted: '#576579',
+    textSecondary: '#333D38',
+    textMuted: '#475569',
     textInverse: '#FFFFFF',
     success: '#2D6A4F',
     successBg: 'rgba(45, 106, 79, 0.1)',
@@ -221,6 +221,32 @@ export const DarkTheme = {
 
 export type Theme = typeof LightTheme;
 
+export const SeniorLightTheme: Theme = {
+  ...LightTheme,
+  colors: {
+    ...LightTheme.colors,
+    textPrimary: '#000000',
+    textSecondary: '#1E293B',
+    textMuted: '#334155',
+    border: '#94A3B8',
+    cardBorder: '#94A3B8',
+    borderTactile: '#64748B',
+  },
+};
+
+export const SeniorDarkTheme: Theme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    textPrimary: '#FFFFFF',
+    textSecondary: '#E2E8F0',
+    textMuted: '#CBD5E1',
+    border: '#475569',
+    cardBorder: '#475569',
+    borderTactile: '#64748B',
+  },
+};
+
 export const Spacing = {
   xxs: 2,
   xs: 4,
@@ -253,9 +279,16 @@ export const TouchTargets = {
   xl: 72,
 };
 
+export const SeniorTouchTargets: typeof TouchTargets = {
+  sm: 54,
+  md: 62,
+  lg: 70,
+  xl: 78,
+};
+
 export const Typography = {
   fontSizes: {
-    xs: 12,
+    xs: 13,
     sm: 14,
     md: 16,
     lg: 18,
@@ -279,6 +312,35 @@ export const Typography = {
     normal: 1.4,
     relaxed: 1.5,
     loose: 1.7,
+  },
+};
+
+export const SeniorTypography: typeof Typography = {
+  fontSizes: {
+    xs: 15,
+    sm: 16,
+    md: 18,
+    lg: 21,
+    xl: 25,
+    xxl: 30,
+    xxxl: 36,
+    display: 40,
+    giant: 44,
+    hero: 48,
+  },
+  fontWeights: {
+    regular: '400' as const,
+    medium: '500' as const,
+    semibold: '600' as const,
+    bold: '700' as const,
+    heavy: '800' as const,
+  },
+  lineHeights: {
+    tight: 1.2,
+    snug: 1.35,
+    normal: 1.5,
+    relaxed: 1.6,
+    loose: 1.8,
   },
 };
 

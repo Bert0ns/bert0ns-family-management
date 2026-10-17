@@ -13,7 +13,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
   selectedPeriod,
   onPeriodChange,
 }) => {
-  const { theme, spacing, radius, typography } = useTheme();
+  const { theme, spacing, radius, typography, touchTargets } = useTheme();
   const { t, locale } = useI18n();
 
   const [yearStr, monthStr] = selectedPeriod.split('-');
@@ -48,6 +48,8 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
     onPeriodChange(newPeriod);
   };
 
+  const chevronButtonDimension = Math.max(48, touchTargets.sm);
+
   return (
     <View
       style={{
@@ -60,7 +62,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
         borderColor: theme.colors.cardBorder,
         paddingHorizontal: spacing.xs + 2,
         paddingVertical: spacing.xs,
-        minHeight: 56,
+        minHeight: Math.max(56, chevronButtonDimension + spacing.xs * 2),
         gap: spacing.xs,
       }}
     >
@@ -69,13 +71,13 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
         activeOpacity={0.7}
         accessibilityLabel={t.common.previousMonth}
         style={{
-          width: 48,
-          height: 48,
+          width: chevronButtonDimension,
+          height: chevronButtonDimension,
           borderRadius: radius.sm,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: theme.colors.surfaceSubtle,
-          borderWidth: 1,
+          borderWidth: 1.5,
           borderColor: theme.colors.borderTactile,
           flexShrink: 0,
         }}
@@ -129,13 +131,13 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
         activeOpacity={0.7}
         accessibilityLabel={t.common.nextMonth}
         style={{
-          width: 48,
-          height: 48,
+          width: chevronButtonDimension,
+          height: chevronButtonDimension,
           borderRadius: radius.sm,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: theme.colors.surfaceSubtle,
-          borderWidth: 1,
+          borderWidth: 1.5,
           borderColor: theme.colors.borderTactile,
           flexShrink: 0,
         }}

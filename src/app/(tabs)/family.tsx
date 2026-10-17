@@ -15,6 +15,7 @@ import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { FamilyMember, Category } from '@/types';
 import { sumBy, toCents, fromCents } from '@/utils/numberParser';
+import { useTabScroll } from '@/context/TabScrollContext';
 
 const TABULAR_NUMS: TextStyle =
   Platform.OS === 'web'
@@ -24,6 +25,7 @@ const TABULAR_NUMS: TextStyle =
 export default function FamilyScreen() {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
+  const { handleTabScroll } = useTabScroll();
 
   const family = useAppStore((s) => s.family);
   const members = useAppStore((s) => s.members);
@@ -77,6 +79,8 @@ export default function FamilyScreen() {
         width: '100%',
         alignSelf: 'center',
       }}
+      onScroll={handleTabScroll}
+      scrollEventThrottle={16}
     >
       {/* Household Info Banner */}
       <Card

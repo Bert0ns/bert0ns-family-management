@@ -24,6 +24,7 @@ import { MonthlyTrendChart } from '@/components/charts/MonthlyTrendChart';
 import { DayOfWeekChart } from '@/components/charts/DayOfWeekChart';
 import { PaymentMethodChart } from '@/components/charts/PaymentMethodChart';
 import { CategoryDetailModal } from '@/components/charts/CategoryDetailModal';
+import { useTabScroll } from '@/context/TabScrollContext';
 
 const TABULAR_NUMS: TextStyle =
   Platform.OS === 'web'
@@ -33,6 +34,7 @@ const TABULAR_NUMS: TextStyle =
 export default function AnalyticsScreen() {
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
+  const { handleTabScroll } = useTabScroll();
   const family = useAppStore((s) => s.family);
   const members = useAppStore((s) => s.members);
   const categories = useAppStore((s) => s.categories);
@@ -109,6 +111,8 @@ export default function AnalyticsScreen() {
         alignSelf: 'center',
       }}
       showsVerticalScrollIndicator={false}
+      onScroll={handleTabScroll}
+      scrollEventThrottle={16}
     >
       {/* Interactive Month Stepper */}
       <View style={{ marginBottom: spacing.md }}>
