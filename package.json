@@ -66,6 +66,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check-all": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
+    "release": "bash scripts/release.sh",
     "doctor": "expo-doctor",
     "prepare": "husky"
   },

@@ -1,0 +1,17 @@
+name: Setup JS toolchain
+description: Install pnpm and Node.js 22, then install dependencies from the lockfile.
+runs:
+  using: composite
+  steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@v6
+
+    - name: Setup Node.js 22
+      uses: actions/setup-node@v7
+      with:
+        node-version: 22
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile

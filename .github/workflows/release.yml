@@ -1,0 +1,329 @@
+name: Release Application
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  workflow_dispatch:
+    inputs:
+      draft:
+        description: 'Publish release as draft'
+        required: false
+        type: boolean
+        default: false
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+      build_android:
+        description: 'Build Android APK'
+        required: false
+        type: boolean
+        default: true
+      build_web:
+        description: 'Build Web bundle (ZIP)'
+        required: false
+        type: boolean
+        default: true
+      skip_checks:
+        description: 'Skip quality checks (emergency only)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: Prepare Release Metadata
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.metadata.outputs.tag }}
+      version: ${{ steps.metadata.outputs.version }}
+      build_android: ${{ steps.metadata.outputs.build_android }}
+      build_web: ${{ steps.metadata.outputs.build_web }}
+      draft: ${{ steps.metadata.outputs.draft }}
+      prerelease: ${{ steps.metadata.outputs.prerelease }}
+      skip_checks: ${{ steps.metadata.outputs.skip_checks }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Compute Release Metadata
+        id: metadata
+        # Inputs are passed through env so they are never interpolated into the script body.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_BUILD_ANDROID: ${{ inputs.build_android }}
+          INPUT_BUILD_WEB: ${{ inputs.build_web }}
+          INPUT_DRAFT: ${{ inputs.draft }}
+          INPUT_PRERELEASE: ${{ inputs.prerelease }}
+          INPUT_SKIP_CHECKS: ${{ inputs.skip_checks }}
+        run: |
+          PKG_VER=$(node -p "require('./package.json').version")
+          APP_VER=$(node -p "require('./app.json').expo.version")
+
+          if [ "$PKG_VER" != "$APP_VER" ]; then
+            echo "::error::package.json version ($PKG_VER) does not match app.json expo.version ($APP_VER)."
+            exit 1
+          fi
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Manual releases must be dispatched from main (got $GITHUB_REF)."
+            exit 1
+          fi
+
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            CLEAN_VER="${TAG#v}"
+            if [ "$CLEAN_VER" != "$PKG_VER" ]; then
+              echo "::error::Tag $TAG does not match package.json version ($PKG_VER)."
+              exit 1
+            fi
+          else
+            CLEAN_VER="$PKG_VER"
+            TAG="v$PKG_VER"
+          fi
+
+          if ! [[ "$CLEAN_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::'$CLEAN_VER' is not a valid semantic version."
+            exit 1
+          fi
+
+          BUILD_ANDROID="true"
+          BUILD_WEB="true"
+          DRAFT="false"
+          PRERELEASE="false"
+          SKIP_CHECKS="false"
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            BUILD_ANDROID="$INPUT_BUILD_ANDROID"
+            BUILD_WEB="$INPUT_BUILD_WEB"
+            DRAFT="$INPUT_DRAFT"
+            PRERELEASE="$INPUT_PRERELEASE"
+            SKIP_CHECKS="$INPUT_SKIP_CHECKS"
+          fi
+
+          if [ "$BUILD_ANDROID" != "true" ] && [ "$BUILD_WEB" != "true" ]; then
+            echo "::error::At least one build target (Android or Web) must be enabled."
+            exit 1
+          fi
+
+          {
+            echo "tag=$TAG"
+            echo "version=$CLEAN_VER"
+            echo "build_android=$BUILD_ANDROID"
+            echo "build_web=$BUILD_WEB"
+            echo "draft=$DRAFT"
+            echo "prerelease=$PRERELEASE"
+            echo "skip_checks=$SKIP_CHECKS"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Prepared release metadata:"
+          echo "  Tag: $TAG"
+          echo "  Version: $CLEAN_VER"
+          echo "  Commit: $GITHUB_SHA"
+          echo "  Build Android: $BUILD_ANDROID"
+          echo "  Build Web: $BUILD_WEB"
+          echo "  Draft: $DRAFT"
+          echo "  Pre-release: $PRERELEASE"
+          echo "  Skip Checks: $SKIP_CHECKS"
+
+  validate:
+    name: Codebase Quality Checks
+    needs: prepare
+    if: needs.prepare.outputs.skip_checks != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup JS toolchain
+        uses: ./.github/actions/setup-js
+
+      - name: Typecheck, Lint, Format & Tests
+        run: pnpm check-all
+
+  build-android:
+    name: Build Native Android APK
+    needs: [prepare, validate]
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_android == 'true' && (needs.prepare.outputs.skip_checks == 'true' || needs.validate.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Verify Release Signing Secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+        run: |
+          for name in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing secret ANDROID_RELEASE_${name}. Release APKs must be signed with the project release key, not the public debug key."
+              exit 1
+            fi
+          done
+
+      - name: Prepare Android build
+        uses: ./.github/actions/android-prebuild
+        with:
+          supabase-url: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          supabase-anon-key: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Build Signed Android Release APK with Gradle
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+        run: |
+          KEYSTORE_PATH="$RUNNER_TEMP/release.keystore"
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          cd android
+          # The injected signing properties override the template's debug signingConfig for release builds.
+          ./gradlew assembleRelease --build-cache --parallel -x lint -x lintVitalRelease \
+            -Pandroid.injected.signing.store.file="$KEYSTORE_PATH" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+          rm -f "$KEYSTORE_PATH"
+
+      - name: Verify, Package & Checksum Android APK
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          mkdir -p release-android
+          SOURCE_APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$SOURCE_APK" ]; then
+            echo "::error::No release APK found in android/app/build/outputs/apk/release"
+            exit 1
+          fi
+
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n 1)
+          CERTS=$("$APKSIGNER" verify --print-certs "$SOURCE_APK")
+          echo "$CERTS"
+          if echo "$CERTS" | grep -q "CN=Android Debug"; then
+            echo "::error::Release APK is signed with the Android debug key."
+            exit 1
+          fi
+
+          TARGET_APK="release-android/FamilyExpenseManager-${VERSION}.apk"
+          cp "$SOURCE_APK" "$TARGET_APK"
+          cd release-android
+          sha256sum "FamilyExpenseManager-${VERSION}.apk" > "FamilyExpenseManager-${VERSION}.apk.sha256"
+          echo "Generated APK: $TARGET_APK"
+          cat "FamilyExpenseManager-${VERSION}.apk.sha256"
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-release-apk
+          path: release-android/*
+          retention-days: 7
+
+  build-web:
+    name: Build Web Distribution Bundle
+    needs: [prepare, validate]
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_web == 'true' && (needs.prepare.outputs.skip_checks == 'true' || needs.validate.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup JS toolchain
+        uses: ./.github/actions/setup-js
+
+      - name: Export Web Application
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: pnpm build:web
+
+      - name: Package Web Distribution ZIP
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          mkdir -p release-web
+          cd dist
+          zip -r "../release-web/FamilyExpenseManager-web-${VERSION}.zip" .
+          cd ../release-web
+          sha256sum "FamilyExpenseManager-web-${VERSION}.zip" > "FamilyExpenseManager-web-${VERSION}.zip.sha256"
+          echo "Generated Web ZIP: FamilyExpenseManager-web-${VERSION}.zip"
+          cat "FamilyExpenseManager-web-${VERSION}.zip.sha256"
+
+      - name: Upload Web Bundle Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-release-bundle
+          path: release-web/*
+          retention-days: 7
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [prepare, validate, build-android, build-web]
+    if: |
+      always() &&
+      needs.prepare.result == 'success' &&
+      (needs.prepare.outputs.skip_checks == 'true' || needs.validate.result == 'success') &&
+      (needs.build-android.result == 'success' || (needs.build-android.result == 'skipped' && needs.prepare.outputs.build_android != 'true')) &&
+      (needs.build-web.result == 'success' || (needs.build-web.result == 'skipped' && needs.prepare.outputs.build_web != 'true'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release Assets Directory
+        run: mkdir -p release-assets
+
+      - name: Download Android Artifacts
+        if: needs.build-android.result == 'success'
+        uses: actions/download-artifact@v7
+        with:
+          name: android-release-apk
+          path: release-assets
+
+      - name: Download Web Artifacts
+        if: needs.build-web.result == 'success'
+        uses: actions/download-artifact@v7
+        with:
+          name: web-release-bundle
+          path: release-assets
+
+      - name: Consolidate SHA-256 Checksums
+        run: |
+          cd release-assets
+          shopt -s nullglob
+          BINARIES=(*.apk *.zip)
+          if [ "${#BINARIES[@]}" -eq 0 ]; then
+            echo "::error::No release binaries were produced; refusing to publish an empty release."
+            exit 1
+          fi
+          sha256sum "${BINARIES[@]}" > SHA256SUMS.txt
+          echo "=== SHA256 Checksums ==="
+          cat SHA256SUMS.txt
+          ls -la
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: Release ${{ needs.prepare.outputs.tag }}
+          draft: ${{ needs.prepare.outputs.draft == 'true' }}
+          prerelease: ${{ needs.prepare.outputs.prerelease == 'true' }}
+          generate_release_notes: true
+          fail_on_unmatched_files: false
+          files: |
+            release-assets/*.apk
+            release-assets/*.zip
+            release-assets/SHA256SUMS.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

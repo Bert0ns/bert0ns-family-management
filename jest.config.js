@@ -18,6 +18,7 @@ module.exports = {
         tsconfig: {
           strict: true,
           ignoreDeprecations: '6.0',
+          customConditions: ['react-native-legacy-deep-imports', 'react-native'],
           paths: {
             '@/*': ['./src/*'],
           },

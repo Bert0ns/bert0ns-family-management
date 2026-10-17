@@ -18,17 +18,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup JS toolchain
+        uses: ./.github/actions/setup-js
 
       - name: TypeScript Typecheck
         run: pnpm typecheck
@@ -49,17 +40,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup JS toolchain
+        uses: ./.github/actions/setup-js
 
       - name: Web Export Smoke Test
         run: pnpm build:web
