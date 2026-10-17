@@ -15,6 +15,20 @@ if [ -n "$(git status --porcelain)" ]; then
   exit 1
 fi
 
+# 2. Releases are cut from an up-to-date main branch
+RELEASE_BRANCH="main"
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [ "$CURRENT_BRANCH" != "$RELEASE_BRANCH" ]; then
+  echo "Error: Releases must be created from '$RELEASE_BRANCH' (currently on '$CURRENT_BRANCH')."
+  exit 1
+fi
+
+git fetch --quiet origin "$RELEASE_BRANCH" --tags
+if [ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/$RELEASE_BRANCH")" ]; then
+  echo "Error: Local '$RELEASE_BRANCH' is not in sync with 'origin/$RELEASE_BRANCH'. Pull or push first."
+  exit 1
+fi
+
 CURRENT_VER=$(node -p "require('./package.json').version")
 echo "Current version: $CURRENT_VER"
 
@@ -42,12 +56,24 @@ if [ -z "$TARGET_ARG" ]; then
   esac
 fi
 
-# Calculate new version
-IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VER"
+# Calculate new version (a prerelease suffix like -beta.1 is dropped before bumping)
+if ! [[ "$CURRENT_VER" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-[0-9A-Za-z.]+)?$ ]]; then
+  echo "Error: Current version '$CURRENT_VER' is not a valid semantic version."
+  exit 1
+fi
+MAJOR="${BASH_REMATCH[1]}"
+MINOR="${BASH_REMATCH[2]}"
+PATCH="${BASH_REMATCH[3]}"
+PRERELEASE_SUFFIX="${BASH_REMATCH[4]}"
 
 case "$TARGET_ARG" in
   patch)
-    NEW_VER="$MAJOR.$MINOR.$((PATCH + 1))"
+    # Patching a prerelease finalizes it (1.1.0-beta.1 -> 1.1.0), matching npm semantics.
+    if [ -n "$PRERELEASE_SUFFIX" ]; then
+      NEW_VER="$MAJOR.$MINOR.$PATCH"
+    else
+      NEW_VER="$MAJOR.$MINOR.$((PATCH + 1))"
+    fi
     ;;
   minor)
     NEW_VER="$MAJOR.$((MINOR + 1)).0"
@@ -64,7 +90,7 @@ case "$TARGET_ARG" in
 esac
 
 # Validate semver pattern
-if ! [[ "$NEW_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+if ! [[ "$NEW_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
   echo "Error: '$NEW_VER' is not a valid semantic version."
   exit 1
 fi
@@ -80,32 +106,32 @@ fi
 
 echo ""
 echo "Running quality verification checks before release..."
-pnpm lint
-pnpm format:check
-pnpm typecheck
-pnpm test
+pnpm check-all
 
 echo ""
 echo "Updating version in package.json and app.json..."
-node -e "
+# Android requires a strictly increasing integer versionCode for every installable update.
+NEW_VER="$NEW_VER" node -e "
 const fs = require('fs');
+const newVer = process.env.NEW_VER;
 
 // package.json
 const pkgPath = './package.json';
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-pkg.version = '$NEW_VER';
+pkg.version = newVer;
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
 // app.json
 const appPath = './app.json';
 const app = JSON.parse(fs.readFileSync(appPath, 'utf8'));
-if (app.expo) {
-  app.expo.version = '$NEW_VER';
-}
+app.expo.version = newVer;
+app.expo.android = app.expo.android || {};
+app.expo.android.versionCode = (app.expo.android.versionCode || 1) + 1;
 fs.writeFileSync(appPath, JSON.stringify(app, null, 2) + '\n');
+console.log('Android versionCode: ' + app.expo.android.versionCode);
 "
 
-pnpm format
+pnpm exec prettier --write package.json app.json
 
 # Git commit and tag
 git add package.json app.json
@@ -116,13 +142,12 @@ echo ""
 echo "Successfully created release commit and tag: $TAG"
 echo ""
 echo "To trigger the automated GitHub Actions Release workflow, run:"
-echo "  git push origin main && git push origin $TAG"
+echo "  git push origin $RELEASE_BRANCH && git push origin $TAG"
 echo ""
 
 read -r -p "Push release to origin now? [y/N]: " PUSH_CHOICE
 if [[ "$PUSH_CHOICE" =~ ^[Yy]$ ]]; then
-  CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-  git push origin "$CURRENT_BRANCH"
+  git push origin "$RELEASE_BRANCH"
   git push origin "$TAG"
   echo "Pushed branch and tag to origin. Release workflow triggered!"
 fi

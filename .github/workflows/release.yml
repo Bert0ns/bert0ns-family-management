@@ -6,11 +6,6 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Release version (e.g. 1.0.1 or v1.0.1). Leave empty to use package.json version.'
-        required: false
-        type: string
-        default: ''
       draft:
         description: 'Publish release as draft'
         required: false
@@ -62,18 +57,43 @@ jobs:
 
       - name: Compute Release Metadata
         id: metadata
+        # Inputs are passed through env so they are never interpolated into the script body.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_BUILD_ANDROID: ${{ inputs.build_android }}
+          INPUT_BUILD_WEB: ${{ inputs.build_web }}
+          INPUT_DRAFT: ${{ inputs.draft }}
+          INPUT_PRERELEASE: ${{ inputs.prerelease }}
+          INPUT_SKIP_CHECKS: ${{ inputs.skip_checks }}
         run: |
-          RAW_INPUT="${{ github.event.inputs.version }}"
-          if [ -n "$RAW_INPUT" ]; then
-            CLEAN_VER="${RAW_INPUT#v}"
-            TAG="v$CLEAN_VER"
-          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          PKG_VER=$(node -p "require('./package.json').version")
+          APP_VER=$(node -p "require('./app.json').expo.version")
+
+          if [ "$PKG_VER" != "$APP_VER" ]; then
+            echo "::error::package.json version ($PKG_VER) does not match app.json expo.version ($APP_VER)."
+            exit 1
+          fi
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Manual releases must be dispatched from main (got $GITHUB_REF)."
+            exit 1
+          fi
+
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             TAG="${GITHUB_REF#refs/tags/}"
             CLEAN_VER="${TAG#v}"
+            if [ "$CLEAN_VER" != "$PKG_VER" ]; then
+              echo "::error::Tag $TAG does not match package.json version ($PKG_VER)."
+              exit 1
+            fi
           else
-            PKG_VER=$(node -p "require('./package.json').version")
-            TAG="v$PKG_VER"
             CLEAN_VER="$PKG_VER"
+            TAG="v$PKG_VER"
+          fi
+
+          if ! [[ "$CLEAN_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::'$CLEAN_VER' is not a valid semantic version."
+            exit 1
           fi
 
           BUILD_ANDROID="true"
@@ -82,25 +102,33 @@ jobs:
           PRERELEASE="false"
           SKIP_CHECKS="false"
 
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            BUILD_ANDROID="${{ github.event.inputs.build_android }}"
-            BUILD_WEB="${{ github.event.inputs.build_web }}"
-            DRAFT="${{ github.event.inputs.draft }}"
-            PRERELEASE="${{ github.event.inputs.prerelease }}"
-            SKIP_CHECKS="${{ github.event.inputs.skip_checks }}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            BUILD_ANDROID="$INPUT_BUILD_ANDROID"
+            BUILD_WEB="$INPUT_BUILD_WEB"
+            DRAFT="$INPUT_DRAFT"
+            PRERELEASE="$INPUT_PRERELEASE"
+            SKIP_CHECKS="$INPUT_SKIP_CHECKS"
           fi
 
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "version=$CLEAN_VER" >> $GITHUB_OUTPUT
-          echo "build_android=$BUILD_ANDROID" >> $GITHUB_OUTPUT
-          echo "build_web=$BUILD_WEB" >> $GITHUB_OUTPUT
-          echo "draft=$DRAFT" >> $GITHUB_OUTPUT
-          echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
-          echo "skip_checks=$SKIP_CHECKS" >> $GITHUB_OUTPUT
+          if [ "$BUILD_ANDROID" != "true" ] && [ "$BUILD_WEB" != "true" ]; then
+            echo "::error::At least one build target (Android or Web) must be enabled."
+            exit 1
+          fi
+
+          {
+            echo "tag=$TAG"
+            echo "version=$CLEAN_VER"
+            echo "build_android=$BUILD_ANDROID"
+            echo "build_web=$BUILD_WEB"
+            echo "draft=$DRAFT"
+            echo "prerelease=$PRERELEASE"
+            echo "skip_checks=$SKIP_CHECKS"
+          } >> "$GITHUB_OUTPUT"
 
           echo "Prepared release metadata:"
           echo "  Tag: $TAG"
           echo "  Version: $CLEAN_VER"
+          echo "  Commit: $GITHUB_SHA"
           echo "  Build Android: $BUILD_ANDROID"
           echo "  Build Web: $BUILD_WEB"
           echo "  Draft: $DRAFT"
@@ -116,97 +144,80 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup JS toolchain
+        uses: ./.github/actions/setup-js
 
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: TypeScript Typecheck
-        run: pnpm typecheck
-
-      - name: ESLint Check
-        run: pnpm lint
-
-      - name: Prettier Code Style Check
-        run: pnpm format:check
-
-      - name: Unit & Integration Tests (Jest)
-        run: pnpm test
+      - name: Typecheck, Lint, Format & Tests
+        run: pnpm check-all
 
   build-android:
     name: Build Native Android APK
     needs: [prepare, validate]
-    if: always() && needs.prepare.outputs.build_android == 'true' && (needs.prepare.outputs.skip_checks == 'true' || needs.validate.result == 'success')
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_android == 'true' && (needs.prepare.outputs.skip_checks == 'true' || needs.validate.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Setup Java JDK 17
-        uses: actions/setup-java@v5
+      - name: Verify Release Signing Secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+        run: |
+          for name in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing secret ANDROID_RELEASE_${name}. Release APKs must be signed with the project release key, not the public debug key."
+              exit 1
+            fi
+          done
+
+      - name: Prepare Android build
+        uses: ./.github/actions/android-prebuild
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          supabase-url: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          supabase-anon-key: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Expo Prebuild (Generate Native Android Project)
+      - name: Build Signed Android Release APK with Gradle
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
         run: |
-          npx expo prebuild --platform android --no-install
-          cat << 'EOF' >> android/gradle.properties
-          org.gradle.parallel=true
-          org.gradle.caching=true
-          org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC
-          org.gradle.vfs.watch=true
-          EOF
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
-        with:
-          build-root-directory: android
-          cache-read-only: false
-
-      - name: Build Android Release APK with Gradle
-        env:
-          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
-        run: |
+          KEYSTORE_PATH="$RUNNER_TEMP/release.keystore"
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
           cd android
-          chmod +x gradlew
-          ./gradlew assembleRelease --build-cache --parallel -x lint -x lintVitalRelease
+          # The injected signing properties override the template's debug signingConfig for release builds.
+          ./gradlew assembleRelease --build-cache --parallel -x lint -x lintVitalRelease \
+            -Pandroid.injected.signing.store.file="$KEYSTORE_PATH" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+          rm -f "$KEYSTORE_PATH"
 
-      - name: Package & Checksum Android APK
+      - name: Verify, Package & Checksum Android APK
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          VERSION="${{ needs.prepare.outputs.version }}"
           mkdir -p release-android
           SOURCE_APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
           if [ -z "$SOURCE_APK" ]; then
             echo "::error::No release APK found in android/app/build/outputs/apk/release"
             exit 1
           fi
+
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n 1)
+          CERTS=$("$APKSIGNER" verify --print-certs "$SOURCE_APK")
+          echo "$CERTS"
+          if echo "$CERTS" | grep -q "CN=Android Debug"; then
+            echo "::error::Release APK is signed with the Android debug key."
+            exit 1
+          fi
+
           TARGET_APK="release-android/FamilyExpenseManager-${VERSION}.apk"
           cp "$SOURCE_APK" "$TARGET_APK"
           cd release-android
@@ -224,23 +235,14 @@ jobs:
   build-web:
     name: Build Web Distribution Bundle
     needs: [prepare, validate]
-    if: always() && needs.prepare.outputs.build_web == 'true' && (needs.prepare.outputs.skip_checks == 'true' || needs.validate.result == 'success')
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_web == 'true' && (needs.prepare.outputs.skip_checks == 'true' || needs.validate.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup JS toolchain
+        uses: ./.github/actions/setup-js
 
       - name: Export Web Application
         env:
@@ -249,8 +251,9 @@ jobs:
         run: pnpm build:web
 
       - name: Package Web Distribution ZIP
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          VERSION="${{ needs.prepare.outputs.version }}"
           mkdir -p release-web
           cd dist
           zip -r "../release-web/FamilyExpenseManager-web-${VERSION}.zip" .
@@ -271,26 +274,24 @@ jobs:
     needs: [prepare, validate, build-android, build-web]
     if: |
       always() &&
+      needs.prepare.result == 'success' &&
       (needs.prepare.outputs.skip_checks == 'true' || needs.validate.result == 'success') &&
-      (needs.build-android.result == 'success' || needs.build-android.result == 'skipped') &&
-      (needs.build-web.result == 'success' || needs.build-web.result == 'skipped')
+      (needs.build-android.result == 'success' || (needs.build-android.result == 'skipped' && needs.prepare.outputs.build_android != 'true')) &&
+      (needs.build-web.result == 'success' || (needs.build-web.result == 'skipped' && needs.prepare.outputs.build_web != 'true'))
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-
       - name: Create Release Assets Directory
         run: mkdir -p release-assets
 
       - name: Download Android Artifacts
-        if: needs.prepare.outputs.build_android == 'true' && needs.build-android.result == 'success'
+        if: needs.build-android.result == 'success'
         uses: actions/download-artifact@v7
         with:
           name: android-release-apk
           path: release-assets
 
       - name: Download Web Artifacts
-        if: needs.prepare.outputs.build_web == 'true' && needs.build-web.result == 'success'
+        if: needs.build-web.result == 'success'
         uses: actions/download-artifact@v7
         with:
           name: web-release-bundle
@@ -299,11 +300,13 @@ jobs:
       - name: Consolidate SHA-256 Checksums
         run: |
           cd release-assets
-          rm -f SHA256SUMS.txt
-          # Calculate checksums of binary releases (excluding individual .sha256 files)
-          find . -maxdepth 1 -type f \( -name "*.apk" -o -name "*.zip" \) -exec sha256sum {} + > SHA256SUMS.txt || true
-          # Clean filenames in SHA256SUMS.txt (strip leading ./)
-          sed -i 's|\./||g' SHA256SUMS.txt
+          shopt -s nullglob
+          BINARIES=(*.apk *.zip)
+          if [ "${#BINARIES[@]}" -eq 0 ]; then
+            echo "::error::No release binaries were produced; refusing to publish an empty release."
+            exit 1
+          fi
+          sha256sum "${BINARIES[@]}" > SHA256SUMS.txt
           echo "=== SHA256 Checksums ==="
           cat SHA256SUMS.txt
           ls -la
@@ -312,10 +315,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           name: Release ${{ needs.prepare.outputs.tag }}
           draft: ${{ needs.prepare.outputs.draft == 'true' }}
           prerelease: ${{ needs.prepare.outputs.prerelease == 'true' }}
           generate_release_notes: true
+          fail_on_unmatched_files: false
           files: |
             release-assets/*.apk
             release-assets/*.zip
