@@ -33,9 +33,10 @@ function TabsLayoutContent() {
 
   // Floating dock dimensions
   const isWideScreen = windowWidth >= 768;
-  const barWidth = isWideScreen ? Math.min(windowWidth - 48, 520) : windowWidth - 28;
-  const barLeft = Math.max(14, (windowWidth - barWidth) / 2);
+  const barWidth = isWideScreen ? Math.min(windowWidth - 32, 560) : windowWidth - 16;
+  const barLeft = Math.max(8, (windowWidth - barWidth) / 2);
   const floatingBottom = Math.max(insets.bottom, 12) + (Platform.OS === 'ios' ? 4 : 8);
+  const tabSlotWidth = (barWidth - 8) / 5;
 
   // Global Sync & Auth Lifecycle Bootstrap
   useEffect(() => {
@@ -80,67 +81,78 @@ function TabsLayoutContent() {
     focused: boolean,
     color: ColorValue | string,
     label: string,
-  ) => (
-    <View
-      accessibilityLabel={label}
-      style={{
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 64,
-        height: 60,
-      }}
-    >
+  ) => {
+    const labelFontSize = tabSlotWidth < 78 ? (label.length >= 10 ? 10 : 11) : 12;
+    const labelLetterSpacing = tabSlotWidth < 78 ? -0.25 : -0.1;
+
+    return (
       <View
+        accessibilityLabel={label}
         style={{
-          width: 42,
-          height: 36,
-          borderRadius: Radius.dockInner,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: focused
-            ? (theme.colors.dockActivePill ?? theme.colors.brandLight)
-            : 'transparent',
-          borderWidth: focused ? 1 : 0,
-          borderColor: focused
-            ? (theme.colors.dockActiveBorder ?? `${theme.colors.brand}4D`)
-            : 'transparent',
+          width: '100%',
+          height: 60,
+          paddingHorizontal: 1,
         }}
       >
-        <IconComponent
-          size={21}
-          color={focused ? theme.colors.brand : (color as string)}
-          strokeWidth={focused ? 2.5 : 2}
-        />
+        <View
+          style={{
+            width: 42,
+            height: 34,
+            borderRadius: Radius.dockInner,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: focused
+              ? (theme.colors.dockActivePill ?? theme.colors.brandLight)
+              : 'transparent',
+            borderWidth: focused ? 1 : 0,
+            borderColor: focused
+              ? (theme.colors.dockActiveBorder ?? `${theme.colors.brand}4D`)
+              : 'transparent',
+          }}
+        >
+          <IconComponent
+            size={21}
+            color={focused ? theme.colors.brand : (color as string)}
+            strokeWidth={focused ? 2.5 : 2}
+          />
+        </View>
+        <Animated.Text
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
+          style={{
+            fontSize: labelFontSize,
+            lineHeight: 14,
+            letterSpacing: labelLetterSpacing,
+            fontWeight: focused ? '800' : '600',
+            color: focused ? theme.colors.brand : (color as string),
+            textAlign: 'center',
+            includeFontPadding: false,
+            opacity: labelsVisibility,
+            maxHeight: labelsVisibility.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 18],
+            }),
+            marginTop: labelsVisibility.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 2],
+            }),
+            transform: [
+              {
+                translateY: labelsVisibility.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [4, 0],
+                }),
+              },
+            ],
+          }}
+        >
+          {label}
+        </Animated.Text>
       </View>
-      <Animated.Text
-        numberOfLines={1}
-        style={{
-          fontSize: 12,
-          fontWeight: focused ? '800' : '600',
-          color: focused ? theme.colors.brand : (color as string),
-          opacity: labelsVisibility,
-          maxHeight: labelsVisibility.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 18],
-          }),
-          marginTop: labelsVisibility.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 2],
-          }),
-          transform: [
-            {
-              translateY: labelsVisibility.interpolate({
-                inputRange: [0, 1],
-                outputRange: [4, 0],
-              }),
-            },
-          ],
-        }}
-      >
-        {label}
-      </Animated.Text>
-    </View>
-  );
+    );
+  };
 
   return (
     <Tabs
@@ -187,7 +199,7 @@ function TabsLayoutContent() {
           elevation: 2,
           paddingTop: 0,
           paddingBottom: 0,
-          paddingHorizontal: 6,
+          paddingHorizontal: 4,
           overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
         },
         tabBarButton: ({ ref: _ref, style, onPress, ...rest }: any) => (
@@ -211,13 +223,14 @@ function TabsLayoutContent() {
                 padding: 0,
                 paddingTop: 0,
                 paddingBottom: 0,
+                width: '100%',
                 height: '100%',
               },
             ]}
           />
         ),
         tabBarIconStyle: {
-          width: 64,
+          width: '100%',
           height: 60,
           justifyContent: 'center',
           alignItems: 'center',
