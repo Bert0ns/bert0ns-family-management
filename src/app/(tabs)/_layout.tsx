@@ -266,9 +266,10 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="import"
         options={{
-          href: null,
           title: t.tabs.import,
           headerTitle: t.tabs.import,
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none', width: 0, height: 0, flex: 0 },
         }}
       />
     </Tabs>

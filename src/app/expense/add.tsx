@@ -21,12 +21,14 @@ import {
   FileJson,
 } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { TouchTargets } from '@/theme/tokens';
 import { useI18n, getLocalizedCategoryName } from '@/i18n';
 import { useAppStore } from '@/services/store';
 import { IconHelper } from '@/components/common/IconHelper';
 import { Avatar } from '@/components/common/Avatar';
 import { Input } from '@/components/common/Input';
 import { parseLocalizedNumber } from '@/utils/numberParser';
+import type { FamilyMember } from '@/types';
 
 const TABULAR_NUMS: TextStyle =
   Platform.OS === 'web'
@@ -53,6 +55,20 @@ const getYesterdayLocalIso = (): string => {
 
 const QUICK_AMOUNTS = [5, 10, 20, 50];
 
+export const resolveActivePayerId = (
+  paidByMemberId: string,
+  currentMemberId: string,
+  members: Pick<FamilyMember, 'id'>[],
+): string => {
+  if (paidByMemberId && members.some((m) => m.id === paidByMemberId)) {
+    return paidByMemberId;
+  }
+  if (currentMemberId && members.some((m) => m.id === currentMemberId)) {
+    return currentMemberId;
+  }
+  return members[0]?.id || '';
+};
+
 export default function AddExpenseScreen() {
   const router = useRouter();
   const { theme, spacing, radius, typography } = useTheme();
@@ -62,6 +78,7 @@ export default function AddExpenseScreen() {
   const categories = useAppStore((s) => s.categories);
   const addExpense = useAppStore((s) => s.addExpense);
   const currentMemberId = useAppStore((s) => s.currentMemberId);
+  const setCurrentMemberId = useAppStore((s) => s.setCurrentMemberId);
 
   const [amount, setAmount] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
@@ -83,7 +100,7 @@ export default function AddExpenseScreen() {
 
   // Derived state ensures robust default fallback even if store hydration finishes after initial mount
   const activeCategoryId = selectedCategoryId || categories[0]?.id || 'cat_groceries';
-  const activePaidByMemberId = paidByMemberId || currentMemberId || members[0]?.id || '';
+  const activePaidByMemberId = resolveActivePayerId(paidByMemberId, currentMemberId, members);
 
   const selectedCategory = categories.find((c) => c.id === activeCategoryId) || categories[0];
   const localizedCategoryName = selectedCategory
@@ -119,6 +136,7 @@ export default function AddExpenseScreen() {
 
   const handleSelectMember = (memberId: string) => {
     setPaidByMemberId(memberId);
+    setCurrentMemberId(memberId);
     if (errors.paidBy) setErrors((prev) => ({ ...prev, paidBy: undefined }));
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -180,6 +198,10 @@ export default function AddExpenseScreen() {
       paidBy: activePaidByMemberId,
       date: activeDate.trim(),
     });
+
+    if (activePaidByMemberId !== currentMemberId) {
+      setCurrentMemberId(activePaidByMemberId);
+    }
 
     addExpense({
       paid_by_member_id: activePaidByMemberId,
@@ -590,7 +612,7 @@ export default function AddExpenseScreen() {
         )}
       </View>
 
-      {/* Paid By Family Member - 1-Tap Active Payer Selector */}
+      {/* Paying as / Paid By Family Member - 1-Tap Active Payer Selector */}
       <View style={{ marginBottom: spacing.xl, width: '100%', overflow: 'hidden' }}>
         <Text
           style={{
@@ -601,13 +623,13 @@ export default function AddExpenseScreen() {
             letterSpacing: 0.2,
           }}
         >
-          {t.addExpense.paidByLabel}
+          {t.dashboard.payingAs}
         </Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           style={{ width: '100%' }}
-          contentContainerStyle={{ gap: spacing.sm, paddingVertical: 2 }}
+          contentContainerStyle={{ gap: spacing.sm, paddingVertical: spacing.xxs }}
         >
           {members.map((m) => {
             const isSelected = activePaidByMemberId === m.id;
@@ -617,11 +639,12 @@ export default function AddExpenseScreen() {
                 activeOpacity={0.75}
                 onPress={() => handleSelectMember(m.id)}
                 accessibilityRole="button"
+                accessibilityLabel={`${t.dashboard.payingAs} ${m.display_name}`}
                 accessibilityState={{ selected: isSelected }}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  minHeight: 48,
+                  minHeight: TouchTargets.sm,
                   paddingHorizontal: spacing.md,
                   borderRadius: radius.pill,
                   backgroundColor: isSelected
