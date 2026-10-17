@@ -69,12 +69,12 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = React.memo(
         activeOpacity={0.7}
         onPress={handlePress}
         accessibilityRole="button"
-        accessibilityLabel={`${expense.merchant_name}, ${currency}${expense.amount.toFixed(2)}`}
+        accessibilityLabel={`${expense.merchant_name}, ${currency}${expense.amount.toFixed(2)}, ${catName}, ${formattedDate}, ${memberName}`}
         style={[
           {
             flexDirection: 'row',
             alignItems: 'center',
-            minHeight: 64,
+            minHeight: 72,
             paddingVertical: spacing.sm + 2,
             paddingHorizontal: spacing.sm + 4,
             backgroundColor: theme.colors.card,
@@ -89,19 +89,19 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = React.memo(
         {/* Category Icon */}
         <View
           style={{
-            width: 40,
-            height: 40,
+            width: 46,
+            height: 46,
             borderRadius: radius.sm,
             backgroundColor: `${catColor}18`,
             borderWidth: 1,
-            borderColor: `${catColor}30`,
+            borderColor: `${catColor}45`,
             alignItems: 'center',
             justifyContent: 'center',
             marginRight: spacing.sm + 2,
             flexShrink: 0,
           }}
         >
-          <IconHelper name={catIcon} size={20} color={catColor} />
+          <IconHelper name={catIcon} size={22} color={catColor} />
         </View>
 
         {/* Details */}
@@ -115,7 +115,7 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = React.memo(
                 flex: 1,
                 minWidth: 0,
               }}
-              numberOfLines={1}
+              numberOfLines={2}
               ellipsizeMode="tail"
             >
               {expense.merchant_name}
@@ -150,21 +150,38 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = React.memo(
             </Text>
           </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              marginTop: 4,
+              backgroundColor: theme.isDark
+                ? theme.colors.surfaceElevated
+                : theme.colors.surfaceSubtle,
+              borderWidth: 1,
+              borderColor: member?.color_code || theme.colors.borderTactile,
+              borderRadius: radius.xs,
+              paddingHorizontal: 6,
+              paddingVertical: 2,
+              alignSelf: 'flex-start',
+              maxWidth: '100%',
+            }}
+          >
             <View
               style={{
-                width: 6,
-                height: 6,
-                borderRadius: 3,
+                width: 8,
+                height: 8,
+                borderRadius: 4,
                 backgroundColor: member?.color_code || theme.colors.brand,
                 flexShrink: 0,
               }}
             />
             <Text
               style={{
-                color: theme.colors.textMuted,
-                fontSize: 11,
-                fontWeight: typography.fontWeights.medium,
+                color: theme.colors.textPrimary,
+                fontSize: typography.fontSizes.xs,
+                fontWeight: typography.fontWeights.semibold,
                 flexShrink: 1,
                 minWidth: 0,
               }}

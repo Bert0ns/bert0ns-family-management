@@ -20,6 +20,15 @@ export interface ComputedPieSlice {
   isOther?: boolean;
 }
 
+export function formatCategoryAccessibilityLabel(
+  categoryName: string,
+  currency: string,
+  total: number,
+  percentage: number,
+): string {
+  return `${categoryName}, ${currency}${total.toFixed(2)}, ${percentage.toFixed(1)}%`;
+}
+
 export function computeCategoryPieSlices(
   data: CategorySummary[],
   totalSpend: number,
@@ -192,7 +201,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
         />
       </View>
 
-      {/* Accessible Ranked Category Bars */}
+      {/* Accessible Ranked Category Breakdown Rows */}
       <View style={{ marginTop: spacing.lg, gap: spacing.md }}>
         {data.map((item, idx) => {
           const isSelected = selectedIndex === idx;
@@ -204,7 +213,12 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
               key={item.category.id}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel={`${localizedCategoryName}: ${currency}${item.total.toFixed(2)}, ${item.percentage.toFixed(0)}%`}
+              accessibilityLabel={formatCategoryAccessibilityLabel(
+                localizedCategoryName,
+                currency,
+                item.total,
+                item.percentage,
+              )}
               onPress={() => {
                 setSelectedIndex(isSelected ? null : idx);
                 if (onSelectCategory) {
@@ -212,11 +226,14 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                 }
               }}
               style={{
-                backgroundColor: isSelected ? theme.colors.surfaceSubtle : theme.colors.card,
-                padding: spacing.sm,
+                minHeight: 54,
+                paddingVertical: spacing.sm + 2,
+                paddingHorizontal: spacing.md,
                 borderRadius: radius.lg,
-                borderWidth: isSelected ? 2 : 1,
-                borderColor: isSelected ? item.category.color : theme.colors.border,
+                borderWidth: 1.5,
+                borderColor: isSelected ? item.category.color : theme.colors.borderTactile,
+                backgroundColor: isSelected ? theme.colors.surfaceSubtle : theme.colors.card,
+                justifyContent: 'center',
               }}
             >
               <View
@@ -224,8 +241,8 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  marginBottom: 6,
                   gap: spacing.sm,
+                  marginBottom: 6,
                 }}
               >
                 <View
@@ -239,8 +256,8 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                 >
                   <View
                     style={{
-                      width: 36,
-                      height: 36,
+                      width: 38,
+                      height: 38,
                       borderRadius: radius.md,
                       backgroundColor: hexToRgba(item.category.color, 0.12),
                       alignItems: 'center',
@@ -257,36 +274,47 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                       fontWeight: typography.fontWeights.bold,
                       flexShrink: 1,
                     }}
-                    numberOfLines={1}
+                    numberOfLines={2}
                     ellipsizeMode="tail"
                   >
                     {localizedCategoryName}
                   </Text>
                 </View>
 
-                <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                <View style={{ alignItems: 'flex-end', flexShrink: 0, gap: 3 }}>
                   <Text
                     style={{
                       color: theme.colors.textPrimary,
                       fontSize: typography.fontSizes.md,
                       fontWeight: typography.fontWeights.heavy,
+                      fontVariant: ['tabular-nums'],
                     }}
                     numberOfLines={1}
                   >
                     {currency}
                     {item.total.toFixed(2)}
                   </Text>
-                  <Text
+                  <View
                     style={{
-                      color: theme.colors.textSecondary,
-                      fontSize: typography.fontSizes.xs,
-                      fontWeight: typography.fontWeights.semibold,
+                      backgroundColor: hexToRgba(item.category.color, 0.14),
+                      paddingHorizontal: spacing.sm,
+                      paddingVertical: 2,
+                      borderRadius: radius.full,
+                      alignSelf: 'flex-end',
                     }}
-                    numberOfLines={1}
                   >
-                    {item.percentage.toFixed(0)}%, {item.transactionCount}{' '}
-                    {t.ledger.transactionsCount}
-                  </Text>
+                    <Text
+                      style={{
+                        color: item.category.color,
+                        fontSize: typography.fontSizes.sm,
+                        fontWeight: typography.fontWeights.bold,
+                        fontVariant: ['tabular-nums'],
+                      }}
+                      numberOfLines={1}
+                    >
+                      {item.percentage.toFixed(1)}%
+                    </Text>
+                  </View>
                 </View>
               </View>
 
@@ -294,7 +322,9 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
               <View
                 style={{
                   height: 8,
-                  backgroundColor: theme.colors.surfaceSubtle,
+                  backgroundColor: isSelected
+                    ? theme.colors.borderTactile
+                    : theme.colors.surfaceSubtle,
                   borderRadius: radius.xs,
                   overflow: 'hidden',
                 }}

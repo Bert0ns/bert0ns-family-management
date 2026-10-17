@@ -11,7 +11,7 @@ import {
   useWindowDimensions,
   ViewStyle,
 } from 'react-native';
-import { Calendar, User, CreditCard, Trash2, X, Pencil } from 'lucide-react-native';
+import { Calendar, User, CreditCard, Trash2, X, Pencil, Tag } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useI18n, getLocalizedCategoryName, getLocalizedPaymentMethod } from '@/i18n';
 import { useAppStore } from '@/services/store';
@@ -282,17 +282,19 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                 borderRadius: radius.xl,
                 borderWidth: 1.5,
                 borderColor: theme.colors.borderTactile,
-                padding: spacing.md,
+                paddingHorizontal: spacing.md,
                 marginBottom: spacing.lg,
-                gap: spacing.md,
               }}
             >
-              {/* Date */}
+              {/* Category */}
               <View
                 style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  paddingVertical: spacing.md,
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.colors.borderTactile,
                   gap: spacing.sm,
                 }}
               >
@@ -304,33 +306,28 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                     flexShrink: 0,
                   }}
                 >
-                  <Calendar size={18} color={theme.colors.textMuted} />
+                  <Tag size={18} color={theme.colors.textMuted} />
                   <Text
                     style={{
                       color: theme.colors.textSecondary,
                       fontSize: typography.fontSizes.sm,
-                      fontWeight: typography.fontWeights.medium,
+                      fontWeight: typography.fontWeights.semibold,
                     }}
                   >
-                    {t.expenseDetail.date}
+                    {t.expenseDetail.category}
                   </Text>
                 </View>
                 <Text
                   style={{
                     color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.sm,
+                    fontSize: typography.fontSizes.md,
                     fontWeight: typography.fontWeights.bold,
                     flexShrink: 1,
                     textAlign: 'right',
                   }}
                   numberOfLines={1}
                 >
-                  {new Date(expense.transaction_date).toLocaleDateString(dateLocale, {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
+                  {catName}
                 </Text>
               </View>
 
@@ -340,6 +337,9 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  paddingVertical: spacing.md,
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.colors.borderTactile,
                   gap: spacing.sm,
                 }}
               >
@@ -356,7 +356,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                     style={{
                       color: theme.colors.textSecondary,
                       fontSize: typography.fontSizes.sm,
-                      fontWeight: typography.fontWeights.medium,
+                      fontWeight: typography.fontWeights.semibold,
                     }}
                   >
                     {t.expenseDetail.paidBy}
@@ -381,7 +381,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   <Text
                     style={{
                       color: theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.sm,
+                      fontSize: typography.fontSizes.md,
                       fontWeight: typography.fontWeights.bold,
                       flexShrink: 1,
                     }}
@@ -393,12 +393,65 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                 </View>
               </View>
 
+              {/* Date */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  paddingVertical: spacing.md,
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.colors.borderTactile,
+                  gap: spacing.sm,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.sm,
+                    flexShrink: 0,
+                  }}
+                >
+                  <Calendar size={18} color={theme.colors.textMuted} />
+                  <Text
+                    style={{
+                      color: theme.colors.textSecondary,
+                      fontSize: typography.fontSizes.sm,
+                      fontWeight: typography.fontWeights.semibold,
+                    }}
+                  >
+                    {t.expenseDetail.date}
+                  </Text>
+                </View>
+                <Text
+                  style={{
+                    color: theme.colors.textPrimary,
+                    fontSize: typography.fontSizes.md,
+                    fontWeight: typography.fontWeights.bold,
+                    flexShrink: 1,
+                    textAlign: 'right',
+                  }}
+                  numberOfLines={1}
+                >
+                  {new Date(expense.transaction_date).toLocaleDateString(dateLocale, {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </Text>
+              </View>
+
               {/* Payment Method */}
               <View
                 style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  paddingVertical: spacing.md,
+                  borderBottomWidth: expense.notes ? 1 : 0,
+                  borderBottomColor: theme.colors.borderTactile,
                   gap: spacing.sm,
                 }}
               >
@@ -415,7 +468,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                     style={{
                       color: theme.colors.textSecondary,
                       fontSize: typography.fontSizes.sm,
-                      fontWeight: typography.fontWeights.medium,
+                      fontWeight: typography.fontWeights.semibold,
                     }}
                   >
                     {t.expenseDetail.paymentMethod}
@@ -424,7 +477,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                 <Text
                   style={{
                     color: theme.colors.textPrimary,
-                    fontSize: typography.fontSizes.sm,
+                    fontSize: typography.fontSizes.md,
                     fontWeight: typography.fontWeights.bold,
                     flexShrink: 1,
                     textAlign: 'right',
@@ -439,17 +492,15 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               {Boolean(expense.notes) && (
                 <View
                   style={{
-                    borderTopWidth: 1,
-                    borderTopColor: theme.colors.borderTactile,
-                    paddingTop: spacing.sm,
+                    paddingVertical: spacing.md,
                   }}
                 >
                   <Text
                     style={{
                       color: theme.colors.textSecondary,
-                      fontSize: typography.fontSizes.xs,
-                      fontWeight: typography.fontWeights.medium,
-                      marginBottom: 2,
+                      fontSize: typography.fontSizes.sm,
+                      fontWeight: typography.fontWeights.semibold,
+                      marginBottom: spacing.xs,
                     }}
                   >
                     {t.expenseDetail.notes}
@@ -457,9 +508,9 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   <Text
                     style={{
                       color: theme.colors.textPrimary,
-                      fontSize: typography.fontSizes.sm,
-                      fontWeight: typography.fontWeights.medium,
-                      lineHeight: 20,
+                      fontSize: typography.fontSizes.md,
+                      fontWeight: typography.fontWeights.bold,
+                      lineHeight: 22,
                     }}
                   >
                     {expense.notes}
@@ -474,7 +525,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                 <Button
                   title={t.expenseDetail.editExpense}
                   variant="secondary"
-                  icon={<Pencil size={18} color={theme.colors.brand} strokeWidth={2.5} />}
+                  size="lg"
+                  icon={<Pencil size={20} color={theme.colors.brand} strokeWidth={2.5} />}
                   onPress={() => {
                     onClose();
                     onEdit?.(expense);
@@ -485,13 +537,15 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               <Button
                 title={t.common.delete}
                 variant="danger"
-                icon={<Trash2 size={18} color="#FFFFFF" strokeWidth={2.5} />}
+                size="lg"
+                icon={<Trash2 size={20} color="#FFFFFF" strokeWidth={2.5} />}
                 onPress={handleDelete}
                 style={{ flex: 1 }}
               />
               <Button
                 title={t.common.close}
                 variant="outline"
+                size="lg"
                 onPress={onClose}
                 style={{ flex: 1 }}
               />

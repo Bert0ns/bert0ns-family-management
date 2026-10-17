@@ -52,7 +52,7 @@ export const Button: React.FC<ButtonProps> = ({
   accessibilityState,
   hitSlop,
 }) => {
-  const { theme, spacing, radius, typography } = useTheme();
+  const { theme, spacing, radius, typography, touchTargets } = useTheme();
 
   const handlePress = () => {
     if (disabled || loading) return;
@@ -83,15 +83,15 @@ export const Button: React.FC<ButtonProps> = ({
   const isIconOnly = !title && Boolean(icon);
 
   const iconOnlyDimensionMap: Record<ButtonSize, number> = {
-    sm: 48,
-    md: 52,
-    lg: 60,
+    sm: Math.max(48, touchTargets.sm),
+    md: Math.max(52, touchTargets.md),
+    lg: Math.max(60, touchTargets.lg),
   };
 
   const sizeHeightMap: Record<ButtonSize, number> = {
-    sm: 48,
-    md: 52,
-    lg: 60,
+    sm: Math.max(48, touchTargets.sm),
+    md: Math.max(52, touchTargets.md),
+    lg: Math.max(60, touchTargets.lg),
   };
 
   const sizePaddingMap: Record<ButtonSize, { paddingHorizontal: number }> = {
@@ -140,7 +140,7 @@ export const Button: React.FC<ButtonProps> = ({
           height: iconOnlyDimensionMap[size],
         }
       : padding),
-    borderWidth: 1,
+    borderWidth: isOutline || isSecondary ? 1.5 : 1,
     borderColor:
       isOutline || isSecondary
         ? theme.colors.borderTactile

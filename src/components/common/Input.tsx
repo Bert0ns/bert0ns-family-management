@@ -29,7 +29,7 @@ export const Input: React.FC<InputProps> = ({
   onBlur,
   ...props
 }) => {
-  const { theme, spacing, radius, typography } = useTheme();
+  const { theme, spacing, radius, typography, touchTargets } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const isWeb = Platform.OS === 'web';
 
@@ -49,15 +49,17 @@ export const Input: React.FC<InputProps> = ({
     return theme.colors.borderTactile;
   };
 
+  const hasFocusOrError = isFocused || Boolean(error);
+
   const wrapperStyle: ViewStyle = {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.inputBg,
     borderRadius: radius.sm,
-    borderWidth: 1,
+    borderWidth: hasFocusOrError ? 2 : 1.5,
     borderColor: getBorderColor(),
     paddingHorizontal: spacing.md,
-    minHeight: 52,
+    minHeight: Math.max(52, touchTargets.md - 2),
     gap: spacing.sm,
     minWidth: 0,
     ...webGlass,

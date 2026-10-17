@@ -35,12 +35,22 @@ import { AuthModal } from '@/components/sync/AuthModal';
 import { AuthIntent } from '@/services/authWorkflowService';
 import { FamilyPairingModal } from '@/components/sync/FamilyPairingModal';
 import { SyncBadge } from '@/components/common/SyncBadge';
+import { useTabScroll } from '@/context/TabScrollContext';
 
 export default function SettingsScreen() {
-  const { theme, colorSchemePreference, setColorSchemePreference, spacing, radius, typography } =
-    useTheme();
+  const {
+    theme,
+    colorSchemePreference,
+    setColorSchemePreference,
+    readabilityMode,
+    setReadabilityMode,
+    spacing,
+    radius,
+    typography,
+  } = useTheme();
 
   const { t, locale, setLocale } = useI18n();
+  const { handleTabScroll } = useTabScroll();
 
   const family = useAppStore((s) => s.family);
   const notificationPreferences = useAppStore((s) => s.notificationPreferences);
@@ -208,6 +218,11 @@ export default function SettingsScreen() {
     { label: t.settings.themeDark, value: 'dark' as const },
   ];
 
+  const readabilityOptions = [
+    { label: t.settings.readabilityStandard, value: 'standard' as const },
+    { label: t.settings.readabilitySenior, value: 'senior' as const },
+  ];
+
   const languageOptions = [
     { label: t.settings.english, value: 'en' as SupportedLocale },
     { label: t.settings.italian, value: 'it' as SupportedLocale },
@@ -224,6 +239,8 @@ export default function SettingsScreen() {
         alignSelf: 'center',
       }}
       showsVerticalScrollIndicator={false}
+      onScroll={handleTabScroll}
+      scrollEventThrottle={16}
     >
       <View
         style={{
@@ -400,6 +417,34 @@ export default function SettingsScreen() {
             options={themeOptions}
             selectedValue={colorSchemePreference}
             onSelect={(val) => setColorSchemePreference(val as 'system' | 'light' | 'dark')}
+          />
+        </View>
+
+        {/* Readability Mode Selector */}
+        <View style={{ marginBottom: spacing.lg }}>
+          <Text
+            style={{
+              color: theme.colors.textSecondary,
+              fontSize: typography.fontSizes.sm,
+              fontWeight: typography.fontWeights.bold,
+              marginBottom: 4,
+            }}
+          >
+            {t.settings.readabilityMode}
+          </Text>
+          <Text
+            style={{
+              color: theme.colors.textMuted,
+              fontSize: typography.fontSizes.xs,
+              marginBottom: 8,
+            }}
+          >
+            {t.settings.readabilityDescription}
+          </Text>
+          <OptionSelector
+            options={readabilityOptions}
+            selectedValue={readabilityMode}
+            onSelect={(val) => setReadabilityMode(val as 'standard' | 'senior')}
           />
         </View>
 

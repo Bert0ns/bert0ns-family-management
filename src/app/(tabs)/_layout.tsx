@@ -5,6 +5,7 @@ import {
   Platform,
   Pressable,
   useWindowDimensions,
+  Animated,
   type ColorValue,
 } from 'react-native';
 import { Tabs } from 'expo-router';
@@ -20,13 +21,15 @@ import { authService } from '@/services/authService';
 import { syncEngine } from '@/services/syncEngine';
 import { realtimeSync } from '@/services/realtimeSync';
 import { isValidUUID } from '@/utils/uuid';
+import { TabScrollProvider, useTabScroll } from '@/context/TabScrollContext';
 
-export default function TabsLayout() {
+function TabsLayoutContent() {
   const { theme } = useTheme();
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const family = useAppStore((s) => s.family);
+  const { labelsVisibility, resetTabScroll } = useTabScroll();
 
   // Floating dock dimensions
   const isWideScreen = windowWidth >= 768;
@@ -83,8 +86,8 @@ export default function TabsLayout() {
       style={{
         alignItems: 'center',
         justifyContent: 'center',
-        width: 48,
-        height: 48,
+        width: 64,
+        height: 60,
       }}
     >
       <View
@@ -109,12 +112,42 @@ export default function TabsLayout() {
           strokeWidth={focused ? 2.5 : 2}
         />
       </View>
+      <Animated.Text
+        numberOfLines={1}
+        style={{
+          fontSize: 12,
+          fontWeight: focused ? '800' : '600',
+          color: focused ? theme.colors.brand : (color as string),
+          opacity: labelsVisibility,
+          maxHeight: labelsVisibility.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, 18],
+          }),
+          marginTop: labelsVisibility.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, 2],
+          }),
+          transform: [
+            {
+              translateY: labelsVisibility.interpolate({
+                inputRange: [0, 1],
+                outputRange: [4, 0],
+              }),
+            },
+          ],
+        }}
+      >
+        {label}
+      </Animated.Text>
     </View>
   );
 
   return (
     <Tabs
       detachInactiveScreens={false}
+      screenListeners={{
+        tabPress: () => resetTabScroll(),
+      }}
       screenOptions={{
         animation: 'none',
         sceneStyle: {
@@ -142,7 +175,7 @@ export default function TabsLayout() {
           bottom: floatingBottom,
           left: barLeft,
           width: barWidth,
-          height: 60,
+          height: 68,
           backgroundColor: 'transparent',
           borderRadius: Radius.dock,
           borderWidth: 1,
@@ -184,8 +217,8 @@ export default function TabsLayout() {
           />
         ),
         tabBarIconStyle: {
-          width: 48,
-          height: 48,
+          width: 64,
+          height: 60,
           justifyContent: 'center',
           alignItems: 'center',
           margin: 0,
@@ -196,7 +229,7 @@ export default function TabsLayout() {
           minWidth: 0,
           justifyContent: 'center',
           alignItems: 'center',
-          height: 60,
+          height: 68,
           padding: 0,
           margin: 0,
         },
@@ -273,5 +306,13 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+  );
+}
+
+export default function TabsLayout() {
+  return (
+    <TabScrollProvider>
+      <TabsLayoutContent />
+    </TabScrollProvider>
   );
 }

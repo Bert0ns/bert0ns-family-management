@@ -33,6 +33,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { IconHelper } from '@/components/common/IconHelper';
 import { Expense, PeriodPreset, AmountBracket } from '@/types';
 import { sumBy } from '@/utils/numberParser';
+import { useTabScroll } from '@/context/TabScrollContext';
 
 const TABULAR_NUMS: TextStyle =
   Platform.OS === 'web'
@@ -82,6 +83,7 @@ export default function LedgerScreen() {
   const router = useRouter();
   const { theme, spacing, radius, typography } = useTheme();
   const { t } = useI18n();
+  const { handleTabScroll } = useTabScroll();
 
   const family = useAppStore((s) => s.family);
   const members = useAppStore((s) => s.members);
@@ -670,6 +672,8 @@ export default function LedgerScreen() {
           keyExtractor={keyExtractor}
           contentContainerStyle={{ padding: spacing.lg, paddingBottom: 130 }}
           showsVerticalScrollIndicator={false}
+          onScroll={handleTabScroll}
+          scrollEventThrottle={16}
           renderItem={renderItem}
           ListEmptyComponent={
             <Card

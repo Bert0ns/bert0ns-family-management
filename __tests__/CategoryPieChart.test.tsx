@@ -1,4 +1,7 @@
-import { computeCategoryPieSlices } from '@/components/charts/CategoryPieChart';
+import {
+  computeCategoryPieSlices,
+  formatCategoryAccessibilityLabel,
+} from '@/components/charts/CategoryPieChart';
 import { parseSafePeriod } from '@/components/charts/HeatmapCalendar';
 import { CategorySummary } from '@/services/analytics';
 
@@ -145,6 +148,34 @@ describe('CategoryPieChart Slicing Invariants & Heatmap Parsing', () => {
       slices[0].onPress?.();
       expect(selectedIdx).toBeNull();
       expect(selectedCatId).toBe('1');
+    });
+  });
+
+  describe('Category Accessibility Label & Breakdown Rows', () => {
+    it('formats accessibility labels with category name, currency, 2-decimal amount, and 1-decimal percentage', () => {
+      expect(formatCategoryAccessibilityLabel('Groceries', '€', 125.45, 32.6)).toBe(
+        'Groceries, €125.45, 32.6%',
+      );
+      expect(formatCategoryAccessibilityLabel('Utilities', '$', 50, 20)).toBe(
+        'Utilities, $50.00, 20.0%',
+      );
+      expect(formatCategoryAccessibilityLabel('General & Other', '€', 0, 0)).toBe(
+        'General & Other, €0.00, 0.0%',
+      );
+    });
+
+    it('produces valid accessible breakdown rows matching category items', () => {
+      const data: CategorySummary[] = [
+        createMockCategorySummary('cat-1', 'Groceries', 150.75, 60.3),
+        createMockCategorySummary('cat-2', 'Transport', 99.25, 39.7),
+      ];
+
+      const labels = data.map((item) =>
+        formatCategoryAccessibilityLabel(item.category.name, '€', item.total, item.percentage),
+      );
+
+      expect(labels[0]).toBe('Groceries, €150.75, 60.3%');
+      expect(labels[1]).toBe('Transport, €99.25, 39.7%');
     });
   });
 
