@@ -286,6 +286,55 @@ You can compile standalone `.apk` packages locally inside WSL using the Linux An
 
 ---
 
+## 🚀 Release Workflow & Distribution
+
+The repository features a fully automated release pipeline in [`.github/workflows/release.yml`](.github/workflows/release.yml) that executes quality validation, compiles standalone native Android APKs and static Web bundles, generates SHA-256 checksums, and publishes official GitHub Releases with auto-generated release notes.
+
+### Releasing via CLI (Recommended)
+
+Run the interactive release script:
+
+```bash
+pnpm release
+```
+
+This helper will:
+
+1. Ensure your git working tree is clean.
+2. Prompt for bump type (`patch`, `minor`, `major`, or custom version).
+3. Run the complete quality suite (`pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`).
+4. Synchronize version strings in both `package.json` and `app.json`.
+5. Create an annotated git commit and release tag (e.g. `v1.0.1`).
+6. Prompt to push the release tag to GitHub, immediately triggering the release pipeline.
+
+### Releasing via Git Tag Push
+
+You can also trigger a release manually by creating and pushing a semantic version tag:
+
+```bash
+git tag -a v1.0.1 -m "Release v1.0.1"
+git push origin v1.0.1
+```
+
+### Manual Trigger via GitHub Actions (workflow_dispatch)
+
+Navigate to **Actions** → **Release Application** → **Run workflow**:
+
+- **Version**: Set a custom version or leave blank to use the version from `package.json`.
+- **Draft / Pre-release**: Toggle draft or pre-release flags.
+- **Build Targets**: Selectively build Android APK and/or Web bundle.
+- **Emergency Bypass**: Optionally skip validation checks in emergency rollback/hotfix scenarios.
+
+### Release Artifacts Published
+
+Every release generates and attaches the following assets to GitHub Releases:
+
+- `FamilyExpenseManager-<version>.apk`: Standalone release APK ready for direct sideloading and distribution to relatives.
+- `FamilyExpenseManager-web-<version>.zip`: Production web distribution bundle.
+- `SHA256SUMS.txt`: Cryptographic SHA-256 checksums for verifying file integrity.
+
+---
+
 ## 📄 License
 
 This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE).

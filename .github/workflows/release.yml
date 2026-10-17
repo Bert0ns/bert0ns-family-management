@@ -1,0 +1,324 @@
+name: Release Application
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 1.0.1 or v1.0.1). Leave empty to use package.json version.'
+        required: false
+        type: string
+        default: ''
+      draft:
+        description: 'Publish release as draft'
+        required: false
+        type: boolean
+        default: false
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+      build_android:
+        description: 'Build Android APK'
+        required: false
+        type: boolean
+        default: true
+      build_web:
+        description: 'Build Web bundle (ZIP)'
+        required: false
+        type: boolean
+        default: true
+      skip_checks:
+        description: 'Skip quality checks (emergency only)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: Prepare Release Metadata
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.metadata.outputs.tag }}
+      version: ${{ steps.metadata.outputs.version }}
+      build_android: ${{ steps.metadata.outputs.build_android }}
+      build_web: ${{ steps.metadata.outputs.build_web }}
+      draft: ${{ steps.metadata.outputs.draft }}
+      prerelease: ${{ steps.metadata.outputs.prerelease }}
+      skip_checks: ${{ steps.metadata.outputs.skip_checks }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Compute Release Metadata
+        id: metadata
+        run: |
+          RAW_INPUT="${{ github.event.inputs.version }}"
+          if [ -n "$RAW_INPUT" ]; then
+            CLEAN_VER="${RAW_INPUT#v}"
+            TAG="v$CLEAN_VER"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            CLEAN_VER="${TAG#v}"
+          else
+            PKG_VER=$(node -p "require('./package.json').version")
+            TAG="v$PKG_VER"
+            CLEAN_VER="$PKG_VER"
+          fi
+
+          BUILD_ANDROID="true"
+          BUILD_WEB="true"
+          DRAFT="false"
+          PRERELEASE="false"
+          SKIP_CHECKS="false"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            BUILD_ANDROID="${{ github.event.inputs.build_android }}"
+            BUILD_WEB="${{ github.event.inputs.build_web }}"
+            DRAFT="${{ github.event.inputs.draft }}"
+            PRERELEASE="${{ github.event.inputs.prerelease }}"
+            SKIP_CHECKS="${{ github.event.inputs.skip_checks }}"
+          fi
+
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$CLEAN_VER" >> $GITHUB_OUTPUT
+          echo "build_android=$BUILD_ANDROID" >> $GITHUB_OUTPUT
+          echo "build_web=$BUILD_WEB" >> $GITHUB_OUTPUT
+          echo "draft=$DRAFT" >> $GITHUB_OUTPUT
+          echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
+          echo "skip_checks=$SKIP_CHECKS" >> $GITHUB_OUTPUT
+
+          echo "Prepared release metadata:"
+          echo "  Tag: $TAG"
+          echo "  Version: $CLEAN_VER"
+          echo "  Build Android: $BUILD_ANDROID"
+          echo "  Build Web: $BUILD_WEB"
+          echo "  Draft: $DRAFT"
+          echo "  Pre-release: $PRERELEASE"
+          echo "  Skip Checks: $SKIP_CHECKS"
+
+  validate:
+    name: Codebase Quality Checks
+    needs: prepare
+    if: needs.prepare.outputs.skip_checks != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript Typecheck
+        run: pnpm typecheck
+
+      - name: ESLint Check
+        run: pnpm lint
+
+      - name: Prettier Code Style Check
+        run: pnpm format:check
+
+      - name: Unit & Integration Tests (Jest)
+        run: pnpm test
+
+  build-android:
+    name: Build Native Android APK
+    needs: [prepare, validate]
+    if: always() && needs.prepare.outputs.build_android == 'true' && (needs.prepare.outputs.skip_checks == 'true' || needs.validate.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Expo Prebuild (Generate Native Android Project)
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          npx expo prebuild --platform android --no-install
+          cat << 'EOF' >> android/gradle.properties
+          org.gradle.parallel=true
+          org.gradle.caching=true
+          org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC
+          org.gradle.vfs.watch=true
+          EOF
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          build-root-directory: android
+          cache-read-only: false
+
+      - name: Build Android Release APK with Gradle
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --build-cache --parallel -x lint -x lintVitalRelease
+
+      - name: Package & Checksum Android APK
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          mkdir -p release-android
+          SOURCE_APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$SOURCE_APK" ]; then
+            echo "::error::No release APK found in android/app/build/outputs/apk/release"
+            exit 1
+          fi
+          TARGET_APK="release-android/FamilyExpenseManager-${VERSION}.apk"
+          cp "$SOURCE_APK" "$TARGET_APK"
+          cd release-android
+          sha256sum "FamilyExpenseManager-${VERSION}.apk" > "FamilyExpenseManager-${VERSION}.apk.sha256"
+          echo "Generated APK: $TARGET_APK"
+          cat "FamilyExpenseManager-${VERSION}.apk.sha256"
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-release-apk
+          path: release-android/*
+          retention-days: 7
+
+  build-web:
+    name: Build Web Distribution Bundle
+    needs: [prepare, validate]
+    if: always() && needs.prepare.outputs.build_web == 'true' && (needs.prepare.outputs.skip_checks == 'true' || needs.validate.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Export Web Application
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: pnpm build:web
+
+      - name: Package Web Distribution ZIP
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          mkdir -p release-web
+          cd dist
+          zip -r "../release-web/FamilyExpenseManager-web-${VERSION}.zip" .
+          cd ../release-web
+          sha256sum "FamilyExpenseManager-web-${VERSION}.zip" > "FamilyExpenseManager-web-${VERSION}.zip.sha256"
+          echo "Generated Web ZIP: FamilyExpenseManager-web-${VERSION}.zip"
+          cat "FamilyExpenseManager-web-${VERSION}.zip.sha256"
+
+      - name: Upload Web Bundle Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-release-bundle
+          path: release-web/*
+          retention-days: 7
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [prepare, validate, build-android, build-web]
+    if: |
+      always() &&
+      (needs.prepare.outputs.skip_checks == 'true' || needs.validate.result == 'success') &&
+      (needs.build-android.result == 'success' || needs.build-android.result == 'skipped') &&
+      (needs.build-web.result == 'success' || needs.build-web.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Create Release Assets Directory
+        run: mkdir -p release-assets
+
+      - name: Download Android Artifacts
+        if: needs.prepare.outputs.build_android == 'true' && needs.build-android.result == 'success'
+        uses: actions/download-artifact@v7
+        with:
+          name: android-release-apk
+          path: release-assets
+
+      - name: Download Web Artifacts
+        if: needs.prepare.outputs.build_web == 'true' && needs.build-web.result == 'success'
+        uses: actions/download-artifact@v7
+        with:
+          name: web-release-bundle
+          path: release-assets
+
+      - name: Consolidate SHA-256 Checksums
+        run: |
+          cd release-assets
+          rm -f SHA256SUMS.txt
+          # Calculate checksums of binary releases (excluding individual .sha256 files)
+          find . -maxdepth 1 -type f \( -name "*.apk" -o -name "*.zip" \) -exec sha256sum {} + > SHA256SUMS.txt || true
+          # Clean filenames in SHA256SUMS.txt (strip leading ./)
+          sed -i 's|\./||g' SHA256SUMS.txt
+          echo "=== SHA256 Checksums ==="
+          cat SHA256SUMS.txt
+          ls -la
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: Release ${{ needs.prepare.outputs.tag }}
+          draft: ${{ needs.prepare.outputs.draft == 'true' }}
+          prerelease: ${{ needs.prepare.outputs.prerelease == 'true' }}
+          generate_release_notes: true
+          files: |
+            release-assets/*.apk
+            release-assets/*.zip
+            release-assets/SHA256SUMS.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
