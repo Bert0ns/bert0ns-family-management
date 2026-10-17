@@ -16,7 +16,6 @@ import {
   ChevronRight,
   ArrowUpRight,
   ArrowDownRight,
-  Check,
   TrendingUp,
 } from 'lucide-react-native';
 import { useTheme } from '@/theme';
@@ -81,7 +80,6 @@ export default function DashboardScreen() {
   const categories = useAppStore((s) => s.categories);
   const expenses = useAppStore((s) => s.expenses);
   const currentMemberId = useAppStore((s) => s.currentMemberId);
-  const setCurrentMemberId = useAppStore((s) => s.setCurrentMemberId);
   const selectedPeriod = useAppStore((s) => s.selectedPeriod);
   const setSelectedPeriod = useAppStore((s) => s.setSelectedPeriod);
   const setFilters = useAppStore((s) => s.setFilters);
@@ -228,148 +226,73 @@ export default function DashboardScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       showsVerticalScrollIndicator={false}
     >
-      {/* 1. Household Masthead & Active Payer Switcher */}
+      {/* 1. Household Masthead */}
       <View
         style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           marginBottom: spacing.md,
           paddingBottom: spacing.sm,
           borderBottomWidth: 1,
           borderBottomColor: theme.colors.border,
         }}
       >
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: spacing.sm,
-          }}
-        >
-          <View style={{ flex: 1, minWidth: 0, marginRight: spacing.sm }}>
-            <Text
-              style={{
-                color: theme.colors.brand,
-                fontSize: typography.fontSizes.xs,
-                fontWeight: typography.fontWeights.bold,
-                letterSpacing: 0.8,
-                textTransform: 'uppercase',
-                marginBottom: 2,
-              }}
-            >
-              {t.dashboard.householdOverview}
-            </Text>
-            <Text
-              style={{
-                color: theme.colors.textPrimary,
-                fontSize: typography.fontSizes.xl,
-                fontWeight: typography.fontWeights.heavy,
-                letterSpacing: -0.3,
-              }}
-              numberOfLines={1}
-            >
-              {family.name}
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            activeOpacity={0.75}
-            onPress={() => router.push('/(tabs)/analytics')}
-            accessibilityRole="button"
-            accessibilityLabel={t.tabs.analytics}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.xs,
-              minHeight: 44,
-              paddingHorizontal: spacing.md,
-              paddingVertical: spacing.xs + 2,
-              borderRadius: radius.md,
-              backgroundColor: theme.colors.surface,
-              borderWidth: 1,
-              borderColor: theme.colors.cardBorder,
-            }}
-          >
-            <TrendingUp size={16} color={theme.colors.brand} strokeWidth={2.2} />
-            <Text
-              style={{
-                color: theme.colors.textPrimary,
-                fontSize: typography.fontSizes.sm,
-                fontWeight: typography.fontWeights.bold,
-              }}
-            >
-              {t.tabs.analytics}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Active Payer Quick-Switcher Strip */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: spacing.xs + 2,
-          }}
-        >
+        <View style={{ flex: 1, minWidth: 0, marginRight: spacing.sm }}>
           <Text
             style={{
-              color: theme.colors.textSecondary,
+              color: theme.colors.brand,
               fontSize: typography.fontSizes.xs,
-              fontWeight: typography.fontWeights.semibold,
-              marginRight: spacing.xxs,
+              fontWeight: typography.fontWeights.bold,
+              letterSpacing: 0.8,
+              textTransform: 'uppercase',
+              marginBottom: 2,
             }}
           >
-            {t.dashboard.payingAs}:
+            {t.dashboard.householdOverview}
           </Text>
-          {members.map((member) => {
-            const isSelected = member.id === currentMemberId;
-            const memberColor = member.color_code || theme.colors.brand;
-            return (
-              <TouchableOpacity
-                key={member.id}
-                activeOpacity={0.75}
-                onPress={() => setCurrentMemberId(member.id)}
-                accessibilityRole="button"
-                accessibilityState={{ selected: isSelected }}
-                accessibilityLabel={`${t.dashboard.payingAs} ${member.display_name}`}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  minHeight: 40,
-                  paddingHorizontal: spacing.sm + 2,
-                  paddingVertical: 6,
-                  borderRadius: radius.pill,
-                  backgroundColor: isSelected ? `${memberColor}18` : theme.colors.surface,
-                  borderWidth: isSelected ? 1.5 : 1,
-                  borderColor: isSelected ? memberColor : theme.colors.cardBorder,
-                  gap: 6,
-                }}
-              >
-                <View
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: memberColor,
-                  }}
-                />
-                <Text
-                  style={{
-                    color: isSelected ? theme.colors.textPrimary : theme.colors.textSecondary,
-                    fontSize: typography.fontSizes.xs,
-                    fontWeight: isSelected
-                      ? typography.fontWeights.bold
-                      : typography.fontWeights.medium,
-                  }}
-                  numberOfLines={1}
-                >
-                  {member.display_name}
-                </Text>
-                {isSelected && <Check size={13} color={memberColor} strokeWidth={2.8} />}
-              </TouchableOpacity>
-            );
-          })}
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              fontSize: typography.fontSizes.xl,
+              fontWeight: typography.fontWeights.heavy,
+              letterSpacing: -0.3,
+            }}
+            numberOfLines={1}
+          >
+            {family.name}
+          </Text>
         </View>
+
+        <TouchableOpacity
+          activeOpacity={0.75}
+          onPress={() => router.push('/(tabs)/analytics')}
+          accessibilityRole="button"
+          accessibilityLabel={t.tabs.analytics}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.xs,
+            minHeight: 44,
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.xs + 2,
+            borderRadius: radius.md,
+            backgroundColor: theme.colors.surface,
+            borderWidth: 1,
+            borderColor: theme.colors.cardBorder,
+          }}
+        >
+          <TrendingUp size={16} color={theme.colors.brand} strokeWidth={2.2} />
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              fontSize: typography.fontSizes.sm,
+              fontWeight: typography.fontWeights.bold,
+            }}
+          >
+            {t.tabs.analytics}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* 2. Month Stepper */}
