@@ -36,6 +36,7 @@ export const it: TranslationSchema = {
     burnRatePerDay: 'Spesa media al giorno',
     monthForecast: 'Stima Fine Mese',
     projectedSpend: 'Spesa mensile stimata',
+    topSpender: 'Primo Contribuente',
     familyMembers: 'Membri della Famiglia',
     recentExpenses: 'Spese Recenti',
     viewAll: 'Mostra Tutto',

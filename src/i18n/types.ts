@@ -34,6 +34,7 @@ export interface TranslationSchema {
     burnRatePerDay: string;
     monthForecast: string;
     projectedSpend: string;
+    topSpender: string;
     familyMembers: string;
     recentExpenses: string;
     viewAll: string;

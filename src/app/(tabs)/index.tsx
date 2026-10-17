@@ -603,7 +603,7 @@ export default function DashboardScreen() {
             </Text>
           </View>
 
-          {/* Month Forecast */}
+          {/* Top Spender */}
           <View
             style={{
               flex: 1,
@@ -622,35 +622,48 @@ export default function DashboardScreen() {
               }}
               numberOfLines={1}
             >
-              {t.dashboard.monthForecast}
+              {t.dashboard.topSpender}
             </Text>
-            <Text
-              style={[
-                {
-                  color: theme.colors.textPrimary,
-                  fontSize: typography.fontSizes.lg,
-                  fontWeight: typography.fontWeights.heavy,
-                },
-                TABULAR_NUMS,
-              ]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.75}
-            >
-              {family.currency}
-              {metrics.projectedMonthEnd.toFixed(0)}
-            </Text>
-            <Text
-              style={{
-                color: theme.colors.textSecondary,
-                fontSize: 11,
-                fontWeight: typography.fontWeights.medium,
-                marginTop: 2,
-              }}
-              numberOfLines={1}
-            >
-              {t.dashboard.projectedSpend}
-            </Text>
+            {metrics.topSpender ? (
+              <>
+                <Text
+                  style={{
+                    color: theme.colors.textPrimary,
+                    fontSize: typography.fontSizes.md,
+                    fontWeight: typography.fontWeights.heavy,
+                  }}
+                  numberOfLines={1}
+                >
+                  {metrics.topSpender.member.display_name}
+                </Text>
+                <Text
+                  style={[
+                    {
+                      color: metrics.topSpender.member.color_code || theme.colors.brand,
+                      fontSize: 12,
+                      fontWeight: typography.fontWeights.bold,
+                      marginTop: 2,
+                    },
+                    TABULAR_NUMS,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {family.currency}
+                  {metrics.topSpender.total.toFixed(0)} ({metrics.topSpender.percentage.toFixed(0)}
+                  %)
+                </Text>
+              </>
+            ) : (
+              <Text
+                style={{
+                  color: theme.colors.textMuted,
+                  fontSize: typography.fontSizes.md,
+                  fontWeight: typography.fontWeights.bold,
+                }}
+              >
+                —
+              </Text>
+            )}
           </View>
 
           {/* Top Category */}
@@ -1306,18 +1319,20 @@ export default function DashboardScreen() {
       )}
 
       {/* Edit Expense Modal */}
-      <EditExpenseModal
-        visible={!!selectedExpenseForEdit}
-        expense={selectedExpenseForEdit}
-        categories={categories}
-        members={members}
-        currency={family.currency}
-        onClose={() => setSelectedExpenseForEdit(null)}
-        onSave={async (id, updates) => {
-          await updateExpense(id, updates);
-          setSelectedExpenseForEdit(null);
-        }}
-      />
+      {selectedExpenseForEdit && (
+        <EditExpenseModal
+          visible={!!selectedExpenseForEdit}
+          expense={selectedExpenseForEdit}
+          categories={categories}
+          members={members}
+          currency={family.currency}
+          onClose={() => setSelectedExpenseForEdit(null)}
+          onSave={async (id, updates) => {
+            await updateExpense(id, updates);
+            setSelectedExpenseForEdit(null);
+          }}
+        />
+      )}
     </ScrollView>
   );
 }
